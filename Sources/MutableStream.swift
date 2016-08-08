@@ -23,7 +23,7 @@
 import Foundation
 
 public class MutableStream<T> : Stream<T> {
-  private var _sema = DispatchSemaphore(value: 1)
+  private var _sema = DispatchSemaphore(value: 0)
   private var _handlers = [Handler]()
 
   override public init() { }

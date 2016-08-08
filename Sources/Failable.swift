@@ -29,7 +29,7 @@ public protocol _Failable { // hacking type system once
   init(success: Success)
   init(error: Error)
 
-  func onSucess(_ handler: @noescape (Success) throws -> Void) rethrows
+  func onSuccess(_ handler: @noescape (Success) throws -> Void) rethrows
   func onFailure(_ handler: @noescape (Failure) throws -> Void) rethrows
 
   // (success or failure) * (try transfrom success to success) -> (success or failure)
@@ -61,7 +61,7 @@ public enum Failable<T> : _Failable {
     self = .failure(error)
   }
 
-  public func onSucess(_ handler: @noescape (Success) throws -> Void) rethrows {
+  public func onSuccess(_ handler: @noescape (Success) throws -> Void) rethrows {
     if case let .success(successValue) = self {
       try handler(successValue)
     }

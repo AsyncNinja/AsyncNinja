@@ -22,11 +22,10 @@
 
 import XCTest
 import Foundation
-import AppKit
 @testable import FunctionalConcurrency
 
 
-class ChannelsTests: XCTestCase {
+class FuturesTests: XCTestCase {
 
   func testExample() {
 
