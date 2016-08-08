@@ -55,3 +55,31 @@ public func combine<T, S : Collection>(futures: S) -> Future<[T]>
   where S.Iterator.Element : Future<T>, S.IndexDistance == Int {
     return BatchFuture(futures: futures)
 }
+
+public extension Collection where Self.IndexDistance == Int {
+  public func map<T>(executor: Executor, transform: (Self.Iterator.Element) -> T) -> Future<[T]> {
+    let promise = Promise<[T]>()
+    let sema = DispatchSemaphore(value: 0)
+
+    let count = self.count
+    var subvalues = [T?](repeating: nil, count: count)
+    var unknownSubvaluesCount = count
+
+    for (index, value) in self.enumerated() {
+      executor.execute {
+        let subvalue = transform(value)
+
+        sema.wait()
+        defer { sema.signal() }
+
+        subvalues[index] = subvalue
+        unknownSubvaluesCount -= 1
+        if 0 == unknownSubvaluesCount {
+          promise.complete(value: subvalues.flatMap { $0 })
+        }
+      }
+    }
+    
+    return promise
+  }
+}

@@ -63,3 +63,43 @@ public func combine<T, S : Collection>(futures: [Future<Failable<T>>]) -> Future
   where S.Iterator.Element : Future<Failable<T>>, S.IndexDistance == Int {
     return FailableBatchFuture(futures: futures)
 }
+
+public extension Collection where Self.IndexDistance == Int {
+  public func map<T>(executor: Executor, transform: (Self.Iterator.Element) throws -> T) -> Future<Failable<[T]>> {
+    let promise = Promise<Failable<[T]>>()
+    let sema = DispatchSemaphore(value: 0)
+
+    var canContinue = true
+    let count = self.count
+    var subvalues = [T?](repeating: nil, count: count)
+    var unknownSubvaluesCount = count
+
+    for (index, value) in self.enumerated() {
+      executor.execute {
+        guard canContinue else { return }
+
+        let subvalue = failable { try transform(value) }
+
+        sema.wait()
+        defer { sema.signal() }
+
+        guard canContinue else { return }
+        subvalue.onSuccess {
+          subvalues[index] = $0
+          unknownSubvaluesCount -= 1
+          if 0 == unknownSubvaluesCount {
+            promise.complete(value: Failable(success: subvalues.flatMap { $0 }))
+            canContinue = false
+          }
+        }
+
+        subvalue.onFailure {
+          promise.complete(value: Failable(error: $0))
+          canContinue = false
+        }
+      }
+    }
+
+    return promise
+  }
+}
