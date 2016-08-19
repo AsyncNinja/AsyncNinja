@@ -22,22 +22,25 @@
 
 import Foundation
 
+/// Future is proxy for a value that will appear at some poing in future.
 public class Future<T> : Channel {
   public typealias Value = T
   typealias Handler = FutureHandler<T>
 
   init() { }
 
-  public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) -> T) -> Future<T> {
+  final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) -> T) -> Future<T> {
     let promise = Promise<T>()
-    self.onValue(executor: executor) { value in
+    let handler = FutureHandler(executor: executor) { value in
       promise.complete(value: transform(value))
     }
+    self.add(handler: handler)
     return promise
   }
 
   final public func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
-    self.add(handler: FutureHandler(executor: executor, block: block))
+    let handler = FutureHandler(executor: executor, block: block)
+    self.add(handler: handler)
   }
 
   func add(handler: FutureHandler<Value>) {
