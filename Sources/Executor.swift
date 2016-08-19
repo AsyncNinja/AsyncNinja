@@ -22,18 +22,23 @@
 
 import Foundation
 
+/// Executor is an abstraction over execution context
 public enum Executor {
   case queue(DispatchQueue)
   case custom((@escaping (Void) -> Void) -> Void)
 
-  public static var primary: Executor = Executor.default
-  public static var main: Executor { return .queue(DispatchQueue.main) }
-  public static var userInteractive: Executor { return .queue(DispatchQueue.global(qos: .userInteractive)) }
-  public static var userInitiated: Executor { return .queue(DispatchQueue.global(qos: .userInitiated)) }
-  public static var `default`: Executor { return .queue(DispatchQueue.global(qos: .`default`)) }
-  public static var utility: Executor { return .queue(DispatchQueue.global(qos: .utility)) }
-  public static var background: Executor { return .queue(DispatchQueue.global(qos: .background)) }
-  static var immediate: Executor { return .custom({ $0() }) }
+  public static let primary = Executor.default
+  public static let main = Executor.queue(DispatchQueue.main)
+  public static var userInteractive = Executor(qos: .userInteractive)
+  public static var userInitiated = Executor(qos: .userInitiated)
+  public static var `default` = Executor(qos: .default)
+  public static var utility = Executor(qos: .utility)
+  public static var background = Executor(qos: .background)
+  static var immediate = Executor.custom { $0() }
+
+  public init(qos: DispatchQoS.QoSClass) {
+    self = .queue(DispatchQueue.global(qos: qos))
+  }
 
   public func execute(_ block: @escaping (Void) -> Void) {
     switch self {
