@@ -29,12 +29,12 @@ public enum Executor {
 
   public static let primary = Executor.default
   public static let main = Executor.queue(DispatchQueue.main)
-  public static var userInteractive = Executor(qos: .userInteractive)
-  public static var userInitiated = Executor(qos: .userInitiated)
-  public static var `default` = Executor(qos: .default)
-  public static var utility = Executor(qos: .utility)
-  public static var background = Executor(qos: .background)
-  static var immediate = Executor.custom { $0() }
+  public static let userInteractive = Executor(qos: .userInteractive)
+  public static let userInitiated = Executor(qos: .userInitiated)
+  public static let `default` = Executor(qos: .default)
+  public static let utility = Executor(qos: .utility)
+  public static let background = Executor(qos: .background)
+  static let immediate = Executor.custom { $0() }
 
   public init(qos: DispatchQoS.QoSClass) {
     self = .queue(DispatchQueue.global(qos: qos))

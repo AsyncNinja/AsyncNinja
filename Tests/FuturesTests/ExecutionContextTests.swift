@@ -20,35 +20,35 @@
 //  IN THE SOFTWARE.
 //
 
+import XCTest
 import Foundation
+@testable import FunctionalConcurrency
 
-public class MutableStream<T> : Stream<T> {
-  private var _sema = DispatchSemaphore(value: 1)
-  private var _handlers = [Handler]()
-
-  override public init() { }
-
-  override public func onValue(executor: Executor, block: @escaping (Value) -> Void) {
-    _sema.wait()
-    defer { _sema.signal() }
-    _handlers.append((executor: executor, block: block))
-  }
-
-  public func send(_ value: Value) {
-    _sema.wait()
-    defer { _sema.signal() }
-    for (context, block) in _handlers {
-      context.execute { block(value) }
+class ExecutionContextTests : XCTestCase {
+  func testFailure() {
+    class ObjectToDeallocate : InternalQueueProvider {
+      let internalQueue: DispatchQueue = DispatchQueue(label: "internal queue", attributes: [])
     }
-  }
 
-  public func send<S: Sequence>(_ values: S) where S.Iterator.Element == Value {
-    _sema.wait()
-    defer { _sema.signal() }
-    for value in values {
-      for (context, block) in _handlers {
-        context.execute { block(value) }
+    var object : ObjectToDeallocate? = ObjectToDeallocate()
+
+    let halfOfFutureValue = future(value: "Hello")
+      .map(context: object) { (value, object) -> String in
+        if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
+          dispatchPrecondition(condition: .onQueue(object.internalQueue))
+        }
+        return "\(value) to"
+    }
+
+    XCTAssertEqual(halfOfFutureValue.wait().successValue!, "Hello to")
+    object = nil
+    let fullFutureValue = halfOfFutureValue.map(context: object) { (value, object) -> String in
+      if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
+        dispatchPrecondition(condition: .onQueue(object.internalQueue))
       }
+      return "\(value) dead"
     }
+    
+    XCTAssertEqual(fullFutureValue.wait().failureValue as! ConcurrencyError, ConcurrencyError.ownedDeallocated)
   }
 }

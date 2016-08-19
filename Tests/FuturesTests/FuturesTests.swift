@@ -24,8 +24,7 @@ import XCTest
 import Foundation
 @testable import FunctionalConcurrency
 
-
-class FuturesTests: XCTestCase {
+class FuturesTests : XCTestCase {
 
   func testFuture() {
 

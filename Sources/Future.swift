@@ -32,7 +32,7 @@ public class Future<T> : Channel {
   final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) -> T) -> Future<T> {
     let promise = Promise<T>()
     let handler = FutureHandler(executor: executor) { value in
-      promise.complete(value: transform(value))
+      promise.complete(with: transform(value))
     }
     self.add(handler: handler)
     return promise

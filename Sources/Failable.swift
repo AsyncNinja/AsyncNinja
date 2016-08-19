@@ -26,6 +26,9 @@ public protocol _Failable { // hacking type system once
   associatedtype Success
   associatedtype Failure
 
+  var successValue: Success? { get }
+  var failureValue: Failure? { get }
+
   init(success: Success)
   init(error: Error)
 
@@ -45,13 +48,28 @@ public protocol _Failable { // hacking type system once
   func liftFailure(transform: (Failure) -> Success) -> Success
 }
 
-
 public enum Failable<T> : _Failable {
   public typealias Success = T
   public typealias Failure = Error
 
   case success(Success)
   case failure(Failure)
+
+  public var successValue: Success? {
+    if case let .success(successValue) = self {
+      return successValue
+    } else {
+      return nil
+    }
+  }
+
+  public var failureValue: Failure? {
+    if case let .failure(failureValue) = self {
+      return failureValue
+    } else {
+      return nil
+    }
+  }
 
   public init(success: Success) {
     self = .success(success)
@@ -114,38 +132,4 @@ public func failable<T>(block: () throws -> T) -> Failable<T> {
 public func failable<T>(block: () throws -> Failable<T>) -> Failable<T> {
   do { return try block() }
   catch { return Failable(error: error) }
-}
-
-// public typealias FailableFuture<T> = Future<Failable<T>> // does not work properly yet
-
-public extension Future where T : _Failable {
-
-  public typealias Success = Value.Success
-  public typealias Failure = Value.Failure
-
-  public func liftSuccess<T>(executor: Executor, transform: @escaping (Success) throws -> T) -> Future<Failable<T>> {
-    let promise = Promise<Failable<T>>()
-    self.onValue(executor: executor) {
-      promise.complete(value: $0.liftSuccess(transform: transform))
-    }
-    return promise
-  }
-
-  public func liftFailure(executor: Executor, transform: @escaping (Failure) -> Success) -> Future<Success> {
-    let promise = Promise<Success>()
-    self.onValue(executor: executor) { value -> Void in
-      let nextValue = value.liftFailure(transform: transform)
-      promise.complete(value: nextValue)
-    }
-    return promise
-  }
-
-  public func liftFailure(executor: Executor, transform: @escaping (Failure) throws -> Success) -> Future<Failable<Success>> {
-    let promise = Promise<Failable<T.Success>>()
-    self.onValue(executor: executor) { value -> Void in
-      let nextValue = value.liftFailure(transform: transform)
-      promise.complete(value: nextValue)
-    }
-    return promise
-  }
 }

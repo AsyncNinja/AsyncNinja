@@ -76,7 +76,7 @@ public extension Collection where Self.IndexDistance == Int {
         subvalues[index] = subvalue
         unknownSubvaluesCount -= 1
         if 0 == unknownSubvaluesCount {
-          promise.complete(value: subvalues.flatMap { $0 })
+          promise.complete(with: subvalues.flatMap { $0 })
         }
       }
     }

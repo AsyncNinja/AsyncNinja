@@ -88,13 +88,13 @@ public extension Collection where Self.IndexDistance == Int {
           subvalues[index] = $0
           unknownSubvaluesCount -= 1
           if 0 == unknownSubvaluesCount {
-            promise.complete(value: Failable(success: subvalues.flatMap { $0 }))
+            promise.complete(with: Failable(success: subvalues.flatMap { $0 }))
             canContinue = false
           }
         }
 
         subvalue.onFailure {
-          promise.complete(value: Failable(error: $0))
+          promise.complete(with: Failable(error: $0))
           canContinue = false
         }
       }

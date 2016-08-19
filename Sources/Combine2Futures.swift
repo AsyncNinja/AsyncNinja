@@ -52,7 +52,7 @@ public func combine<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<
 public func combine<A, B>(_ futureA: Future<A>, _ valueB: B) -> Future<(A, B)> {
   let promise = Promise<(A, B)>()
   futureA.onValue(executor: .immediate) {
-    promise.complete(value: ($0, valueB))
+    promise.complete(with: ($0, valueB))
   }
   return promise
 }

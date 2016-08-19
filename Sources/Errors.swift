@@ -22,33 +22,15 @@
 
 import Foundation
 
-public class MutableStream<T> : Stream<T> {
-  private var _sema = DispatchSemaphore(value: 1)
-  private var _handlers = [Handler]()
+public enum ConcurrencyError : Error, Equatable {
+  case cancelled
+  case ownedDeallocated
+}
 
-  override public init() { }
+public protocol CancellationRepresentableError : Error {
+  var representsCancellation: Bool { get }
+}
 
-  override public func onValue(executor: Executor, block: @escaping (Value) -> Void) {
-    _sema.wait()
-    defer { _sema.signal() }
-    _handlers.append((executor: executor, block: block))
-  }
-
-  public func send(_ value: Value) {
-    _sema.wait()
-    defer { _sema.signal() }
-    for (context, block) in _handlers {
-      context.execute { block(value) }
-    }
-  }
-
-  public func send<S: Sequence>(_ values: S) where S.Iterator.Element == Value {
-    _sema.wait()
-    defer { _sema.signal() }
-    for value in values {
-      for (context, block) in _handlers {
-        context.execute { block(value) }
-      }
-    }
-  }
+extension ConcurrencyError : CancellationRepresentableError {
+  public var representsCancellation : Bool { return .cancelled == self }
 }
