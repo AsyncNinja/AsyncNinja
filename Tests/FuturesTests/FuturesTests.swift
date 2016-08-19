@@ -61,7 +61,7 @@ class FuturesTests: XCTestCase {
         .map(executor: .userInteractive, makePerformer(globalQOS: .userInteractive, multiplier: 2))
         .map(executor: .default, makePerformer(globalQOS: .default, multiplier: 3))
         .map(executor: .utility, makePerformer(globalQOS: .utility, multiplier: 4))
-        .map(executor: .background, makePerformer(globalQOS: .utility, multiplier: 5))
+        .map(executor: .background, makePerformer(globalQOS: .background, multiplier: 5))
 
       let result2 = future(value: 2)
         .map(executor: .background, makePerformer(globalQOS: .background, multiplier: 5))
