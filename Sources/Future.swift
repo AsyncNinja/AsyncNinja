@@ -28,7 +28,7 @@ public class Future<T> : Channel {
 
   init() { }
 
-  public func map<T>(executor: Executor, _ transform: (Value) -> T) -> Future<T> {
+  public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) -> T) -> Future<T> {
     let promise = Promise<T>()
     self.onValue(executor: executor) { value in
       promise.complete(value: transform(value))
@@ -36,7 +36,7 @@ public class Future<T> : Channel {
     return promise
   }
 
-  final public func onValue(executor: Executor, block: (Value) -> Void) {
+  final public func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
     self.add(handler: FutureHandler(executor: executor, block: block))
   }
 

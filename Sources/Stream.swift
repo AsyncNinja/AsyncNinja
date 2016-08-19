@@ -28,11 +28,11 @@ public class Stream<T> : Channel {
 
   init() { }
 
-  public func onValue(executor: Executor, block: (Value) -> Void) {
+  public func onValue(executor: Executor, block: @escaping (Value) -> Void) {
     fatalError() // abstract
   }
 
-  public func map<T>(executor: Executor, _ transform: (Value) -> T) -> Stream<T> {
+  public func map<T>(executor: Executor, _ transform: @escaping  (Value) -> T) -> Stream<T> {
     let mutableStream = MutableStream<T>()
     self.onValue(executor: executor) { value in
       mutableStream.send(transform(value))

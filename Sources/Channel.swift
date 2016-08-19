@@ -24,11 +24,11 @@ import Foundation
 
 public protocol Channel {
   associatedtype Value
-  func onValue(executor: Executor, block: (Value) -> Void)
+  func onValue(executor: Executor, block: @escaping (Value) -> Void)
 }
 
 public extension Channel {
-  private func wait(waitingBlock: @noescape (DispatchSemaphore) -> DispatchTimeoutResult) -> Value? {
+  private func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Value? {
     let sema = DispatchSemaphore(value: 0)
     var result: Value? = nil
     self.onValue(executor: .immediate) {

@@ -28,8 +28,8 @@ class ConstantStream<S: Sequence> : Stream<S.Iterator.Element> {
   init(sequence: S) {
     _sequence = sequence
   }
-
-  override func onValue(executor: Executor, block: (Value) -> Void) {
+  
+  override func onValue(executor: Executor, block: @escaping (Value) -> Void) {
     executor.execute {
       for element in self._sequence {
         block(element)

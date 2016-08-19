@@ -23,12 +23,12 @@
 import Foundation
 
 public class MutableStream<T> : Stream<T> {
-  private var _sema = DispatchSemaphore(value: 0)
+  private var _sema = DispatchSemaphore(value: 1)
   private var _handlers = [Handler]()
 
   override public init() { }
 
-  override public func onValue(executor: Executor, block: (Value) -> Void) {
+  override public func onValue(executor: Executor, block: @escaping (Value) -> Void) {
     _sema.wait()
     defer { _sema.signal() }
     _handlers.append((executor: executor, block: block))
@@ -42,7 +42,7 @@ public class MutableStream<T> : Stream<T> {
     }
   }
 
-  public func send<S: Sequence where S.Iterator.Element == Value>(_ values: S) {
+  public func send<S: Sequence>(_ values: S) where S.Iterator.Element == Value {
     _sema.wait()
     defer { _sema.signal() }
     for value in values {

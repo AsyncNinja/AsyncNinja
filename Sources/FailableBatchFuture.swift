@@ -27,7 +27,7 @@ class FailableBatchFuture<T> : MutableFuture<Failable<[T]>> {
   private var _subsuccesses: [T?]
   private var _unknownSubvaluesCount: Int
 
-  private init<S : Collection where S.Iterator.Element : Future<Failable<T>>, S.IndexDistance == Int>(futures: S) {
+  init<S : Collection>(futures: S) where S.Iterator.Element : Future<Failable<T>>, S.IndexDistance == Int {
     self.count = futures.count
     _unknownSubvaluesCount = self.count
     _subsuccesses = Array<T?>(repeating: nil, count: self.count)
@@ -65,9 +65,9 @@ public func combine<T, S : Collection>(futures: [Future<Failable<T>>]) -> Future
 }
 
 public extension Collection where Self.IndexDistance == Int {
-  public func map<T>(executor: Executor, transform: (Self.Iterator.Element) throws -> T) -> Future<Failable<[T]>> {
+  public func map<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> T) -> Future<Failable<[T]>> {
     let promise = Promise<Failable<[T]>>()
-    let sema = DispatchSemaphore(value: 0)
+    let sema = DispatchSemaphore(value: 1)
 
     var canContinue = true
     let count = self.count

@@ -24,8 +24,9 @@ import Foundation
 
 public enum Executor {
   case queue(DispatchQueue)
-  case custom(((Void) -> Void) -> Void)
+  case custom((@escaping (Void) -> Void) -> Void)
 
+  public static var primary: Executor = Executor.default
   public static var main: Executor { return .queue(DispatchQueue.main) }
   public static var userInteractive: Executor { return .queue(DispatchQueue.global(qos: .userInteractive)) }
   public static var userInitiated: Executor { return .queue(DispatchQueue.global(qos: .userInitiated)) }
@@ -34,7 +35,7 @@ public enum Executor {
   public static var background: Executor { return .queue(DispatchQueue.global(qos: .background)) }
   static var immediate: Executor { return .custom({ $0() }) }
 
-  public func execute(_ block: (Void) -> Void) {
+  public func execute(_ block: @escaping (Void) -> Void) {
     switch self {
     case .queue(let queue):
       queue.async(execute: block)

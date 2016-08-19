@@ -27,7 +27,7 @@ import Foundation
 
 class FuturesTests: XCTestCase {
 
-  func testExample() {
+  func testFuture() {
 
     let result = future(value: 1)
       .map(executor: .utility) { $0 * 3 }
@@ -44,13 +44,34 @@ class FuturesTests: XCTestCase {
       .onValue(executor: .utility) { print("\($0)") }
   }
 
-  func testPerformanceExample() {
+  func testPerformanceFuture() {
     self.measure {
-      let result = future(value: 1)
-        .map(executor: .userInteractive) { $0 * 3 }
-        .wait()
+      
+      func makePerformer(globalQOS: DispatchQoS.QoSClass, multiplier: Int) -> (Int) -> Int {
+        return {
+          let queue = DispatchQueue.global(qos: globalQOS)
+          if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
+            dispatchPrecondition(condition: .onQueue(queue))
+          }
+          return $0 * multiplier
+        }
+      }
+      
+      let result1 = future(value: 1)
+        .map(executor: .userInteractive, makePerformer(globalQOS: .userInteractive, multiplier: 2))
+        .map(executor: .default, makePerformer(globalQOS: .default, multiplier: 3))
+        .map(executor: .utility, makePerformer(globalQOS: .utility, multiplier: 4))
+        .map(executor: .background, makePerformer(globalQOS: .utility, multiplier: 5))
 
-      XCTAssertEqual(result, 3)
+      let result2 = future(value: 2)
+        .map(executor: .background, makePerformer(globalQOS: .background, multiplier: 5))
+        .map(executor: .utility, makePerformer(globalQOS: .utility, multiplier: 4))
+        .map(executor: .default, makePerformer(globalQOS: .default, multiplier: 3))
+        .map(executor: .userInteractive, makePerformer(globalQOS: .userInteractive, multiplier: 2))
+      
+      let result = combine(result1, result2).map { $0 + $1 }.wait()
+
+      XCTAssertEqual(result, 360)
     }
   }
   

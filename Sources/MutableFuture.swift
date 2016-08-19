@@ -23,7 +23,7 @@
 import Foundation
 
 public class MutableFuture<T> : Future<T> {
-  private var _sema = DispatchSemaphore(value: 0)
+  private var _sema = DispatchSemaphore(value: 1)
   private var _handlers = [Handler]()
   private var value: Value?
   private var _aliveKeeper: MutableFuture<T>?
@@ -40,7 +40,7 @@ public class MutableFuture<T> : Future<T> {
   }
 
   @discardableResult
-  final func tryUpdateAndMakeValue(with block: @noescape (Void) -> Value?) {
+  final func tryUpdateAndMakeValue(with block: (Void) -> Value?) {
     _sema.wait()
     defer { _sema.signal() }
 

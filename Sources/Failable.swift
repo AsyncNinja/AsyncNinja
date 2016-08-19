@@ -29,20 +29,20 @@ public protocol _Failable { // hacking type system once
   init(success: Success)
   init(error: Error)
 
-  func onSuccess(_ handler: @noescape (Success) throws -> Void) rethrows
-  func onFailure(_ handler: @noescape (Failure) throws -> Void) rethrows
+  func onSuccess(_ handler: (Success) throws -> Void) rethrows
+  func onFailure(_ handler: (Failure) throws -> Void) rethrows
 
   // (success or failure) * (try transfrom success to success) -> (success or failure)
-  func liftSuccess<T>(transform: @noescape (Success) throws -> T) -> Failable<T>
+  func liftSuccess<T>(transform: (Success) throws -> T) -> Failable<T>
 
   // (success or failure) * (try transfrom success to (success or failure)) -> (success or failure)
-  func liftSuccess<T>(transform: @noescape (Success) throws -> Failable<T>) -> Failable<T>
+  func liftSuccess<T>(transform: (Success) throws -> Failable<T>) -> Failable<T>
 
   // (success or failure) * (try transfrom failure to success) -> (success or failure)
-  func liftFailure(transform: @noescape (Failure) throws -> Success) -> Failable<Success>
+  func liftFailure(transform: (Failure) throws -> Success) -> Failable<Success>
 
   // (success or failure) * (transfrom failure to success) -> success
-  func liftFailure(transform: @noescape (Failure) -> Success) -> Success
+  func liftFailure(transform: (Failure) -> Success) -> Success
 }
 
 
@@ -61,23 +61,23 @@ public enum Failable<T> : _Failable {
     self = .failure(error)
   }
 
-  public func onSuccess(_ handler: @noescape (Success) throws -> Void) rethrows {
+  public func onSuccess(_ handler: (Success) throws -> Void) rethrows {
     if case let .success(successValue) = self {
       try handler(successValue)
     }
   }
 
-  public func onFailure(_ handler: @noescape (Failure) throws -> Void) rethrows {
+  public func onFailure(_ handler: (Failure) throws -> Void) rethrows {
     if case let .failure(failureValue) = self {
       try handler(failureValue)
     }
   }
 
-  public func liftSuccess<T>(transform: @noescape (Success) throws -> T) -> Failable<T> {
+  public func liftSuccess<T>(transform: (Success) throws -> T) -> Failable<T> {
     return self.liftSuccess { .success(try transform($0)) }
   }
 
-  public func liftSuccess<T>(transform: @noescape (Success) throws -> Failable<T>) -> Failable<T> {
+  public func liftSuccess<T>(transform: (Success) throws -> Failable<T>) -> Failable<T> {
     switch self {
     case let .success(successValue):
       return failable { try transform(successValue) }
@@ -86,7 +86,7 @@ public enum Failable<T> : _Failable {
     }
   }
 
-  public func liftFailure(transform: @noescape (Failure) throws -> Success) -> Failable<Success> {
+  public func liftFailure(transform: (Failure) throws -> Success) -> Failable<Success> {
     switch self {
     case let .success(successValue):
       return .success(successValue)
@@ -96,7 +96,7 @@ public enum Failable<T> : _Failable {
     }
   }
 
-  public func liftFailure(transform: @noescape (Failure) -> Success) -> Success {
+  public func liftFailure(transform: (Failure) -> Success) -> Success {
     switch self {
     case let .success(successValue):
       return successValue
@@ -106,12 +106,12 @@ public enum Failable<T> : _Failable {
   }
 }
 
-public func failable<T>(block: @noescape () throws -> T) -> Failable<T> {
+public func failable<T>(block: () throws -> T) -> Failable<T> {
   do { return Failable(success: try block()) }
   catch { return Failable(error: error) }
 }
 
-public func failable<T>(block: @noescape () throws -> Failable<T>) -> Failable<T> {
+public func failable<T>(block: () throws -> Failable<T>) -> Failable<T> {
   do { return try block() }
   catch { return Failable(error: error) }
 }
@@ -123,7 +123,7 @@ public extension Future where T : _Failable {
   public typealias Success = Value.Success
   public typealias Failure = Value.Failure
 
-  public func liftSuccess<T>(executor: Executor, transform: (Success) throws -> T) -> Future<Failable<T>> {
+  public func liftSuccess<T>(executor: Executor, transform: @escaping (Success) throws -> T) -> Future<Failable<T>> {
     let promise = Promise<Failable<T>>()
     self.onValue(executor: executor) {
       promise.complete(value: $0.liftSuccess(transform: transform))
@@ -131,7 +131,7 @@ public extension Future where T : _Failable {
     return promise
   }
 
-  public func liftFailure(executor: Executor, transform: (Failure) -> Success) -> Future<Success> {
+  public func liftFailure(executor: Executor, transform: @escaping (Failure) -> Success) -> Future<Success> {
     let promise = Promise<Success>()
     self.onValue(executor: executor) { value -> Void in
       let nextValue = value.liftFailure(transform: transform)
@@ -140,7 +140,7 @@ public extension Future where T : _Failable {
     return promise
   }
 
-  public func liftFailure(executor: Executor, transform: (Failure) throws -> Success) -> Future<Failable<Success>> {
+  public func liftFailure(executor: Executor, transform: @escaping (Failure) throws -> Success) -> Future<Failable<Success>> {
     let promise = Promise<Failable<T.Success>>()
     self.onValue(executor: executor) { value -> Void in
       let nextValue = value.liftFailure(transform: transform)
