@@ -130,18 +130,30 @@ can be provided by `MaterialsProvider`. Workers that make all above work concurr
 *	products are function returns not argument of callback
 *	combining products is much simpler	
 
-##	Whishlist
-*	Futures
+##	Wishlist
+*	Support of latest Swift
+*	Futures (50% done)
 	*	simple
 	*	typesafe
 	*	composable
-*	Streams
+*	Streams (1% done)
 	*	unbuffered
 	*	buffered
+	*	composable
+	*	stream producers: (timers, IOs and etc.)
 	*	integration with Objective-C runtime (KVO and etc.)
-*	Tests
-*	Documetation
-*	Sample Code
+*	Related abstractions implementation (10% done)
+	*	validation monad aka Fallible
+	*	...
+*	Test Coverage (34% done)
+*	Performance Measurement (0% done)
+*	Documentation (0% done)
+*	Sample Code (1% done)
+*	Linux support (0% done)	
+*	Integrations (0% done)
+	*	AppKit
+	*	UIKit
+	*	server side
 
 ##	Documentation
 TODO
