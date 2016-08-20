@@ -68,7 +68,7 @@ class FuturesTests : XCTestCase {
         .map(executor: .default, makePerformer(globalQOS: .default, multiplier: 3))
         .map(executor: .userInteractive, makePerformer(globalQOS: .userInteractive, multiplier: 2))
       
-      let result = combine(result1, result2).map { $0 + $1 }.wait()
+      let result = zip(result1, result2).map { $0 + $1 }.wait()
 
       XCTAssertEqual(result, 360)
     }

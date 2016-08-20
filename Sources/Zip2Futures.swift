@@ -22,54 +22,37 @@
 
 import Foundation
 
-final class Combine3Futures<A, B, C> : MutableFuture<(A, B, C)> {
+final class Zip2Futures<A, B> : MutableFuture<(A, B)> {
   private var _subvalueA: A?
   private var _subvalueB: B?
-  private var _subvalueC: C?
 
-  init(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: Future<C>) {
+  init(_ futureA: Future<A>, _ futureB: Future<B>) {
     super.init()
-    futureA.onValue(executor: .immediate) { [weak self] (subvalueA) in
+    futureA.onValue(executor: .immediate) { [weak self] subvalueA in
       guard let self_ = self else { return }
-
       self_.tryUpdateAndMakeValue {
         self_._subvalueA = subvalueA
-        if let subvalueB = self_._subvalueB, let subvalueC = self_._subvalueC {
-          return (subvalueA, subvalueB, subvalueC)
-        } else {
-          return nil
-        }
+        return self_._subvalueB.flatMap { (subvalueA, $0)}
       }
     }
-
-    futureB.onValue(executor: .immediate) { [weak self] (subvalueB) in
+    futureB.onValue(executor: .immediate) { [weak self] subvalueB in
       guard let self_ = self else { return }
-
       self_.tryUpdateAndMakeValue {
         self_._subvalueB = subvalueB
-        if let subvalueA = self_._subvalueA, let subvalueC = self_._subvalueC {
-          return (subvalueA, subvalueB, subvalueC)
-        } else {
-          return nil
-        }
-      }
-    }
-
-    futureC.onValue(executor: .immediate) { [weak self] (subvalueC) in
-      guard let self_ = self else { return }
-
-      self_.tryUpdateAndMakeValue {
-        self_._subvalueC = subvalueC
-        if let subvalueA = self_._subvalueA, let subvalueB = self_._subvalueB {
-          return (subvalueA, subvalueB, subvalueC)
-        } else {
-          return nil
-        }
+        return self_._subvalueA.flatMap { ($0, subvalueB)}
       }
     }
   }
 }
 
-public func combine<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: Future<C>) -> Future<(A, B, C)> {
-  return Combine3Futures(futureA, futureB, futureC)
+public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, B)> {
+  return Zip2Futures(futureA, futureB)
+}
+
+public func zip<A, B>(_ futureA: Future<A>, _ valueB: B) -> Future<(A, B)> {
+  let promise = Promise<(A, B)>()
+  futureA.onValue(executor: .immediate) {
+    promise.complete(with: ($0, valueB))
+  }
+  return promise
 }

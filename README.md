@@ -118,7 +118,7 @@ can be provided by `MaterialsProvider`. Workers that make all above work concurr
 	  func makeCar() -> Future<Car> {
 		let futureBody = self.makeBody()
 		let futureWheels = (0..<4).map { _ in self.makeWheel() }
-		return combine(futureBody, futureWheels)
+		return zip(futureBody, futureWheels)
 		  .map { (body, wheels) in
 			// use body and wheels to make car
 			return car
