@@ -28,7 +28,6 @@ typealias FailablePromise<T> = Promise<Failable<T>>
 public extension Future where T : _Failable {
 
   public typealias Success = Value.Success
-  public typealias Failure = Value.Failure
 
   final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) throws -> T) -> FailableFuture<T> {
     let promise = FailablePromise<T>()
@@ -47,7 +46,7 @@ public extension Future where T : _Failable {
     return promise
   }
 
-  final public func liftFailure(executor: Executor, transform: @escaping (Failure) -> Success) -> Future<Success> {
+  final public func liftFailure(executor: Executor, transform: @escaping (Error) -> Success) -> Future<Success> {
     let promise = Promise<Success>()
     self.onValue(executor: executor) { value -> Void in
       let nextValue = value.liftFailure(transform: transform)
@@ -56,7 +55,7 @@ public extension Future where T : _Failable {
     return promise
   }
 
-  final public func liftFailure(executor: Executor, transform: @escaping (Failure) throws -> Success) -> FailableFuture<Success> {
+  final public func liftFailure(executor: Executor, transform: @escaping (Error) throws -> Success) -> FailableFuture<Success> {
     let promise = FailablePromise<Success>()
     self.onValue(executor: executor) { value -> Void in
       let nextValue = value.liftFailure(transform: transform)

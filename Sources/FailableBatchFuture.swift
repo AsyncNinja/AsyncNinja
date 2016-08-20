@@ -94,7 +94,7 @@ public extension Collection where Self.IndexDistance == Int {
         }
 
         subvalue.onFailure {
-          promise.complete(with: Failable(error: $0))
+          promise.complete(with: Failable(failure: $0))
           canContinue = false
         }
       }

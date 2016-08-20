@@ -36,7 +36,7 @@ public extension Future {
           promise.complete(with: failable { try transform(value, context) })
         }
       } else {
-        promise.complete(with: Failable(error: ConcurrencyError.ownedDeallocated))
+        promise.complete(with: Failable(failure: ConcurrencyError.ownedDeallocated))
       }
     }
     self.add(handler: handler)
@@ -62,12 +62,12 @@ public extension Future where T : _Failable {
 
     self.onValue(executor: .immediate) {
       guard let successValue = $0.successValue else {
-        promise.complete(with: Failable(error: $0.failureValue as! Error))
+        promise.complete(with: Failable(failure: $0.failureValue!))
         return
       }
 
       guard let context = weakContext else {
-        promise.complete(with: Failable(error: ConcurrencyError.ownedDeallocated))
+        promise.complete(with: Failable(failure: ConcurrencyError.ownedDeallocated))
         return
       }
 
@@ -80,7 +80,7 @@ public extension Future where T : _Failable {
     return promise
   }
 
-  final public func liftFailure<U: ExecutionContext>(context: U?, transform: @escaping (Failure, U) throws -> Success) -> FailableFuture<Success> {
+  final public func liftFailure<U: ExecutionContext>(context: U?, transform: @escaping (Error, U) throws -> Success) -> FailableFuture<Success> {
     let promise = FailablePromise<Success>()
     weak var weakContext = context
 
@@ -91,7 +91,7 @@ public extension Future where T : _Failable {
       }
 
       guard let context = weakContext else {
-        promise.complete(with: Failable(error: ConcurrencyError.ownedDeallocated))
+        promise.complete(with: Failable(failure: ConcurrencyError.ownedDeallocated))
         return
       }
 
