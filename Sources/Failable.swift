@@ -22,7 +22,7 @@
 
 import Foundation
 
-public protocol _Failable { // hacking type system once
+public protocol _Fallible { // hacking type system once
   associatedtype Success
 
   var successValue: Success? { get }
@@ -35,19 +35,19 @@ public protocol _Failable { // hacking type system once
   func onFailure(_ handler: (Error) throws -> Void) rethrows
 
   // (success or failure) * (try transfrom success to success) -> (success or failure)
-  func liftSuccess<T>(transform: (Success) throws -> T) -> Failable<T>
+  func liftSuccess<T>(transform: (Success) throws -> T) -> Fallible<T>
 
   // (success or failure) * (try transfrom success to (success or failure)) -> (success or failure)
-  func liftSuccess<T>(transform: (Success) throws -> Failable<T>) -> Failable<T>
+  func liftSuccess<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>
 
   // (success or failure) * (try transfrom failure to success) -> (success or failure)
-  func liftFailure(transform: (Error) throws -> Success) -> Failable<Success>
+  func liftFailure(transform: (Error) throws -> Success) -> Fallible<Success>
 
   // (success or failure) * (transfrom failure to success) -> success
   func liftFailure(transform: (Error) -> Success) -> Success
 }
 
-public enum Failable<T> : _Failable {
+public enum Fallible<T> : _Fallible {
   public typealias Success = T
 
   case success(Success)
@@ -83,20 +83,20 @@ public enum Failable<T> : _Failable {
     }
   }
 
-  public func liftSuccess<T>(transform: (Success) throws -> T) -> Failable<T> {
+  public func liftSuccess<T>(transform: (Success) throws -> T) -> Fallible<T> {
     return self.liftSuccess { .success(try transform($0)) }
   }
 
-  public func liftSuccess<T>(transform: (Success) throws -> Failable<T>) -> Failable<T> {
+  public func liftSuccess<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T> {
     switch self {
     case let .success(successValue):
-      return failable { try transform(successValue) }
+      return fallible { try transform(successValue) }
     case let .failure(failureValue):
       return .failure(failureValue)
     }
   }
 
-  public func liftFailure(transform: (Error) throws -> Success) -> Failable<Success> {
+  public func liftFailure(transform: (Error) throws -> Success) -> Fallible<Success> {
     switch self {
     case let .success(successValue):
       return .success(successValue)
@@ -116,12 +116,12 @@ public enum Failable<T> : _Failable {
   }
 }
 
-public func failable<T>(block: () throws -> T) -> Failable<T> {
-  do { return Failable(success: try block()) }
-  catch { return Failable(failure: error) }
+public func fallible<T>(block: () throws -> T) -> Fallible<T> {
+  do { return Fallible(success: try block()) }
+  catch { return Fallible(failure: error) }
 }
 
-public func failable<T>(block: () throws -> Failable<T>) -> Failable<T> {
+public func fallible<T>(block: () throws -> Fallible<T>) -> Fallible<T> {
   do { return try block() }
-  catch { return Failable(failure: error) }
+  catch { return Fallible(failure: error) }
 }

@@ -24,26 +24,26 @@ import XCTest
 import Foundation
 @testable import FunctionalConcurrency
 
-class FailableTests : XCTestCase {
+class FallibleTests : XCTestCase {
   enum TestError : Error {
     case testCode
     case otherCode
   }
 
   func testSuccessValue() {
-    let value = Failable(success: 3)
+    let value = Fallible(success: 3)
     XCTAssertEqual(3, value.successValue)
     XCTAssertNil(value.failureValue)
   }
 
   func testFailureValue() {
-    let value = Failable<Int>(failure: TestError.testCode)
+    let value = Fallible<Int>(failure: TestError.testCode)
     XCTAssertEqual(TestError.testCode, value.failureValue as! TestError)
     XCTAssertNil(value.successValue)
   }
 
   func testOnSuccess() {
-    let value = Failable(success: 1)
+    let value = Fallible(success: 1)
     var numberOfCalls = 0
 
     value.onSuccess {
@@ -55,7 +55,7 @@ class FailableTests : XCTestCase {
   }
 
   func testOnFailure() {
-    let value = Failable<Int>(failure: TestError.testCode)
+    let value = Fallible<Int>(failure: TestError.testCode)
     var numberOfCalls = 0
 
     value.onFailure {
@@ -67,7 +67,7 @@ class FailableTests : XCTestCase {
   }
 
   func testLiftSuccessForSuccess() {
-    let value = Failable<Int>(success: 2)
+    let value = Fallible<Int>(success: 2)
     var numberOfCalls = 0
 
     let nextValue = value.liftSuccess { (success) -> Int in
@@ -80,7 +80,7 @@ class FailableTests : XCTestCase {
   }
 
   func testLiftSuccessForFailure() {
-    let value = Failable<Int>(failure: TestError.testCode)
+    let value = Fallible<Int>(failure: TestError.testCode)
     var numberOfCalls = 0
 
     let nextValue = value.liftSuccess { (success) -> Int in
@@ -93,7 +93,7 @@ class FailableTests : XCTestCase {
   }
 
   func testLiftSuccessForThrow() {
-    let value = Failable<Int>(success: 2)
+    let value = Fallible<Int>(success: 2)
     var numberOfCalls = 0
 
     let nextValue = value.liftSuccess { (success) -> Int in
@@ -106,7 +106,7 @@ class FailableTests : XCTestCase {
   }
 
   func testLiftFailureForSuccess() {
-    let value = Failable(success: 2)
+    let value = Fallible(success: 2)
     var numberOfCalls = 0
 
     let nextValue = value.liftFailure { _ in
@@ -119,7 +119,7 @@ class FailableTests : XCTestCase {
   }
 
   func testLiftFailureOnFailure() {
-    let value = Failable<Int>(failure: TestError.testCode)
+    let value = Fallible<Int>(failure: TestError.testCode)
     var numberOfCalls = 0
 
     let nextValue = value.liftFailure { _ in
@@ -132,7 +132,7 @@ class FailableTests : XCTestCase {
   }
 
   func testLiftFailure2OnSuccess() {
-    let value = Failable(success: 2)
+    let value = Fallible(success: 2)
     var numberOfCalls = 0
 
     let nextValue = value.liftFailure { _ in
@@ -146,7 +146,7 @@ class FailableTests : XCTestCase {
   }
 
   func testLiftFailure2OnFailure() {
-    let value = Failable<Int>(failure: TestError.testCode)
+    let value = Fallible<Int>(failure: TestError.testCode)
     var numberOfCalls = 0
 
     let nextValue = value.liftFailure { _ in
@@ -160,7 +160,7 @@ class FailableTests : XCTestCase {
   }
 
   func testLiftFailure2OnThrow() {
-    let value = Failable<Int>(failure: TestError.testCode)
+    let value = Fallible<Int>(failure: TestError.testCode)
     var numberOfCalls = 0
 
     let nextValue = value.liftFailure { _ in
@@ -172,13 +172,13 @@ class FailableTests : XCTestCase {
     XCTAssertEqual(numberOfCalls, 1)
   }
 
-  func testMakeFailableSuccess() {
-    let value = failable { 2 }
+  func testMakeFallibleSuccess() {
+    let value = fallible { 2 }
     XCTAssertEqual(value.successValue!, 2)
   }
 
-  func testMakeFailableFailure() {
-    let value = failable { throw TestError.testCode }
+  func testMakeFallibleFailure() {
+    let value = fallible { throw TestError.testCode }
     XCTAssertEqual(value.failureValue as! TestError, TestError.testCode)
   }
 }

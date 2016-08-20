@@ -22,12 +22,12 @@
 
 import Foundation
 
-class FailableBatchFuture<T> : MutableFuture<Failable<[T]>> {
+class FallibleBatchFuture<T> : MutableFuture<Fallible<[T]>> {
   let count: Int
   private var _subsuccesses: [T?]
   private var _unknownSubvaluesCount: Int
 
-  init<S : Collection>(futures: S) where S.Iterator.Element : Future<Failable<T>>, S.IndexDistance == Int {
+  init<S : Collection>(futures: S) where S.Iterator.Element : Future<Fallible<T>>, S.IndexDistance == Int {
     self.count = futures.count
     _unknownSubvaluesCount = self.count
     _subsuccesses = Array<T?>(repeating: nil, count: self.count)
@@ -42,7 +42,7 @@ class FailableBatchFuture<T> : MutableFuture<Failable<[T]>> {
   }
 
   @discardableResult
-  func complete(subvalue: Failable<T>, index: Int) {
+  func complete(subvalue: Fallible<T>, index: Int) {
     self.tryUpdateAndMakeValue {
       guard nil == _subsuccesses[index] else { return nil }
 
@@ -50,7 +50,7 @@ class FailableBatchFuture<T> : MutableFuture<Failable<[T]>> {
       case let .success(succesValue):
         _subsuccesses[index] = succesValue
         _unknownSubvaluesCount -= 1
-        return _unknownSubvaluesCount == 0 ? Failable(success: _subsuccesses.flatMap { $0 }) : nil
+        return _unknownSubvaluesCount == 0 ? Fallible(success: _subsuccesses.flatMap { $0 }) : nil
       case let .failure(failureValue):
         return .failure(failureValue)
       }
@@ -59,14 +59,14 @@ class FailableBatchFuture<T> : MutableFuture<Failable<[T]>> {
 }
 
 /// Single failure fails them all
-public func combine<T, S : Collection>(futures: [Future<Failable<T>>]) -> Future<Failable<[T]>>
-  where S.Iterator.Element : Future<Failable<T>>, S.IndexDistance == Int {
-    return FailableBatchFuture(futures: futures)
+public func combine<T, S : Collection>(futures: [Future<Fallible<T>>]) -> Future<Fallible<[T]>>
+  where S.Iterator.Element : Future<Fallible<T>>, S.IndexDistance == Int {
+    return FallibleBatchFuture(futures: futures)
 }
 
 public extension Collection where Self.IndexDistance == Int {
-  public func map<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> T) -> Future<Failable<[T]>> {
-    let promise = Promise<Failable<[T]>>()
+  public func map<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> T) -> Future<Fallible<[T]>> {
+    let promise = Promise<Fallible<[T]>>()
     let sema = DispatchSemaphore(value: 1)
 
     var canContinue = true
@@ -78,7 +78,7 @@ public extension Collection where Self.IndexDistance == Int {
       executor.execute {
         guard canContinue else { return }
 
-        let subvalue = failable { try transform(value) }
+        let subvalue = fallible { try transform(value) }
 
         sema.wait()
         defer { sema.signal() }
@@ -88,13 +88,13 @@ public extension Collection where Self.IndexDistance == Int {
           subvalues[index] = $0
           unknownSubvaluesCount -= 1
           if 0 == unknownSubvaluesCount {
-            promise.complete(with: Failable(success: subvalues.flatMap { $0 }))
+            promise.complete(with: Fallible(success: subvalues.flatMap { $0 }))
             canContinue = false
           }
         }
 
         subvalue.onFailure {
-          promise.complete(with: Failable(failure: $0))
+          promise.complete(with: Fallible(failure: $0))
           canContinue = false
         }
       }

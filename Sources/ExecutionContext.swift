@@ -27,16 +27,16 @@ public protocol ExecutionContext : class {
 }
 
 public extension Future {
-  final func map<U: ExecutionContext, V>(context: U?, _ transform: @escaping (Value, U) throws -> V) -> Future<Failable<V>> {
-    let promise = Promise<Failable<V>>()
+  final func map<U: ExecutionContext, V>(context: U?, _ transform: @escaping (Value, U) throws -> V) -> Future<Fallible<V>> {
+    let promise = Promise<Fallible<V>>()
     weak var weakContext = context
     let handler = FutureHandler<Value>(executor: .immediate) { value in
       if let context = weakContext {
         context.executor.execute {
-          promise.complete(with: failable { try transform(value, context) })
+          promise.complete(with: fallible { try transform(value, context) })
         }
       } else {
-        promise.complete(with: Failable(failure: ConcurrencyError.ownedDeallocated))
+        promise.complete(with: Fallible(failure: ConcurrencyError.ownedDeallocated))
       }
     }
     self.add(handler: handler)
@@ -54,25 +54,25 @@ public extension Future {
   }
 }
 
-public extension Future where T : _Failable {
+public extension Future where T : _Fallible {
 
-  final public func liftSuccess<T, U: ExecutionContext>(context: U?, transform: @escaping (Success, U) throws -> T) -> FailableFuture<T> {
-    let promise = FailablePromise<T>()
+  final public func liftSuccess<T, U: ExecutionContext>(context: U?, transform: @escaping (Success, U) throws -> T) -> FallibleFuture<T> {
+    let promise = FalliblePromise<T>()
     weak var weakContext = context
 
     self.onValue(executor: .immediate) {
       guard let successValue = $0.successValue else {
-        promise.complete(with: Failable(failure: $0.failureValue!))
+        promise.complete(with: Fallible(failure: $0.failureValue!))
         return
       }
 
       guard let context = weakContext else {
-        promise.complete(with: Failable(failure: ConcurrencyError.ownedDeallocated))
+        promise.complete(with: Fallible(failure: ConcurrencyError.ownedDeallocated))
         return
       }
 
       context.executor.execute {
-        let transformedValue = failable { try transform(successValue, context) }
+        let transformedValue = fallible { try transform(successValue, context) }
         promise.complete(with: transformedValue)
       }
     }
@@ -80,23 +80,23 @@ public extension Future where T : _Failable {
     return promise
   }
 
-  final public func liftFailure<U: ExecutionContext>(context: U?, transform: @escaping (Error, U) throws -> Success) -> FailableFuture<Success> {
-    let promise = FailablePromise<Success>()
+  final public func liftFailure<U: ExecutionContext>(context: U?, transform: @escaping (Error, U) throws -> Success) -> FallibleFuture<Success> {
+    let promise = FalliblePromise<Success>()
     weak var weakContext = context
 
     self.onValue(executor: .immediate) {
       guard let failureValue = $0.failureValue else {
-        promise.complete(with: Failable(success: $0.successValue!))
+        promise.complete(with: Fallible(success: $0.successValue!))
         return
       }
 
       guard let context = weakContext else {
-        promise.complete(with: Failable(failure: ConcurrencyError.ownedDeallocated))
+        promise.complete(with: Fallible(failure: ConcurrencyError.ownedDeallocated))
         return
       }
 
       context.executor.execute {
-        let transformedValue = failable { try transform(failureValue, context) }
+        let transformedValue = fallible { try transform(failureValue, context) }
         promise.complete(with: transformedValue)
       }
     }

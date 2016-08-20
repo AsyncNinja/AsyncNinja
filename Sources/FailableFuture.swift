@@ -22,24 +22,24 @@
 
 import Foundation
 
-public typealias FailableFuture<T> = Future<Failable<T>>
-typealias FailablePromise<T> = Promise<Failable<T>>
+public typealias FallibleFuture<T> = Future<Fallible<T>>
+typealias FalliblePromise<T> = Promise<Fallible<T>>
 
-public extension Future where T : _Failable {
+public extension Future where T : _Fallible {
 
   public typealias Success = Value.Success
 
-  final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) throws -> T) -> FailableFuture<T> {
-    let promise = FailablePromise<T>()
+  final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) throws -> T) -> FallibleFuture<T> {
+    let promise = FalliblePromise<T>()
     let handler = FutureHandler(executor: executor) { value in
-      promise.complete(with: failable { try transform(value) })
+      promise.complete(with: fallible { try transform(value) })
     }
     self.add(handler: handler)
     return promise
   }
 
-  final public func liftSuccess<T>(executor: Executor, transform: @escaping (Success) throws -> T) -> FailableFuture<T> {
-    let promise = FailablePromise<T>()
+  final public func liftSuccess<T>(executor: Executor, transform: @escaping (Success) throws -> T) -> FallibleFuture<T> {
+    let promise = FalliblePromise<T>()
     self.onValue(executor: executor) {
       promise.complete(with: $0.liftSuccess(transform: transform))
     }
@@ -55,8 +55,8 @@ public extension Future where T : _Failable {
     return promise
   }
 
-  final public func liftFailure(executor: Executor, transform: @escaping (Error) throws -> Success) -> FailableFuture<Success> {
-    let promise = FailablePromise<Success>()
+  final public func liftFailure(executor: Executor, transform: @escaping (Error) throws -> Success) -> FallibleFuture<Success> {
+    let promise = FalliblePromise<Success>()
     self.onValue(executor: executor) { value -> Void in
       let nextValue = value.liftFailure(transform: transform)
       promise.complete(with: nextValue)

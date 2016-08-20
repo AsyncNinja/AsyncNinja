@@ -44,8 +44,8 @@ public func future<T>(executor: Executor, block: @escaping () -> T) -> Future<T>
   return promise
 }
 
-public func future<T>(executor: Executor, block: @escaping () throws -> T) -> Future<Failable<T>> {
-  let promise = Promise<Failable<T>>()
-  executor.execute { promise.complete(with: failable(block: block)) }
+public func future<T>(executor: Executor, block: @escaping () throws -> T) -> Future<Fallible<T>> {
+  let promise = Promise<Fallible<T>>()
+  executor.execute { promise.complete(with: fallible(block: block)) }
   return promise
 }
