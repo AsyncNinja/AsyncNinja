@@ -32,6 +32,7 @@ class TimerStream : MutableStream<Void> {
     timer.setEventHandler { [weak self] in
       self?.send(())
     }
+    timer.resume()
   }
 }
 

@@ -22,41 +22,15 @@
 
 import Foundation
 
-public protocol _Future : Channel { // hacking type system
-  func onValue(executor: Executor, block: @escaping (Value) -> Void)
-}
+public class Producer<T> : MutableStream<T> {
 
-/// Future is proxy for a value that will appear at some poing in future.
-public class Future<T> : _Future {
-  public typealias Value = T
-  typealias Handler = FutureHandler<Value>
+  override public init() { }
 
-  init() { }
-
-  final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) -> T) -> Future<T> {
-    let promise = Promise<T>()
-    let handler = FutureHandler(executor: executor) { value in
-      promise.complete(with: transform(value))
-    }
-    self.add(handler: handler)
-    return promise
+  override public func send(_ value: Value) {
+    super.send(value)
   }
 
-  final public func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
-    let handler = FutureHandler(executor: executor, block: block)
-    self.add(handler: handler)
-  }
-
-  func add(handler: FutureHandler<Value>) {
-    fatalError() // abstract
-  }
-}
-
-struct FutureHandler<T> {
-  var executor: Executor
-  var block: (T) -> Void
-
-  func handle(value: T) {
-    self.executor.execute { self.block(value) }
+  override public func send<S: Sequence>(_ values: S) where S.Iterator.Element == Value {
+    super.send(values)
   }
 }

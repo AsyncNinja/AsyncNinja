@@ -24,24 +24,29 @@ import Foundation
 
 public class Stream<T> : Channel {
   public typealias Value = T
-  public typealias Handler = (executor: Executor, block: (Value) -> Void)
+  typealias Handler = StreamHandler<T>
 
   init() { }
 
-  public func onValue(executor: Executor, block: @escaping (Value) -> Void) {
-    fatalError() // abstract
+  final public func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
+    let handler = Handler(executor: executor, block: block)
+    self.add(handler: handler)
   }
 
-  public func map<T>(executor: Executor, _ transform: @escaping  (Value) -> T) -> Stream<T> {
-    let mutableStream = MutableStream<T>()
+  public func map<T>(executor: Executor = .primary, _ transform: @escaping  (Value) -> T) -> Stream<T> {
+    let mutableStream = Producer<T>()
     self.onValue(executor: executor) { value in
       mutableStream.send(transform(value))
     }
     return mutableStream
   }
 
+  func add(handler: Handler) {
+    fatalError() // abstract
+  }
+
   public func changes() -> Stream<(T?, T)> {
-    let mutableStream = MutableStream<(T?, T)>()
+    let mutableStream = Producer<(T?, T)>()
     var previousValue: Value? = nil
     self.onValue(executor: .immediate) {
       let change = (previousValue, $0)
@@ -51,12 +56,12 @@ public class Stream<T> : Channel {
     return mutableStream
   }
 
-  public func bufferPairs() -> Stream<(T, T)> {
-    return self.buffer(capacity: 2).map(executor: .immediate) { ($0[0], $0[1]) }
+  public func bufferedPairs() -> Stream<(T, T)> {
+    return self.buffered(capacity: 2).map(executor: .immediate) { ($0[0], $0[1]) }
   }
 
-  public func buffer(capacity: Int) -> Stream<[T]> {
-    let bufferingStream = MutableStream<[T]>()
+  public func buffered(capacity: Int) -> Stream<[T]> {
+    let bufferingStream = Producer<[T]>()
     var buffer = [T]()
     buffer.reserveCapacity(capacity)
 
@@ -69,5 +74,22 @@ public class Stream<T> : Channel {
     }
 
     return bufferingStream
+  }
+
+  public func enumerated() -> Stream<(Int, T)> {
+    var index = -1
+    return self.map(executor: .immediate) {
+      index += 1
+      return (index, $0)
+    }
+  }
+}
+
+struct StreamHandler<T> {
+  var executor: Executor
+  var block: (T) -> Void
+
+  func handle(value: T) {
+    self.executor.execute { self.block(value) }
   }
 }

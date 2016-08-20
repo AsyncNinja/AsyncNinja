@@ -23,31 +23,33 @@
 import Foundation
 
 public class MutableStream<T> : Stream<T> {
-  private var _sema = DispatchSemaphore(value: 1)
+  private let _sema = DispatchSemaphore(value: 1)
   private var _handlers = [Handler]()
+  private var _aliveKeeper: MutableStream<T>?
 
-  override public init() { }
+  override init() { }
 
-  override public func onValue(executor: Executor, block: @escaping (Value) -> Void) {
+  override func add(handler: StreamHandler<T>) {
     _sema.wait()
     defer { _sema.signal() }
-    _handlers.append((executor: executor, block: block))
+    _aliveKeeper = self
+    _handlers.append(handler)
   }
 
-  public func send(_ value: Value) {
+  func send(_ value: Value) {
     _sema.wait()
     defer { _sema.signal() }
-    for (context, block) in _handlers {
-      context.execute { block(value) }
+    for handler in _handlers {
+      handler.executor.execute { handler.block(value) }
     }
   }
 
-  public func send<S: Sequence>(_ values: S) where S.Iterator.Element == Value {
+  func send<S: Sequence>(_ values: S) where S.Iterator.Element == Value {
     _sema.wait()
     defer { _sema.signal() }
     for value in values {
-      for (context, block) in _handlers {
-        context.execute { block(value) }
+      for handler in _handlers {
+        handler.executor.execute { handler.block(value) }
       }
     }
   }

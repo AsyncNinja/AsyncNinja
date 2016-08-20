@@ -20,43 +20,27 @@
 //  IN THE SOFTWARE.
 //
 
+import XCTest
 import Foundation
+@testable import FunctionalConcurrency
 
-public protocol _Future : Channel { // hacking type system
-  func onValue(executor: Executor, block: @escaping (Value) -> Void)
-}
+class TimerStreamTests : XCTestCase {
+  func testSimple() {
+    let interval = 0.2
+    let initialTime = DispatchTime.now()
+    let times = makeTimer(interval: interval)
+      .map { _ in DispatchTime.now() }
+      .buffered(capacity: 5)
+      .wait()
 
-/// Future is proxy for a value that will appear at some poing in future.
-public class Future<T> : _Future {
-  public typealias Value = T
-  typealias Handler = FutureHandler<Value>
+    XCTAssertEqual(5, times.count)
 
-  init() { }
-
-  final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) -> T) -> Future<T> {
-    let promise = Promise<T>()
-    let handler = FutureHandler(executor: executor) { value in
-      promise.complete(with: transform(value))
+    for (index, time) in times.enumerated() {
+      let minTime = initialTime + Double(index + 1) * interval
+      let maxTime = initialTime + Double(index + 2) * interval
+      XCTAssertLessThanOrEqual(minTime, time)
+      XCTAssertLessThanOrEqual(time, maxTime)
     }
-    self.add(handler: handler)
-    return promise
-  }
-
-  final public func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
-    let handler = FutureHandler(executor: executor, block: block)
-    self.add(handler: handler)
-  }
-
-  func add(handler: FutureHandler<Value>) {
-    fatalError() // abstract
   }
 }
 
-struct FutureHandler<T> {
-  var executor: Executor
-  var block: (T) -> Void
-
-  func handle(value: T) {
-    self.executor.execute { self.block(value) }
-  }
-}

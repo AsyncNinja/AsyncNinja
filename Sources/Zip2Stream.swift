@@ -22,41 +22,32 @@
 
 import Foundation
 
-public protocol _Future : Channel { // hacking type system
-  func onValue(executor: Executor, block: @escaping (Value) -> Void)
-}
+public func zip<T, U>(_ leftStream: Stream<T>, _ rightStream: Stream<U>) -> Stream<(T, U)> {
+  let resultStream = Producer<(T, U)>()
+  let leftQueue = QueueImpl<T>()
+  let rightQueue = QueueImpl<U>()
 
-/// Future is proxy for a value that will appear at some poing in future.
-public class Future<T> : _Future {
-  public typealias Value = T
-  typealias Handler = FutureHandler<Value>
-
-  init() { }
-
-  final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) -> T) -> Future<T> {
-    let promise = Promise<T>()
-    let handler = FutureHandler(executor: executor) { value in
-      promise.complete(with: transform(value))
+  func makeElement(_ leftQueue: QueueImpl<T>, _ rightQueue: QueueImpl<U>) -> (T, U)? {
+    if leftQueue.isEmpty || rightQueue.isEmpty {
+      return nil
+    } else {
+      return (leftQueue.pop()!, rightQueue.pop()!)
     }
-    self.add(handler: handler)
-    return promise
   }
 
-  final public func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
-    let handler = FutureHandler(executor: executor, block: block)
-    self.add(handler: handler)
+  leftStream.onValue(executor: .immediate) { leftValue in
+    leftQueue.push(leftValue)
+    if let element = makeElement(leftQueue, rightQueue) {
+      resultStream.send(element)
+    }
   }
 
-  func add(handler: FutureHandler<Value>) {
-    fatalError() // abstract
+  rightStream.onValue(executor: .immediate) { rightValue in
+    rightQueue.push(rightValue)
+    if let element = makeElement(leftQueue, rightQueue) {
+      resultStream.send(element)
+    }
   }
-}
 
-struct FutureHandler<T> {
-  var executor: Executor
-  var block: (T) -> Void
-
-  func handle(value: T) {
-    self.executor.execute { self.block(value) }
-  }
+  return resultStream
 }

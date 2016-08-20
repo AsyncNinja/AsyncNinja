@@ -36,7 +36,7 @@ class FuturesTests : XCTestCase {
   }
 
   func testSteam() {
-    let stream = MutableStream<Int>()
+    let stream = Producer<Int>()
     stream.send([1, 2, 3, 4, 5])
     stream
       .map(executor: .utility) { $0 * 2 }

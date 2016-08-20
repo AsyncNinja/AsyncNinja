@@ -22,41 +22,43 @@
 
 import Foundation
 
-public protocol _Future : Channel { // hacking type system
-  func onValue(executor: Executor, block: @escaping (Value) -> Void)
-}
+class QueueImpl<T> {
+  typealias Wrapper = QueueElementWrapper<T>
 
-/// Future is proxy for a value that will appear at some poing in future.
-public class Future<T> : _Future {
-  public typealias Value = T
-  typealias Handler = FutureHandler<Value>
+  var _first: Wrapper? = nil
+  var _last: Wrapper? = nil
 
   init() { }
 
-  final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) -> T) -> Future<T> {
-    let promise = Promise<T>()
-    let handler = FutureHandler(executor: executor) { value in
-      promise.complete(with: transform(value))
+  func push(_ element: T) {
+    let new = Wrapper(element: element)
+    if let last = _last {
+      last.next = new
+    } else {
+      _first = new
     }
-    self.add(handler: handler)
-    return promise
+    _last = new
   }
 
-  final public func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
-    let handler = FutureHandler(executor: executor, block: block)
-    self.add(handler: handler)
+  func pop() -> T? {
+    guard let first = _first else { return nil }
+    if let next = first.next {
+      _first = next
+    } else {
+      _last = nil
+    }
+
+    return first.element
   }
 
-  func add(handler: FutureHandler<Value>) {
-    fatalError() // abstract
-  }
+  var isEmpty: Bool { return nil == _first }
 }
 
-struct FutureHandler<T> {
-  var executor: Executor
-  var block: (T) -> Void
+class QueueElementWrapper<T> {
+  let element: T
+  var next: QueueElementWrapper<T>?
 
-  func handle(value: T) {
-    self.executor.execute { self.block(value) }
+  init(element: T) {
+    self.element = element
   }
 }
