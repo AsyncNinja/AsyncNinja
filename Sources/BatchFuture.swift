@@ -58,7 +58,7 @@ public func combine<T, S : Collection>(futures: S) -> Future<[T]>
 }
 
 public extension Collection where Self.IndexDistance == Int {
-  public func map<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) -> T) -> Future<[T]> {
+  public func map<T>(executor: Executor = .primary, transform: @escaping (Self.Iterator.Element) -> T) -> Future<[T]> {
     let promise = Promise<[T]>()
     let sema = DispatchSemaphore(value: 1)
 
@@ -81,6 +81,34 @@ public extension Collection where Self.IndexDistance == Int {
       }
     }
     
+    return promise
+  }
+
+  public func map<T>(executor: Executor = .primary, transform: @escaping (Self.Iterator.Element) -> Future<T>) -> Future<[T]> {
+    let promise = Promise<[T]>()
+    let sema = DispatchSemaphore(value: 1)
+
+    let count = self.count
+    var subvalues = [T?](repeating: nil, count: count)
+    var unknownSubvaluesCount = count
+
+    for (index, value) in self.enumerated() {
+      executor.execute {
+        let futureSubvalue = transform(value)
+        futureSubvalue.onValue { subvalue in
+
+          sema.wait()
+          defer { sema.signal() }
+
+          subvalues[index] = subvalue
+          unknownSubvaluesCount -= 1
+          if 0 == unknownSubvaluesCount {
+            promise.complete(with: subvalues.flatMap { $0 })
+          }
+        }
+      }
+    }
+
     return promise
   }
 }
