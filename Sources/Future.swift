@@ -22,10 +22,14 @@
 
 import Foundation
 
+public protocol _Future : Channel { // hacking type system
+  func onValue(executor: Executor, block: @escaping (Value) -> Void)
+}
+
 /// Future is proxy for a value that will appear at some poing in future.
-public class Future<T> : Channel {
+public class Future<T> : _Future {
   public typealias Value = T
-  typealias Handler = FutureHandler<T>
+  typealias Handler = FutureHandler<Value>
 
   init() { }
 

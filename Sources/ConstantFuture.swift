@@ -37,3 +37,11 @@ class ConstantFuture<T> : Future<T> {
 public func future<T>(value: T) -> Future<T> {
   return ConstantFuture(value: value)
 }
+
+public func future<T>(success: T) -> FallibleFuture<T> {
+  return ConstantFuture(value: Fallible(success: success))
+}
+
+public func future<T>(failure: Error) -> FallibleFuture<T> {
+  return ConstantFuture(value: Fallible(failure: failure))
+}

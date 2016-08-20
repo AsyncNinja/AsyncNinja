@@ -22,69 +22,36 @@
 
 import Foundation
 
-class BatchFuture<T> : MutableFuture<[T]> {
-  let count: Int
-  private var _subvalues: [T?]
-  private var _unknownSubvaluesCount: Int
+public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : _Future {
+  fileprivate typealias Value = Self.Iterator.Element.Value
 
-  init<S : Collection>(futures: S)
-    where S.Iterator.Element : Future<T>, S.IndexDistance == Int {
-    self.count = futures.count
-    _unknownSubvaluesCount = self.count
-    _subvalues = Array<T?>(repeating: nil, count: self.count)
-    super.init()
+  /// joins an array of futures to a future array
+  func joined() -> Future<[Value]> {
+    return self.map(executor: .immediate) { $0 as! Future<Value> }
+  }
 
-
-    for (index, future) in futures.enumerated() {
-      future.onValue(executor: .immediate) { [weak self] in
-        self?.complete(subvalue: $0, index: index)
-      }
+  ///
+  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, Value) -> Result) -> Future<Result> {
+    return self.joined().map(executor: executor) {
+      $0.reduce(initialResult, nextPartialResult)
     }
   }
 
-  func complete(subvalue: T, index: Int) {
-    self.tryUpdateAndMakeValue {
-      guard nil == _subvalues[index] else { return nil }
-      _subvalues[index] = subvalue
-      _unknownSubvaluesCount -= 1
-      return _unknownSubvaluesCount == 0 ? _subvalues.flatMap { $0 } : nil
+  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, Value) throws -> Result) -> FallibleFuture<Result> {
+    return self.joined().map(executor: executor) { values in
+      fallible { try values.reduce(initialResult, nextPartialResult) }
     }
   }
-}
-
-public func combine<T, S : Collection>(futures: S) -> Future<[T]>
-  where S.Iterator.Element : Future<T>, S.IndexDistance == Int {
-    return BatchFuture(futures: futures)
 }
 
 public extension Collection where Self.IndexDistance == Int {
-  public func map<T>(executor: Executor = .primary, transform: @escaping (Self.Iterator.Element) -> T) -> Future<[T]> {
-    let promise = Promise<[T]>()
-    let sema = DispatchSemaphore(value: 1)
-
-    let count = self.count
-    var subvalues = [T?](repeating: nil, count: count)
-    var unknownSubvaluesCount = count
-
-    for (index, value) in self.enumerated() {
-      executor.execute {
-        let subvalue = transform(value)
-
-        sema.wait()
-        defer { sema.signal() }
-
-        subvalues[index] = subvalue
-        unknownSubvaluesCount -= 1
-        if 0 == unknownSubvaluesCount {
-          promise.complete(with: subvalues.flatMap { $0 })
-        }
-      }
-    }
-    
-    return promise
+  /// transforms each element of collection on executor and provides future array of transformed values
+  func map<T>(executor: Executor = .primary, transform: @escaping (Self.Iterator.Element) -> T) -> Future<[T]> {
+    return self.map(executor: executor) { future(value: transform($0)) }
   }
 
-  public func map<T>(executor: Executor = .primary, transform: @escaping (Self.Iterator.Element) -> Future<T>) -> Future<[T]> {
+  /// transforms each element of collection to future value on executor and provides future array of transformed values
+  func map<T>(executor: Executor = .primary, transform: @escaping (Self.Iterator.Element) -> Future<T>) -> Future<[T]> {
     let promise = Promise<[T]>()
     let sema = DispatchSemaphore(value: 1)
 

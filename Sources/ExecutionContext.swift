@@ -27,7 +27,7 @@ public protocol ExecutionContext : class {
 }
 
 public extension Future {
-  final func map<U: ExecutionContext, V>(context: U?, _ transform: @escaping (Value, U) throws -> V) -> Future<Fallible<V>> {
+  final func map<U: ExecutionContext, V>(context: U?, _ transform: @escaping (Value, U) throws -> V) -> FallibleFuture<V> {
     let promise = Promise<Fallible<V>>()
     weak var weakContext = context
     let handler = FutureHandler<Value>(executor: .immediate) { value in

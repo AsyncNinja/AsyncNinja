@@ -22,50 +22,37 @@
 
 import Foundation
 
-class FallibleBatchFuture<T> : MutableFuture<Fallible<[T]>> {
-  let count: Int
-  private var _subsuccesses: [T?]
-  private var _unknownSubvaluesCount: Int
-
-  init<S : Collection>(futures: S) where S.Iterator.Element : Future<Fallible<T>>, S.IndexDistance == Int {
-    self.count = futures.count
-    _unknownSubvaluesCount = self.count
-    _subsuccesses = Array<T?>(repeating: nil, count: self.count)
-    super.init()
-
-
-    for (index, future) in futures.enumerated() {
-      future.onValue(executor: Executor.immediate) { [weak self] in
-        self?.complete(subvalue: $0, index: index)
-      }
-    }
-  }
-
-  @discardableResult
-  func complete(subvalue: Fallible<T>, index: Int) {
-    self.tryUpdateAndMakeValue {
-      guard nil == _subsuccesses[index] else { return nil }
-
-      switch subvalue {
-      case let .success(succesValue):
-        _subsuccesses[index] = succesValue
-        _unknownSubvaluesCount -= 1
-        return _unknownSubvaluesCount == 0 ? Fallible(success: _subsuccesses.flatMap { $0 }) : nil
-      case let .failure(failureValue):
-        return .failure(failureValue)
-      }
-    }
-  }
-}
-
 /// Single failure fails them all
-public func combine<T, S : Collection>(futures: [Future<Fallible<T>>]) -> Future<Fallible<[T]>>
-  where S.Iterator.Element : Future<Fallible<T>>, S.IndexDistance == Int {
-    return FallibleBatchFuture(futures: futures)
+public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : _Future, Self.Iterator.Element.Value : _Fallible {
+  fileprivate typealias Value = Self.Iterator.Element.Value.Success
+
+  /// joins an array of futures to a future array
+  func joined() -> FallibleFuture<[Value]> {
+    return self.map(executor: .immediate) { $0 as! FallibleFuture<Value> }
+  }
+
+  ///
+  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, Value) throws -> Result) -> FallibleFuture<Result> {
+    return self.joined().map(executor: executor) {
+      $0.liftSuccess { try $0.reduce(initialResult, nextPartialResult) }
+    }
+  }
+
 }
 
 public extension Collection where Self.IndexDistance == Int {
-  public func map<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> T) -> Future<Fallible<[T]>> {
+  /// transforms each element of collection on executor and provides future array of transformed values
+  public func map<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> T) -> FallibleFuture<[T]> {
+    return self.map(executor: executor) { future(success: try transform($0)) }
+  }
+
+  /// transforms each element of collection to future values on executor and provides future array of transformed values
+  public func map<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> FallibleFuture<[T]> {
+    return self.map(executor: executor) { (try transform($0)).map(executor: .immediate) { $0 } }
+  }
+
+  /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
+  public func map<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> FallibleFuture<T>) -> FallibleFuture<[T]> {
     let promise = Promise<Fallible<[T]>>()
     let sema = DispatchSemaphore(value: 1)
 
@@ -76,26 +63,35 @@ public extension Collection where Self.IndexDistance == Int {
 
     for (index, value) in self.enumerated() {
       executor.execute {
-        guard canContinue else { return }
-
-        let subvalue = fallible { try transform(value) }
 
         sema.wait()
-        defer { sema.signal() }
+        let canContinue_ = canContinue
+        sema.signal()
 
-        guard canContinue else { return }
-        subvalue.onSuccess {
-          subvalues[index] = $0
-          unknownSubvaluesCount -= 1
-          if 0 == unknownSubvaluesCount {
-            promise.complete(with: Fallible(success: subvalues.flatMap { $0 }))
+        guard canContinue_ else { return }
+
+        let futureSubvalue: FallibleFuture<T>
+        do { futureSubvalue = try transform(value) }
+        catch { futureSubvalue = future(failure: error) }
+
+        futureSubvalue.onValue { subvalue in
+          sema.wait()
+          defer { sema.signal() }
+
+          guard canContinue else { return }
+          subvalue.onSuccess {
+            subvalues[index] = $0
+            unknownSubvaluesCount -= 1
+            if 0 == unknownSubvaluesCount {
+              promise.complete(with: Fallible(success: subvalues.flatMap { $0 }))
+              canContinue = false
+            }
+          }
+
+          subvalue.onFailure {
+            promise.complete(with: Fallible(failure: $0))
             canContinue = false
           }
-        }
-
-        subvalue.onFailure {
-          promise.complete(with: Fallible(failure: $0))
-          canContinue = false
         }
       }
     }

@@ -55,3 +55,5 @@ public class MutableFuture<T> : Future<T> {
     _aliveKeeper = nil
   }
 }
+
+typealias MutableFallibleFuture<T> = MutableFuture<Fallible<T>>
