@@ -28,11 +28,27 @@ class FuturesTests : XCTestCase {
 
   func testFuture() {
 
-    let result = future(value: 1)
-      .map(executor: .utility) { $0 * 3 }
-      .wait()
+    weak var weakFuture: Future<Int>?
+    weak var weakMappedFuture: Future<Int>?
+
+    let result: Int = autoreleasepool {
+      let futureValue = future(value: 1)
+      let mappedFutureValue = futureValue.map(executor: .utility) { (value) -> Int in
+        if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
+          dispatchPrecondition(condition: .onQueue(DispatchQueue.global(qos: .utility)))
+        }
+        return value * 3
+      }
+      weakFuture = futureValue
+      weakMappedFuture = mappedFutureValue
+      return mappedFutureValue.wait()
+    }
+
+    sleep(1) // this test succeeds when utility queue has time to release futures
 
     XCTAssertEqual(result, 3)
+    XCTAssert(nil == weakFuture)
+    XCTAssert(nil == weakMappedFuture)
   }
 
   func testSteam() {
