@@ -50,11 +50,31 @@ public class Future<T> : _Future {
   func add(handler: FutureHandler<Value>) {
     fatalError() // abstract
   }
+
+  final public func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Value? {
+    let sema = DispatchSemaphore(value: 0)
+    var result: Value? = nil
+    self.onValue(executor: .immediate) {
+      result = $0
+      sema.signal()
+    }
+    switch waitingBlock(sema) {
+    case .success:
+      return result
+    case .timedOut:
+      return nil
+    }
+  }
 }
 
-struct FutureHandler<T> {
-  var executor: Executor
-  var block: (T) -> Void
+class FutureHandler<T> {
+  let executor: Executor
+  let block: (T) -> Void
+
+  init(executor: Executor, block: @escaping (T) -> Void) {
+    self.executor = executor
+    self.block = block
+  }
 
   func handle(value: T) {
     self.executor.execute { self.block(value) }

@@ -28,52 +28,89 @@ public class Channel<T> : Consumable {
 
   init() { }
 
+  func add(handler: Handler) {
+    fatalError() // abstract
+  }
+
+  func remove(handler: Handler) {
+    fatalError() // abstract
+  }
+
   final public func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
     let handler = Handler(executor: executor, block: block)
     self.add(handler: handler)
   }
 
-  public func map<T>(executor: Executor = .primary, _ transform: @escaping  (Value) -> T) -> Channel<T> {
-    let mutableChannel = Producer<T>()
-    self.onValue(executor: executor) { value in
-      mutableChannel.send(transform(value))
+  final public func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> T? {
+    let sema = DispatchSemaphore(value: 0)
+    var result: Value? = nil
+
+    let handler = Handler(executor: .immediate) {
+      result = $0
+      sema.signal()
     }
-    return mutableChannel
+    self.add(handler: handler)
+    defer { self.remove(handler: handler) }
+
+    switch waitingBlock(sema) {
+    case .success:
+      return result
+    case .timedOut:
+      return nil
+    }
   }
 
-  func add(handler: Handler) {
-    fatalError() // abstract
+  public func map<T>(executor: Executor = .primary, _ transform: @escaping  (Value) -> T) -> Channel<T> {
+    return makeDerivedChannel { (producer, value) in
+      executor.execute { producer.send(transform(value)) }
+    }
   }
 
   public func changes() -> Channel<(T?, T)> {
-    let mutableChannel = Producer<(T?, T)>()
     var previousValue: Value? = nil
-    self.onValue(executor: .immediate) {
-      let change = (previousValue, $0)
-      mutableChannel.send(change)
-      previousValue = $0
+
+    return makeDerivedChannel { (producer, value) in
+      let change = (previousValue, value)
+      producer.send(change)
+      previousValue = value
     }
-    return mutableChannel
   }
 
   public func bufferedPairs() -> Channel<(T, T)> {
     return self.buffered(capacity: 2).map(executor: .immediate) { ($0[0], $0[1]) }
   }
 
+  func makeDerivedChannel<T>(onValue: @escaping (Producer<T>, Value) -> ()) -> Channel<T> {
+    let derivedChannel = Producer<T>()
+    weak var weakDerivedChannel: Producer<T>? = derivedChannel
+    weak var weakHandler: Handler? = nil
+
+    let handler = Handler(executor: .immediate) { [weak self] in
+      guard let derivedChannel = weakDerivedChannel else {
+        if let self_ = self, let handler = weakHandler {
+          self_.remove(handler: handler)
+        }
+        return
+      }
+
+      onValue(derivedChannel, $0)
+    }
+    weakHandler = handler
+    self.add(handler: handler)
+    return derivedChannel
+  }
+
   public func buffered(capacity: Int) -> Channel<[T]> {
-    let bufferingChannel = Producer<[T]>()
     var buffer = [T]()
     buffer.reserveCapacity(capacity)
 
-    self.onValue(executor: .immediate) {
-      buffer.append($0)
+    return makeDerivedChannel { (producer, value) in
+      buffer.append(value)
       if capacity == buffer.count {
-        bufferingChannel.send(buffer)
+        producer.send(buffer)
         buffer.removeAll(keepingCapacity: true)
       }
     }
-
-    return bufferingChannel
   }
 
   public func enumerated() -> Channel<(Int, T)> {
@@ -85,11 +122,22 @@ public class Channel<T> : Consumable {
   }
 }
 
-struct ChannelHandler<T> {
-  var executor: Executor
-  var block: (T) -> Void
+final class ChannelHandler<T> : Hashable {
+  let executor: Executor
+  let block: (T) -> Void
+  var hashValue: Int { return ObjectIdentifier(self).hashValue }
+
+  static func ==(lhs: ChannelHandler<T>, rhs: ChannelHandler<T>) -> Bool {
+    return lhs === rhs
+  }
+
+  init(executor: Executor, block: @escaping (T) -> Void) {
+    self.executor = executor
+    self.block = block
+  }
 
   func handle(value: T) {
-    self.executor.execute { self.block(value) }
+    let block = self.block
+    self.executor.execute { block(value) }
   }
 }

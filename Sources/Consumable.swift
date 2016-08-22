@@ -25,24 +25,10 @@ import Foundation
 public protocol Consumable {
   associatedtype Value
   func onValue(executor: Executor, block: @escaping (Value) -> Void)
+  func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Value?
 }
 
 public extension Consumable {
-  private func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Value? {
-    let sema = DispatchSemaphore(value: 0)
-    var result: Value? = nil
-    self.onValue(executor: .immediate) {
-      result = $0
-      sema.signal()
-    }
-    switch waitingBlock(sema) {
-    case .success:
-      return result
-    case .timedOut:
-      return nil
-    }
-  }
-
   final public func wait() -> Value {
     return self.wait(waitingBlock: { $0.wait(); return .success })!
   }

@@ -24,7 +24,7 @@ import Foundation
 
 public class MutableFuture<T> : Future<T> {
   private let _sema = DispatchSemaphore(value: 1)
-  private var _handlers = [Handler]()
+  private var _handlers = ContiguousArray<Handler>()
   private var value: Value?
   private var _aliveKeeper: MutableFuture<T>?
 
