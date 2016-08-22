@@ -22,7 +22,7 @@
 
 import Foundation
 
-class ConstantStream<S: Sequence> : Stream<S.Iterator.Element> {
+class ConstantChannel<S: Sequence> : Channel<S.Iterator.Element> {
   private let _sequence: S
 
   init(sequence: S) {
@@ -38,6 +38,6 @@ class ConstantStream<S: Sequence> : Stream<S.Iterator.Element> {
   }
 }
 
-public func stream<S: Sequence>(sequence: S) -> Stream<S.Iterator.Element> {
-  return ConstantStream(sequence: sequence)
+public func channel<S: Sequence>(sequence: S) -> Channel<S.Iterator.Element> {
+  return ConstantChannel(sequence: sequence)
 }

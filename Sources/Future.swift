@@ -22,7 +22,7 @@
 
 import Foundation
 
-public protocol _Future : Channel { // hacking type system
+public protocol _Future : Consumable { // hacking type system
   func onValue(executor: Executor, block: @escaping (Value) -> Void)
 }
 

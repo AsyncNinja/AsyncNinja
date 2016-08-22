@@ -22,15 +22,36 @@
 
 import Foundation
 
-public class Producer<T> : MutableChannel<T> {
+public protocol Consumable {
+  associatedtype Value
+  func onValue(executor: Executor, block: @escaping (Value) -> Void)
+}
 
-  override public init() { }
-
-  override public func send(_ value: Value) {
-    super.send(value)
+public extension Consumable {
+  private func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Value? {
+    let sema = DispatchSemaphore(value: 0)
+    var result: Value? = nil
+    self.onValue(executor: .immediate) {
+      result = $0
+      sema.signal()
+    }
+    switch waitingBlock(sema) {
+    case .success:
+      return result
+    case .timedOut:
+      return nil
+    }
   }
 
-  override public func send<S: Sequence>(_ values: S) where S.Iterator.Element == Value {
-    super.send(values)
+  final public func wait() -> Value {
+    return self.wait(waitingBlock: { $0.wait(); return .success })!
+  }
+
+  final public func wait(timeout: DispatchTime) -> Value? {
+    return self.wait(waitingBlock: { $0.wait(timeout: timeout) })
+  }
+
+  final public func wait(wallTimeout: DispatchWallTime) -> Value? {
+    return self.wait(waitingBlock: { $0.wait(wallTimeout: wallTimeout) })
   }
 }

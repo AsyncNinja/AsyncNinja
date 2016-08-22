@@ -22,7 +22,7 @@
 
 import Foundation
 
-class TimerStream : MutableStream<Void> {
+class TimerChannel : MutableChannel<Void> {
   let timer: DispatchSourceTimer
 
   init(timer: DispatchSourceTimer) {
@@ -36,68 +36,68 @@ class TimerStream : MutableStream<Void> {
   }
 }
 
-public func makeTimer(interval: DispatchTimeInterval) -> Stream<Void> {
+public func makeTimer(interval: DispatchTimeInterval) -> Channel<Void> {
   return makeTimer(deadline: DispatchTime.now(), interval: interval)
 }
 
-public func makeTimer(interval: DispatchTimeInterval, leeway: DispatchTimeInterval) -> Stream<Void> {
+public func makeTimer(interval: DispatchTimeInterval, leeway: DispatchTimeInterval) -> Channel<Void> {
   return makeTimer(deadline: DispatchTime.now(), interval: interval, leeway: leeway)
 }
 
-public func makeTimer(deadline: DispatchTime, interval: DispatchTimeInterval) -> Stream<Void> {
+public func makeTimer(deadline: DispatchTime, interval: DispatchTimeInterval) -> Channel<Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(deadline: deadline, interval: interval)
-  return TimerStream(timer:timer)
+  return TimerChannel(timer:timer)
 }
 
-public func makeTimer(deadline: DispatchTime, interval: DispatchTimeInterval, leeway: DispatchTimeInterval) -> Stream<Void> {
+public func makeTimer(deadline: DispatchTime, interval: DispatchTimeInterval, leeway: DispatchTimeInterval) -> Channel<Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(deadline: deadline, interval: interval, leeway: leeway)
-  return TimerStream(timer:timer)
+  return TimerChannel(timer:timer)
 }
 
-public func makeTimer(wallDeadline: DispatchWallTime, interval: DispatchTimeInterval) -> Stream<Void> {
+public func makeTimer(wallDeadline: DispatchWallTime, interval: DispatchTimeInterval) -> Channel<Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(wallDeadline: wallDeadline, interval: interval)
-  return TimerStream(timer:timer)
+  return TimerChannel(timer:timer)
 }
 
-public func makeTimer(wallDeadline: DispatchWallTime, interval: DispatchTimeInterval, leeway: DispatchTimeInterval) -> Stream<Void> {
+public func makeTimer(wallDeadline: DispatchWallTime, interval: DispatchTimeInterval, leeway: DispatchTimeInterval) -> Channel<Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(wallDeadline: wallDeadline, interval: interval, leeway: leeway)
-  return TimerStream(timer:timer)
+  return TimerChannel(timer:timer)
 }
 
 //
 
-public func makeTimer(interval: Double) -> Stream<Void> {
+public func makeTimer(interval: Double) -> Channel<Void> {
   return makeTimer(deadline: DispatchTime.now(), interval: interval)
 }
 
-public func makeTimer(interval: Double, leeway: DispatchTimeInterval) -> Stream<Void> {
+public func makeTimer(interval: Double, leeway: DispatchTimeInterval) -> Channel<Void> {
   return makeTimer(deadline: DispatchTime.now(), interval: interval, leeway: leeway)
 }
 
-public func makeTimer(deadline: DispatchTime, interval: Double) -> Stream<Void> {
+public func makeTimer(deadline: DispatchTime, interval: Double) -> Channel<Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(deadline: deadline, interval: interval)
-  return TimerStream(timer:timer)
+  return TimerChannel(timer:timer)
 }
 
-public func makeTimer(deadline: DispatchTime, interval: Double, leeway: DispatchTimeInterval) -> Stream<Void> {
+public func makeTimer(deadline: DispatchTime, interval: Double, leeway: DispatchTimeInterval) -> Channel<Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(deadline: deadline, interval: interval, leeway: leeway)
-  return TimerStream(timer:timer)
+  return TimerChannel(timer:timer)
 }
 
-public func makeTimer(wallDeadline: DispatchWallTime, interval: Double) -> Stream<Void> {
+public func makeTimer(wallDeadline: DispatchWallTime, interval: Double) -> Channel<Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(wallDeadline: wallDeadline, interval: interval)
-  return TimerStream(timer:timer)
+  return TimerChannel(timer:timer)
 }
 
-public func makeTimer(wallDeadline: DispatchWallTime, interval: Double, leeway: DispatchTimeInterval) -> Stream<Void> {
+public func makeTimer(wallDeadline: DispatchWallTime, interval: Double, leeway: DispatchTimeInterval) -> Channel<Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(wallDeadline: wallDeadline, interval: interval, leeway: leeway)
-  return TimerStream(timer:timer)
+  return TimerChannel(timer:timer)
 }

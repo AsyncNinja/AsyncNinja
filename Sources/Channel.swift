@@ -22,36 +22,74 @@
 
 import Foundation
 
-public protocol Channel {
-  associatedtype Value
-  func onValue(executor: Executor, block: @escaping (Value) -> Void)
+public class Channel<T> : Consumable {
+  public typealias Value = T
+  typealias Handler = ChannelHandler<T>
+
+  init() { }
+
+  final public func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
+    let handler = Handler(executor: executor, block: block)
+    self.add(handler: handler)
+  }
+
+  public func map<T>(executor: Executor = .primary, _ transform: @escaping  (Value) -> T) -> Channel<T> {
+    let mutableChannel = Producer<T>()
+    self.onValue(executor: executor) { value in
+      mutableChannel.send(transform(value))
+    }
+    return mutableChannel
+  }
+
+  func add(handler: Handler) {
+    fatalError() // abstract
+  }
+
+  public func changes() -> Channel<(T?, T)> {
+    let mutableChannel = Producer<(T?, T)>()
+    var previousValue: Value? = nil
+    self.onValue(executor: .immediate) {
+      let change = (previousValue, $0)
+      mutableChannel.send(change)
+      previousValue = $0
+    }
+    return mutableChannel
+  }
+
+  public func bufferedPairs() -> Channel<(T, T)> {
+    return self.buffered(capacity: 2).map(executor: .immediate) { ($0[0], $0[1]) }
+  }
+
+  public func buffered(capacity: Int) -> Channel<[T]> {
+    let bufferingChannel = Producer<[T]>()
+    var buffer = [T]()
+    buffer.reserveCapacity(capacity)
+
+    self.onValue(executor: .immediate) {
+      buffer.append($0)
+      if capacity == buffer.count {
+        bufferingChannel.send(buffer)
+        buffer.removeAll(keepingCapacity: true)
+      }
+    }
+
+    return bufferingChannel
+  }
+
+  public func enumerated() -> Channel<(Int, T)> {
+    var index = -1
+    return self.map(executor: .immediate) {
+      index += 1
+      return (index, $0)
+    }
+  }
 }
 
-public extension Channel {
-  private func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Value? {
-    let sema = DispatchSemaphore(value: 0)
-    var result: Value? = nil
-    self.onValue(executor: .immediate) {
-      result = $0
-      sema.signal()
-    }
-    switch waitingBlock(sema) {
-    case .success:
-      return result
-    case .timedOut:
-      return nil
-    }
-  }
+struct ChannelHandler<T> {
+  var executor: Executor
+  var block: (T) -> Void
 
-  final public func wait() -> Value {
-    return self.wait(waitingBlock: { $0.wait(); return .success })!
-  }
-
-  final public func wait(timeout: DispatchTime) -> Value? {
-    return self.wait(waitingBlock: { $0.wait(timeout: timeout) })
-  }
-
-  final public func wait(wallTimeout: DispatchWallTime) -> Value? {
-    return self.wait(waitingBlock: { $0.wait(wallTimeout: wallTimeout) })
+  func handle(value: T) {
+    self.executor.execute { self.block(value) }
   }
 }

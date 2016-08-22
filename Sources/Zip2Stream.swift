@@ -22,8 +22,8 @@
 
 import Foundation
 
-public func zip<T, U>(_ leftStream: Stream<T>, _ rightStream: Stream<U>) -> Stream<(T, U)> {
-  let resultStream = Producer<(T, U)>()
+public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> Channel<(T, U)> {
+  let resultChannel = Producer<(T, U)>()
   let leftQueue = QueueImpl<T>()
   let rightQueue = QueueImpl<U>()
 
@@ -35,19 +35,19 @@ public func zip<T, U>(_ leftStream: Stream<T>, _ rightStream: Stream<U>) -> Stre
     }
   }
 
-  leftStream.onValue(executor: .immediate) { leftValue in
+  leftChannel.onValue(executor: .immediate) { leftValue in
     leftQueue.push(leftValue)
     if let element = makeElement(leftQueue, rightQueue) {
-      resultStream.send(element)
+      resultChannel.send(element)
     }
   }
 
-  rightStream.onValue(executor: .immediate) { rightValue in
+  rightChannel.onValue(executor: .immediate) { rightValue in
     rightQueue.push(rightValue)
     if let element = makeElement(leftQueue, rightQueue) {
-      resultStream.send(element)
+      resultChannel.send(element)
     }
   }
 
-  return resultStream
+  return resultChannel
 }

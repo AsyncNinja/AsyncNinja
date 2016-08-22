@@ -24,15 +24,15 @@ import XCTest
 import Foundation
 @testable import FunctionalConcurrency
 
-class TimerStreamTests : XCTestCase {
+class TimerChannelTests : XCTestCase {
 
   func testLifetime() {
     let interval = 0.2
     let initialTime = DispatchTime.now()
 
-    weak var weakTimer: FunctionalConcurrency.Stream<Void>? = nil
-    weak var weakMappedTimer: FunctionalConcurrency.Stream<DispatchTime>? = nil
-    weak var weakTimesBuffer: FunctionalConcurrency.Stream<[DispatchTime]>? = nil
+    weak var weakTimer: Channel<Void>? = nil
+    weak var weakMappedTimer: Channel<DispatchTime>? = nil
+    weak var weakTimesBuffer: Channel<[DispatchTime]>? = nil
 
     let times: [DispatchTime] = autoreleasepool {
       let timer = makeTimer(interval: interval)

@@ -22,14 +22,14 @@
 
 import Foundation
 
-public class MutableStream<T> : Stream<T> {
+public class MutableChannel<T> : Channel<T> {
   private let _sema = DispatchSemaphore(value: 1)
   private var _handlers = [Handler]()
-  private var _aliveKeeper: MutableStream<T>?
+  private var _aliveKeeper: MutableChannel<T>?
 
   override init() { }
 
-  override func add(handler: StreamHandler<T>) {
+  override func add(handler: ChannelHandler<T>) {
     _sema.wait()
     defer { _sema.signal() }
     _aliveKeeper = self
