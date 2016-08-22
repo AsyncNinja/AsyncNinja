@@ -25,15 +25,42 @@ import Foundation
 @testable import FunctionalConcurrency
 
 class TimerStreamTests : XCTestCase {
-  func testSimple() {
+
+  func testLifetime() {
     let interval = 0.2
     let initialTime = DispatchTime.now()
-    let times = makeTimer(interval: interval)
-      .map { _ in DispatchTime.now() }
-      .buffered(capacity: 5)
-      .wait()
 
+    weak var weakTimer: FunctionalConcurrency.Stream<Void>? = nil
+    weak var weakMappedTimer: FunctionalConcurrency.Stream<DispatchTime>? = nil
+    weak var weakTimesBuffer: FunctionalConcurrency.Stream<[DispatchTime]>? = nil
+
+    let times: [DispatchTime] = autoreleasepool {
+      let timer = makeTimer(interval: interval)
+      weakTimer = timer
+      XCTAssertNotNil(weakTimer)
+
+      let mappedTimer = timer.map(executor: .utility) { _ -> DispatchTime in
+        if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
+          dispatchPrecondition(condition: .onQueue(DispatchQueue.global(qos: .utility)))
+        }
+
+        return DispatchTime.now()
+      }
+      weakMappedTimer = mappedTimer
+      XCTAssertNotNil(weakMappedTimer)
+
+      let timesBuffer = mappedTimer.buffered(capacity: 5)
+      weakTimesBuffer = timesBuffer
+      XCTAssertNotNil(weakTimesBuffer)
+
+      return timesBuffer.wait()
+    }
+
+    sleep(1) // lets
     XCTAssertEqual(5, times.count)
+    XCTAssertNil(weakTimer)
+    XCTAssertNil(weakMappedTimer)
+    XCTAssertNil(weakTimesBuffer)
 
     for (index, time) in times.enumerated() {
       let minTime = initialTime + Double(index + 1) * interval

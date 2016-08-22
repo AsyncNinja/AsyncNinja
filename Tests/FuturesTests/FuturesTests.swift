@@ -26,7 +26,7 @@ import Foundation
 
 class FuturesTests : XCTestCase {
 
-  func testFuture() {
+  func testLifetime() {
 
     weak var weakFuture: Future<Int>?
     weak var weakMappedFuture: Future<Int>?
@@ -47,8 +47,8 @@ class FuturesTests : XCTestCase {
     sleep(1) // this test succeeds when utility queue has time to release futures
 
     XCTAssertEqual(result, 3)
-    XCTAssert(nil == weakFuture)
-    XCTAssert(nil == weakMappedFuture)
+    XCTAssertNil(weakFuture)
+    XCTAssertNil(weakMappedFuture)
   }
 
   func testSteam() {
