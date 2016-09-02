@@ -26,7 +26,7 @@ import Foundation
 
 class ExecutionContextTests : XCTestCase {
   func testFailure() {
-    class ObjectToDeallocate : InternalQueueProvider {
+    class ObjectToDeallocate : Actor {
       let internalQueue: DispatchQueue = DispatchQueue(label: "internal queue", attributes: [])
     }
 
