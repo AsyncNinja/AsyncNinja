@@ -26,15 +26,8 @@ public class Promise<T> : MutableFuture<T> {
   override public init() { }
 
   @discardableResult
-  public func complete(with value: Value) -> Bool {
-    var didCompleteThisTime = false
-
-    self.tryUpdateAndMakeValue {
-      didCompleteThisTime = true
-      return value
-    }
-
-    return didCompleteThisTime
+  final public func complete(with value: Value) -> Bool {
+    return self.tryComplete(with: value)
   }
 }
 

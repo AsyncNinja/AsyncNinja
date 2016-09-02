@@ -30,17 +30,15 @@ final class Zip2Futures<A, B> : MutableFuture<(A, B)> {
     super.init()
     futureA.onValue(executor: .immediate) { [weak self] subvalueA in
       guard let self_ = self else { return }
-      self_.tryUpdateAndMakeValue {
-        self_._subvalueA = subvalueA
-        return self_._subvalueB.flatMap { (subvalueA, $0)}
-      }
+      self_._subvalueA = subvalueA
+      guard let value = self_._subvalueB.flatMap ({ (subvalueA, $0) }) else { return }
+      self_.tryComplete(with: value)
     }
     futureB.onValue(executor: .immediate) { [weak self] subvalueB in
       guard let self_ = self else { return }
-      self_.tryUpdateAndMakeValue {
-        self_._subvalueB = subvalueB
-        return self_._subvalueA.flatMap { ($0, subvalueB)}
-      }
+      self_._subvalueB = subvalueB
+      guard let value = self_._subvalueA.flatMap ({ ($0, subvalueB) }) else { return }
+      self_.tryComplete(with: value)
     }
   }
 }

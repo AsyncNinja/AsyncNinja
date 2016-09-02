@@ -22,38 +22,102 @@
 
 import Foundation
 
+typealias MutableFallibleFuture<T> = MutableFuture<Fallible<T>>
+
 public class MutableFuture<T> : Future<T> {
-  private let _sema = DispatchSemaphore(value: 1)
-  private var _handlers = ContiguousArray<Handler>()
-  private var value: Value?
-  private var _aliveKeeper: MutableFuture<T>?
+  private var _state: AbstractMutableFutureState<T> = InitialMutableFutureState()
 
   override func add(handler: FutureHandler<T>) {
-    _sema.wait()
-    defer { _sema.signal() }
-    if let value = self.value {
-      handler.handle(value: value)
-    } else {
-      _aliveKeeper = self
-      _handlers.append(handler)
+    while true {
+      if let currentState = _state as? CompletedMutableFutureState<Value> {
+        handler.handle(value: currentState.value)
+        break
+      } else if let currentState = _state as? IncompleteMutableFutureState<Value> {
+        let nextState = SubscribedMutableFutureState(handler: handler, nextNode: currentState, owner: self)
+        if compareAndSwap(old: currentState, new: nextState, to: &_state) {
+          break
+        }
+      }
     }
   }
 
   @discardableResult
-  final func tryUpdateAndMakeValue(with block: (Void) -> Value?) {
-    _sema.wait()
-    defer { _sema.signal() }
+  final func tryComplete(with value: Value) -> Bool {
+    let nextState = CompletedMutableFutureState(value: value)
+    while true {
+      guard let currentState = _state as? IncompleteMutableFutureState<Value> else { return false }
+      guard compareAndSwap(old: currentState, new: nextState, to: &_state) else { continue }
 
-    guard nil == self.value else { return }
-    guard let value = block() else { return }
-    self.value = value
-    func apply(handler: Handler) {
-      handler.executor.execute { handler.block(value) }
+      var handlersNode_ = currentState
+      while let handlersNode = handlersNode_ as? SubscribedMutableFutureState<Value> {
+        handlersNode.handler.handle(value: value)
+        handlersNode_ = handlersNode.nextNode
+      }
+      return true
     }
-    _handlers.forEach(apply)
-    _handlers = []
-    _aliveKeeper = nil
   }
 }
 
-typealias MutableFallibleFuture<T> = MutableFuture<Fallible<T>>
+fileprivate class AbstractMutableFutureState<T> { }
+
+fileprivate class IncompleteMutableFutureState<T> : AbstractMutableFutureState<T> {}
+
+fileprivate class InitialMutableFutureState<T> : IncompleteMutableFutureState<T> {
+  typealias Value = T
+  typealias Handler = FutureHandler<Value>
+}
+
+fileprivate class SubscribedMutableFutureState<T> : IncompleteMutableFutureState<T> {
+  typealias Value = T
+  typealias Handler = FutureHandler<Value>
+
+  let handler: Handler
+  let nextNode: IncompleteMutableFutureState<T>
+  let owner: MutableFuture<T>
+
+  init(handler: Handler, nextNode: IncompleteMutableFutureState<T>, owner: MutableFuture<T>) {
+    self.handler = handler
+    self.nextNode = nextNode
+    self.owner = owner
+  }
+}
+
+fileprivate class CompletedMutableFutureState<T> : AbstractMutableFutureState<T> {
+  let value: T
+
+  init(value: T) {
+    self.value = value
+  }
+}
+
+@inline(__always)
+fileprivate func compareAndSwap<T: AnyObject>(old: T, new: T, to toPtr: UnsafeMutablePointer<T>) -> Bool {
+  let oldRef = Unmanaged.passUnretained(old)
+  let newRef = Unmanaged.passRetained(new)
+  let oldPtr = oldRef.toOpaque()
+  let newPtr = newRef.toOpaque()
+
+  if OSAtomicCompareAndSwapPtrBarrier(UnsafeMutableRawPointer(oldPtr), UnsafeMutableRawPointer(newPtr), UnsafeMutableRawPointer(toPtr).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)) {
+    oldRef.release()
+    return true
+  } else {
+    newRef.release()
+    return false
+  }
+}
+
+@inline(__always)
+fileprivate func compareAndSwap<T: AnyObject>(old: T?, new: T?, to toPtr: UnsafeMutablePointer<T?>) -> Bool {
+  let oldRef = old.map(Unmanaged.passUnretained)
+  let newRef = new.map(Unmanaged.passRetained)
+  let oldPtr = oldRef?.toOpaque() ?? nil
+  let newPtr = newRef?.toOpaque() ?? nil
+
+  if OSAtomicCompareAndSwapPtrBarrier(UnsafeMutableRawPointer(oldPtr), UnsafeMutableRawPointer(newPtr), UnsafeMutableRawPointer(toPtr).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)) {
+    oldRef?.release()
+    return true
+  } else {
+    newRef?.release()
+    return false
+  }
+}

@@ -31,41 +31,23 @@ final class Zip3Futures<A, B, C> : MutableFuture<(A, B, C)> {
     super.init()
     futureA.onValue(executor: .immediate) { [weak self] (subvalueA) in
       guard let self_ = self else { return }
-
-      self_.tryUpdateAndMakeValue {
-        self_._subvalueA = subvalueA
-        if let subvalueB = self_._subvalueB, let subvalueC = self_._subvalueC {
-          return (subvalueA, subvalueB, subvalueC)
-        } else {
-          return nil
-        }
-      }
+      self_._subvalueA = subvalueA
+      guard let subvalueB = self_._subvalueB, let subvalueC = self_._subvalueC else { return }
+      self_.tryComplete(with: (subvalueA, subvalueB, subvalueC))
     }
 
     futureB.onValue(executor: .immediate) { [weak self] (subvalueB) in
       guard let self_ = self else { return }
-
-      self_.tryUpdateAndMakeValue {
-        self_._subvalueB = subvalueB
-        if let subvalueA = self_._subvalueA, let subvalueC = self_._subvalueC {
-          return (subvalueA, subvalueB, subvalueC)
-        } else {
-          return nil
-        }
-      }
+      self_._subvalueB = subvalueB
+      guard let subvalueA = self_._subvalueA, let subvalueC = self_._subvalueC else { return }
+      self_.tryComplete(with: (subvalueA, subvalueB, subvalueC))
     }
 
     futureC.onValue(executor: .immediate) { [weak self] (subvalueC) in
       guard let self_ = self else { return }
-
-      self_.tryUpdateAndMakeValue {
-        self_._subvalueC = subvalueC
-        if let subvalueA = self_._subvalueA, let subvalueB = self_._subvalueB {
-          return (subvalueA, subvalueB, subvalueC)
-        } else {
-          return nil
-        }
-      }
+      self_._subvalueC = subvalueC
+      guard let subvalueA = self_._subvalueA, let subvalueB = self_._subvalueB else { return }
+      self_.tryComplete(with: (subvalueA, subvalueB, subvalueC))
     }
   }
 }
