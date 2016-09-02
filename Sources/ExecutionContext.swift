@@ -131,10 +131,26 @@ public extension Future where T : _Fallible {
   }
 }
 
-public protocol InternalQueueProvider : ExecutionContext {
+public protocol Actor : ExecutionContext {
   var internalQueue: DispatchQueue { get }
 }
 
-public extension InternalQueueProvider {
+public extension Actor {
   var executor: Executor { return .queue(self.internalQueue) }
 }
+
+public protocol MainQueueActor : ExecutionContext {
+}
+
+public extension MainQueueActor {
+  public var executor: Executor { return .main }
+}
+
+#if os(macOS)
+  import AppKit
+  extension NSResponder : MainQueueActor { }
+#elseif os(iOS) || os(tvOS) || os(watchOS)
+  import UIKit
+  extension UIResponder : MainQueueActor { }
+#else
+#endif
