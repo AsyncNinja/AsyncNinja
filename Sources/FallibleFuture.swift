@@ -23,7 +23,7 @@
 import Foundation
 
 public typealias FallibleFuture<T> = Future<Fallible<T>>
-typealias FalliblePromise<T> = Promise<Fallible<T>>
+public typealias FalliblePromise<T> = Promise<Fallible<T>>
 
 public extension Future where T : _Fallible {
 
@@ -63,4 +63,18 @@ public extension Future where T : _Fallible {
     }
     return promise
   }
+}
+
+public extension Promise where T : _Fallible {
+    final public func succeed(with success: Success) {
+        self.complete(with: T(success: success))
+    }
+    
+    final public func fail(with failure: Error) {
+        self.complete(with: T(failure: failure))
+    }
+    
+    final public func cancel() {
+        self.fail(with: ConcurrencyError.cancelled)
+    }
 }
