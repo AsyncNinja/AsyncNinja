@@ -59,7 +59,7 @@ class BatchFutureTests : XCTestCase {
 
   func testMapToFuture() {
     let value = (1...5)
-      .map(executor: .utility) { future(after: TimeInterval($0) / 10.0, value: $0) }
+      .asyncMap(executor: .utility) { future(after: TimeInterval($0) / 10.0, value: $0) }
       .map { $0.reduce(5) { $0 + $1 } }
       .wait()
     XCTAssertEqual(20, value)
@@ -67,7 +67,7 @@ class BatchFutureTests : XCTestCase {
 
   func testMapToValue() {
     let value = (1...5)
-      .map(executor: .utility)  { $0 }
+      .asyncMap(executor: .utility)  { $0 }
       .map { $0.reduce(5) { $0 + $1 } }
       .wait()
     XCTAssertEqual(20, value)

@@ -27,7 +27,7 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
 
   /// joins an array of futures to a future array
   func joined() -> Future<[Value]> {
-    return self.map(executor: .immediate) { $0 as! Future<Value> }
+    return self.asyncMap(executor: .immediate) { $0 as! Future<Value> }
   }
 
   ///
@@ -46,12 +46,12 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
 
 public extension Collection where Self.IndexDistance == Int {
   /// transforms each element of collection on executor and provides future array of transformed values
-  func map<T>(executor: Executor = .primary, transform: @escaping (Self.Iterator.Element) -> T) -> Future<[T]> {
-    return self.map(executor: executor) { future(value: transform($0)) }
+  func asyncMap<T>(executor: Executor = .primary, transform: @escaping (Self.Iterator.Element) -> T) -> Future<[T]> {
+    return self.asyncMap(executor: executor) { future(value: transform($0)) }
   }
 
   /// transforms each element of collection to future value on executor and provides future array of transformed values
-  func map<T>(executor: Executor = .primary, transform: @escaping (Self.Iterator.Element) -> Future<T>) -> Future<[T]> {
+  func asyncMap<T>(executor: Executor = .primary, transform: @escaping (Self.Iterator.Element) -> Future<T>) -> Future<[T]> {
     let promise = Promise<[T]>()
     let sema = DispatchSemaphore(value: 1)
 

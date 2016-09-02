@@ -28,7 +28,7 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
 
   /// joins an array of futures to a future array
   func joined() -> FallibleFuture<[Value]> {
-    return self.map(executor: .immediate) { $0 as! FallibleFuture<Value> }
+    return self.asyncMap(executor: .immediate) { $0 as! FallibleFuture<Value> }
   }
 
   ///
@@ -42,17 +42,17 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
 
 public extension Collection where Self.IndexDistance == Int {
   /// transforms each element of collection on executor and provides future array of transformed values
-  public func map<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> T) -> FallibleFuture<[T]> {
-    return self.map(executor: executor) { future(success: try transform($0)) }
+  public func asyncMap<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> T) -> FallibleFuture<[T]> {
+    return self.asyncMap(executor: executor) { future(success: try transform($0)) }
   }
 
   /// transforms each element of collection to future values on executor and provides future array of transformed values
-  public func map<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> FallibleFuture<[T]> {
-    return self.map(executor: executor) { (try transform($0)).map(executor: .immediate) { $0 } }
+  public func asyncMap<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> FallibleFuture<[T]> {
+    return self.asyncMap(executor: executor) { (try transform($0)).map(executor: .immediate) { $0 } }
   }
 
   /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
-  public func map<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> FallibleFuture<T>) -> FallibleFuture<[T]> {
+  public func asyncMap<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> FallibleFuture<T>) -> FallibleFuture<[T]> {
     let promise = Promise<Fallible<[T]>>()
     let sema = DispatchSemaphore(value: 1)
 
