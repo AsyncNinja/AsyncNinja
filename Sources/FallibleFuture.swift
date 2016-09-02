@@ -45,6 +45,14 @@ public extension Future where T : _Fallible {
     }
     return promise
   }
+  
+  final public func onSuccess(executor: Executor, block: @escaping (Success) -> Void) {
+    self.onValue(executor: executor) {
+      if let successValue = $0.successValue {
+        block(successValue)
+      }
+    }
+  }
 
   final public func liftFailure(executor: Executor, transform: @escaping (Error) -> Success) -> Future<Success> {
     let promise = Promise<Success>()
@@ -62,6 +70,14 @@ public extension Future where T : _Fallible {
       promise.complete(with: nextValue)
     }
     return promise
+  }
+  
+  final public func onFailure(executor: Executor, block: @escaping (Error) -> Void) {
+    self.onValue(executor: executor) { value -> Void in
+      if let failureValue = value.failureValue {
+        block(failureValue)
+      }
+    }
   }
 }
 

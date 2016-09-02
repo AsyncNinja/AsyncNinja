@@ -79,6 +79,21 @@ public extension Future where T : _Fallible {
 
     return promise
   }
+  
+  final public func onSuccess<U: ExecutionContext>(context: U?, block: @escaping (Success, U) -> Void) {
+    weak var weakContext = context
+
+    self.onValue(executor: .immediate) {
+      guard
+        let successValue = $0.successValue,
+        let context = weakContext
+        else { return }
+      
+      context.executor.execute {
+        block(successValue, context)
+      }
+    }
+  }
 
   final public func liftFailure<U: ExecutionContext>(context: U?, transform: @escaping (Error, U) throws -> Success) -> FallibleFuture<Success> {
     let promise = FalliblePromise<Success>()
@@ -102,6 +117,17 @@ public extension Future where T : _Fallible {
     }
 
     return promise
+  }
+  
+  final public func onFailure<U: ExecutionContext>(context: U?, block: @escaping (Error, U) -> Void) {
+    weak var weakContext = context
+    
+    self.onValue(executor: .immediate) {
+      guard let failureValue = $0.failureValue, let context = weakContext else { return }
+      context.executor.execute {
+        block(failureValue, context)
+      }
+    }
   }
 }
 
