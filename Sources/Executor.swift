@@ -25,6 +25,7 @@ import Foundation
 /// Executor is an abstraction over execution context
 public enum Executor {
   case queue(DispatchQueue)
+  case operationQueue(OperationQueue)
   case custom((@escaping (Void) -> Void) -> Void)
 
   public static let primary = Executor.default
@@ -44,6 +45,8 @@ public enum Executor {
     switch self {
     case .queue(let queue):
       queue.async(execute: block)
+    case .operationQueue(let queue):
+      queue.addOperation(block)
     case .custom(let customExecutor):
       customExecutor(block)
     }
