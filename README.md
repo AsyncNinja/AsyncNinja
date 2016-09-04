@@ -5,17 +5,26 @@
 ![Swift](https://img.shields.io/badge/Swift-3.0-orange.svg)
 
 ##	Current State
-Early experiments
+Experimental
 
 ##	Basics
 This framework is an implementation of following principles:
+
 *	provide abstraction that makes
 	*	doing right things easier
 	*	doing wrong things harder
-*	abstraction is based on monads
-	*	validation aka Fallible
-	*	futures	aka Future
-	*	streams aka Stream
+*	use abstraction is based on monads
+	*	`Fallible` is validation monad. Is an object that represents either success value of failure value (Error).
+	*	`Future`* is a proxy of value that will be available at some point in the future. See example for advances of using futures.
+	*	`Channel` (renamed from Stream because of some odd naming conflict with standard library) is the same as future but value will appear multiple times.
+	* 	`Executor` is object made to execute escaped block `(Void) -> Void`. It`s propose is to encapsulate a way of an execution.
+*	implement error handling
+	* 	use default swift error handling model (throwing errors) for synchronous execution 
+	*  use validation monads (`Fallible<T>`) for asynchronous execution
+
+
+*in oppose to other implementations future may not complete with an error by default. Combination of `Future<Fallible<T>>` must be used in order to have this feature (`FallibleFuture<T>` typealias is also availbale).
+
 	
 ##	Example
 ###	Problem
