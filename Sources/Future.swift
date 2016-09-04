@@ -22,17 +22,23 @@
 
 import Foundation
 
+//  The combination of protocol _Future and abstract class Future
+//  is an dirty hack of type system. But there are no higher-kinded types
+//  or generic protocols to implement it properly.
+
 public protocol _Future : Consumable { // hacking type system
   func onValue(executor: Executor, block: @escaping (Value) -> Void)
 }
 
-/// Future is proxy for a value that will appear at some poing in future.
+/// Future is a proxy of value that will be available at some point in the future.
 public class Future<T> : _Future {
   public typealias Value = T
   typealias Handler = FutureHandler<Value>
 
   init() { }
 
+  /// Higher order function (method) that asynchronously transforms value of this future on specified executor
+  /// "transform" closure is not thowable in this implementation because otherwise it would make returning future fallible.
   final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) -> T) -> Future<T> {
     let promise = Promise<T>()
     let handler = FutureHandler(executor: executor) { value in
@@ -42,6 +48,8 @@ public class Future<T> : _Future {
     return promise
   }
 
+  /// Higher order function (method) that asynchronously performs block on specified executor as soon as a value will be available.
+  /// This method is less preferrable then map because using of it means that block has sideeffects (does more then just data transformation).
   final public func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
     let handler = FutureHandler(executor: executor, block: block)
     self.add(handler: handler)

@@ -22,6 +22,10 @@
 
 import Foundation
 
+//  The combination of protocol _Fallible and enum Fallible
+//  is an dirty hack of type system. But there are no higher-kinded types
+//  or generic protocols to implement it properly.
+
 public protocol _Fallible { // hacking type system once
   associatedtype Success
 
