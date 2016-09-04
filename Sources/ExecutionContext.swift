@@ -26,14 +26,6 @@ public protocol ExecutionContext : class {
   var executor: Executor { get }
 }
 
-public protocol Actor : ExecutionContext {
-  var internalQueue: DispatchQueue { get }
-}
-
-public extension Actor {
-  var executor: Executor { return .queue(self.internalQueue) }
-}
-
 #if os(macOS)
   import AppKit
   extension NSResponder : ExecutionContext {

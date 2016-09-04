@@ -23,10 +23,8 @@
 import Foundation
 
 /// Executor is an abstraction over execution context
-public enum Executor {
-  case queue(DispatchQueue)
-  case operationQueue(OperationQueue)
-  case custom((@escaping (Void) -> Void) -> Void)
+public struct Executor {
+  private let _handler: (@escaping (Void) -> Void) -> Void
 
   public static let primary = Executor.default
   public static let main = Executor.queue(DispatchQueue.main)
@@ -35,20 +33,27 @@ public enum Executor {
   public static let `default` = Executor(qos: .default)
   public static let utility = Executor(qos: .utility)
   public static let background = Executor(qos: .background)
-  static let immediate = Executor.custom { $0() }
+  static let immediate = Executor(handler: { $0() })
+
+  public var executor: Executor { return self }
+
+  public static func queue(_ queue: DispatchQueue) -> Executor {
+    return Executor(handler: { queue.async(execute: $0) } )
+  }
+
+  public init(handler: @escaping (@escaping (Void) -> Void) -> Void) {
+    _handler = handler
+  }
+
+  public init(queue: DispatchQueue) {
+    _handler = { queue.async(execute: $0) }
+  }
 
   public init(qos: DispatchQoS.QoSClass) {
-    self = .queue(DispatchQueue.global(qos: qos))
+    self.init(queue: DispatchQueue.global(qos: qos))
   }
 
   public func execute(_ block: @escaping (Void) -> Void) {
-    switch self {
-    case .queue(let queue):
-      queue.async(execute: block)
-    case .operationQueue(let queue):
-      queue.addOperation(block)
-    case .custom(let customExecutor):
-      customExecutor(block)
-    }
+    _handler(block)
   }
 }
