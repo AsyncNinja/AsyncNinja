@@ -48,7 +48,7 @@ public extension Collection where Self.IndexDistance == Int {
 
   /// transforms each element of collection to future values on executor and provides future array of transformed values
   public func asyncMap<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> FallibleFuture<[T]> {
-    return self.asyncMap(executor: executor) { (try transform($0)).map(executor: .immediate) { $0 } }
+    return self.asyncMap(executor: executor) { fallible(try transform($0)) }
   }
 
   /// transforms each element of collection to fallible future values on executor and provides future array of transformed values

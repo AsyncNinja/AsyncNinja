@@ -48,6 +48,15 @@ public class Future<T> : _Future {
     return promise
   }
 
+  final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) throws -> T) -> FallibleFuture<T> {
+    let promise = FalliblePromise<T>()
+    let handler = FutureHandler<Value>(executor: executor) { value in
+      promise.complete(with: fallible { try transform(value) })
+    }
+    self.add(handler: handler)
+    return promise
+  }
+
   /// Higher order function (method) that asynchronously performs block on specified executor as soon as a value will be available.
   /// This method is less preferrable then map because using of it means that block has sideeffects (does more then just data transformation).
   final public func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {

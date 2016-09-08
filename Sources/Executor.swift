@@ -28,29 +28,29 @@ public struct Executor {
 
   public static let primary = Executor.default
   public static let main = Executor.queue(DispatchQueue.main)
-  public static let userInteractive = Executor(qos: .userInteractive)
-  public static let userInitiated = Executor(qos: .userInitiated)
-  public static let `default` = Executor(qos: .default)
-  public static let utility = Executor(qos: .utility)
-  public static let background = Executor(qos: .background)
+  public static let userInteractive = Executor.queue(.userInteractive)
+  public static let userInitiated = Executor.queue(.userInitiated)
+  public static let `default` = Executor.queue(.default)
+  public static let utility = Executor.queue(.utility)
+  public static let background = Executor.queue(.background)
   static let immediate = Executor(handler: { $0() })
 
   public var executor: Executor { return self }
 
   public static func queue(_ queue: DispatchQueue) -> Executor {
-    return Executor(handler: { queue.async(execute: $0) } )
+    return Executor(handler: { queue.async(execute: $0) })
+  }
+
+  public static func queue(_ queue: OperationQueue) -> Executor {
+    return Executor(handler: queue.addOperation)
+  }
+
+  public static func queue(_ qos: DispatchQoS.QoSClass) -> Executor {
+    return Executor.queue(DispatchQueue.global(qos: qos))
   }
 
   public init(handler: @escaping (@escaping (Void) -> Void) -> Void) {
     _handler = handler
-  }
-
-  public init(queue: DispatchQueue) {
-    _handler = { queue.async(execute: $0) }
-  }
-
-  public init(qos: DispatchQoS.QoSClass) {
-    self.init(queue: DispatchQueue.global(qos: qos))
   }
 
   public func execute(_ block: @escaping (Void) -> Void) {

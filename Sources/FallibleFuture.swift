@@ -94,3 +94,7 @@ public extension Promise where T : _Fallible {
         self.fail(with: ConcurrencyError.cancelled)
     }
 }
+
+public func fallible<T>(_ future: Future<T>) -> FallibleFuture<T> {
+  return future.map(executor: .immediate) { $0 }
+}

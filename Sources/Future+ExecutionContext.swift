@@ -40,7 +40,7 @@ public extension Future {
     return promise
   }
 
-  final func onValue<U: ExecutionContext>(context: U, block: @escaping (Value, U) -> Void) {
+  final func onValue<U: ExecutionContext>(context: U?, block: @escaping (Value, U) -> Void) {
     weak var weakContext = context
     let handler = FutureHandler<Value>(executor: Executor.immediate) { value in
       if let context = weakContext {
