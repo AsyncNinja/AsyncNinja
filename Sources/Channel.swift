@@ -32,28 +32,18 @@ public class Channel<T> : Consumable {
     fatalError() // abstract
   }
 
-  func remove(handler: Handler) {
-    fatalError() // abstract
-  }
-
   // MARK: - private helpers
   func makeDerivedChannel<T>(executor: Executor, onValue: @escaping (Producer<T>, Value) -> ()) -> Channel<T> {
     let derivedChannel = Producer<T>()
     weak var weakDerivedChannel: Producer<T>? = derivedChannel
-    weak var weakHandler: Handler? = nil
 
-    let handler = Handler(executor: executor) { [weak self] in
-      guard let derivedChannel = weakDerivedChannel else {
-        if let self_ = self, let handler = weakHandler {
-          self_.remove(handler: handler)
-        }
-        return
-      }
-
+    let handler = Handler(executor: executor) {
+      guard let derivedChannel = weakDerivedChannel else { return }
       onValue(derivedChannel, $0)
     }
-    weakHandler = handler
+
     self.add(handler: handler)
+    derivedChannel.releasePool.insert(handler)
     return derivedChannel
   }
 }
@@ -73,7 +63,6 @@ public extension Channel {
       sema.signal()
     }
     self.add(handler: handler)
-    defer { self.remove(handler: handler) }
 
     switch waitingBlock(sema) {
     case .success:

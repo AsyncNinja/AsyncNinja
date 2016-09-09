@@ -22,46 +22,47 @@
 
 import Foundation
 
-public class MutableChannel<T> : Channel<T> {
-  private let _sema = DispatchSemaphore(value: 1)
-  private var _handlers = Set<Handler>()
-  private var _aliveKeeper: MutableChannel<T>?
+public class MutableChannel<T> : Channel<T>, ThreadSafeContainer {
+  typealias ThreadSafeItem = SubscribedMutableChannelState<T>
+  var head: ThreadSafeItem?
+  public let releasePool = ReleasePool()
 
   override init() { }
 
-  override func add(handler: ChannelHandler<T>) {
-    _sema.wait()
-    defer { _sema.signal() }
-    _aliveKeeper = self
-    _handlers.insert(handler)
-  }
-
-  override func remove(handler: Handler) {
-    _sema.wait()
-    defer { _sema.signal() }
-    _handlers.remove(handler)
-    if _handlers.isEmpty {
-      _aliveKeeper = nil
-    }
-  }
-
-  private func _send(_ value: Value) {
-    for handler in _handlers {
-      handler.handle(value: value)
+  override func add(handler: Handler) {
+    self.update {
+      .replace(ThreadSafeItem(handler: handler, next: $0))
     }
   }
 
   func send(_ value: Value) {
-    _sema.wait()
-    defer { _sema.signal() }
-    _send(value)
+    var nextItem = self.head
+    while let currentItem = nextItem {
+      currentItem.handler?.handle(value: value)
+      nextItem = currentItem.next
+    }
   }
 
   func send<S: Sequence>(_ values: S) where S.Iterator.Element == Value {
-    _sema.wait()
-    defer { _sema.signal() }
-    for value in values {
-      _send(value)
+    var nextItem = self.head
+    while let currentItem = nextItem {
+      for value in values {
+        currentItem.handler?.handle(value: value)
+      }
+      nextItem = currentItem.next
     }
+  }
+}
+
+final class SubscribedMutableChannelState<T> {
+  typealias Value = T
+  typealias Handler = ChannelHandler<Value>
+
+  weak var handler: Handler?
+  let next: SubscribedMutableChannelState<T>?
+
+  init(handler: Handler, next: SubscribedMutableChannelState<T>?) {
+    self.handler = handler
+    self.next = next
   }
 }

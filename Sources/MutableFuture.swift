@@ -35,9 +35,9 @@ public class MutableFuture<T> : Future<T>, ThreadSafeContainer {
         handler.handle(value: completedState.value)
         return .keep
       case let incompleteState as SubscribedMutableFutureState<Value>:
-        return .replace(SubscribedMutableFutureState(handler: handler, nextNode: incompleteState, owner: self))
+        return .replace(SubscribedMutableFutureState(handler: handler, next: incompleteState, owner: self))
       case .none:
-        return .replace(SubscribedMutableFutureState(handler: handler, nextNode: nil, owner: self))
+        return .replace(SubscribedMutableFutureState(handler: handler, next: nil, owner: self))
       default:
         fatalError()
       }
@@ -53,7 +53,7 @@ public class MutableFuture<T> : Future<T>, ThreadSafeContainer {
     var nextItem = oldHead
     while let currentItem = nextItem as? SubscribedMutableFutureState<Value> {
       currentItem.handler.handle(value: value)
-      nextItem = currentItem.nextNode
+      nextItem = currentItem.next
     }
 
     return nil != oldHead
@@ -69,13 +69,13 @@ final class SubscribedMutableFutureState<T> : AbstractMutableFutureState<T> {
   typealias Handler = FutureHandler<Value>
 
   let handler: Handler
-  let nextNode: SubscribedMutableFutureState<T>?
+  let next: SubscribedMutableFutureState<T>?
   let owner: MutableFuture<T>
   override var isIncomplete: Bool { return true }
 
-  init(handler: Handler, nextNode: SubscribedMutableFutureState<T>?, owner: MutableFuture<T>) {
+  init(handler: Handler, next: SubscribedMutableFutureState<T>?, owner: MutableFuture<T>) {
     self.handler = handler
-    self.nextNode = nextNode
+    self.next = next
     self.owner = owner
   }
 }
