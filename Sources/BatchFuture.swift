@@ -61,21 +61,23 @@ public extension Collection where Self.IndexDistance == Int {
 
     for (index, value) in self.enumerated() {
       executor.execute {
-        let futureSubvalue = transform(value)
-        futureSubvalue.onValue { subvalue in
-
+        weak var weakPromise = promise
+        let handler = transform(value)._onValue(executor: .immediate) {
+          guard let promise = weakPromise else { return }
           sema.wait()
           defer { sema.signal() }
 
-          subvalues[index] = subvalue
+          subvalues[index] = $0
           unknownSubvaluesCount -= 1
           if 0 == unknownSubvaluesCount {
             promise.complete(with: subvalues.flatMap { $0 })
           }
         }
+
+        promise.releasePool.insert(handler)
       }
     }
-
+    
     return promise
   }
 }

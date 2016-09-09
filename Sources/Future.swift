@@ -27,13 +27,14 @@ import Foundation
 //  or generic protocols to implement it properly.
 
 public protocol _Future : Consumable { // hacking type system
-  func onValue(executor: Executor, block: @escaping (Value) -> Void)
 }
 
 /// Future is a proxy of value that will be available at some point in the future.
-public class Future<T> : _Future {
+public class Future<T> : _Future, ExecutionContext {
   public typealias Value = T
   typealias Handler = FutureHandler<Value>
+  public var executor: Executor { return .immediate }
+  public let releasePool = ReleasePool()
 
   init() { }
 
@@ -41,28 +42,36 @@ public class Future<T> : _Future {
   /// "transform" closure is not thowable in this implementation because otherwise it would make returning future fallible.
   final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) -> T) -> Future<T> {
     let promise = Promise<T>()
-    let handler = FutureHandler(executor: executor) { value in
-      promise.complete(with: transform(value))
-    }
+    weak var weakPromise = promise
+    let handler = self._onValue(executor: executor) { weakPromise?.complete(with: transform($0)) }
     self.add(handler: handler)
+    promise.releasePool.insert(self)
     return promise
   }
 
   final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) throws -> T) -> FallibleFuture<T> {
     let promise = FalliblePromise<T>()
-    let handler = FutureHandler<Value>(executor: executor) { value in
-      promise.complete(with: fallible { try transform(value) })
+    weak var weakPromise = promise
+    let handler = self._onValue(executor: executor) { value in
+      weakPromise?.complete(with: fallible { try transform(value) })
     }
     self.add(handler: handler)
+    promise.releasePool.insert(self)
     return promise
   }
 
-  /// Higher order function (method) that asynchronously performs block on specified executor as soon as a value will be available.
-  /// This method is less preferrable then map because using of it means that block has sideeffects (does more then just data transformation).
-  final public func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
-    let handler = FutureHandler(executor: executor, block: block)
+  @discardableResult
+  final func _onValue(executor: Executor, block: @escaping (Value) -> Void) -> Handler {
+    let handler = Handler(executor: executor, block: block)
     self.add(handler: handler)
+    return handler
   }
+
+//  /// Higher order function (method) that asynchronously performs block on specified executor as soon as a value will be available.
+//  /// This method is less preferrable then map because using of it means that block has sideeffects (does more then just data transformation).
+//  final public func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
+//    self.releasePool.insert(self._onValue(block: block))
+//  }
 
   func add(handler: FutureHandler<Value>) {
     fatalError() // abstract
@@ -71,10 +80,12 @@ public class Future<T> : _Future {
   final public func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Value? {
     let sema = DispatchSemaphore(value: 0)
     var result: Value? = nil
-    self.onValue(executor: .immediate) {
+
+    self._onValue(executor: .immediate) {
       result = $0
       sema.signal()
     }
+
     switch waitingBlock(sema) {
     case .success:
       return result
@@ -84,7 +95,7 @@ public class Future<T> : _Future {
   }
 }
 
-class FutureHandler<T> {
+struct FutureHandler<T> {
   let executor: Executor
   let block: (T) -> Void
 

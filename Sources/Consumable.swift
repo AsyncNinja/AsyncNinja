@@ -24,7 +24,7 @@ import Foundation
 
 public protocol Consumable {
   associatedtype Value
-  func onValue(executor: Executor, block: @escaping (Value) -> Void)
+//  func onValue(executor: Executor, block: @escaping (Value) -> Void)
   func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Value?
 }
 

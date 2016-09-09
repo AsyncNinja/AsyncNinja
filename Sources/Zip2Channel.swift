@@ -35,19 +35,22 @@ public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> 
     }
   }
 
-  leftChannel.onValue(executor: .immediate) { leftValue in
+  leftChannel._onValue(executor: .immediate) { leftValue in
     leftQueue.push(leftValue)
     if let element = makeElement(leftQueue, rightQueue) {
       resultChannel.send(element)
     }
   }
 
-  rightChannel.onValue(executor: .immediate) { rightValue in
+  rightChannel._onValue(executor: .immediate) { rightValue in
     rightQueue.push(rightValue)
     if let element = makeElement(leftQueue, rightQueue) {
       resultChannel.send(element)
     }
   }
+
+  resultChannel.releasePool.insert(leftChannel)
+  resultChannel.releasePool.insert(rightChannel)
 
   return resultChannel
 }

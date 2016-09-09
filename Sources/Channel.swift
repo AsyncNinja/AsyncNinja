@@ -26,6 +26,8 @@ public class Channel<T> : Consumable {
   public typealias Value = T
   typealias Handler = ChannelHandler<T>
 
+  let releasePool = ReleasePool()
+
   init() { }
 
   func add(handler: Handler) {
@@ -49,7 +51,7 @@ public class Channel<T> : Consumable {
 }
 
 public extension Channel {
-  func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
+  func _onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
     let handler = Handler(executor: executor, block: block)
     self.add(handler: handler)
   }

@@ -29,26 +29,29 @@ final class Zip3Futures<A, B, C> : MutableFuture<(A, B, C)> {
 
   init(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: Future<C>) {
     super.init()
-    futureA.onValue(executor: .immediate) { [weak self] (subvalueA) in
+    futureA._onValue(executor: .immediate) { [weak self] (subvalueA) in
       guard let self_ = self else { return }
       self_._subvalueA = subvalueA
       guard let subvalueB = self_._subvalueB, let subvalueC = self_._subvalueC else { return }
       self_.tryComplete(with: (subvalueA, subvalueB, subvalueC))
     }
 
-    futureB.onValue(executor: .immediate) { [weak self] (subvalueB) in
+    futureB._onValue(executor: .immediate) { [weak self] (subvalueB) in
       guard let self_ = self else { return }
       self_._subvalueB = subvalueB
       guard let subvalueA = self_._subvalueA, let subvalueC = self_._subvalueC else { return }
       self_.tryComplete(with: (subvalueA, subvalueB, subvalueC))
     }
 
-    futureC.onValue(executor: .immediate) { [weak self] (subvalueC) in
+    futureC._onValue(executor: .immediate) { [weak self] (subvalueC) in
       guard let self_ = self else { return }
       self_._subvalueC = subvalueC
       guard let subvalueA = self_._subvalueA, let subvalueB = self_._subvalueB else { return }
       self_.tryComplete(with: (subvalueA, subvalueB, subvalueC))
     }
+    self.releasePool.insert(futureA)
+    self.releasePool.insert(futureB)
+    self.releasePool.insert(futureC)
   }
 }
 

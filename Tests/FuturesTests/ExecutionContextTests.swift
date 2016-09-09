@@ -28,6 +28,7 @@ class ExecutionContextTests : XCTestCase {
   func testFailure() {
     class ObjectToDeallocate : ExecutionContext {
       let internalQueue: DispatchQueue = DispatchQueue(label: "internal queue", attributes: [])
+      let releasePool = ReleasePool()
       var executor: Executor { return .queue(self.internalQueue) }
     }
 

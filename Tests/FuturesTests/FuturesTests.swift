@@ -51,14 +51,6 @@ class FuturesTests : XCTestCase {
     XCTAssertNil(weakMappedFuture)
   }
 
-  func testSteam() {
-    let channel = Producer<Int>()
-    channel.send([1, 2, 3, 4, 5])
-    channel
-      .map(executor: .utility) { $0 * 2 }
-      .onValue(executor: .utility) { print("\($0)") }
-  }
-
   func testPerformanceFuture() {
     self.measure {
       

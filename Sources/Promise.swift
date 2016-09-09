@@ -32,9 +32,10 @@ public class Promise<T> : MutableFuture<T> {
 
   @discardableResult
   final public func complete(with future: Future<Value>) {
-    future.onValue(executor: .immediate) { [weak self] in
+    let handler = future._onValue(executor: .immediate) { [weak self] in
       self?.tryComplete(with: $0)
     }
+    self.releasePool.insert(handler)
   }
 
 }

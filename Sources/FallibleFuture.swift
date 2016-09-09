@@ -35,50 +35,37 @@ public extension Future where T : _Fallible {
       promise.complete(with: fallible { try transform(value) })
     }
     self.add(handler: handler)
+    promise.releasePool.insert(handler)
     return promise
   }
 
   final public func liftSuccess<T>(executor: Executor, transform: @escaping (Success) throws -> T) -> FallibleFuture<T> {
-    let promise = FalliblePromise<T>()
-    self.onValue(executor: executor) {
-      promise.complete(with: $0.liftSuccess(transform: transform))
-    }
-    return promise
+    return self.map(executor: executor) { $0.liftSuccess(transform: transform) }
   }
   
-  final public func onSuccess(executor: Executor, block: @escaping (Success) -> Void) {
-    self.onValue(executor: executor) {
-      if let successValue = $0.successValue {
-        block(successValue)
-      }
-    }
-  }
+//  final public func onSuccess(executor: Executor, block: @escaping (Success) -> Void) {
+//    self.onValue(executor: executor) {
+//      if let successValue = $0.successValue {
+//        block(successValue)
+//      }
+//    }
+//  }
 
   final public func liftFailure(executor: Executor, transform: @escaping (Error) -> Success) -> Future<Success> {
-    let promise = Promise<Success>()
-    self.onValue(executor: executor) { value -> Void in
-      let nextValue = value.liftFailure(transform: transform)
-      promise.complete(with: nextValue)
-    }
-    return promise
+    return self.map(executor: executor) { $0.liftFailure(transform: transform) }
   }
 
   final public func liftFailure(executor: Executor, transform: @escaping (Error) throws -> Success) -> FallibleFuture<Success> {
-    let promise = FalliblePromise<Success>()
-    self.onValue(executor: executor) { value -> Void in
-      let nextValue = value.liftFailure(transform: transform)
-      promise.complete(with: nextValue)
-    }
-    return promise
+    return self.map(executor: executor) { $0.liftFailure(transform: transform) }
   }
   
-  final public func onFailure(executor: Executor, block: @escaping (Error) -> Void) {
-    self.onValue(executor: executor) { value -> Void in
-      if let failureValue = value.failureValue {
-        block(failureValue)
-      }
-    }
-  }
+//  final public func onFailure(executor: Executor, block: @escaping (Error) -> Void) {
+//    self.onValue(executor: executor) { value -> Void in
+//      if let failureValue = value.failureValue {
+//        block(failureValue)
+//      }
+//    }
+//  }
 }
 
 public extension Promise where T : _Fallible {

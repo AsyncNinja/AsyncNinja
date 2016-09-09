@@ -22,7 +22,7 @@
 
 import Foundation
 
-public typealias Releasable = AnyObject
+public typealias Releasable = Any
 
 public class ReleasePool : ThreadSafeContainer {
   typealias ThreadSafeItem = DisposableObjectContainer

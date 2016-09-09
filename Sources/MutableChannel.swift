@@ -25,7 +25,6 @@ import Foundation
 public class MutableChannel<T> : Channel<T>, ThreadSafeContainer {
   typealias ThreadSafeItem = SubscribedMutableChannelState<T>
   var head: ThreadSafeItem?
-  public let releasePool = ReleasePool()
 
   override init() { }
 

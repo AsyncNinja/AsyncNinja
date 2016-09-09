@@ -28,18 +28,20 @@ final class Zip2Futures<A, B> : MutableFuture<(A, B)> {
 
   init(_ futureA: Future<A>, _ futureB: Future<B>) {
     super.init()
-    futureA.onValue(executor: .immediate) { [weak self] subvalueA in
+    futureA._onValue(executor: .immediate) { [weak self] subvalueA in
       guard let self_ = self else { return }
       self_._subvalueA = subvalueA
       guard let value = self_._subvalueB.flatMap ({ (subvalueA, $0) }) else { return }
       self_.tryComplete(with: value)
     }
-    futureB.onValue(executor: .immediate) { [weak self] subvalueB in
+    futureB._onValue(executor: .immediate) { [weak self] subvalueB in
       guard let self_ = self else { return }
       self_._subvalueB = subvalueB
       guard let value = self_._subvalueA.flatMap ({ ($0, subvalueB) }) else { return }
       self_.tryComplete(with: value)
     }
+    self.releasePool.insert(futureA)
+    self.releasePool.insert(futureB)
   }
 }
 
@@ -48,9 +50,5 @@ public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, 
 }
 
 public func zip<A, B>(_ futureA: Future<A>, _ valueB: B) -> Future<(A, B)> {
-  let promise = Promise<(A, B)>()
-  futureA.onValue(executor: .immediate) {
-    promise.complete(with: ($0, valueB))
-  }
-  return promise
+  return futureA.map(executor: .immediate) { ($0, valueB) }
 }

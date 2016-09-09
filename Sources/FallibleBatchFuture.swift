@@ -74,7 +74,7 @@ public extension Collection where Self.IndexDistance == Int {
         do { futureSubvalue = try transform(value) }
         catch { futureSubvalue = future(failure: error) }
 
-        futureSubvalue.onValue { subvalue in
+        futureSubvalue._onValue(executor: .immediate) { subvalue in
           sema.wait()
           defer { sema.signal() }
 
@@ -95,6 +95,8 @@ public extension Collection where Self.IndexDistance == Int {
         }
       }
     }
+
+    promise.releasePool.insert(self)
 
     return promise
   }
