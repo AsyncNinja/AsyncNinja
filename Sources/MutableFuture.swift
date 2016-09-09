@@ -24,100 +24,67 @@ import Foundation
 
 typealias MutableFallibleFuture<T> = MutableFuture<Fallible<T>>
 
-public class MutableFuture<T> : Future<T> {
-  private var _state: AbstractMutableFutureState<T> = InitialMutableFutureState()
+public class MutableFuture<T> : Future<T>, ThreadSafeContainer {
+  typealias ThreadSafeItem = AbstractMutableFutureState<T>
+  var head: ThreadSafeItem?
 
   override func add(handler: FutureHandler<T>) {
-    while true {
-      if let currentState = _state as? CompletedMutableFutureState<Value> {
-        handler.handle(value: currentState.value)
-        break
-      } else if let currentState = _state as? IncompleteMutableFutureState<Value> {
-        let nextState = SubscribedMutableFutureState(handler: handler, nextNode: currentState, owner: self)
-        if compareAndSwap(old: currentState, new: nextState, to: &_state) {
-          break
-        }
+    self.update {
+      switch $0 {
+      case let completedState as CompletedMutableFutureState<Value>:
+        handler.handle(value: completedState.value)
+        return .keep
+      case let incompleteState as SubscribedMutableFutureState<Value>:
+        return .replace(SubscribedMutableFutureState(handler: handler, nextNode: incompleteState, owner: self))
+      case .none:
+        return .replace(SubscribedMutableFutureState(handler: handler, nextNode: nil, owner: self))
+      default:
+        fatalError()
       }
     }
   }
 
   @discardableResult
   final func tryComplete(with value: Value) -> Bool {
-    let nextState = CompletedMutableFutureState(value: value)
-    while true {
-      guard let currentState = _state as? IncompleteMutableFutureState<Value> else { return false }
-      guard compareAndSwap(old: currentState, new: nextState, to: &_state) else { continue }
+    let completedItem = CompletedMutableFutureState(value: value)
+    let (oldHead, newHead) = self.update { ($0?.isIncomplete ?? true) ? .replace(completedItem) : .keep }
+    guard completedItem === newHead else { return false }
 
-      var handlersNode_ = currentState
-      while let handlersNode = handlersNode_ as? SubscribedMutableFutureState<Value> {
-        handlersNode.handler.handle(value: value)
-        handlersNode_ = handlersNode.nextNode
-      }
-      return true
+    var nextItem = oldHead
+    while let currentItem = nextItem as? SubscribedMutableFutureState<Value> {
+      currentItem.handler.handle(value: value)
+      nextItem = currentItem.nextNode
     }
+
+    return nil != oldHead
   }
 }
 
-fileprivate class AbstractMutableFutureState<T> { }
-
-fileprivate class IncompleteMutableFutureState<T> : AbstractMutableFutureState<T> {}
-
-fileprivate class InitialMutableFutureState<T> : IncompleteMutableFutureState<T> {
-  typealias Value = T
-  typealias Handler = FutureHandler<Value>
+class AbstractMutableFutureState<T> {
+  var isIncomplete: Bool { fatalError() /* abstract */ }
 }
 
-fileprivate class SubscribedMutableFutureState<T> : IncompleteMutableFutureState<T> {
+final class SubscribedMutableFutureState<T> : AbstractMutableFutureState<T> {
   typealias Value = T
   typealias Handler = FutureHandler<Value>
 
   let handler: Handler
-  let nextNode: IncompleteMutableFutureState<T>
+  let nextNode: SubscribedMutableFutureState<T>?
   let owner: MutableFuture<T>
+  override var isIncomplete: Bool { return true }
 
-  init(handler: Handler, nextNode: IncompleteMutableFutureState<T>, owner: MutableFuture<T>) {
+  init(handler: Handler, nextNode: SubscribedMutableFutureState<T>?, owner: MutableFuture<T>) {
     self.handler = handler
     self.nextNode = nextNode
     self.owner = owner
   }
 }
 
-fileprivate class CompletedMutableFutureState<T> : AbstractMutableFutureState<T> {
+final class CompletedMutableFutureState<T> : AbstractMutableFutureState<T> {
   let value: T
+  override var isIncomplete: Bool { return false }
 
   init(value: T) {
     self.value = value
-  }
-}
-
-@inline(__always)
-fileprivate func compareAndSwap<T: AnyObject>(old: T, new: T, to toPtr: UnsafeMutablePointer<T>) -> Bool {
-  let oldRef = Unmanaged.passUnretained(old)
-  let newRef = Unmanaged.passRetained(new)
-  let oldPtr = oldRef.toOpaque()
-  let newPtr = newRef.toOpaque()
-
-  if OSAtomicCompareAndSwapPtrBarrier(UnsafeMutableRawPointer(oldPtr), UnsafeMutableRawPointer(newPtr), UnsafeMutableRawPointer(toPtr).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)) {
-    oldRef.release()
-    return true
-  } else {
-    newRef.release()
-    return false
-  }
-}
-
-@inline(__always)
-fileprivate func compareAndSwap<T: AnyObject>(old: T?, new: T?, to toPtr: UnsafeMutablePointer<T?>) -> Bool {
-  let oldRef = old.map(Unmanaged.passUnretained)
-  let newRef = new.map(Unmanaged.passRetained)
-  let oldPtr = oldRef?.toOpaque() ?? nil
-  let newPtr = newRef?.toOpaque() ?? nil
-
-  if OSAtomicCompareAndSwapPtrBarrier(UnsafeMutableRawPointer(oldPtr), UnsafeMutableRawPointer(newPtr), UnsafeMutableRawPointer(toPtr).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)) {
-    oldRef?.release()
-    return true
-  } else {
-    newRef?.release()
-    return false
   }
 }
