@@ -32,11 +32,11 @@ public class ReleasePool : ThreadSafeContainer {
   public init() { }
 
   public func insert(_ releasable: Releasable) {
-    self.update { .replace(DisposableObjectContainer(object: releasable, next: $0)) }
+    self.updateHead { .replace(DisposableObjectContainer(object: releasable, next: $0)) }
   }
 
   public func drain() {
-    self.update { _ in .remove }
+    self.updateHead { _ in .remove }
   }
 }
 

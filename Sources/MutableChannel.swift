@@ -30,7 +30,7 @@ public class MutableChannel<T> : Channel<T>, ThreadSafeContainer {
   override init() { }
 
   override func add(handler: Handler) {
-    self.update {
+    self.updateHead {
       .replace(ThreadSafeItem(handler: handler, next: $0))
     }
   }

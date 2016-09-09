@@ -8,6 +8,8 @@
 
 import Foundation
 
+/// ThreadSafeContainer is a data structure (mixin) that has head and can change this head with thread safety.
+/// Current implementation is lock-free that has to be perfect for quick and often updates.
 protocol ThreadSafeContainer : class {
   associatedtype ThreadSafeItem: AnyObject
   var head: ThreadSafeItem? { get set }
@@ -15,7 +17,7 @@ protocol ThreadSafeContainer : class {
 
 extension ThreadSafeContainer {
   @discardableResult
-  func update(_ block: (ThreadSafeItem?) -> HeadChange<ThreadSafeItem>) -> (oldHead: ThreadSafeItem?, newHead: ThreadSafeItem?) {
+  func updateHead(_ block: (ThreadSafeItem?) -> HeadChange<ThreadSafeItem>) -> (oldHead: ThreadSafeItem?, newHead: ThreadSafeItem?) {
     while true {
       let localHead = self.head
 

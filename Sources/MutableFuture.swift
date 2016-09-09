@@ -29,7 +29,7 @@ public class MutableFuture<T> : Future<T>, ThreadSafeContainer {
   var head: ThreadSafeItem?
 
   override func add(handler: FutureHandler<T>) {
-    self.update {
+    self.updateHead {
       switch $0 {
       case let completedState as CompletedMutableFutureState<Value>:
         handler.handle(value: completedState.value)
@@ -47,7 +47,7 @@ public class MutableFuture<T> : Future<T>, ThreadSafeContainer {
   @discardableResult
   final func tryComplete(with value: Value) -> Bool {
     let completedItem = CompletedMutableFutureState(value: value)
-    let (oldHead, newHead) = self.update { ($0?.isIncomplete ?? true) ? .replace(completedItem) : .keep }
+    let (oldHead, newHead) = self.updateHead { ($0?.isIncomplete ?? true) ? .replace(completedItem) : .keep }
     guard completedItem === newHead else { return false }
 
     var nextItem = oldHead
