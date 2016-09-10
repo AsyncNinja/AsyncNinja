@@ -3,7 +3,7 @@
 This topic recommends rules that help to avoid retain cycles between FunctionalConcurrency abstractions (futures and channels) and their host objects (actors and actor compoents).
 
 ##Rules
-* use Actor Model
+* use [Actor Model](ActorModel.md)
 * use futures and channels manipulation methods that has `context: ExecutionContext` argument
 
 ##How does it work?

@@ -37,7 +37,7 @@ extension MyActor : ExecutionContext
 ```
 
 ## What about UI?
-UI-related objects (windows, views, view controllers and etc) are mostly bound to main queue/thread. They may be considered as components of some imaginery (or real) actor that changes it's state on main queue. Conform your UI-related to `ExecutionContext` protocol and enjoy concurrency with neat memory management.
+UI-related objects (windows, views, view controllers and etc) are mostly bound to main queue/thread. They may be considered as components of some imaginery (or real) actor that changes it's state on main queue. Conform your UI-related to `ExecutionContext` protocol and enjoy concurrency with neat [memory management](MemoryManagement.md).
 
 #### Example
 
