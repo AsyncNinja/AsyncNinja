@@ -24,12 +24,24 @@ import XCTest
 import Foundation
 @testable import FunctionalConcurrency
 
+struct SimpleRequest {}
+struct SimpleResponse {}
+
 class ExecutionContextTests : XCTestCase {
   func testFailure() {
     class ObjectToDeallocate : ExecutionContext {
-      let internalQueue: DispatchQueue = DispatchQueue(label: "internal queue", attributes: [])
-      let releasePool = ReleasePool()
+      let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
       var executor: Executor { return .queue(self.internalQueue) }
+      let releasePool = ReleasePool()
+
+      func perform(request: SimpleRequest) -> FallibleFuture<SimpleResponse> {
+        return future(context: self) { try $0._perform(request: request) }
+      }
+
+      private func _perform(request: SimpleRequest) throws -> SimpleResponse {
+        // do work
+        return SimpleResponse()
+      }
     }
 
     var object : ObjectToDeallocate? = ObjectToDeallocate()
@@ -43,13 +55,14 @@ class ExecutionContextTests : XCTestCase {
     }
 
     XCTAssertEqual(halfOfFutureValue.wait().successValue!, "Hello to")
-    object = nil
-    let fullFutureValue = halfOfFutureValue.map(context: object) { (value, object) -> String in
+    let fullFutureValue = halfOfFutureValue
+      .map(context: object) { (value, object) -> String in
       if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
         dispatchPrecondition(condition: .onQueue(object.internalQueue))
       }
       return "\(value) dead"
     }
+    object = nil
     
     XCTAssertEqual(fullFutureValue.wait().failureValue as! ConcurrencyError, ConcurrencyError.contextDeallocated)
   }

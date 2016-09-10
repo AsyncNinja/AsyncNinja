@@ -81,14 +81,44 @@ public extension Future where T : _Fallible {
   }
 }
 
-public func future<T>(context: ExecutionContext, block: @escaping () -> T) -> Future<T> {
-    let promise = Promise<T>()
-    context.executor.execute { promise.complete(with: block()) }
-    return promise
+//public func future<T>(context: ExecutionContext, block: @escaping () -> T) -> Future<T> {
+//  let promise = Promise<T>()
+//  context.executor.execute { promise.complete(with: block()) }
+//  return promise
+//}
+
+public func future<T, U : ExecutionContext>(context: U?, block: @escaping (U) throws -> T) -> FallibleFuture<T> {
+  guard let context = context
+    else { return future(failure: ConcurrencyError.contextDeallocated) }
+
+  return future(executor: context.executor) { [weak context] () -> T in
+    guard let context = context
+      else { throw ConcurrencyError.contextDeallocated }
+
+    return try block(context)
+  }
 }
 
-public func future<T>(context: ExecutionContext, block: @escaping () throws -> T) -> FallibleFuture<T> {
-    let promise = FalliblePromise<T>()
-    context.executor.execute { promise.complete(with: fallible(block: block)) }
-    return promise
+public func future<T, U : ExecutionContext>(context: U?, block: @escaping (U) throws -> Future<T>) -> FallibleFuture<T> {
+  guard let context = context
+    else { return future(failure: ConcurrencyError.contextDeallocated) }
+
+  return future(executor: context.executor) { [weak context] () -> Future<T>  in
+    guard let context = context
+      else { throw ConcurrencyError.contextDeallocated }
+
+    return try block(context)
+  }
+}
+
+public func future<T, U : ExecutionContext>(context: U?, block: @escaping (U) throws -> FallibleFuture<T>) -> FallibleFuture<T> {
+  guard let context = context
+    else { return future(failure: ConcurrencyError.contextDeallocated) }
+
+  return future(executor: context.executor) { [weak context] () -> FallibleFuture<T>  in
+    guard let context = context
+      else { throw ConcurrencyError.contextDeallocated }
+
+    return try block(context)
+  }
 }

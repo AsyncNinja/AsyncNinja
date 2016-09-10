@@ -56,6 +56,14 @@ public func future<T>(executor: Executor, block: @escaping () throws -> T) -> Fa
   return promise
 }
 
+public func future<T>(executor: Executor, block: @escaping () throws -> Future<T>) -> FallibleFuture<T> {
+  return future(executor: executor, block: block).flattern()
+}
+
+public func future<T>(executor: Executor, block: @escaping () throws -> FallibleFuture<T>) -> FallibleFuture<T> {
+  return future(executor: executor, block: block).flattern()
+}
+
 public func future<T>(after timeout: TimeInterval, value: T) -> Future<T> {
   let promise = Promise<T>()
   let deadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000 * 1000 * 1000))
