@@ -30,27 +30,15 @@ public extension Future where T : _Fallible {
   public typealias Success = Value.Success
 
   final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) throws -> T) -> FallibleFuture<T> {
-    let promise = FalliblePromise<T>()
-    let handler = FutureHandler(executor: executor) { value in
-      promise.complete(with: fallible { try transform(value) })
+    return self.map(executor: executor) { value -> Fallible<T> in
+      fallible { try transform(value) }
     }
-    self.add(handler: handler)
-    promise.releasePool.insert(handler)
-    return promise
   }
 
   final public func liftSuccess<T>(executor: Executor, transform: @escaping (Success) throws -> T) -> FallibleFuture<T> {
     return self.map(executor: executor) { $0.liftSuccess(transform: transform) }
   }
   
-//  final public func onSuccess(executor: Executor, block: @escaping (Success) -> Void) {
-//    self.onValue(executor: executor) {
-//      if let successValue = $0.successValue {
-//        block(successValue)
-//      }
-//    }
-//  }
-
   final public func liftFailure(executor: Executor, transform: @escaping (Error) -> Success) -> Future<Success> {
     return self.map(executor: executor) { $0.liftFailure(transform: transform) }
   }
@@ -58,14 +46,6 @@ public extension Future where T : _Fallible {
   final public func liftFailure(executor: Executor, transform: @escaping (Error) throws -> Success) -> FallibleFuture<Success> {
     return self.map(executor: executor) { $0.liftFailure(transform: transform) }
   }
-  
-//  final public func onFailure(executor: Executor, block: @escaping (Error) -> Void) {
-//    self.onValue(executor: executor) { value -> Void in
-//      if let failureValue = value.failureValue {
-//        block(failureValue)
-//      }
-//    }
-//  }
 }
 
 public extension Promise where T : _Fallible {

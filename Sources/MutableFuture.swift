@@ -27,6 +27,7 @@ typealias MutableFallibleFuture<T> = MutableFuture<Fallible<T>>
 public class MutableFuture<T> : Future<T>, ThreadSafeContainer {
   typealias ThreadSafeItem = AbstractMutableFutureState<T>
   var head: ThreadSafeItem?
+  let releasePool = ReleasePool()
 
   override func add(handler: FutureHandler<T>) {
     self.updateHead {
@@ -48,15 +49,17 @@ public class MutableFuture<T> : Future<T>, ThreadSafeContainer {
   final func tryComplete(with value: Value) -> Bool {
     let completedItem = CompletedMutableFutureState(value: value)
     let (oldHead, newHead) = self.updateHead { ($0?.isIncomplete ?? true) ? .replace(completedItem) : .keep }
-    guard completedItem === newHead else { return false }
+    let didComplete = (completedItem === newHead)
+    guard didComplete else { return false }
 
     var nextItem = oldHead
     while let currentItem = nextItem as? SubscribedMutableFutureState<Value> {
-      currentItem.handler.handle(value: value)
+      currentItem.handler?.handle(value: value)
       nextItem = currentItem.next
     }
+    self.releasePool.drain()
 
-    return nil != oldHead
+    return true
   }
 }
 
@@ -68,7 +71,7 @@ final class SubscribedMutableFutureState<T> : AbstractMutableFutureState<T> {
   typealias Value = T
   typealias Handler = FutureHandler<Value>
 
-  let handler: Handler
+  weak private(set) var handler: Handler?
   let next: SubscribedMutableFutureState<T>?
   let owner: MutableFuture<T>
   override var isIncomplete: Bool { return true }

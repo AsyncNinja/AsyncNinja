@@ -24,7 +24,7 @@ import Foundation
 
 public enum ConcurrencyError : Error, Equatable {
   case cancelled
-  case ownedDeallocated
+  case contextDeallocated
 }
 
 public protocol CancellationRepresentableError : Error {

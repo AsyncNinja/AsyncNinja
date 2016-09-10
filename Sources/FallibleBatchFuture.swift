@@ -62,8 +62,8 @@ public extension Collection where Self.IndexDistance == Int {
     var unknownSubvaluesCount = count
 
     for (index, value) in self.enumerated() {
-      executor.execute {
-
+      executor.execute { [weak promise] in
+        guard let promise = promise else { return }
         sema.wait()
         let canContinue_ = canContinue
         sema.signal()
@@ -74,7 +74,9 @@ public extension Collection where Self.IndexDistance == Int {
         do { futureSubvalue = try transform(value) }
         catch { futureSubvalue = future(failure: error) }
 
-        futureSubvalue._onValue(executor: .immediate) { subvalue in
+        let handler = futureSubvalue._onValue(executor: .immediate) { [weak promise] subvalue in
+          guard let promise = promise else { return }
+
           sema.wait()
           defer { sema.signal() }
 
@@ -93,6 +95,8 @@ public extension Collection where Self.IndexDistance == Int {
             canContinue = false
           }
         }
+
+        promise.releasePool.insert(handler)
       }
     }
 

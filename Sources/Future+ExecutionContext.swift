@@ -24,62 +24,57 @@ import Foundation
 
 public extension Future {
   
-  final func map<U: ExecutionContext, V>(context: U?, _ transform: @escaping (Value, U) throws -> V) -> FallibleFuture<V> {
-    let promise = Promise<Fallible<V>>()
-    weak var weakContext = context
-    let handler = FutureHandler<Value>(executor: .immediate) { value in
-      if let context = weakContext {
-        context.executor.execute {
-          promise.complete(with: fallible { try transform(value, context) })
-        }
-      } else {
-        promise.complete(with: Fallible(failure: ConcurrencyError.ownedDeallocated))
-      }
+  final func map<U: ExecutionContext, V>(context: U?, executor: Executor? = nil, _ transform: @escaping (Value, U) throws -> V) -> FallibleFuture<V> {
+    guard let context = context
+      else { return future(failure: ConcurrencyError.contextDeallocated) }
+    return self.map(executor: executor ?? context.executor) { [weak context] (value) in
+      guard let context = context
+        else { throw ConcurrencyError.contextDeallocated }
+      return try transform(value, context)
     }
-    self.add(handler: handler)
-    promise.releasePool.insert(handler)
-    return promise
   }
 
-  final func onValue<U: ExecutionContext>(context: U?, block: @escaping (Value, U) -> Void) {
-    weak var weakContext = context
-    let handler = FutureHandler<Value>(executor: Executor.immediate) { value in
-      if let context = weakContext {
-        context.executor.execute { block(value, context) }
-      }
+  final func onValue<U: ExecutionContext>(context: U?, executor: Executor? = nil, block: @escaping (Value, U) -> Void) {
+    guard let context = context
+      else { return }
+
+    let handler = self._onValue(executor: executor ?? context.executor) { [weak context] (value) in
+      guard let context = context
+        else { return }
+      block(value, context)
     }
-    self.add(handler: handler)
-    context?.releasePool.insert(handler)
+
+    context.releasePool.insert(handler)
   }
 }
 
 public extension Future where T : _Fallible {
 
-  final public func liftSuccess<T, U: ExecutionContext>(context: U?, transform: @escaping (Success, U) throws -> T) -> FallibleFuture<T> {
-    return self.map(context: context) { (value, context) in
+  final public func liftSuccess<T, U: ExecutionContext>(context: U?, executor: Executor? = nil, transform: @escaping (Success, U) throws -> T) -> FallibleFuture<T> {
+    return self.map(context: context, executor: executor) { (value, context) in
       if let failureValue = value.failureValue { throw failureValue }
       if let successValue = value.successValue { return try transform(successValue, context) }
       fatalError()
     }
   }
 
-  final public func onSuccess<U: ExecutionContext>(context: U?, block: @escaping (Success, U) -> Void) {
-    self.onValue(context: context) { (value, context) in
+  final public func onSuccess<U: ExecutionContext>(context: U?, executor: Executor? = nil, block: @escaping (Success, U) -> Void) {
+    self.onValue(context: context, executor: executor) { (value, context) in
       guard let successValue = value.successValue else { return }
       block(successValue, context)
     }
   }
 
-  final public func liftFailure<U: ExecutionContext>(context: U?, transform: @escaping (Error, U) throws -> Success) -> FallibleFuture<Success> {
-    return self.map(context: context) { (value, context) in
+  final public func liftFailure<U: ExecutionContext>(context: U?, executor: Executor? = nil, transform: @escaping (Error, U) throws -> Success) -> FallibleFuture<Success> {
+    return self.map(context: context, executor: executor) { (value, context) in
       if let failureValue = value.failureValue { return try transform(failureValue, context) }
       if let successValue = value.successValue { return successValue }
       fatalError()
     }
   }
 
-  final public func onFailure<U: ExecutionContext>(context: U?, block: @escaping (Error, U) -> Void) {
-    self.onValue(context: context) { (value, context) in
+  final public func onFailure<U: ExecutionContext>(context: U?, executor: Executor? = nil, block: @escaping (Error, U) -> Void) {
+    self.onValue(context: context, executor: executor) { (value, context) in
       guard let failureValue = value.failureValue else { return }
       block(failureValue, context)
     }

@@ -51,6 +51,6 @@ class ExecutionContextTests : XCTestCase {
       return "\(value) dead"
     }
     
-    XCTAssertEqual(fullFutureValue.wait().failureValue as! ConcurrencyError, ConcurrencyError.ownedDeallocated)
+    XCTAssertEqual(fullFutureValue.wait().failureValue as! ConcurrencyError, ConcurrencyError.contextDeallocated)
   }
 }

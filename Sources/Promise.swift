@@ -42,13 +42,17 @@ public class Promise<T> : MutableFuture<T> {
 
 public func future<T>(executor: Executor, block: @escaping () -> T) -> Future<T> {
   let promise = Promise<T>()
-  executor.execute { promise.complete(with: block()) }
+  executor.execute { [weak promise] in promise?.complete(with: block()) }
   return promise
+}
+
+public func future<T>(executor: Executor, block: @escaping () -> Future<T>) -> Future<T> {
+  return future(executor: executor, block: block).flattern()
 }
 
 public func future<T>(executor: Executor, block: @escaping () throws -> T) -> FallibleFuture<T> {
   let promise = Promise<Fallible<T>>()
-  executor.execute { promise.complete(with: fallible(block: block)) }
+  executor.execute { [weak promise] in promise?.complete(with: fallible(block: block)) }
   return promise
 }
 
