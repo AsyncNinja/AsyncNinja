@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 //  The combination of protocol _Fallible and enum Fallible
 //  is an dirty hack of type system. But there are no higher-kinded types

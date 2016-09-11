@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 public class MutableChannel<T> : Channel<T>, ThreadSafeContainer {
   typealias ThreadSafeItem = SubscribedMutableChannelState<T>

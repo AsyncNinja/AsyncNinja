@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 class ConstantChannel<S: Sequence> : Channel<S.Iterator.Element> {
   private let _sequence: S

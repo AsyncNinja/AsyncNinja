@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 class TimerChannel : MutableChannel<Void> {
   let timer: DispatchSourceTimer

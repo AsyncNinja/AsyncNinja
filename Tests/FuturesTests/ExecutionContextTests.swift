@@ -21,7 +21,7 @@
 //
 
 import XCTest
-import Foundation
+import Dispatch
 @testable import FunctionalConcurrency
 
 struct SimpleRequest {}

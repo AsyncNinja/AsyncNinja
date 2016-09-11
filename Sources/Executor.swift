@@ -20,34 +20,11 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 /// Executor is an abstraction over execution context
 public struct Executor {
   private let _handler: (@escaping (Void) -> Void) -> Void
-
-  public static let primary = Executor.default
-  public static let main = Executor.queue(DispatchQueue.main)
-  public static let userInteractive = Executor.queue(.userInteractive)
-  public static let userInitiated = Executor.queue(.userInitiated)
-  public static let `default` = Executor.queue(.default)
-  public static let utility = Executor.queue(.utility)
-  public static let background = Executor.queue(.background)
-  static let immediate = Executor(handler: { $0() })
-
-  public var executor: Executor { return self }
-
-  public static func queue(_ queue: DispatchQueue) -> Executor {
-    return Executor(handler: { queue.async(execute: $0) })
-  }
-
-  public static func queue(_ queue: OperationQueue) -> Executor {
-    return Executor(handler: queue.addOperation)
-  }
-
-  public static func queue(_ qos: DispatchQoS.QoSClass) -> Executor {
-    return Executor.queue(DispatchQueue.global(qos: qos))
-  }
 
   public init(handler: @escaping (@escaping (Void) -> Void) -> Void) {
     _handler = handler
@@ -55,5 +32,24 @@ public struct Executor {
 
   public func execute(_ block: @escaping (Void) -> Void) {
     _handler(block)
+  }
+}
+
+public extension Executor {
+  static let primary = Executor.default
+  static let main = Executor.queue(DispatchQueue.main)
+  static let userInteractive = Executor.queue(.userInteractive)
+  static let userInitiated = Executor.queue(.userInitiated)
+  static let `default` = Executor.queue(.default)
+  static let utility = Executor.queue(.utility)
+  static let background = Executor.queue(.background)
+  internal static let immediate = Executor(handler: { $0() })
+
+  static func queue(_ queue: DispatchQueue) -> Executor {
+    return Executor(handler: { queue.async(execute: $0) })
+  }
+
+  static func queue(_ qos: DispatchQoS.QoSClass) -> Executor {
+    return Executor.queue(DispatchQueue.global(qos: qos))
   }
 }

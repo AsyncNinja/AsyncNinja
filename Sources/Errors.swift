@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 public enum ConcurrencyError : Error, Equatable {
   case cancelled

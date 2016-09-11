@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 typealias MutableFallibleFuture<T> = MutableFuture<Fallible<T>>
 

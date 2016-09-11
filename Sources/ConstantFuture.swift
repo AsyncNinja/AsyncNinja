@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 class ConstantFuture<T> : Future<T> {
   private var _value: Value

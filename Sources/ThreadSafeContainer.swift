@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 /// ThreadSafeContainer is a data structure (mixin) that has head and can change this head with thread safety.
 /// Current implementation is lock-free that has to be perfect for quick and often updates.

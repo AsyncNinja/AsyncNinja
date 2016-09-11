@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 final class Zip2Futures<A, B> : MutableFuture<(A, B)> {
   private var _subvalueA: A?

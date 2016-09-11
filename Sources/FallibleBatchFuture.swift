@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 /// Single failure fails them all
 public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : _Future, Self.Iterator.Element.Value : _Fallible {

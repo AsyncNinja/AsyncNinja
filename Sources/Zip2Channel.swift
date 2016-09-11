@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> Channel<(T, U)> {
   let resultChannel = Producer<(T, U)>()

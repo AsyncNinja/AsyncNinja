@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 public class Promise<T> : MutableFuture<T> {
   override public init() { }
@@ -64,7 +64,7 @@ public func future<T>(executor: Executor, block: @escaping () throws -> Fallible
   return future(executor: executor, block: block).flattern()
 }
 
-public func future<T>(after timeout: TimeInterval, value: T) -> Future<T> {
+public func future<T>(after timeout: Double, value: T) -> Future<T> {
   let promise = Promise<T>()
   let deadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000 * 1000 * 1000))
   DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {

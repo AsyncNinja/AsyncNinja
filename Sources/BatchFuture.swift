@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : _Future {
   fileprivate typealias Value = Self.Iterator.Element.Value

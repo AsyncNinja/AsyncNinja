@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 public typealias FallibleFuture<T> = Future<Fallible<T>>
 public typealias FalliblePromise<T> = Promise<Fallible<T>>

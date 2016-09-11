@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+import Dispatch
 
 public protocol ExecutionContext : class {
   var executor: Executor { get }
