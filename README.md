@@ -141,25 +141,26 @@ can be provided by `MaterialsProvider`. Workers that make all above work concurr
 
 ##	Wishlist
 *	Support of latest Swift
-*	Futures (50% done)
+*	Solution for Memory Management (20% done)
+*	Futures (60% done)
 	*	simple
 	*	typesafe
 	*	composable
-*	Streams (1% done)
-	*	unbuffered
-	*	buffered
+*	Channels (20% done)
+	*	buffered and unbuffered
+	*	infinite and finite
 	*	composable
-	*	stream producers: (timers, IOs and etc.)
+	*	producers: (timers, IOs and etc.)
 	*	integration with Objective-C runtime (KVO and etc.)
 *	Related abstractions implementation (10% done)
 	*	validation monad aka Fallible
 	*	...
-*	Test Coverage (34% done)
-*	Performance Measurement (0% done)
-*	Documentation (0% done)
+*	Test Coverage (38% done)
+*	Performance Measurement (1% done)
+*	Documentation (1% done)
 *	Sample Code (1% done)
 *	Linux support (0% done)	
-*	Integrations (0% done)
+*	Integrations (10% done)
 	*	AppKit
 	*	UIKit
 	*	server side
