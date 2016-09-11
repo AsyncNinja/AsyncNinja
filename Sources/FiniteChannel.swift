@@ -22,9 +22,11 @@
 
 import Dispatch
 
-public class Channel<T> {
-  public typealias Value = T
-  public typealias Handler = ChannelHandler<Value>
+public class FiniteChannel<T, U> {
+  public typealias RegularValue = T
+  public typealias FinalValue = U
+  public typealias Value = FiniteChannelValue<RegularValue, FinalValue>
+  public typealias Handler = FiniteChannelHandler<RegularValue, FinalValue>
 
   let releasePool = ReleasePool()
 
@@ -35,38 +37,21 @@ public class Channel<T> {
   }
 }
 
-extension Channel : _Channel {
+extension FiniteChannel : _Channel {
 }
 
-public extension Channel {
-  func bufferedPairs() -> Channel<(T, T)> {
-    return self.buffered(capacity: 2).map(executor: .immediate) { ($0[0], $0[1]) }
-  }
+public enum FiniteChannelValue<T, U> {
+  public typealias RegularValue = T
+  public typealias FinalValue = U
 
-  func buffered(capacity: Int) -> Channel<[T]> {
-    var buffer = [T]()
-    buffer.reserveCapacity(capacity)
-
-    return self.makeDerivedChannel(executor: .immediate) { (producer, value) in
-      buffer.append(value)
-      if capacity == buffer.count {
-        producer.send(buffer)
-        buffer.removeAll(keepingCapacity: true)
-      }
-    }
-  }
-
-  func enumerated() -> Channel<(Int, T)> {
-    var index: Int64 = -1
-    return self.map(executor: .immediate) {
-      let localIndex = Int(OSAtomicIncrement64(&index))
-      return (localIndex, $0)
-    }
-  }
+  case regular(RegularValue)
+  case final(FinalValue)
 }
 
-final public class ChannelHandler<T> : _ChannelHandler {
-  public typealias Value = T
+final public class FiniteChannelHandler<T, U> : _ChannelHandler {
+  public typealias RegularValue = T
+  public typealias FinalValue = U
+  public typealias Value = FiniteChannelValue<RegularValue, FinalValue>
 
   let executor: Executor
   let block: (Value) -> Void

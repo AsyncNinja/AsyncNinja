@@ -22,37 +22,15 @@
 
 import Dispatch
 
-public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> Channel<(T, U)> {
-  let resultChannel = Producer<(T, U)>()
-  let leftQueue = QueueImpl<T>()
-  let rightQueue = QueueImpl<U>()
+public class FiniteProducer<T, U> : MutableFiniteChannel<T, U> {
 
-  func makeElement(_ leftQueue: QueueImpl<T>, _ rightQueue: QueueImpl<U>) -> (T, U)? {
-    if leftQueue.isEmpty || rightQueue.isEmpty {
-      return nil
-    } else {
-      return (leftQueue.pop()!, rightQueue.pop()!)
-    }
+  override public init() { }
+
+  override func send(regular regularValue: RegularValue) -> Bool {
+    return super.send(regular: regularValue)
   }
 
-  let leftHandler = leftChannel._onValue(executor: .immediate) { [weak resultChannel] leftValue in
-    guard let resultChannel = resultChannel else { return }
-    leftQueue.push(leftValue)
-    if let element = makeElement(leftQueue, rightQueue) {
-      resultChannel.send(element)
-    }
+  override func send(final finalValue: FinalValue) -> Bool {
+    return super.send(final: finalValue)
   }
-
-  let rightHandler = rightChannel._onValue(executor: .immediate) { [weak resultChannel] rightValue in
-    guard let resultChannel = resultChannel else { return }
-    rightQueue.push(rightValue)
-    if let element = makeElement(leftQueue, rightQueue) {
-      resultChannel.send(element)
-    }
-  }
-
-  resultChannel.releasePool.insert(leftHandler)
-  resultChannel.releasePool.insert(rightHandler)
-
-  return resultChannel
 }
