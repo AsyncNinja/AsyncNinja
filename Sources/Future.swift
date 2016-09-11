@@ -62,6 +62,16 @@ public class Future<T> : _Future {
     return self.map(executor: executor) { value in fallible { try transform(value) } }
   }
 
+  final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) throws -> Future<T>) -> FallibleFuture<T> {
+    return self.map(executor: executor) { value in fallible { try transform(value) } }
+      .flattern()
+  }
+
+  final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) throws -> FallibleFuture<T>) -> FallibleFuture<T> {
+    return self.map(executor: executor) { value in fallible { try transform(value) } }
+      .flattern()
+  }
+
   final public func _onValue(executor: Executor, block: @escaping (Value) -> Void) -> Handler {
     let handler = Handler(executor: executor, block: block, owner: self)
     self.add(handler: handler)

@@ -10,7 +10,7 @@
   import Foundation
 
   public extension ExecutionContext {
-    public static func queue(_ queue: OperationQueue) -> Executor {
+    static func operationQueue(_ queue: OperationQueue) -> Executor {
       return Executor(handler: queue.addOperation)
     }
   }
