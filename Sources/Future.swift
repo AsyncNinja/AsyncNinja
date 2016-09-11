@@ -38,12 +38,16 @@ public class Future<T> : _Future {
 
   init() { }
 
+//  final public func onValue(executor: Executor = .primary, _ block: @escaping (Value) -> Void) {
+//    var handler: Handler? = nil
+//    handler = self._onValue(executor: executor) {
+//      block($0)
+//      handler = nil
+//    }
+//  }
+//
   /// Higher order function (method) that asynchronously transforms value of this future on specified executor
   /// "transform" closure is not thowable in this implementation because otherwise it would make returning future fallible.
-
-
-  // let futureB = futureA.map(transform)
-  // futureA must live if (isIncomplete && hasSubscribers)
   final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) -> T) -> Future<T> {
     let promise = Promise<T>()
     let handler = self._onValue(executor: executor) { [weak promise] in

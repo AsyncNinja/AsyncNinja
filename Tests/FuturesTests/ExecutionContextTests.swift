@@ -47,7 +47,7 @@ class ExecutionContextTests : XCTestCase {
     var object : ObjectToDeallocate? = ObjectToDeallocate()
 
     let halfOfFutureValue = future(value: "Hello")
-      .map(context: object) { (value, object) -> String in
+      .map(context: object!) { (object, value) -> String in
         if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
           dispatchPrecondition(condition: .onQueue(object.internalQueue))
         }
@@ -56,7 +56,7 @@ class ExecutionContextTests : XCTestCase {
 
     XCTAssertEqual(halfOfFutureValue.wait().successValue!, "Hello to")
     let fullFutureValue = halfOfFutureValue
-      .map(context: object) { (value, object) -> String in
+      .map(context: object!) { (object, value) -> String in
       if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
         dispatchPrecondition(condition: .onQueue(object.internalQueue))
       }

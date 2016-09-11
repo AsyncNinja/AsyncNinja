@@ -24,24 +24,19 @@ import Dispatch
 
 public extension Future {
   
-  final func map<U: ExecutionContext, V>(context: U?, executor: Executor? = nil, _ transform: @escaping (Value, U) throws -> V) -> FallibleFuture<V> {
-    guard let context = context
-      else { return future(failure: ConcurrencyError.contextDeallocated) }
+  final func map<U: ExecutionContext, V>(context: U, executor: Executor? = nil, _ transform: @escaping (U, Value) throws -> V) -> FallibleFuture<V> {
     return self.map(executor: executor ?? context.executor) { [weak context] (value) in
       guard let context = context
         else { throw ConcurrencyError.contextDeallocated }
-      return try transform(value, context)
+      return try transform(context, value)
     }
   }
 
-  final func onValue<U: ExecutionContext>(context: U?, executor: Executor? = nil, block: @escaping (Value, U) -> Void) {
-    guard let context = context
-      else { return }
-
+  final func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, Value) -> Void) {
     let handler = self._onValue(executor: executor ?? context.executor) { [weak context] (value) in
       guard let context = context
         else { return }
-      block(value, context)
+      block(context, value)
     }
 
     context.releaseOnDeinit(handler)
@@ -50,47 +45,38 @@ public extension Future {
 
 public extension Future where T : _Fallible {
 
-  final public func liftSuccess<T, U: ExecutionContext>(context: U?, executor: Executor? = nil, transform: @escaping (Success, U) throws -> T) -> FallibleFuture<T> {
-    return self.map(context: context, executor: executor) { (value, context) in
+  final public func liftSuccess<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Success) throws -> T) -> FallibleFuture<T> {
+    return self.map(context: context, executor: executor) { (context, value) in
       if let failureValue = value.failureValue { throw failureValue }
-      if let successValue = value.successValue { return try transform(successValue, context) }
+      if let successValue = value.successValue { return try transform(context, successValue) }
       fatalError()
     }
   }
 
-  final public func onSuccess<U: ExecutionContext>(context: U?, executor: Executor? = nil, block: @escaping (Success, U) -> Void) {
-    self.onValue(context: context, executor: executor) { (value, context) in
+  final public func onSuccess<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, Success) -> Void) {
+    self.onValue(context: context, executor: executor) { (context, value) in
       guard let successValue = value.successValue else { return }
-      block(successValue, context)
+      block(context, successValue)
     }
   }
 
-  final public func liftFailure<U: ExecutionContext>(context: U?, executor: Executor? = nil, transform: @escaping (Error, U) throws -> Success) -> FallibleFuture<Success> {
-    return self.map(context: context, executor: executor) { (value, context) in
-      if let failureValue = value.failureValue { return try transform(failureValue, context) }
+  final public func liftFailure<U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Error) throws -> Success) -> FallibleFuture<Success> {
+    return self.map(context: context, executor: executor) { (context, value) in
+      if let failureValue = value.failureValue { return try transform(context, failureValue) }
       if let successValue = value.successValue { return successValue }
       fatalError()
     }
   }
 
-  final public func onFailure<U: ExecutionContext>(context: U?, executor: Executor? = nil, block: @escaping (Error, U) -> Void) {
-    self.onValue(context: context, executor: executor) { (value, context) in
+  final public func onFailure<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, Error) -> Void) {
+    self.onValue(context: context, executor: executor) { (context, value) in
       guard let failureValue = value.failureValue else { return }
-      block(failureValue, context)
+      block(context, failureValue)
     }
   }
 }
 
-//public func future<T>(context: ExecutionContext, block: @escaping () -> T) -> Future<T> {
-//  let promise = Promise<T>()
-//  context.executor.execute { promise.complete(with: block()) }
-//  return promise
-//}
-
-public func future<T, U : ExecutionContext>(context: U?, block: @escaping (U) throws -> T) -> FallibleFuture<T> {
-  guard let context = context
-    else { return future(failure: ConcurrencyError.contextDeallocated) }
-
+public func future<T, U : ExecutionContext>(context: U, block: @escaping (U) throws -> T) -> FallibleFuture<T> {
   return future(executor: context.executor) { [weak context] () -> T in
     guard let context = context
       else { throw ConcurrencyError.contextDeallocated }
@@ -99,10 +85,7 @@ public func future<T, U : ExecutionContext>(context: U?, block: @escaping (U) th
   }
 }
 
-public func future<T, U : ExecutionContext>(context: U?, block: @escaping (U) throws -> Future<T>) -> FallibleFuture<T> {
-  guard let context = context
-    else { return future(failure: ConcurrencyError.contextDeallocated) }
-
+public func future<T, U : ExecutionContext>(context: U, block: @escaping (U) throws -> Future<T>) -> FallibleFuture<T> {
   return future(executor: context.executor) { [weak context] () -> Future<T>  in
     guard let context = context
       else { throw ConcurrencyError.contextDeallocated }
@@ -111,10 +94,7 @@ public func future<T, U : ExecutionContext>(context: U?, block: @escaping (U) th
   }
 }
 
-public func future<T, U : ExecutionContext>(context: U?, block: @escaping (U) throws -> FallibleFuture<T>) -> FallibleFuture<T> {
-  guard let context = context
-    else { return future(failure: ConcurrencyError.contextDeallocated) }
-
+public func future<T, U : ExecutionContext>(context: U, block: @escaping (U) throws -> FallibleFuture<T>) -> FallibleFuture<T> {
   return future(executor: context.executor) { [weak context] () -> FallibleFuture<T>  in
     guard let context = context
       else { throw ConcurrencyError.contextDeallocated }
