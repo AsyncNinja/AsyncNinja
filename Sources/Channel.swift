@@ -22,7 +22,7 @@
 
 import Foundation
 
-public class Channel<T> : Consumable {
+public class Channel<T> {
   public typealias Value = T
   typealias Handler = ChannelHandler<T>
 
@@ -47,6 +47,20 @@ public class Channel<T> : Consumable {
     self.add(handler: handler)
     derivedChannel.releasePool.insert(handler)
     return derivedChannel
+  }
+}
+
+public extension Channel {
+  final public func wait() -> Value {
+    return self.wait(waitingBlock: { $0.wait(); return .success })!
+  }
+
+  final public func wait(timeout: DispatchTime) -> Value? {
+    return self.wait(waitingBlock: { $0.wait(timeout: timeout) })
+  }
+
+  final public func wait(wallTimeout: DispatchWallTime) -> Value? {
+    return self.wait(waitingBlock: { $0.wait(wallTimeout: wallTimeout) })
   }
 }
 

@@ -26,7 +26,8 @@ import Foundation
 //  is an dirty hack of type system. But there are no higher-kinded types
 //  or generic protocols to implement it properly.
 
-public protocol _Future : Consumable { // hacking type system
+public protocol _Future { // hacking type system
+  associatedtype Value
   func _onValue(executor: Executor, block: @escaping (Value) -> Void) -> FutureHandler<Value>
 }
 
@@ -83,6 +84,18 @@ public class Future<T> : _Future {
     case .timedOut:
       return nil
     }
+  }
+
+  final public func wait() -> Value {
+    return self.wait(waitingBlock: { $0.wait(); return .success })!
+  }
+
+  final public func wait(timeout: DispatchTime) -> Value? {
+    return self.wait(waitingBlock: { $0.wait(timeout: timeout) })
+  }
+
+  final public func wait(wallTimeout: DispatchWallTime) -> Value? {
+    return self.wait(waitingBlock: { $0.wait(wallTimeout: wallTimeout) })
   }
 }
 
