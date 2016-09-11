@@ -22,33 +22,59 @@
 
 import Dispatch
 
-/// Executor is an abstraction over execution context
+/// Executor encapsulates asynchrounous way of execution escaped block.
 public struct Executor {
-  private let _handler: (@escaping (Void) -> Void) -> Void
+  public typealias Handler = (@escaping (Void) -> Void) -> Void
+  private let _handler: Handler
 
-  public init(handler: @escaping (@escaping (Void) -> Void) -> Void) {
+  /// Initialiaes executor with custom handler
+  public init(handler: @escaping Handler) {
     _handler = handler
   }
 
-  public func execute(_ block: @escaping (Void) -> Void) {
+  func execute(_ block: @escaping (Void) -> Void) {
     _handler(block)
+  }
+
+  func execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
+    let deadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000 * 1000 * 1000))
+    DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
+      self.execute(block)
+    }
   }
 }
 
 public extension Executor {
+  /// primary executor is primary because it will be used as default value when executor argument is ommited
   static let primary = Executor.default
+
+  /// shortcut to main queue executor
   static let main = Executor.queue(DispatchQueue.main)
+
+  /// shortcut to global concurrent user interactive queue executor
   static let userInteractive = Executor.queue(.userInteractive)
+
+  /// shortcut to global concurrent user initiated queue executor
   static let userInitiated = Executor.queue(.userInitiated)
+
+  /// shortcut to global concurrent default queue executor
   static let `default` = Executor.queue(.default)
+
+  /// shortcut to global concurrent utility queue executor
   static let utility = Executor.queue(.utility)
+
+  /// shortcut to global concurrent background queue executor
   static let background = Executor.queue(.background)
+
+  /// **internal use only**
   internal static let immediate = Executor(handler: { $0() })
 
+  /// initializes executor based on specified queue
   static func queue(_ queue: DispatchQueue) -> Executor {
     return Executor(handler: { queue.async(execute: $0) })
   }
 
+  /// initializes executor based on global queue with specified QoS class
   static func queue(_ qos: DispatchQoS.QoSClass) -> Executor {
     return Executor.queue(DispatchQueue.global(qos: qos))
   }

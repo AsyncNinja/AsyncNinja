@@ -22,14 +22,19 @@
 
 import Dispatch
 
-public class Promise<T> : MutableFuture<T> {
+/// Promise that may be manually completed by owner.
+final public class Promise<T> : MutableFuture<T> {
   override public init() { }
 
+  /// Completes promise with value and returns true.
+  /// Returns false if promise was completed before.
   @discardableResult
   final public func complete(with value: Value) -> Bool {
     return self.tryComplete(with: value)
   }
 
+  /// Completes promise when specified future completes.
+  /// `self` will retain specified future until it`s completion
   @discardableResult
   final public func complete(with future: Future<Value>) {
     let handler = future._onValue(executor: .immediate) { [weak self] in
@@ -37,38 +42,31 @@ public class Promise<T> : MutableFuture<T> {
     }
     self.releasePool.insert(handler)
   }
-
 }
 
+/// Asynchrounously executes block on executor and wraps returned value into future
 public func future<T>(executor: Executor, block: @escaping () -> T) -> Future<T> {
   let promise = Promise<T>()
   executor.execute { [weak promise] in promise?.complete(with: block()) }
   return promise
 }
 
-public func future<T>(executor: Executor, block: @escaping () -> Future<T>) -> Future<T> {
-  return future(executor: executor, block: block).flattern()
-}
-
+/// Asynchrounously executes block on executor and wraps returned value into future
 public func future<T>(executor: Executor, block: @escaping () throws -> T) -> FallibleFuture<T> {
-  let promise = Promise<Fallible<T>>()
-  executor.execute { [weak promise] in promise?.complete(with: fallible(block: block)) }
-  return promise
+  return future(executor: executor) { fallible(block: block) }
 }
 
-public func future<T>(executor: Executor, block: @escaping () throws -> Future<T>) -> FallibleFuture<T> {
-  return future(executor: executor, block: block).flattern()
-}
-
-public func future<T>(executor: Executor, block: @escaping () throws -> FallibleFuture<T>) -> FallibleFuture<T> {
-  return future(executor: executor, block: block).flattern()
-}
-
-public func future<T>(after timeout: Double, value: T) -> Future<T> {
+/// Asynchrounously executes block after timeout on executor and wraps returned value into future
+public func future<T>(executor: Executor = .primary, after timeout: Double, block: @escaping () -> T) -> Future<T> {
   let promise = Promise<T>()
-  let deadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000 * 1000 * 1000))
-  DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
-    promise.complete(with: value)
+  executor.execute(after: timeout) { [weak promise] in
+    guard let promise = promise else { return }
+    promise.complete(with: block())
   }
   return promise
+}
+
+/// Asynchrounously executes block after timeout on executor and wraps returned value into future
+public func future<T>(after timeout: Double, block: @escaping () throws -> T) -> FallibleFuture<T> {
+  return future(after: timeout) { fallible(block: block) }
 }

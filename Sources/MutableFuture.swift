@@ -24,12 +24,14 @@ import Dispatch
 
 typealias MutableFallibleFuture<T> = MutableFuture<Fallible<T>>
 
+/// **internal use only**
+/// Base class for futures that has has mutable private state.
 public class MutableFuture<T> : Future<T>, ThreadSafeContainer {
   typealias ThreadSafeItem = AbstractMutableFutureState<T>
   var head: ThreadSafeItem?
   let releasePool = ReleasePool()
 
-  override func add(handler: FutureHandler<T>) {
+  final override func add(handler: FutureHandler<T>) {
     self.updateHead {
       switch $0 {
       case let completedState as CompletedMutableFutureState<Value>:
@@ -63,10 +65,12 @@ public class MutableFuture<T> : Future<T>, ThreadSafeContainer {
   }
 }
 
+/// **internal use only**
 class AbstractMutableFutureState<T> {
   var isIncomplete: Bool { fatalError() /* abstract */ }
 }
 
+/// **internal use only**
 final class SubscribedMutableFutureState<T> : AbstractMutableFutureState<T> {
   typealias Value = T
   typealias Handler = FutureHandler<Value>
@@ -83,6 +87,7 @@ final class SubscribedMutableFutureState<T> : AbstractMutableFutureState<T> {
   }
 }
 
+/// **internal use only**
 final class CompletedMutableFutureState<T> : AbstractMutableFutureState<T> {
   let value: T
   override var isIncomplete: Bool { return false }
