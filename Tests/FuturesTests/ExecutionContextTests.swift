@@ -29,7 +29,7 @@ struct SimpleResponse {}
 
 class ExecutionContextTests : XCTestCase {
   func testFailure() {
-    class ObjectToDeallocate : ExecutionContext {
+    class ObjectToDeallocate : ExecutionContext, ReleasePoolOwner {
       let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
       var executor: Executor { return .queue(self.internalQueue) }
       let releasePool = ReleasePool()

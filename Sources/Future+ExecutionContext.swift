@@ -44,7 +44,7 @@ public extension Future {
       block(value, context)
     }
 
-    context.releasePool.insert(handler)
+    context.releaseOnDeinit(handler)
   }
 }
 

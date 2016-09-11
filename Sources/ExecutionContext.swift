@@ -24,32 +24,15 @@ import Dispatch
 
 public protocol ExecutionContext : class {
   var executor: Executor { get }
+  func releaseOnDeinit(_ object: AnyObject)
+}
+
+public protocol ReleasePoolOwner {
   var releasePool: ReleasePool { get }
 }
 
-//#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-//  extension NSObject {
-//    func associatedObject<T>(forKey key: String) -> T? {
-//      return key.withCString { objc_getAssociatedObject(self, $0) as! T? }
-//    }
-//
-//    func setAssociatedObject<T>(object: T?, forKey key: String) {
-//      key.withCString {
-//        objc_setAssociatedObject(self, $0, object, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-//      }
-//    }
-//  }
-//#endif
-//
-//#if os(macOS)
-//  import AppKit
-//  extension NSResponder : ExecutionContext {
-//    public var executor: Executor { return .main }
-//  }
-//#elseif os(iOS) || os(tvOS) || os(watchOS)
-//  import UIKit
-//  extension UIResponder : ExecutionContext {
-//    public var executor: Executor { return .main }
-//  }
-//#else
-//#endif
+public extension ExecutionContext where Self : ReleasePoolOwner {
+  func releaseOnDeinit(_ object: AnyObject) {
+    self.releasePool.insert(object)
+  }
+}
