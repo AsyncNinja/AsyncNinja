@@ -47,9 +47,8 @@ public extension Future where T : _Fallible {
 
   final public func liftSuccess<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Success) throws -> T) -> FallibleFuture<T> {
     return self.map(context: context, executor: executor) { (context, value) -> T in
-      if let failureValue = value.failureValue { throw failureValue }
-      if let successValue = value.successValue { return try transform(context, successValue) }
-      fatalError()
+      let successValue = try value.fetchSuccessValue()
+      return try transform(context, successValue)
     }
   }
 
