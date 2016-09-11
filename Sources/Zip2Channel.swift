@@ -26,6 +26,7 @@ public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> 
   let resultChannel = Producer<(T, U)>()
   let leftQueue = QueueImpl<T>()
   let rightQueue = QueueImpl<U>()
+  let sema = DispatchSemaphore(value: 1)
 
   func makeElement(_ leftQueue: QueueImpl<T>, _ rightQueue: QueueImpl<U>) -> (T, U)? {
     if leftQueue.isEmpty || rightQueue.isEmpty {
@@ -37,6 +38,8 @@ public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> 
 
   let leftHandler = leftChannel._onValue(executor: .immediate) { [weak resultChannel] leftValue in
     guard let resultChannel = resultChannel else { return }
+    sema.wait()
+    defer { sema.signal() }
     leftQueue.push(leftValue)
     if let element = makeElement(leftQueue, rightQueue) {
       resultChannel.send(element)
@@ -45,6 +48,8 @@ public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> 
 
   let rightHandler = rightChannel._onValue(executor: .immediate) { [weak resultChannel] rightValue in
     guard let resultChannel = resultChannel else { return }
+    sema.wait()
+    defer { sema.signal() }
     rightQueue.push(rightValue)
     if let element = makeElement(leftQueue, rightQueue) {
       resultChannel.send(element)
