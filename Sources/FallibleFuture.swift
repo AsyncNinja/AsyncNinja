@@ -38,7 +38,7 @@ public extension Future where T : _Fallible {
   final public func liftSuccess<T>(executor: Executor, transform: @escaping (Success) throws -> T) -> FallibleFuture<T> {
     return self.map(executor: executor) { $0.liftSuccess(transform: transform) }
   }
-  
+
   final public func liftFailure(executor: Executor, transform: @escaping (Error) -> Success) -> Future<Success> {
     return self.map(executor: executor) { $0.liftFailure(transform: transform) }
   }

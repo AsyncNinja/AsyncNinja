@@ -32,22 +32,6 @@ public extension Future {
     }
   }
 
-  final func map<U: ExecutionContext, V>(context: U, executor: Executor? = nil, _ transform: @escaping (U, Value) throws -> Future<V>) -> FallibleFuture<V> {
-    return self.map(executor: executor ?? context.executor) { [weak context] (value) -> Future<V> in
-      guard let context = context
-        else { throw ConcurrencyError.contextDeallocated }
-      return try transform(context, value)
-    }
-  }
-
-  final func map<U: ExecutionContext, V>(context: U, executor: Executor? = nil, _ transform: @escaping (U, Value) throws -> FallibleFuture<V>) -> FallibleFuture<V> {
-    return self.map(executor: executor ?? context.executor) { [weak context] (value) in
-      guard let context = context
-        else { throw ConcurrencyError.contextDeallocated }
-      return try transform(context, value)
-    }
-  }
-
   final func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, Value) -> Void) {
     let handler = self._onValue(executor: executor ?? context.executor) { [weak context] (value) in
       guard let context = context
@@ -94,24 +78,6 @@ public extension Future where T : _Fallible {
 
 public func future<T, U : ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U) throws -> T) -> FallibleFuture<T> {
   return future(executor: executor ?? context.executor) { [weak context] () -> T in
-    guard let context = context
-      else { throw ConcurrencyError.contextDeallocated }
-
-    return try block(context)
-  }
-}
-
-public func future<T, U : ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U) throws -> Future<T>) -> FallibleFuture<T> {
-  return future(executor: executor ?? context.executor) { [weak context] () -> Future<T>  in
-    guard let context = context
-      else { throw ConcurrencyError.contextDeallocated }
-
-    return try block(context)
-  }
-}
-
-public func future<T, U : ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U) throws -> FallibleFuture<T>) -> FallibleFuture<T> {
-  return future(executor: executor ?? context.executor) { [weak context] () -> FallibleFuture<T>  in
     guard let context = context
       else { throw ConcurrencyError.contextDeallocated }
 

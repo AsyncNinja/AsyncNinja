@@ -28,7 +28,7 @@ public protocol _Channel {
   func add(handler: Handler)
 }
 
-public protocol _ChannelHandler {
+public protocol _ChannelHandler : class {
   associatedtype Value
   init(executor: Executor, block: @escaping (Value) -> Void)
 }
@@ -127,4 +127,29 @@ public extension _Channel {
       return (localIndex, $0)
     }
   }
+}
+
+
+public extension _Channel {
+    final func map<U: ExecutionContext, V>(context: U, executor: Executor? = nil, _ transform: @escaping (U, Value) -> V) -> Channel<V> {
+        let derivedChannel = Producer<V>()
+
+        let handler = self._onValue(executor: executor ?? context.executor) { [weak derivedChannel, weak context] in
+            guard let derivedChannel = derivedChannel, let context = context else { return }
+            derivedChannel.send(transform(context, $0))
+        }
+
+        derivedChannel.releasePool.insert(handler)
+        return derivedChannel
+    }
+
+    final func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, Value) -> Void) {
+        let handler = self._onValue(executor: executor ?? context.executor) { [weak context] (value) in
+            guard let context = context
+                else { return }
+            block(context, value)
+        }
+        
+        context.releaseOnDeinit(handler)
+    }
 }

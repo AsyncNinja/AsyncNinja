@@ -9,7 +9,7 @@
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
   import Foundation
 
-  public extension ExecutionContext {
+  public extension Executor {
     static func operationQueue(_ queue: OperationQueue) -> Executor {
       return Executor(handler: queue.addOperation)
     }
