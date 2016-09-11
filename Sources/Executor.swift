@@ -25,22 +25,23 @@ import Dispatch
 /// Executor encapsulates asynchrounous way of execution escaped block.
 public struct Executor {
   public typealias Handler = (@escaping (Void) -> Void) -> Void
-  private let _handler: Handler
+  private let _impl: ExecutorImpl
+
+  init(impl: ExecutorImpl) {
+    _impl = impl
+  }
 
   /// Initialiaes executor with custom handler
   public init(handler: @escaping Handler) {
-    _handler = handler
+    _impl = HandlerBasedExecutorImpl(handler: handler)
   }
 
   func execute(_ block: @escaping (Void) -> Void) {
-    _handler(block)
+    _impl.fc_execute(block)
   }
 
   func execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
-    let deadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000 * 1000 * 1000))
-    DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
-      self.execute(block)
-    }
+    _impl.fc_execute(after: timeout, block)
   }
 }
 
@@ -71,11 +72,48 @@ public extension Executor {
 
   /// initializes executor based on specified queue
   static func queue(_ queue: DispatchQueue) -> Executor {
-    return Executor(handler: { queue.async(execute: $0) })
+    return Executor(impl: queue)
   }
 
   /// initializes executor based on global queue with specified QoS class
   static func queue(_ qos: DispatchQoS.QoSClass) -> Executor {
     return Executor.queue(DispatchQueue.global(qos: qos))
+  }
+}
+
+/// **internal use only**
+protocol ExecutorImpl {
+  func fc_execute(_ block: @escaping (Void) -> Void)
+  func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void)
+}
+
+extension DispatchQueue : ExecutorImpl {
+  func fc_execute(_ block: @escaping (Void) -> Void) {
+    self.async(execute: block)
+  }
+
+  func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
+    let wallDeadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000 * 1000 * 1000))
+    self.asyncAfter(wallDeadline: wallDeadline, execute: block)
+  }
+}
+
+final class HandlerBasedExecutorImpl : ExecutorImpl {
+  public typealias Handler = (@escaping (Void) -> Void) -> Void
+  private let _handler: Handler
+
+  init(handler: @escaping Handler) {
+    _handler = handler
+  }
+
+  func fc_execute(_ block: @escaping (Void) -> Void) {
+    _handler(block)
+  }
+
+  func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
+    let deadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000 * 1000 * 1000))
+    DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
+      self.fc_execute(block)
+    }
   }
 }
