@@ -65,16 +65,16 @@ class FuturesTests : XCTestCase {
       }
       
       let result1 = future(value: 1)
-        .map(executor: .userInteractive, makePerformer(globalQOS: .userInteractive, multiplier: 2))
-        .map(executor: .default, makePerformer(globalQOS: .default, multiplier: 3))
-        .map(executor: .utility, makePerformer(globalQOS: .utility, multiplier: 4))
-        .map(executor: .background, makePerformer(globalQOS: .background, multiplier: 5))
+        .map(executor: .userInteractive, transform: makePerformer(globalQOS: .userInteractive, multiplier: 2))
+        .map(executor: .default, transform: makePerformer(globalQOS: .default, multiplier: 3))
+        .map(executor: .utility, transform: makePerformer(globalQOS: .utility, multiplier: 4))
+        .map(executor: .background, transform: makePerformer(globalQOS: .background, multiplier: 5))
 
       let result2 = future(value: 2)
-        .map(executor: .background, makePerformer(globalQOS: .background, multiplier: 5))
-        .map(executor: .utility, makePerformer(globalQOS: .utility, multiplier: 4))
-        .map(executor: .default, makePerformer(globalQOS: .default, multiplier: 3))
-        .map(executor: .userInteractive, makePerformer(globalQOS: .userInteractive, multiplier: 2))
+        .map(executor: .background, transform: makePerformer(globalQOS: .background, multiplier: 5))
+        .map(executor: .utility, transform: makePerformer(globalQOS: .utility, multiplier: 4))
+        .map(executor: .default, transform: makePerformer(globalQOS: .default, multiplier: 3))
+        .map(executor: .userInteractive, transform: makePerformer(globalQOS: .userInteractive, multiplier: 2))
       
       let result = zip(result1, result2).map { $0 + $1 }.wait()
 
