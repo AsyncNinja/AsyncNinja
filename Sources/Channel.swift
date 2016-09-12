@@ -30,6 +30,7 @@ public class Channel<T> {
 
   init() { }
 
+  /// **internal use only**
   public func add(handler: Handler) {
     fatalError() // abstract
   }
@@ -65,6 +66,7 @@ public extension Channel {
   }
 }
 
+/// **internal use only**
 final public class ChannelHandler<T> : _ChannelHandler {
   public typealias Value = T
 
