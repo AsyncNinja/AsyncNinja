@@ -1,11 +1,30 @@
 #	Functional Concurrency for Swift
 
-![License](https://img.shields.io/github/license/mashape/apistatus.svg)
-![Platform](https://img.shields.io/badge/platform-ios%7Cosx-lighthgrey.svg)
+Complete toolset for building fast and safe apps that take advantage of concurrency.
+
+
+![License:MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
+![Platform:macOS|iOS|tvOS|watchOS](https://img.shields.io/badge/platform-macOS%7CiOS%7CtvOS%7CwatchOS-orange.svg)
 ![Swift](https://img.shields.io/badge/Swift-3.0-orange.svg)
 
+[Found issue? Have feature request? Have question?](https://github.com/antonvmironov/FunctionalConcurrency/issues)
+
 ##	Current State
-Experimental
+Usable:
+
+*	futures
+*	memory management model
+
+Unstable:
+
+*	channels
+*	finite channels
+
+Not done:
+
+*	buffered channels
+*	bindings
+*	many more
 
 ##	Basics
 This framework is an implementation of following principles:
