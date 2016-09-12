@@ -22,15 +22,47 @@
 
 import Dispatch
 
-public class Producer<T> : MutableChannel<T> {
-
+final public class Producer<T> : Channel<T>, ThreadSafeContainer {
+  typealias ThreadSafeItem = SubscribedProducerState<T>
+  var head: ThreadSafeItem?
+  
   override public init() { }
-
-  override public func send(_ value: Value) {
-    super.send(value)
+  
+  /// **internal use only**
+  override public func add(handler: Handler) {
+    self.updateHead {
+      .replace(ThreadSafeItem(handler: handler, next: $0))
+    }
   }
+  
+  final public func send(_ value: Value) {
+    var nextItem = self.head
+    while let currentItem = nextItem {
+      currentItem.handler?.handle(value: value)
+      nextItem = currentItem.next
+    }
+  }
+  
+  final func send<S: Sequence>(_ values: S) where S.Iterator.Element == Value {
+    var nextItem = self.head
+    while let currentItem = nextItem {
+      for value in values {
+        currentItem.handler?.handle(value: value)
+      }
+      nextItem = currentItem.next
+    }
+  }
+}
 
-  override public func send<S: Sequence>(_ values: S) where S.Iterator.Element == Value {
-    super.send(values)
+final class SubscribedProducerState<T> {
+  typealias Value = T
+  typealias Handler = ChannelHandler<Value>
+  
+  weak var handler: Handler?
+  let next: SubscribedProducerState<T>?
+  
+  init(handler: Handler, next: SubscribedProducerState<T>?) {
+    self.handler = handler
+    self.next = next
   }
 }
