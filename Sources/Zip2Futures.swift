@@ -22,33 +22,121 @@
 
 import Dispatch
 
-final class Zip2Futures<A, B> : MutableFuture<(A, B)> {
-  private var _subvalueA: A?
-  private var _subvalueB: B?
-
-  init(_ futureA: Future<A>, _ futureB: Future<B>) {
-    super.init()
-    let handlerA = futureA._onValue(executor: .immediate) { [weak self] subvalueA in
-      guard let self_ = self else { return }
-      self_._subvalueA = subvalueA
-      guard let value = self_._subvalueB.flatMap ({ (subvalueA, $0) }) else { return }
-      self_.tryComplete(with: value)
-    }
-    let handlerB = futureB._onValue(executor: .immediate) { [weak self] subvalueB in
-      guard let self_ = self else { return }
-      self_._subvalueB = subvalueB
-      guard let value = self_._subvalueA.flatMap ({ ($0, subvalueB) }) else { return }
-      self_.tryComplete(with: value)
-    }
-    self.releasePool.insert(handlerA)
-    self.releasePool.insert(handlerB)
-  }
-}
-
 public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, B)> {
-  return Zip2Futures(futureA, futureB)
+  let promise = Promise<(A, B)>()
+  let sema = DispatchSemaphore(value: 1)
+  var subvalueA: A? = nil
+  var subvalueB: B? = nil
+
+  let handlerA = futureA._onValue(executor: .immediate) { [weak promise] (localSubvalueA) in
+    guard let promise = promise else { return }
+    sema.wait()
+    defer { sema.signal() }
+    
+    subvalueA = localSubvalueA
+    if let localSubvalueB = subvalueB {
+      promise.complete(with: (localSubvalueA, localSubvalueB))
+    }
+  }
+  
+  let handlerB = futureB._onValue(executor: .immediate) { [weak promise] (localSubvalueB) in
+    guard let promise = promise else { return }
+    sema.wait()
+    defer { sema.signal() }
+    
+    subvalueB = localSubvalueB
+    if let localSubvalueA = subvalueA {
+      promise.complete(with: (localSubvalueA, localSubvalueB))
+    }
+  }
+  
+  promise.releasePool.insert(handlerA)
+  promise.releasePool.insert(handlerB)
+  
+  return promise
 }
 
 public func zip<A, B>(_ futureA: Future<A>, _ valueB: B) -> Future<(A, B)> {
   return futureA.map(executor: .immediate) { ($0, valueB) }
+}
+
+public func zip<A, B>(_ futureA: FallibleFuture<A>, _ futureB: FallibleFuture<B>) -> FalliblePromise<(A, B)> {
+  let promise = FalliblePromise<(A, B)>()
+  let sema = DispatchSemaphore(value: 1)
+  var subvalueA: A? = nil
+  var subvalueB: B? = nil
+  
+  let handlerA = futureA._onValue(executor: .immediate) { [weak promise] (localSubvalueA) in
+    guard let promise = promise else { return }
+    sema.wait()
+    defer { sema.signal() }
+    
+    localSubvalueA.onFailure(promise.fail(with:))
+    localSubvalueA.onSuccess { localSubvalueA in
+      subvalueA = localSubvalueA
+      if let localSubvalueB = subvalueB {
+        promise.succeed(with: (localSubvalueA, localSubvalueB))
+      }
+    }
+  }
+  
+  let handlerB = futureB._onValue(executor: .immediate) { [weak promise] (localSubvalueB) in
+    guard let promise = promise else { return }
+    sema.wait()
+    defer { sema.signal() }
+    
+    localSubvalueB.onFailure(promise.fail(with:))
+    localSubvalueB.onSuccess { localSubvalueB in
+      subvalueB = localSubvalueB
+      if let localSubvalueA = subvalueA {
+        promise.succeed(with: (localSubvalueA, localSubvalueB))
+      }
+    }
+  }
+  
+  promise.releasePool.insert(handlerA)
+  promise.releasePool.insert(handlerB)
+  
+  return promise
+}
+
+public func zip<A, B>(_ futureA: FallibleFuture<A>, _ futureB: Future<B>) -> FalliblePromise<(A, B)> {
+  let promise = FalliblePromise<(A, B)>()
+  let sema = DispatchSemaphore(value: 1)
+  var subvalueA: A? = nil
+  var subvalueB: B? = nil
+  
+  let handlerA = futureA._onValue(executor: .immediate) { [weak promise] (localSubvalueA) in
+    guard let promise = promise else { return }
+    sema.wait()
+    defer { sema.signal() }
+    
+    localSubvalueA.onFailure(promise.fail(with:))
+    localSubvalueA.onSuccess { localSubvalueA in
+      subvalueA = localSubvalueA
+      if let localSubvalueB = subvalueB {
+        promise.succeed(with: (localSubvalueA, localSubvalueB))
+      }
+    }
+  }
+  
+  let handlerB = futureB._onValue(executor: .immediate) { [weak promise] (localSubvalueB) in
+    guard let promise = promise else { return }
+    sema.wait()
+    defer { sema.signal() }
+    
+    subvalueB = localSubvalueB
+    if let localSubvalueA = subvalueA {
+      promise.succeed(with: (localSubvalueA, localSubvalueB))
+    }
+  }
+  
+  promise.releasePool.insert(handlerA)
+  promise.releasePool.insert(handlerB)
+  
+  return promise
+}
+
+public func zip<A, B>(_ futureA: FallibleFuture<A>, _ valueB: B) -> FallibleFuture<(A, B)> {
+  return futureA.liftSuccess(executor: .immediate) { ($0, valueB) }
 }
