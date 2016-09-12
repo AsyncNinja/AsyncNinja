@@ -104,4 +104,25 @@ public extension Collection where Self.IndexDistance == Int {
 
     return promise
   }
+
+  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Self.Iterator.Element) throws -> T) -> FallibleFuture<[T]> {
+    return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> T in
+      guard let context = context else { throw ConcurrencyError.contextDeallocated }
+      return try transform(context, value)
+    }
+  }
+  
+  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Self.Iterator.Element) throws -> Future<T>) -> FallibleFuture<[T]> {
+    return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> Future<T> in
+      guard let context = context else { throw ConcurrencyError.contextDeallocated }
+      return try transform(context, value)
+    }
+  }
+  
+  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Self.Iterator.Element) throws -> FallibleFuture<T>) -> FallibleFuture<[T]> {
+    return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> FallibleFuture<T> in
+      guard let context = context else { throw ConcurrencyError.contextDeallocated }
+      return try transform(context, value)
+    }
+  }
 }
