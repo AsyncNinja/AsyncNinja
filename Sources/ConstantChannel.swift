@@ -22,7 +22,7 @@
 
 import Dispatch
 
-class ConstantChannel<S: Sequence> : Channel<S.Iterator.Element> {
+final class ConstantChannel<S: Sequence> : Channel<S.Iterator.Element> {
   private let _sequence: S
 
   init(sequence: S) {

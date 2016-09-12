@@ -28,7 +28,7 @@ final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContain
   typealias FinalState = FinalFiniteProducerState<RegularValue, FinalValue>
   var head: ThreadSafeItem?
 
-  override init() { }
+  override public init() { }
   
   /// **internal use only**
   override public func add(handler: Handler) {

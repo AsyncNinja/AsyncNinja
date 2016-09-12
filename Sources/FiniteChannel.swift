@@ -48,6 +48,7 @@ public enum FiniteChannelValue<T, U> {
   case final(FinalValue)
 }
 
+/// **internal use only**
 final public class FiniteChannelHandler<T, U> : _ChannelHandler {
   public typealias RegularValue = T
   public typealias FinalValue = U

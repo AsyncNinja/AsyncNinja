@@ -24,7 +24,7 @@ import Dispatch
 
 public typealias Releasable = Any
 
-public class ReleasePool : ThreadSafeContainer {
+final public class ReleasePool : ThreadSafeContainer {
   typealias ThreadSafeItem = DisposableObjectContainer
 
   var head: ThreadSafeItem? = nil
@@ -40,7 +40,7 @@ public class ReleasePool : ThreadSafeContainer {
   }
 }
 
-class DisposableObjectContainer {
+final class DisposableObjectContainer {
   let object: Releasable
   let next: DisposableObjectContainer?
 

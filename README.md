@@ -1,7 +1,6 @@
 #	Functional Concurrency for Swift
 
-Complete toolset for building fast and safe apps that take advantage of concurrency.
-
+Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
 
 ![License:MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
 ![Platform:macOS|iOS|tvOS|watchOS](https://img.shields.io/badge/platform-macOS%7CiOS%7CtvOS%7CwatchOS-orange.svg)
@@ -10,21 +9,9 @@ Complete toolset for building fast and safe apps that take advantage of concurre
 [Found issue? Have feature request? Have question?](https://github.com/antonvmironov/FunctionalConcurrency/issues)
 
 ##	Current State
-Usable:
-
-*	futures
-*	memory management model
-
-Unstable:
-
-*	channels
-*	finite channels
-
-Not done:
-
-*	buffered channels
-*	bindings
-*	many more
+*	Usable: `Future`, `Promise`, `Fallible`, `Executor`, `ExecutionContext`
+*	Untested: `Channel`, `Producer`, `FiniteChannel`, `FiniteProducer`
+* 	Not done yet: buffered channels, bindings, many more
 
 ##	Basics
 This framework is an implementation of following principles:
@@ -44,6 +31,9 @@ This framework is an implementation of following principles:
 
 *in oppose to other implementations future may not complete with an error by default. Combination of `Future<Fallible<T>>` must be used in order to have this feature (`FallibleFuture<T>` typealias is also availbale).
 
+##	Documentation
+*	[Actor Model](Docs/ActorModel.md)
+*	[Memory Management](Docs/MemoryManagement.md)
 	
 ##	Example
 ###	Problem
@@ -183,7 +173,3 @@ can be provided by `MaterialsProvider`. Workers that make all above work concurr
 	*	AppKit
 	*	UIKit
 	*	server side
-
-##	Documentation
-*	[Actor Model](Docs/ActorModel.md)
-*	[Memory Management](Docs/MemoryManagement.md)

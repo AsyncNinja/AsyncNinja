@@ -22,7 +22,7 @@
 
 import Dispatch
 
-class ConstantFuture<T> : Future<T> {
+final class ConstantFuture<T> : Future<T> {
   private var _value: Value
 
   init(value: Value) {

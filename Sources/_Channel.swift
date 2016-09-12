@@ -25,9 +25,12 @@ import Foundation
 public protocol _Channel {
   associatedtype Handler : _ChannelHandler
   typealias Value = Self.Handler.Value
+
+  /// **internal use only**
   func add(handler: Handler)
 }
 
+/// **internal use only**
 public protocol _ChannelHandler : class {
   associatedtype Value
   init(executor: Executor, block: @escaping (Value) -> Void)
