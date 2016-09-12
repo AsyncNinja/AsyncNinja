@@ -104,6 +104,33 @@ public extension Future {
   }
 }
 
+/// Asynchrounously executes block on executor and wraps returned value into future
+public func future<T>(executor: Executor, block: @escaping () -> T) -> Future<T> {
+  let promise = Promise<T>()
+  executor.execute { [weak promise] in promise?.complete(with: block()) }
+  return promise
+}
+
+/// Asynchrounously executes block on executor and wraps returned value into future
+public func future<T>(executor: Executor, block: @escaping () throws -> T) -> FallibleFuture<T> {
+  return future(executor: executor) { fallible(block: block) }
+}
+
+/// Asynchrounously executes block after timeout on executor and wraps returned value into future
+public func future<T>(executor: Executor = .primary, after timeout: Double, block: @escaping () -> T) -> Future<T> {
+  let promise = Promise<T>()
+  executor.execute(after: timeout) { [weak promise] in
+    guard let promise = promise else { return }
+    promise.complete(with: block())
+  }
+  return promise
+}
+
+/// Asynchrounously executes block after timeout on executor and wraps returned value into future
+public func future<T>(after timeout: Double, block: @escaping () throws -> T) -> FallibleFuture<T> {
+  return future(after: timeout) { fallible(block: block) }
+}
+
 /// **Internal use only**
 ///
 /// Each subscription to a future value will be expressed in such handler.

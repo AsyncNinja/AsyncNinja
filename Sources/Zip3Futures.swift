@@ -22,39 +22,105 @@
 
 import Dispatch
 
-final class Zip3Futures<A, B, C> : MutableFuture<(A, B, C)> {
-  private var _subvalueA: A?
-  private var _subvalueB: B?
-  private var _subvalueC: C?
-
-  init(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: Future<C>) {
-    super.init()
-    let handlerA = futureA._onValue(executor: .immediate) { [weak self] (subvalueA) in
-      guard let self_ = self else { return }
-      self_._subvalueA = subvalueA
-      guard let subvalueB = self_._subvalueB, let subvalueC = self_._subvalueC else { return }
-      self_.tryComplete(with: (subvalueA, subvalueB, subvalueC))
+public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: Future<C>) -> Future<(A, B, C)> {
+  let promise = Promise<(A, B, C)>()
+  let sema = DispatchSemaphore(value: 1)
+  var subvalueA: A? = nil
+  var subvalueB: B? = nil
+  var subvalueC: C? = nil
+  
+  let handlerA = futureA._onValue(executor: .immediate) { [weak promise] (localSubvalueA) in
+    guard let promise = promise else { return }
+    sema.wait()
+    defer { sema.signal() }
+    
+    subvalueA = localSubvalueA
+    if let localSubvalueB = subvalueB, let localSubvalueC = subvalueC {
+      promise.complete(with: (localSubvalueA, localSubvalueB, localSubvalueC))
     }
-
-    let handlerB = futureB._onValue(executor: .immediate) { [weak self] (subvalueB) in
-      guard let self_ = self else { return }
-      self_._subvalueB = subvalueB
-      guard let subvalueA = self_._subvalueA, let subvalueC = self_._subvalueC else { return }
-      self_.tryComplete(with: (subvalueA, subvalueB, subvalueC))
-    }
-
-    let handlerC = futureC._onValue(executor: .immediate) { [weak self] (subvalueC) in
-      guard let self_ = self else { return }
-      self_._subvalueC = subvalueC
-      guard let subvalueA = self_._subvalueA, let subvalueB = self_._subvalueB else { return }
-      self_.tryComplete(with: (subvalueA, subvalueB, subvalueC))
-    }
-    self.releasePool.insert(handlerA)
-    self.releasePool.insert(handlerB)
-    self.releasePool.insert(handlerC)
   }
+  
+  let handlerB = futureB._onValue(executor: .immediate) { [weak promise] (localSubvalueB) in
+    guard let promise = promise else { return }
+    sema.wait()
+    defer { sema.signal() }
+    
+    subvalueB = localSubvalueB
+    if let localSubvalueA = subvalueA, let localSubvalueC = subvalueC {
+      promise.complete(with: (localSubvalueA, localSubvalueB, localSubvalueC))
+    }
+  }
+  
+  let handlerC = futureC._onValue(executor: .immediate) { [weak promise] (localSubvalueC) in
+    guard let promise = promise else { return }
+    sema.wait()
+    defer { sema.signal() }
+    
+    subvalueC = localSubvalueC
+    if let localSubvalueA = subvalueA, let localSubvalueB = subvalueB {
+      promise.complete(with: (localSubvalueA, localSubvalueB, localSubvalueC))
+    }
+  }
+  
+  promise.releasePool.insert(handlerA)
+  promise.releasePool.insert(handlerB)
+  promise.releasePool.insert(handlerC)
+  
+  return promise
 }
 
-public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: Future<C>) -> Future<(A, B, C)> {
-  return Zip3Futures(futureA, futureB, futureC)
+public func zip<A, B, C>(_ futureA: FallibleFuture<A>, _ futureB: FallibleFuture<B>, _ futureC: FallibleFuture<C>) -> FallibleFuture<(A, B, C)> {
+  let promise = FalliblePromise<(A, B, C)>()
+  let sema = DispatchSemaphore(value: 1)
+  var subvalueA: A? = nil
+  var subvalueB: B? = nil
+  var subvalueC: C? = nil
+  
+  let handlerA = futureA._onValue(executor: .immediate) { [weak promise] (localSubvalueA) in
+    guard let promise = promise else { return }
+    sema.wait()
+    defer { sema.signal() }
+    
+    localSubvalueA.onFailure(promise.fail(with:))
+    localSubvalueA.onSuccess { localSubvalueA in
+      subvalueA = localSubvalueA
+      if let localSubvalueB = subvalueB, let localSubvalueC = subvalueC {
+        promise.succeed(with: (localSubvalueA, localSubvalueB, localSubvalueC))
+      }
+    }
+  }
+  
+  let handlerB = futureB._onValue(executor: .immediate) { [weak promise] (localSubvalueB) in
+    guard let promise = promise else { return }
+    sema.wait()
+    defer { sema.signal() }
+    
+    localSubvalueB.onFailure(promise.fail(with:))
+    localSubvalueB.onSuccess { localSubvalueB in
+      subvalueB = localSubvalueB
+      if let localSubvalueA = subvalueA, let localSubvalueC = subvalueC {
+        promise.succeed(with: (localSubvalueA, localSubvalueB, localSubvalueC))
+      }
+    }
+  }
+  
+  let handlerC = futureC._onValue(executor: .immediate) { [weak promise] (localSubvalueC) in
+    guard let promise = promise else { return }
+    sema.wait()
+    defer { sema.signal() }
+    
+    localSubvalueC.onFailure(promise.fail(with:))
+    localSubvalueC.onSuccess { localSubvalueC in
+      subvalueC = localSubvalueC
+      if let localSubvalueA = subvalueA, let localSubvalueB = subvalueB {
+        promise.succeed(with: (localSubvalueA, localSubvalueB, localSubvalueC))
+      }
+    }
+  }
+  
+  promise.releasePool.insert(handlerA)
+  promise.releasePool.insert(handlerB)
+  promise.releasePool.insert(handlerC)
+  
+  return promise
 }

@@ -23,14 +23,47 @@
 import Dispatch
 
 /// Promise that may be manually completed by owner.
-final public class Promise<T> : MutableFuture<T> {
+final public class Promise<T> : Future<T>, ThreadSafeContainer {
+  typealias ThreadSafeItem = AbstractPromiseState<T>
+  var head: ThreadSafeItem?
+  let releasePool = ReleasePool()
+
   override public init() { }
+
+  /// **internal use only**
+  final override func add(handler: FutureHandler<T>) {
+    self.updateHead {
+      switch $0 {
+      case let completedState as CompletedPromiseState<Value>:
+        handler.handle(value: completedState.value)
+        return .keep
+      case let incompleteState as SubscribedPromiseState<Value>:
+        return .replace(SubscribedPromiseState(handler: handler, next: incompleteState, owner: self))
+      case .none:
+        return .replace(SubscribedPromiseState(handler: handler, next: nil, owner: self))
+      default:
+        fatalError()
+      }
+    }
+  }
 
   /// Completes promise with value and returns true.
   /// Returns false if promise was completed before.
   @discardableResult
   final public func complete(with value: Value) -> Bool {
-    return self.tryComplete(with: value)
+    let completedItem = CompletedPromiseState(value: value)
+    let (oldHead, newHead) = self.updateHead { ($0?.isIncomplete ?? true) ? .replace(completedItem) : .keep }
+    let didComplete = (completedItem === newHead)
+    guard didComplete else { return false }
+    
+    var nextItem = oldHead
+    while let currentItem = nextItem as? SubscribedPromiseState<Value> {
+      currentItem.handler?.handle(value: value)
+      nextItem = currentItem.next
+    }
+    self.releasePool.drain()
+    
+    return true
   }
 
   /// Completes promise when specified future completes.
@@ -38,35 +71,40 @@ final public class Promise<T> : MutableFuture<T> {
   @discardableResult
   final public func complete(with future: Future<Value>) {
     let handler = future._onValue(executor: .immediate) { [weak self] in
-      self?.tryComplete(with: $0)
+      self?.complete(with: $0)
     }
     self.releasePool.insert(handler)
   }
 }
 
-/// Asynchrounously executes block on executor and wraps returned value into future
-public func future<T>(executor: Executor, block: @escaping () -> T) -> Future<T> {
-  let promise = Promise<T>()
-  executor.execute { [weak promise] in promise?.complete(with: block()) }
-  return promise
+/// **internal use only**
+class AbstractPromiseState<T> {
+  var isIncomplete: Bool { fatalError() /* abstract */ }
 }
 
-/// Asynchrounously executes block on executor and wraps returned value into future
-public func future<T>(executor: Executor, block: @escaping () throws -> T) -> FallibleFuture<T> {
-  return future(executor: executor) { fallible(block: block) }
-}
-
-/// Asynchrounously executes block after timeout on executor and wraps returned value into future
-public func future<T>(executor: Executor = .primary, after timeout: Double, block: @escaping () -> T) -> Future<T> {
-  let promise = Promise<T>()
-  executor.execute(after: timeout) { [weak promise] in
-    guard let promise = promise else { return }
-    promise.complete(with: block())
+/// **internal use only**
+final class SubscribedPromiseState<T> : AbstractPromiseState<T> {
+  typealias Value = T
+  typealias Handler = FutureHandler<Value>
+  
+  weak private(set) var handler: Handler?
+  let next: SubscribedPromiseState<T>?
+  let owner: Promise<T>
+  override var isIncomplete: Bool { return true }
+  
+  init(handler: Handler, next: SubscribedPromiseState<T>?, owner: Promise<T>) {
+    self.handler = handler
+    self.next = next
+    self.owner = owner
   }
-  return promise
 }
 
-/// Asynchrounously executes block after timeout on executor and wraps returned value into future
-public func future<T>(after timeout: Double, block: @escaping () throws -> T) -> FallibleFuture<T> {
-  return future(after: timeout) { fallible(block: block) }
+/// **internal use only**
+final class CompletedPromiseState<T> : AbstractPromiseState<T> {
+  let value: T
+  override var isIncomplete: Bool { return false }
+  
+  init(value: T) {
+    self.value = value
+  }
 }
