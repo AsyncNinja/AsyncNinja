@@ -22,15 +22,87 @@
 
 import Dispatch
 
-public class FiniteProducer<T, U> : MutableFiniteChannel<T, U> {
+final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContainer {
+  typealias ThreadSafeItem = FiniteProducerState<RegularValue, FinalValue>
+  typealias RegularState = RegularFiniteProducerState<RegularValue, FinalValue>
+  typealias FinalState = FinalFiniteProducerState<RegularValue, FinalValue>
+  var head: ThreadSafeItem?
 
-  override public init() { }
-
-  override func send(regular regularValue: RegularValue) -> Bool {
-    return super.send(regular: regularValue)
+  override init() { }
+  
+  /// **internal use only**
+  override public func add(handler: Handler) {
+    self.updateHead {
+      switch $0 {
+      case .none:
+        return .replace(RegularState(handler: handler, next: nil))
+      case let regularState as RegularState:
+        return .replace(RegularState(handler: handler, next: regularState))
+      case let finalState as FinalState:
+        handler.handle(value: .final(finalState.finalValue))
+        return .keep
+      default:
+        fatalError()
+      }
+    }
   }
+  
+  private func notify(_ value: Value, head: ThreadSafeItem?) -> Bool {
+    guard let regularState = head as? RegularState else { return false }
+    var nextItem: RegularState? = regularState
+    
+    while let currentItem = nextItem {
+      currentItem.handler?.handle(value: value)
+      nextItem = currentItem.next
+    }
+    return true
+  }
+  
+  public func send(regular regularValue: RegularValue) -> Bool {
+    return self.notify(.regular(regularValue), head: self.head)
+  }
+  
+  public func send(final finalValue: FinalValue) -> Bool {
+    let (oldHead, newHead) = self.updateHead {
+      switch $0 {
+      case .none:
+        return .replace(FinalState(finalValue: finalValue))
+      case is RegularState:
+        return .replace(FinalState(finalValue: finalValue))
+      case is FinalState:
+        return .keep
+      default:
+        fatalError()
+      }
+    }
+    
+    guard nil != newHead else { return false }
+    
+    return self.notify(.final(finalValue), head: oldHead)
+  }
+}
 
-  override func send(final finalValue: FinalValue) -> Bool {
-    return super.send(final: finalValue)
+class FiniteProducerState<T, U> {
+  typealias Value = FiniteChannelValue<T, U>
+  typealias Handler = FiniteChannelHandler<T, U>
+  
+  init() { }
+}
+
+final class RegularFiniteProducerState<T, U> : FiniteProducerState<T, U> {
+  weak var handler: Handler?
+  let next: RegularFiniteProducerState<T, U>?
+  
+  init(handler: Handler, next: RegularFiniteProducerState<T, U>?) {
+    self.handler = handler
+    self.next = next
+  }
+}
+
+final class FinalFiniteProducerState<T, U> : FiniteProducerState<T, U> {
+  let finalValue: U
+  
+  init(finalValue: U) {
+    self.finalValue = finalValue
   }
 }
