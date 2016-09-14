@@ -8,10 +8,7 @@ Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
 
 [Found issue? Have feature request? Have question?](https://github.com/AsyncNinja/AsyncNinja/issues)
 
-##	Current State
-*	Usable: `Future`, `Promise`, `Fallible`, `Executor`, `ExecutionContext`
-*	Untested: `Channel`, `Producer`, `FiniteChannel`, `FiniteProducer`
-* 	Not done yet: buffered channels, bindings, many more
+[Current Progress](https://github.com/AsyncNinja/AsyncNinja/projects/1)
 
 ##	Basics
 This framework is an implementation of following principles:
@@ -154,30 +151,4 @@ can be provided by `MaterialsProvider`. Workers that make all above work concurr
 	
 ### Advantages of solution based on futures
 *	products are function returns not argument of callback
-*	combining products is much simpler	
-
-##	Wishlist
-*	Support of latest Swift
-*	Solution for Memory Management (20% done)
-*	Futures (60% done)
-	*	simple
-	*	typesafe
-	*	composable
-*	Channels (20% done)
-	*	buffered and unbuffered
-	*	infinite and finite
-	*	composable
-	*	producers: (timers, IOs and etc.)
-	*	integration with Objective-C runtime (KVO and etc.)
-*	Related abstractions implementation (10% done)
-	*	validation monad aka Fallible
-	*	...
-*	Test Coverage (38% done)
-*	Performance Measurement (1% done)
-*	Documentation (1% done)
-*	Sample Code (1% done)
-*	Linux support (0% done)	
-*	Integrations (10% done)
-	*	AppKit
-	*	UIKit
-	*	server side
+*	combining products is much simpler
