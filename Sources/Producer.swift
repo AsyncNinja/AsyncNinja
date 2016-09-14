@@ -29,25 +29,27 @@ final public class Producer<T> : Channel<T>, ThreadSafeContainer {
   override public init() { }
   
   /// **internal use only**
-  override public func add(handler: Handler) {
+  override public func makePeriodicalHandler(executor: Executor, block: @escaping (T) -> Void) -> ChannelHandler<T>? {
+    let handler = PeriodicalHandler(executor: executor, block: block)
     self.updateHead {
       .replace(ThreadSafeItem(handler: handler, next: $0))
     }
+    return handler
   }
   
-  final public func send(_ value: Value) {
+  final public func send(_ periodical: PeriodicalValue) {
     var nextItem = self.head
     while let currentItem = nextItem {
-      currentItem.handler?.handle(value: value)
+      currentItem.handler?.handle(periodical)
       nextItem = currentItem.next
     }
   }
   
-  final func send<S: Sequence>(_ values: S) where S.Iterator.Element == Value {
+  final func send<S: Sequence>(_ periodicals: S) where S.Iterator.Element == PeriodicalValue {
     var nextItem = self.head
     while let currentItem = nextItem {
-      for value in values {
-        currentItem.handler?.handle(value: value)
+      if let handler = currentItem.handler {
+        periodicals.forEach(handler.handle)
       }
       nextItem = currentItem.next
     }
@@ -55,8 +57,8 @@ final public class Producer<T> : Channel<T>, ThreadSafeContainer {
 }
 
 final class SubscribedProducerState<T> {
-  typealias Value = T
-  typealias Handler = ChannelHandler<Value>
+  typealias Periodic = T
+  typealias Handler = ChannelHandler<Periodic>
   
   weak var handler: Handler?
   let next: SubscribedProducerState<T>?

@@ -22,63 +22,53 @@
 
 import Dispatch
 
-public class Channel<T> {
-  public typealias Value = T
-  public typealias Handler = ChannelHandler<Value>
+public class Channel<T> : Periodical {
+  public typealias PeriodicalValue = T
+  public typealias Value = PeriodicalValue
+  public typealias PeriodicalHandler = ChannelHandler<Value>
 
   let releasePool = ReleasePool()
 
   init() { }
 
-  /// **internal use only**
-  public func add(handler: Handler) {
-    fatalError() // abstract
+  public func makePeriodicalHandler(executor: Executor, block: @escaping (PeriodicalValue) -> Void) -> PeriodicalHandler? {
+    /* abstract */
+    fatalError()
   }
-}
-
-extension Channel : _Channel {
 }
 
 public extension Channel {
-  func bufferedPairs() -> Channel<(T, T)> {
-    return self.buffered(capacity: 2).map(executor: .immediate) { ($0[0], $0[1]) }
+  public func map<T>(executor: Executor, transform: @escaping (Value) -> T) -> Channel<T> {
+    return self.mapPeriodic(executor: executor, transform: transform)
   }
 
-  func buffered(capacity: Int) -> Channel<[T]> {
-    var buffer = [T]()
-    buffer.reserveCapacity(capacity)
-
-    return self.makeDerivedChannel(executor: .immediate) { (producer, value) in
-      buffer.append(value)
-      if capacity == buffer.count {
-        producer.send(buffer)
-        buffer.removeAll(keepingCapacity: true)
-      }
-    }
+  public func flatMap<T>(executor: Executor = .primary, transform: @escaping (PeriodicalValue) -> T?) -> Channel<T> {
+    return self.flatMapPeriodical(executor: executor, transform: transform)
   }
 
-  func enumerated() -> Channel<(Int, T)> {
-    var index: Int64 = -1
-    return self.map(executor: .immediate) {
-      let localIndex = Int(OSAtomicIncrement64(&index))
-      return (localIndex, $0)
-    }
+  public func flatMap<S: Sequence>(executor: Executor = .primary, transform: @escaping (PeriodicalValue) -> S) -> Channel<S.Iterator.Element> {
+    return self.flatMapPeriodical(executor: executor, transform: transform)
   }
+
+  func filter(executor: Executor = .primary, predicate: @escaping (PeriodicalValue) -> Bool) -> Channel<PeriodicalValue> {
+    return self.filterPeriodical(executor: executor, predicate: predicate)
+  }
+
 }
 
 /// **internal use only**
-final public class ChannelHandler<T> : _ChannelHandler {
-  public typealias Value = T
+final public class ChannelHandler<T> {
+  public typealias PeriodicalValue = T
 
   let executor: Executor
-  let block: (Value) -> Void
+  let block: (PeriodicalValue) -> Void
 
-  public init(executor: Executor, block: @escaping (Value) -> Void) {
+  public init(executor: Executor, block: @escaping (PeriodicalValue) -> Void) {
     self.executor = executor
     self.block = block
   }
 
-  func handle(value: Value) {
+  func handle(_ value: PeriodicalValue) {
     let block = self.block
     self.executor.execute { block(value) }
   }

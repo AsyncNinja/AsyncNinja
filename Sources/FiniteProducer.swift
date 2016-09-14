@@ -23,15 +23,16 @@
 import Dispatch
 
 final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContainer {
-  typealias ThreadSafeItem = FiniteProducerState<RegularValue, FinalValue>
-  typealias RegularState = RegularFiniteProducerState<RegularValue, FinalValue>
-  typealias FinalState = FinalFiniteProducerState<RegularValue, FinalValue>
+  typealias ThreadSafeItem = FiniteProducerState<PeriodicalValue, FinalValue>
+  typealias RegularState = RegularFiniteProducerState<PeriodicalValue, FinalValue>
+  typealias FinalState = FinalFiniteProducerState<PeriodicalValue, FinalValue>
   var head: ThreadSafeItem?
 
   override public init() { }
   
   /// **internal use only**
-  override public func add(handler: Handler) {
+  override public func makeHandler(executor: Executor, block: @escaping (Value) -> Void) -> Handler? {
+    let handler = Handler(executor: executor, block: block)
     self.updateHead {
       switch $0 {
       case .none:
@@ -39,36 +40,38 @@ final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContain
       case let regularState as RegularState:
         return .replace(RegularState(handler: handler, next: regularState))
       case let finalState as FinalState:
-        handler.handle(value: .final(finalState.finalValue))
+        handler.handle(.final(finalState.final))
         return .keep
       default:
         fatalError()
       }
     }
+
+    return handler
   }
-  
+
   private func notify(_ value: Value, head: ThreadSafeItem?) -> Bool {
     guard let regularState = head as? RegularState else { return false }
     var nextItem: RegularState? = regularState
     
     while let currentItem = nextItem {
-      currentItem.handler?.handle(value: value)
+      currentItem.handler?.handle(value)
       nextItem = currentItem.next
     }
     return true
   }
   
-  public func send(regular regularValue: RegularValue) -> Bool {
-    return self.notify(.regular(regularValue), head: self.head)
+  public func send(periodical: PeriodicalValue) -> Bool {
+    return self.notify(.periodical(periodical), head: self.head)
   }
   
-  public func send(final finalValue: FinalValue) -> Bool {
+  public func send(final: FinalValue) -> Bool {
     let (oldHead, newHead) = self.updateHead {
       switch $0 {
       case .none:
-        return .replace(FinalState(finalValue: finalValue))
+        return .replace(FinalState(final: final))
       case is RegularState:
-        return .replace(FinalState(finalValue: finalValue))
+        return .replace(FinalState(final: final))
       case is FinalState:
         return .keep
       default:
@@ -78,7 +81,7 @@ final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContain
     
     guard nil != newHead else { return false }
     
-    return self.notify(.final(finalValue), head: oldHead)
+    return self.notify(.final(final), head: oldHead)
   }
 }
 
@@ -100,9 +103,9 @@ final class RegularFiniteProducerState<T, U> : FiniteProducerState<T, U> {
 }
 
 final class FinalFiniteProducerState<T, U> : FiniteProducerState<T, U> {
-  let finalValue: U
+  let final: U
   
-  init(finalValue: U) {
-    self.finalValue = finalValue
+  init(final: U) {
+    self.final = final
   }
 }

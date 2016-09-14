@@ -22,37 +22,48 @@
 
 import Dispatch
 
-public class FiniteChannel<T, U> {
-  public typealias RegularValue = T
+public class FiniteChannel<T, U> : Periodical, Finite {
+  public typealias PeriodicalValue = T
   public typealias FinalValue = U
-  public typealias Value = FiniteChannelValue<RegularValue, FinalValue>
-  public typealias Handler = FiniteChannelHandler<RegularValue, FinalValue>
+  public typealias Value = FiniteChannelValue<PeriodicalValue, FinalValue>
+  public typealias Handler = FiniteChannelHandler<PeriodicalValue, FinalValue>
+  public typealias PeriodicalHandler = Handler
+  public typealias FinalHandler = Handler
 
   let releasePool = ReleasePool()
 
   init() { }
 
-  public func add(handler: Handler) {
-    fatalError() // abstract
+  final public func makeFinalHandler(executor: Executor, block: @escaping (FinalValue) -> Void) -> Handler? {
+    return self.makeHandler(executor: executor) {
+      if case .final(let value) = $0 { block(value) }
+    }
+  }
+
+  final public func makePeriodicalHandler(executor: Executor, block: @escaping (PeriodicalValue) -> Void) -> Handler? {
+    return self.makeHandler(executor: executor) {
+      if case .periodical(let value) = $0 { block(value) }
+    }
+  }
+  public func makeHandler(executor: Executor, block: @escaping (Value) -> Void) -> Handler? {
+    /* abstract */
+    fatalError()
   }
 }
 
-extension FiniteChannel : _Channel {
-}
-
 public enum FiniteChannelValue<T, U> {
-  public typealias RegularValue = T
+  public typealias PeriodicalValue = T
   public typealias FinalValue = U
 
-  case regular(RegularValue)
+  case periodical(PeriodicalValue)
   case final(FinalValue)
 }
 
 /// **internal use only**
-final public class FiniteChannelHandler<T, U> : _ChannelHandler {
-  public typealias RegularValue = T
+final public class FiniteChannelHandler<T, U> {
+  public typealias PeriodicalValue = T
   public typealias FinalValue = U
-  public typealias Value = FiniteChannelValue<RegularValue, FinalValue>
+  public typealias Value = FiniteChannelValue<PeriodicalValue, FinalValue>
 
   let executor: Executor
   let block: (Value) -> Void
@@ -62,7 +73,7 @@ final public class FiniteChannelHandler<T, U> : _ChannelHandler {
     self.block = block
   }
 
-  func handle(value: Value) {
+  func handle(_ value: Value) {
     let block = self.block
     self.executor.execute { block(value) }
   }

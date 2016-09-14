@@ -31,11 +31,12 @@ final public class Promise<T> : Future<T>, ThreadSafeContainer {
   override public init() { }
 
   /// **internal use only**
-  final override func add(handler: FutureHandler<T>) {
+  override public func makeFinalHandler(executor: Executor, block: @escaping (FinalValue) -> Void) -> FutureHandler<T>? {
+    let handler = Handler(executor: executor, block: block, owner: self)
     self.updateHead {
       switch $0 {
       case let completedState as CompletedPromiseState<Value>:
-        handler.handle(value: completedState.value)
+        handler.handle(completedState.value)
         return .keep
       case let incompleteState as SubscribedPromiseState<Value>:
         return .replace(SubscribedPromiseState(handler: handler, next: incompleteState, owner: self))
@@ -45,20 +46,21 @@ final public class Promise<T> : Future<T>, ThreadSafeContainer {
         fatalError()
       }
     }
+    return handler
   }
 
   /// Completes promise with value and returns true.
   /// Returns false if promise was completed before.
   @discardableResult
-  final public func complete(with value: Value) -> Bool {
-    let completedItem = CompletedPromiseState(value: value)
+  final public func complete(with final: Value) -> Bool {
+    let completedItem = CompletedPromiseState(value: final)
     let (oldHead, newHead) = self.updateHead { ($0?.isIncomplete ?? true) ? .replace(completedItem) : .keep }
     let didComplete = (completedItem === newHead)
     guard didComplete else { return false }
     
     var nextItem = oldHead
     while let currentItem = nextItem as? SubscribedPromiseState<Value> {
-      currentItem.handler?.handle(value: value)
+      currentItem.handler?.handle(final)
       nextItem = currentItem.next
     }
     self.releasePool.drain()
@@ -70,7 +72,7 @@ final public class Promise<T> : Future<T>, ThreadSafeContainer {
   /// `self` will retain specified future until it`s completion
   @discardableResult
   final public func complete(with future: Future<Value>) {
-    let handler = future._onValue(executor: .immediate) { [weak self] in
+    let handler = future.makeFinalHandler(executor: .immediate) { [weak self] in
       self?.complete(with: $0)
     }
     self.releasePool.insert(handler)

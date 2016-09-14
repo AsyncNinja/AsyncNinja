@@ -36,7 +36,7 @@ public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> 
     }
   }
 
-  let leftHandler = leftChannel._onValue(executor: .immediate) { [weak resultChannel] leftValue in
+  let leftHandler = leftChannel.makePeriodicalHandler(executor: .immediate) { [weak resultChannel] leftValue in
     guard let resultChannel = resultChannel else { return }
     sema.wait()
     defer { sema.signal() }
@@ -45,8 +45,11 @@ public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> 
       resultChannel.send(element)
     }
   }
+  if let leftHandler = leftHandler {
+    resultChannel.releasePool.insert(leftHandler)
+  }
 
-  let rightHandler = rightChannel._onValue(executor: .immediate) { [weak resultChannel] rightValue in
+  let rightHandler = rightChannel.makePeriodicalHandler(executor: .immediate) { [weak resultChannel] rightValue in
     guard let resultChannel = resultChannel else { return }
     sema.wait()
     defer { sema.signal() }
@@ -56,8 +59,9 @@ public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> 
     }
   }
 
-  resultChannel.releasePool.insert(leftHandler)
-  resultChannel.releasePool.insert(rightHandler)
+  if let rightHandler = rightHandler {
+    resultChannel.releasePool.insert(rightHandler)
+  }
 
   return resultChannel
 }

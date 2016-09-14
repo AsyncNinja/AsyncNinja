@@ -37,7 +37,9 @@ extension ThreadSafeContainer {
 
       switch block(localHead) {
       case .keep:
-        return (localHead, localHead)
+        if self.head === localHead {
+          return (localHead, localHead)
+        }
       case .remove:
         if compareAndSwap(old: localHead, new: nil, to: &self.head) {
           return (localHead, nil)

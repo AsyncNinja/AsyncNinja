@@ -25,31 +25,8 @@ import Dispatch
 public typealias FallibleFuture<T> = Future<Fallible<T>>
 public typealias FalliblePromise<T> = Promise<Fallible<T>>
 
-public extension Future where T : _Fallible {
-
-  public typealias Success = Value.Success
-
-  final public func map<T>(executor: Executor = .primary, _ transform: @escaping (Value) throws -> T) -> FallibleFuture<T> {
-    return self.map(executor: executor) { value -> Fallible<T> in
-      fallible { try transform(value) }
-    }
-  }
-
-  final public func liftSuccess<T>(executor: Executor, transform: @escaping (Success) throws -> T) -> FallibleFuture<T> {
-    return self.map(executor: executor) { $0.liftSuccess(transform: transform) }
-  }
-
-  final public func liftFailure(executor: Executor, transform: @escaping (Error) -> Success) -> Future<Success> {
-    return self.map(executor: executor) { $0.liftFailure(transform: transform) }
-  }
-
-  final public func liftFailure(executor: Executor, transform: @escaping (Error) throws -> Success) -> FallibleFuture<Success> {
-    return self.map(executor: executor) { $0.liftFailure(transform: transform) }
-  }
-}
-
 public extension Promise where T : _Fallible {
-    final public func succeed(with success: Success) {
+    final public func succeed(with success: FinalValue.Success) {
         self.complete(with: T(success: success))
     }
     
@@ -63,5 +40,5 @@ public extension Promise where T : _Fallible {
 }
 
 public func fallible<T>(_ future: Future<T>) -> FallibleFuture<T> {
-  return future.map(executor: .immediate) { $0 }
+  return future.mapFinal(executor: .immediate) { $0 }
 }

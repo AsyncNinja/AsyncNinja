@@ -23,17 +23,17 @@
 import Dispatch
 
 /// Single failure fails them all
-public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : _Future, Self.Iterator.Element.Value : _Fallible {
-  fileprivate typealias Value = Self.Iterator.Element.Value.Success
+public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : Finite, Self.Iterator.Element.FinalValue : _Fallible {
+  fileprivate typealias FinalValue = Self.Iterator.Element.FinalValue.Success
 
   /// joins an array of futures to a future array
-  func joined() -> FallibleFuture<[Value]> {
-    return self.asyncMap(executor: .immediate) { $0 as! FallibleFuture<Value> }
+  func joined() -> FallibleFuture<[FinalValue]> {
+    return self.asyncMap(executor: .immediate) { $0 as! FallibleFuture<FinalValue> }
   }
 
   ///
-  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, Value) throws -> Result) -> FallibleFuture<Result> {
-    return self.joined().map(executor: executor) {
+  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, FinalValue) throws -> Result) -> FallibleFuture<Result> {
+    return self.joined().mapFinal(executor: executor) {
       $0.liftSuccess { try $0.reduce(initialResult, nextPartialResult) }
     }
   }
@@ -74,7 +74,7 @@ public extension Collection where Self.IndexDistance == Int {
         do { futureSubvalue = try transform(value) }
         catch { futureSubvalue = future(failure: error) }
 
-        let handler = futureSubvalue._onValue(executor: .immediate) { [weak promise] subvalue in
+        let handler = futureSubvalue.makeFinalHandler(executor: .immediate) { [weak promise] subvalue in
           guard let promise = promise else { return }
 
           sema.wait()
@@ -96,7 +96,9 @@ public extension Collection where Self.IndexDistance == Int {
           }
         }
 
-        promise.releasePool.insert(handler)
+        if let handler = handler {
+          promise.releasePool.insert(handler)
+        }
       }
     }
 

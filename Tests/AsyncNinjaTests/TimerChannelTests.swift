@@ -53,7 +53,7 @@ class TimerChannelTests : XCTestCase {
       weakTimesBuffer = timesBuffer
       XCTAssertNotNil(weakTimesBuffer)
 
-      return timesBuffer.wait()
+      return timesBuffer.next()
     }
 
     sleep(1) // lets

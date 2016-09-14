@@ -23,9 +23,11 @@
 import Dispatch
 
 /// Future is a proxy of value that will be available at some point in the future.
-public class Future<T> : _Future {
-  public typealias Value = T
+public class Future<T> : Finite {
+  public typealias FinalValue = T
+  public typealias Value = FinalValue
   public typealias Handler = FutureHandler<Value>
+  public typealias FinalHandler = Handler
 
   /// Base future is **abstract**.
   ///
@@ -33,74 +35,29 @@ public class Future<T> : _Future {
   init() { }
 
   /// **Internal use only**.
-  /// Makes handler with block. Memory management of returned handle is on you.
-  final public func _onValue(executor: Executor, block: @escaping (Value) -> Void) -> Handler {
-    let handler = Handler(executor: executor, block: block, owner: self)
-    self.add(handler: handler)
-    return handler
-  }
-
-  /// **Internal use only**.
-  func add(handler: FutureHandler<Value>) {
-    fatalError() // abstract
+  public func makeFinalHandler(executor: Executor, block: @escaping (FinalValue) -> Void) -> FinalHandler? {
+    /* abstract */
+    fatalError()
   }
 }
 
-/// Each of these methods transform one future into another.
-///
-/// Returned future will own self until it`s completion.
-/// Use this method only for **pure** transformations (not changing shared state).
-/// Use methods map(context:executor:transform:) for state changing transformations.
 public extension Future {
-  /// Transforms Future<TypeA> => Future<TypeB>
-  final func map<T>(executor: Executor = .primary, transform: @escaping (Value) -> T) -> Future<T> {
-    let promise = Promise<T>()
-    let handler = self._onValue(executor: executor) { [weak promise] in
-      promise?.complete(with: transform($0))
-    }
-    self.add(handler: handler)
-    promise.releasePool.insert(handler)
-    return promise
+  final func map<T>(executor: Executor = .primary, transform: @escaping (FinalValue) -> T) -> Future<T> {
+    return self.mapFinal(executor: executor, transform: transform)
   }
 
-  /// Transforms Future<TypeA> => FallibleFuture<TypeB>
-  final func map<T>(executor: Executor = .primary, transform: @escaping (Value) throws -> T) -> FallibleFuture<T> {
-    return self.map(executor: executor) { value in fallible { try transform(value) } }
+  final func map<T>(executor: Executor = .primary, transform: @escaping (FinalValue) throws -> T) -> FallibleFuture<T> {
+    return self.mapFinal(executor: executor, transform: transform)
+  }
+
+  final func map<U: ExecutionContext, V>(context: U, executor: Executor? = nil, transform: @escaping (U, FinalValue) throws -> V) -> FallibleFuture<V> {
+    return self.mapFinal(context: context, executor: executor, transform: transform)
   }
 }
 
-/// Each of these methods synchronously awaits for future to complete.
-/// Using this method is **strongly** discouraged. Calling it on the same serial queue
-/// as any code performed on the same queue this future depends on will cause deadlock.
-public extension Future {
-  final func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Value? {
-    let sema = DispatchSemaphore(value: 0)
-    var result: Value? = nil
-
-    var handler: Handler? = self._onValue(executor: .immediate) {
-      result = $0
-      sema.signal()
-    }
-    defer { handler = nil }
-
-    switch waitingBlock(sema) {
-    case .success:
-      return result
-    case .timedOut:
-      return nil
-    }
-  }
-
-  final func wait() -> Value {
-    return self.wait(waitingBlock: { $0.wait(); return .success })!
-  }
-
-  final func wait(timeout: DispatchTime) -> Value? {
-    return self.wait(waitingBlock: { $0.wait(timeout: timeout) })
-  }
-
-  final func wait(wallTimeout: DispatchWallTime) -> Value? {
-    return self.wait(waitingBlock: { $0.wait(wallTimeout: wallTimeout) })
+public extension Finite where FinalValue : _Fallible {
+  func map<T>(executor: Executor = .primary, transform: @escaping (FinalValue) throws -> T) -> FallibleFuture<T> {
+    return self.mapFinal(executor: executor, transform:transform)
   }
 }
 
@@ -131,6 +88,15 @@ public func future<T>(after timeout: Double, block: @escaping () throws -> T) ->
   return future(after: timeout) { fallible(block: block) }
 }
 
+public func future<T, U : ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U) throws -> T) -> FallibleFuture<T> {
+  return future(executor: executor ?? context.executor) { [weak context] () -> T in
+    guard let context = context
+      else { throw ConcurrencyError.contextDeallocated }
+
+    return try block(context)
+  }
+}
+
 /// **Internal use only**
 ///
 /// Each subscription to a future value will be expressed in such handler.
@@ -146,17 +112,7 @@ final public class FutureHandler<T> {
     self.owner = owner
   }
 
-  func handle(value: T) {
+  func handle(_ value: T) {
     self.executor.execute { self.block(value) }
   }
-}
-
-/// **Internal use only**
-///
-///  The combination of protocol _Future and abstract class Future
-///  is an dirty hack of type system. But there are no higher-kinded types
-///  or generic protocols to implement it properly.
-public protocol _Future { // hacking type system
-  associatedtype Value
-  func _onValue(executor: Executor, block: @escaping (Value) -> Void) -> FutureHandler<Value>
 }

@@ -22,24 +22,24 @@
 
 import Dispatch
 
-public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : _Future {
-  fileprivate typealias Value = Self.Iterator.Element.Value
+public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : Finite {
+  fileprivate typealias FinalValue = Self.Iterator.Element.FinalValue
 
   /// joins an array of futures to a future array
-  func joined() -> Future<[Value]> {
-    return self.asyncMap(executor: .immediate) { $0 as! Future<Value> }
+  func joined() -> Future<[FinalValue]> {
+    return self.asyncMap(executor: .immediate) { $0 as! Future<FinalValue> }
   }
 
   ///
-  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, Value) -> Result) -> Future<Result> {
-    return self.joined().map(executor: executor) {
+  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, FinalValue) -> Result) -> Future<Result> {
+    return self.joined().mapFinal(executor: executor) {
       $0.reduce(initialResult, nextPartialResult)
     }
   }
 
-  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, Value) throws -> Result) -> FallibleFuture<Result> {
-    return self.joined().map(executor: executor) { values in
-      fallible { try values.reduce(initialResult, nextPartialResult) }
+  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, FinalValue) throws -> Result) -> FallibleFuture<Result> {
+    return self.joined().mapFinal(executor: executor) { final in
+      fallible { try final.reduce(initialResult, nextPartialResult) }
     }
   }
 }
@@ -62,7 +62,7 @@ public extension Collection where Self.IndexDistance == Int {
     for (index, value) in self.enumerated() {
       executor.execute {
         weak var weakPromise = promise
-        let handler = transform(value)._onValue(executor: .immediate) {
+        let handler = transform(value).makeFinalHandler(executor: .immediate) {
           guard let promise = weakPromise else { return }
           sema.wait()
           defer { sema.signal() }

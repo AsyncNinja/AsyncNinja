@@ -29,8 +29,9 @@ final class ConstantFuture<T> : Future<T> {
     _value = value
   }
 
-  override func add(handler: FutureHandler<T>) {
-    handler.handle(value: _value)
+  override func makeFinalHandler(executor: Executor, block: @escaping (FinalValue) -> Void) -> FutureHandler<T>? {
+    executor.execute { block(self._value) }
+    return nil
   }
 }
 

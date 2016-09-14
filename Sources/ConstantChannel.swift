@@ -29,12 +29,11 @@ final class ConstantChannel<S: Sequence> : Channel<S.Iterator.Element> {
     _sequence = sequence
   }
 
-  override func add(handler: Handler) {
-    handler.executor.execute {
-      for element in self._sequence {
-        handler.block(element)
-      }
+  override func makePeriodicalHandler(executor: Executor, block: @escaping (S.Iterator.Element) -> Void) -> ChannelHandler<S.Iterator.Element>? {
+    executor.execute {
+      self._sequence.forEach(block)
     }
+    return nil
   }
 }
 
