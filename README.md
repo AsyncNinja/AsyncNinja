@@ -31,6 +31,13 @@ This framework is an implementation of following principles:
 
 *in oppose to other implementations future may not complete with an error by default. Combination of `Future<Fallible<T>>` must be used in order to have this feature (`FallibleFuture<T>` typealias is also availbale).
 
+###Primitives
+|async primitive|`Future<Final>`|`Channel<Periodic>`|`FiniteChannel	<Periodic, Final>`|
+|---------------|:------------------:|:----------------------:|:--------------------------:|
+|has final value?|✓|✕|✓|
+|has periodic value?|✕|✓|✓|
+
+
 ##	Documentation
 *	[Actor Model](Docs/ActorModel.md)
 *	[Memory Management](Docs/MemoryManagement.md)
