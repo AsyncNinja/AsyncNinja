@@ -1,6 +1,6 @@
 #Memory Management
 
-This topic recommends rules that help to avoid retain cycles between FunctionalConcurrency abstractions (futures and channels) and their host objects (actors and actor compoents).
+This topic recommends rules that help to avoid retain cycles between AsyncNinja abstractions (futures and channels) and their host objects (actors and actor compoents).
 
 ##Rules
 * use [Actor Model](ActorModel.md)

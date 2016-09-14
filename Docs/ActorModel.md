@@ -1,6 +1,6 @@
 # Actor Model
 
-This document explains why and how to build [Actor Model](https://en.wikipedia.org/wiki/Actor_model) using FunctionalConcurrency framework.
+This document explains why and how to build [Actor Model](https://en.wikipedia.org/wiki/Actor_model) using AsyncNinja framework.
 
 ## Why?
 > Actors may modify private state, but can only affect each other through messages (avoiding the need for any locks).
@@ -9,14 +9,14 @@ Actor Model is a simple abstraction for concurrent computation. It provides a re
 
 ## How? (Suggested Implementation)
 
-*	import FunctionalConcurrency
+*	import AsyncNinja
 *	introduce a class with it's own internal queue and conform it to `ExecutionContext`
 *	implement public methods that look like:
 ``` public makeSomething(arg1: Arg1, arg2: Arg2) -> FallibleFuture<Something>```
 
 #### Example
 ```
-import FunctionalConcurrency
+import AsyncNinja
 
 public class MyActor {
 	public func perform(request: SimpleRequest) -> FallibleFuture<SimpleResponse> {
@@ -42,7 +42,7 @@ UI-related objects (windows, views, view controllers and etc) are mostly bound t
 #### Example
 
 ```
-import FunctionalConcurrency
+import AsyncNinja
 
 class MyViewController : UIViewController {
 	let myActor = MyActor()

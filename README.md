@@ -1,4 +1,4 @@
-#	Functional Concurrency for Swift
+#	AsyncNinja is a concurrency library for Swift
 
 Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
 
@@ -6,7 +6,7 @@ Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
 ![Platform:macOS|iOS|tvOS|watchOS](https://img.shields.io/badge/platform-macOS%7CiOS%7CtvOS%7CwatchOS-orange.svg)
 ![Swift](https://img.shields.io/badge/Swift-3.0-orange.svg)
 
-[Found issue? Have feature request? Have question?](https://github.com/antonvmironov/FunctionalConcurrency/issues)
+[Found issue? Have feature request? Have question?](https://github.com/AsyncNinja/AsyncNinja/issues)
 
 ##	Current State
 *	Usable: `Future`, `Promise`, `Fallible`, `Executor`, `ExecutionContext`

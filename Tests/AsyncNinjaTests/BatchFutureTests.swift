@@ -22,7 +22,7 @@
 
 import XCTest
 import Dispatch
-@testable import FunctionalConcurrency
+@testable import AsyncNinja
 
 class BatchFutureTests : XCTestCase {
 
