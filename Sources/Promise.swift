@@ -31,7 +31,8 @@ final public class Promise<T> : Future<T>, ThreadSafeContainer {
   override public init() { }
 
   /// **internal use only**
-  override public func makeFinalHandler(executor: Executor, block: @escaping (FinalValue) -> Void) -> FutureHandler<T>? {
+  override public func makeFinalHandler(executor: Executor,
+                                        block: @escaping (FinalValue) -> Void) -> FutureHandler<T>? {
     let handler = Handler(executor: executor, block: block, owner: self)
     self.updateHead {
       switch $0 {

@@ -42,17 +42,20 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
 
 public extension Collection where Self.IndexDistance == Int {
   /// transforms each element of collection on executor and provides future array of transformed values
-  public func asyncMap<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> T) -> FallibleFuture<[T]> {
+  public func asyncMap<T>(executor: Executor,
+                       transform: @escaping (Self.Iterator.Element) throws -> T) -> FallibleFuture<[T]> {
     return self.asyncMap(executor: executor) { future(success: try transform($0)) }
   }
 
   /// transforms each element of collection to future values on executor and provides future array of transformed values
-  public func asyncMap<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> FallibleFuture<[T]> {
+  public func asyncMap<T>(executor: Executor,
+                       transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> FallibleFuture<[T]> {
     return self.asyncMap(executor: executor) { fallible(try transform($0)) }
   }
 
   /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
-  public func asyncMap<T>(executor: Executor, transform: @escaping (Self.Iterator.Element) throws -> FallibleFuture<T>) -> FallibleFuture<[T]> {
+  public func asyncMap<T>(executor: Executor,
+                       transform: @escaping (Self.Iterator.Element) throws -> FallibleFuture<T>) -> FallibleFuture<[T]> {
     let promise = Promise<Fallible<[T]>>()
     let sema = DispatchSemaphore(value: 1)
 
@@ -107,21 +110,24 @@ public extension Collection where Self.IndexDistance == Int {
     return promise
   }
 
-  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Self.Iterator.Element) throws -> T) -> FallibleFuture<[T]> {
+  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
+                       transform: @escaping (U, Self.Iterator.Element) throws -> T) -> FallibleFuture<[T]> {
     return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> T in
       guard let context = context else { throw ConcurrencyError.contextDeallocated }
       return try transform(context, value)
     }
   }
   
-  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Self.Iterator.Element) throws -> Future<T>) -> FallibleFuture<[T]> {
+  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
+                       transform: @escaping (U, Self.Iterator.Element) throws -> Future<T>) -> FallibleFuture<[T]> {
     return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> Future<T> in
       guard let context = context else { throw ConcurrencyError.contextDeallocated }
       return try transform(context, value)
     }
   }
   
-  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Self.Iterator.Element) throws -> FallibleFuture<T>) -> FallibleFuture<[T]> {
+  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
+                       transform: @escaping (U, Self.Iterator.Element) throws -> FallibleFuture<T>) -> FallibleFuture<[T]> {
     return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> FallibleFuture<T> in
       guard let context = context else { throw ConcurrencyError.contextDeallocated }
       return try transform(context, value)

@@ -28,7 +28,8 @@ public protocol Finite : class {
   associatedtype FinalHandler : AnyObject
 
   /// **internal use only**
-  func makeFinalHandler(executor: Executor, block: @escaping (FinalValue) -> Void) -> FinalHandler?
+  func makeFinalHandler(executor: Executor,
+                        block: @escaping (FinalValue) -> Void) -> FinalHandler?
 }
 
 /// Each of these methods transform one future into another.
@@ -38,7 +39,8 @@ public protocol Finite : class {
 /// Use methods map(context:executor:transform:) for state changing transformations.
 public extension Finite {
   /// Transforms Finite<TypeA> => Future<TypeB>
-  func mapFinal<T>(executor: Executor = .primary, transform: @escaping (FinalValue) -> T) -> Future<T> {
+  func mapFinal<T>(executor: Executor = .primary,
+                transform: @escaping (FinalValue) -> T) -> Future<T> {
     let promise = Promise<T>()
     let handler = self.makeFinalHandler(executor: executor) { [weak promise] (final) -> Void in
       guard let promise = promise else { return }
@@ -49,13 +51,15 @@ public extension Finite {
   }
 
   /// Transforms Future<TypeA> => FallibleFuture<TypeB>
-  func mapFinal<T>(executor: Executor = .primary, transform: @escaping (FinalValue) throws -> T) -> FallibleFuture<T> {
+  func mapFinal<T>(executor: Executor = .primary,
+                transform: @escaping (FinalValue) throws -> T) -> FallibleFuture<T> {
     return self.mapFinal(executor: executor) { final in fallible { try transform(final) } }
   }
 }
 
 public extension Finite {
-  func mapFinal<U: ExecutionContext, V>(context: U, executor: Executor? = nil, transform: @escaping (U, FinalValue) throws -> V) -> FallibleFuture<V> {
+  func mapFinal<U: ExecutionContext, V>(context: U, executor: Executor? = nil,
+                transform: @escaping (U, FinalValue) throws -> V) -> FallibleFuture<V> {
     return self.mapFinal(executor: executor ?? context.executor) { [weak context] (final) -> V in
       guard let context = context
         else { throw ConcurrencyError.contextDeallocated }
@@ -63,7 +67,8 @@ public extension Finite {
     }
   }
 
-  func onFinal<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, FinalValue) -> Void) {
+  func onFinal<U: ExecutionContext>(context: U, executor: Executor? = nil,
+               block: @escaping (U, FinalValue) -> Void) {
     let handler = self.makeFinalHandler(executor: executor ?? context.executor) { [weak context] (final) in
       guard let context = context
         else { return }
@@ -130,41 +135,55 @@ public extension Finite {
 }
 
 public extension Finite where FinalValue : _Fallible {
-  func mapFinal<T>(executor: Executor = .primary, transform: @escaping (FinalValue) throws -> T) -> FallibleFuture<T> {
+  func mapFinal<T>(executor: Executor = .primary,
+                transform: @escaping (FinalValue) throws -> T) -> FallibleFuture<T> {
     return self.mapFinal(executor: executor) { final -> Fallible<T> in
       fallible { try transform(final) }
     }
   }
 
-  func mapSuccess<T>(executor: Executor, transform: @escaping (FinalValue.Success) throws -> T) -> FallibleFuture<T> {
+  func mapFinal<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
+                transform: @escaping (U, FinalValue) throws -> T) -> FallibleFuture<T> {
+    return self.mapFinal(context: context, executor: executor) { (context, final) -> T in
+      try transform(context, final)
+    }
+  }
+
+  func mapSuccess<T>(executor: Executor,
+                  transform: @escaping (FinalValue.Success) throws -> T) -> FallibleFuture<T> {
     return self.mapFinal(executor: executor) { $0.mapSuccess(transform: transform) }
   }
 
-  func mapFailure(executor: Executor, transform: @escaping (Error) -> FinalValue.Success) -> Future<FinalValue.Success> {
+  func mapFailure(executor: Executor,
+                  transform: @escaping (Error) -> FinalValue.Success) -> Future<FinalValue.Success> {
     return self.mapFinal(executor: executor) { $0.mapFailure(transform: transform) }
   }
 
-  func mapFailure(executor: Executor, transform: @escaping (Error) throws -> FinalValue.Success) -> FallibleFuture<FinalValue.Success> {
+  func mapFailure(executor: Executor,
+                  transform: @escaping (Error) throws -> FinalValue.Success) -> FallibleFuture<FinalValue.Success> {
     return self.mapFinal(executor: executor) { $0.mapFailure(transform: transform) }
   }
 }
 
 public extension Finite where FinalValue : _Fallible {
-  final public func mapSuccess<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, FinalValue.Success) throws -> T) -> FallibleFuture<T> {
+  final public func mapSuccess<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
+                               transform: @escaping (U, FinalValue.Success) throws -> T) -> FallibleFuture<T> {
     return self.mapFinal(context: context, executor: executor) { (context, value) -> T in
       let success = try value.liftSuccess()
       return try transform(context, success)
     }
   }
 
-  final public func onSuccess<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, FinalValue.Success) -> Void) {
+  final public func onSuccess<U: ExecutionContext>(context: U, executor: Executor? = nil,
+                              block: @escaping (U, FinalValue.Success) -> Void) {
     self.onFinal(context: context, executor: executor) { (context, value) in
       guard let success = value.success else { return }
       block(context, success)
     }
   }
 
-  final public func mapFailure<U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Error) throws -> FinalValue.Success) -> FallibleFuture<FinalValue.Success> {
+  final public func mapFailure<U: ExecutionContext>(context: U, executor: Executor? = nil,
+                               transform: @escaping (U, Error) throws -> FinalValue.Success) -> FallibleFuture<FinalValue.Success> {
     return self.mapFinal(context: context, executor: executor) { (context, value) -> FinalValue.Success in
       if let failure = value.failure { return try transform(context, failure) }
       if let success = value.success { return success }
@@ -172,7 +191,8 @@ public extension Finite where FinalValue : _Fallible {
     }
   }
 
-  final public func onFailure<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, Error) -> Void) {
+  final public func onFailure<U: ExecutionContext>(context: U, executor: Executor? = nil,
+                              block: @escaping (U, Error) -> Void) {
     self.onFinal(context: context, executor: executor) { (context, value) in
       guard let failure = value.failure else { return }
       block(context, failure)

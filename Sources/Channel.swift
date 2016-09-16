@@ -32,30 +32,36 @@ public class Channel<T> : Periodical {
 
   init() { }
 
-  public func makePeriodicalHandler(executor: Executor, block: @escaping (PeriodicalValue) -> Void) -> Handler? {
+  public func makePeriodicalHandler(executor: Executor,
+                                    block: @escaping (PeriodicalValue) -> Void) -> Handler? {
     /* abstract */
     fatalError()
   }
 }
 
 public extension Channel {
-  func map<T>(executor: Executor, transform: @escaping (Value) -> T) -> Channel<T> {
+  func map<T>(executor: Executor,
+           transform: @escaping (Value) -> T) -> Channel<T> {
     return self.mapPeriodic(executor: executor, transform: transform)
   }
   
-  func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, Value) -> Void) {
+  func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil,
+               block: @escaping (U, Value) -> Void) {
     self.onPeriodic(context: context, block: block)
   }
 
-  func flatMap<T>(executor: Executor = .primary, transform: @escaping (Value) -> T?) -> Channel<T> {
+  func flatMap<T>(executor: Executor = .primary,
+               transform: @escaping (Value) -> T?) -> Channel<T> {
     return self.flatMapPeriodical(executor: executor, transform: transform)
   }
 
-  func flatMap<S: Sequence>(executor: Executor = .primary, transform: @escaping (Value) -> S) -> Channel<S.Iterator.Element> {
+  func flatMap<S: Sequence>(executor: Executor = .primary,
+               transform: @escaping (Value) -> S) -> Channel<S.Iterator.Element> {
     return self.flatMapPeriodical(executor: executor, transform: transform)
   }
 
-  func filter(executor: Executor = .primary, predicate: @escaping (Value) -> Bool) -> Channel<Value> {
+  func filter(executor: Executor = .primary,
+              predicate: @escaping (Value) -> Bool) -> Channel<Value> {
     return self.filterPeriodical(executor: executor, predicate: predicate)
   }
 
@@ -71,7 +77,8 @@ final public class ChannelHandler<T> {
   let executor: Executor
   let block: (PeriodicalValue) -> Void
 
-  public init(executor: Executor, block: @escaping (PeriodicalValue) -> Void) {
+  public init(executor: Executor,
+              block: @escaping (PeriodicalValue) -> Void) {
     self.executor = executor
     self.block = block
   }

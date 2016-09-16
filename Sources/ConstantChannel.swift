@@ -29,7 +29,8 @@ final class ConstantChannel<S: Sequence> : Channel<S.Iterator.Element> {
     _periodicalValues = periodicalValues
   }
 
-  override func makePeriodicalHandler(executor: Executor, block: @escaping (S.Iterator.Element) -> Void) -> Handler? {
+  override func makePeriodicalHandler(executor: Executor,
+                                      block: @escaping (S.Iterator.Element) -> Void) -> Handler? {
     executor.execute {
       self._periodicalValues.forEach(block)
     }

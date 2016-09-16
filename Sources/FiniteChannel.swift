@@ -34,23 +34,27 @@ public class FiniteChannel<T, U> : Periodical, Finite {
 
   init() { }
 
-  final public func makeFinalHandler(executor: Executor, block: @escaping (FinalValue) -> Void) -> Handler? {
+  final public func makeFinalHandler(executor: Executor,
+                                     block: @escaping (FinalValue) -> Void) -> Handler? {
     return self.makeHandler(executor: executor) {
       if case .final(let value) = $0 { block(value) }
     }
   }
 
-  final public func makePeriodicalHandler(executor: Executor, block: @escaping (PeriodicalValue) -> Void) -> Handler? {
+  final public func makePeriodicalHandler(executor: Executor,
+                                          block: @escaping (PeriodicalValue) -> Void) -> Handler? {
     return self.makeHandler(executor: executor) {
       if case .periodical(let value) = $0 { block(value) }
     }
   }
-  public func makeHandler(executor: Executor, block: @escaping (Value) -> Void) -> Handler? {
+  public func makeHandler(executor: Executor,
+                          block: @escaping (Value) -> Void) -> Handler? {
     /* abstract */
     fatalError()
   }
   
-  public func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, Value) -> Void) {
+  public func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil,
+                      block: @escaping (U, Value) -> Void) {
     let handler = self.makeHandler(executor: executor ?? context.executor) { [weak context] (value) in
       guard let context = context else { return }
       block(context, value)

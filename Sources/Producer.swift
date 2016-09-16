@@ -29,7 +29,8 @@ final public class Producer<T> : Channel<T>, ThreadSafeContainer {
   override public init() { }
   
   /// **internal use only**
-  override public func makePeriodicalHandler(executor: Executor, block: @escaping (T) -> Void) -> ChannelHandler<T>? {
+  override public func makePeriodicalHandler(executor: Executor,
+                                             block: @escaping (T) -> Void) -> ChannelHandler<T>? {
     let handler = PeriodicalHandler(executor: executor, block: block)
     self.updateHead {
       .replace(ThreadSafeItem(handler: handler, next: $0))

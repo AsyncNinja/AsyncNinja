@@ -31,7 +31,8 @@ final class ConstantFiniteChannel<S: Sequence, U> : FiniteChannel<S.Iterator.Ele
     _finalValue = finalValue
   }
   
-  override func makeHandler(executor: Executor, block: @escaping (Value) -> Void) -> Handler? {
+  override func makeHandler(executor: Executor,
+                            block: @escaping (Value) -> Void) -> Handler? {
     executor.execute {
       for periodicalValue in self._periodicalValues {
         block(.periodical(periodicalValue))

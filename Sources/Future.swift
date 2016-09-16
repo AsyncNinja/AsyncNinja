@@ -48,21 +48,24 @@ public extension Future {
     return self.mapFinal(executor: executor, transform: transform)
   }
 
-  final func map<T>(executor: Executor = .primary, transform: @escaping (FinalValue) throws -> T) -> FallibleFuture<T> {
+  final func map<T>(executor: Executor = .primary,
+                 transform: @escaping (FinalValue) throws -> T) -> FallibleFuture<T> {
     // Test: FutureTests.testMapFinalToFallibleFinal_Success
     // Test: FutureTests.testMapFinalToFallibleFinal_Failure
     return self.mapFinal(executor: executor, transform: transform)
   }
 
-  final func map<U: ExecutionContext, V>(context: U, executor: Executor? = nil, transform: @escaping (U, FinalValue) throws -> V) -> FallibleFuture<V> {
+  final func map<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
+                 transform: @escaping (U, FinalValue) throws -> T) -> FallibleFuture<T> {
     // Test: FutureTests.testMapContextualFinalToFinal_Success_ContextAlive
     // Test: FutureTests.testMapContextualFinalToFinal_Success_ContextDead
     // Test: FutureTests.testMapContextualFinalToFinal_Failure_ContextAlive
     // Test: FutureTests.testMapContextualFinalToFinal_Failure_ContextDead
     return self.mapFinal(context: context, executor: executor, transform: transform)
   }
-  
-  func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, FinalValue) -> Void) {
+
+  func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil,
+               block: @escaping (U, FinalValue) -> Void) {
     // Test: FutureTests.testOnValueContextual_ContextAlive
     // Test: FutureTests.testOnValueContextual_ContextDead
     self.onFinal(context: context, block: block)
@@ -74,8 +77,14 @@ public extension Future {
 }
 
 public extension Finite where FinalValue : _Fallible {
-  func map<T>(executor: Executor = .primary, transform: @escaping (FinalValue) throws -> T) -> FallibleFuture<T> {
-    return self.mapFinal(executor: executor, transform:transform)
+  func map<T>(executor: Executor = .primary,
+           transform: @escaping (FinalValue) throws -> T) -> FallibleFuture<T> {
+    return self.mapFinal(executor: executor, transform: transform)
+  }
+
+  func map<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
+           transform: @escaping (U, FinalValue) throws -> T) -> FallibleFuture<T> {
+    return self.mapFinal(context: context, executor: executor, transform: transform)
   }
 }
 
@@ -92,7 +101,8 @@ public func future<T>(executor: Executor, block: @escaping () throws -> T) -> Fa
 }
 
 /// Asynchrounously executes block after timeout on executor and wraps returned value into future
-public func future<T>(executor: Executor = .primary, after timeout: Double, block: @escaping () -> T) -> Future<T> {
+public func future<T>(executor: Executor = .primary, after timeout: Double,
+                   block: @escaping () -> T) -> Future<T> {
   let promise = Promise<T>()
   executor.execute(after: timeout) { [weak promise] in
     guard let promise = promise else { return }
@@ -102,11 +112,13 @@ public func future<T>(executor: Executor = .primary, after timeout: Double, bloc
 }
 
 /// Asynchrounously executes block after timeout on executor and wraps returned value into future
-public func future<T>(after timeout: Double, block: @escaping () throws -> T) -> FallibleFuture<T> {
+public func future<T>(after timeout: Double,
+                   block: @escaping () throws -> T) -> FallibleFuture<T> {
   return future(after: timeout) { fallible(block: block) }
 }
 
-public func future<T, U : ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U) throws -> T) -> FallibleFuture<T> {
+public func future<T, U : ExecutionContext>(context: U, executor: Executor? = nil,
+                   block: @escaping (U) throws -> T) -> FallibleFuture<T> {
   return future(executor: executor ?? context.executor) { [weak context] () -> T in
     guard let context = context
       else { throw ConcurrencyError.contextDeallocated }

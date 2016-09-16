@@ -28,11 +28,13 @@ public protocol Periodical : class {
   associatedtype PeriodicalHandler : AnyObject
 
   /// **internal use only**
-  func makePeriodicalHandler(executor: Executor, block: @escaping (PeriodicalValue) -> Void) -> PeriodicalHandler?
+  func makePeriodicalHandler(executor: Executor,
+                             block: @escaping (PeriodicalValue) -> Void) -> PeriodicalHandler?
 }
 
 public extension Periodical {
-  internal func makeProducer<T>(executor: Executor, onPeriodic: @escaping (PeriodicalValue, Producer<T>) -> Void) -> Producer<T> {
+  internal func makeProducer<T>(executor: Executor,
+                             onPeriodic: @escaping (PeriodicalValue, Producer<T>) -> Void) -> Producer<T> {
     let producer = Producer<T>()
     let handler = self.makePeriodicalHandler(executor: executor) { [weak producer] (periodicalValue) in
       guard let producer = producer else { return }
@@ -45,7 +47,8 @@ public extension Periodical {
     return producer
   }
 
-  internal func makeChannel<T>(executor: Executor, onPeriodic: @escaping (PeriodicalValue, (T) -> Void) -> Void) -> Channel<T> {
+  internal func makeChannel<T>(executor: Executor,
+                            onPeriodic: @escaping (PeriodicalValue, (T) -> Void) -> Void) -> Channel<T> {
     return self.makeProducer(executor: executor) { (periodicalValue: PeriodicalValue, producer: Producer<T>) -> Void in
       onPeriodic(periodicalValue, producer.send)
     }
@@ -81,14 +84,16 @@ public extension Periodical {
     }
   }
 
-  func mapPeriodic<T>(executor: Executor = .primary, transform: @escaping (PeriodicalValue) -> T) -> Channel<T> {
+  func mapPeriodic<T>(executor: Executor = .primary,
+                   transform: @escaping (PeriodicalValue) -> T) -> Channel<T> {
     return self.makeChannel(executor: executor) { (PeriodicalValue, send) in
       let transformedValue = transform(PeriodicalValue)
       send(transformedValue)
     }
   }
 
-  func flatMapPeriodical<T>(executor: Executor = .primary, transform: @escaping (PeriodicalValue) -> T?) -> Channel<T> {
+  func flatMapPeriodical<T>(executor: Executor = .primary,
+                         transform: @escaping (PeriodicalValue) -> T?) -> Channel<T> {
     return self.makeChannel(executor: executor) { (PeriodicalValue, send) in
       if let transformedValue = transform(PeriodicalValue) {
         send(transformedValue)
@@ -96,13 +101,15 @@ public extension Periodical {
     }
   }
 
-  func flatMapPeriodical<S: Sequence>(executor: Executor = .primary, transform: @escaping (PeriodicalValue) -> S) -> Channel<S.Iterator.Element> {
+  func flatMapPeriodical<S: Sequence>(executor: Executor = .primary,
+                         transform: @escaping (PeriodicalValue) -> S) -> Channel<S.Iterator.Element> {
     return self.makeChannel(executor: executor) { (PeriodicalValue, send) in
       transform(PeriodicalValue).forEach(send)
     }
   }
 
-  func filterPeriodical(executor: Executor = .primary, predicate: @escaping (PeriodicalValue) -> Bool) -> Channel<PeriodicalValue> {
+  func filterPeriodical(executor: Executor = .primary,
+                        predicate: @escaping (PeriodicalValue) -> Bool) -> Channel<PeriodicalValue> {
     return self.makeChannel(executor: executor) { (PeriodicalValue, send) in
       if predicate(PeriodicalValue) {
         send(PeriodicalValue)
@@ -164,14 +171,16 @@ public extension Periodical {
 }
 
 public extension Periodical {
-  func mapPeriodic<U: ExecutionContext, V>(context: U, executor: Executor? = nil, transform: @escaping (U, PeriodicalValue) -> V) -> Channel<V> {
+  func mapPeriodic<U: ExecutionContext, V>(context: U, executor: Executor? = nil,
+                   transform: @escaping (U, PeriodicalValue) -> V) -> Channel<V> {
     return self.makeChannel(executor: executor ?? context.executor) { [weak context] (value, send) in
       guard let context = context else { return }
       send(transform(context, value))
     }
   }
 
-  func onPeriodic<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, PeriodicalValue) -> Void) {
+  func onPeriodic<U: ExecutionContext>(context: U, executor: Executor? = nil,
+                  block: @escaping (U, PeriodicalValue) -> Void) {
     let handler = self.makePeriodicalHandler(executor: executor ?? context.executor) { [weak context] (value) in
       guard let context = context else { return }
       block(context, value)

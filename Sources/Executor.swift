@@ -93,7 +93,7 @@ extension DispatchQueue : ExecutorImpl {
   }
 
   func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
-    let wallDeadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000 * 1000 * 1000))
+    let wallDeadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000_000_000))
     self.asyncAfter(wallDeadline: wallDeadline, execute: block)
   }
 }
@@ -111,7 +111,7 @@ final class HandlerBasedExecutorImpl : ExecutorImpl {
   }
 
   func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
-    let deadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000 * 1000 * 1000))
+    let deadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000_000_000))
     DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
       self.fc_execute(block)
     }

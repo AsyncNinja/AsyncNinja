@@ -31,7 +31,8 @@ final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContain
   override public init() { }
   
   /// **internal use only**
-  override public func makeHandler(executor: Executor, block: @escaping (Value) -> Void) -> Handler? {
+  override public func makeHandler(executor: Executor,
+                                   block: @escaping (Value) -> Void) -> Handler? {
     let handler = Handler(executor: executor, block: block)
     self.updateHead {
       switch $0 {

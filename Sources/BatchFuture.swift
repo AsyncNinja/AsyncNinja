@@ -30,14 +30,16 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
     return self.asyncMap(executor: .immediate) { $0 as! Future<FinalValue> }
   }
 
-  ///
-  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, FinalValue) -> Result) -> Future<Result> {
+  /// reduces results of futures
+  func reduce<Result>(executor: Executor = .primary, initialResult: Result,
+              nextPartialResult: @escaping (Result, FinalValue) -> Result) -> Future<Result> {
     return self.joined().mapFinal(executor: executor) {
       $0.reduce(initialResult, nextPartialResult)
     }
   }
 
-  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, FinalValue) throws -> Result) -> FallibleFuture<Result> {
+  func reduce<Result>(executor: Executor = .primary, initialResult: Result,
+              nextPartialResult: @escaping (Result, FinalValue) throws -> Result) -> FallibleFuture<Result> {
     return self.joined().mapFinal(executor: executor) { final in
       fallible { try final.reduce(initialResult, nextPartialResult) }
     }
@@ -46,12 +48,14 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
 
 public extension Collection where Self.IndexDistance == Int {
   /// transforms each element of collection on executor and provides future array of transformed values
-  func asyncMap<T>(executor: Executor = .primary, transform: @escaping (Self.Iterator.Element) -> T) -> Future<[T]> {
+  func asyncMap<T>(executor: Executor = .primary,
+                transform: @escaping (Self.Iterator.Element) -> T) -> Future<[T]> {
     return self.asyncMap(executor: executor) { future(value: transform($0)) }
   }
 
   /// transforms each element of collection to future value on executor and provides future array of transformed values
-  func asyncMap<T>(executor: Executor = .primary, transform: @escaping (Self.Iterator.Element) -> Future<T>) -> Future<[T]> {
+  func asyncMap<T>(executor: Executor = .primary,
+                transform: @escaping (Self.Iterator.Element) -> Future<T>) -> Future<[T]> {
     let promise = Promise<[T]>()
     let sema = DispatchSemaphore(value: 1)
 

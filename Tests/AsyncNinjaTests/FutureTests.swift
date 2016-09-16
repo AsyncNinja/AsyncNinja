@@ -290,8 +290,4 @@ class FutureTests : XCTestCase {
     sleep(1)
     XCTAssertNil(weakInitialFuture)
   }
-
-  // Test: FutureTests.testOnValueContextual_ContextAlive
-  // Test: FutureTests.testOnValueContextual_ContextDead
-
 }
