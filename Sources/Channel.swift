@@ -25,13 +25,14 @@ import Dispatch
 public class Channel<T> : Periodical {
   public typealias PeriodicalValue = T
   public typealias Value = PeriodicalValue
-  public typealias PeriodicalHandler = ChannelHandler<Value>
+  public typealias Handler = ChannelHandler<Value>
+  public typealias PeriodicalHandler = Handler
 
   let releasePool = ReleasePool()
 
   init() { }
 
-  public func makePeriodicalHandler(executor: Executor, block: @escaping (PeriodicalValue) -> Void) -> PeriodicalHandler? {
+  public func makePeriodicalHandler(executor: Executor, block: @escaping (PeriodicalValue) -> Void) -> Handler? {
     /* abstract */
     fatalError()
   }
@@ -42,19 +43,19 @@ public extension Channel {
     return self.mapPeriodic(executor: executor, transform: transform)
   }
   
-  func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, PeriodicalValue) -> Void) {
+  func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, Value) -> Void) {
     self.onPeriodic(context: context, block: block)
   }
 
-  func flatMap<T>(executor: Executor = .primary, transform: @escaping (PeriodicalValue) -> T?) -> Channel<T> {
+  func flatMap<T>(executor: Executor = .primary, transform: @escaping (Value) -> T?) -> Channel<T> {
     return self.flatMapPeriodical(executor: executor, transform: transform)
   }
 
-  func flatMap<S: Sequence>(executor: Executor = .primary, transform: @escaping (PeriodicalValue) -> S) -> Channel<S.Iterator.Element> {
+  func flatMap<S: Sequence>(executor: Executor = .primary, transform: @escaping (Value) -> S) -> Channel<S.Iterator.Element> {
     return self.flatMapPeriodical(executor: executor, transform: transform)
   }
 
-  func filter(executor: Executor = .primary, predicate: @escaping (PeriodicalValue) -> Bool) -> Channel<PeriodicalValue> {
+  func filter(executor: Executor = .primary, predicate: @escaping (Value) -> Bool) -> Channel<Value> {
     return self.filterPeriodical(executor: executor, predicate: predicate)
   }
 

@@ -23,20 +23,20 @@
 import Dispatch
 
 final class ConstantChannel<S: Sequence> : Channel<S.Iterator.Element> {
-  private let _sequence: S
+  private let _periodicalValues: S
 
-  init(sequence: S) {
-    _sequence = sequence
+  init(periodicalValues: S) {
+    _periodicalValues = periodicalValues
   }
 
-  override func makePeriodicalHandler(executor: Executor, block: @escaping (S.Iterator.Element) -> Void) -> ChannelHandler<S.Iterator.Element>? {
+  override func makePeriodicalHandler(executor: Executor, block: @escaping (S.Iterator.Element) -> Void) -> Handler? {
     executor.execute {
-      self._sequence.forEach(block)
+      self._periodicalValues.forEach(block)
     }
     return nil
   }
 }
 
-public func channel<S: Sequence>(sequence: S) -> Channel<S.Iterator.Element> {
-  return ConstantChannel(sequence: sequence)
+public func channel<S: Sequence>(periodicalValues: S) -> Channel<S.Iterator.Element> {
+  return ConstantChannel(periodicalValues: periodicalValues)
 }
