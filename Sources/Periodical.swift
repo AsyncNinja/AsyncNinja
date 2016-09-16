@@ -32,17 +32,23 @@ public protocol Periodical : class {
 }
 
 public extension Periodical {
-  internal func makeChannel<T>(executor: Executor, onPeriodic: @escaping (PeriodicalValue, (T) -> Void) -> Void) -> Channel<T> {
+  internal func makeProducer<T>(executor: Executor, onPeriodic: @escaping (PeriodicalValue, Producer<T>) -> Void) -> Producer<T> {
     let producer = Producer<T>()
-    let handler = self.makePeriodicalHandler(executor: executor) { [weak producer] (PeriodicalValue) in
+    let handler = self.makePeriodicalHandler(executor: executor) { [weak producer] (periodicalValue) in
       guard let producer = producer else { return }
-      onPeriodic(PeriodicalValue, producer.send)
+      onPeriodic(periodicalValue, producer)
     }
 
     if let handler = handler {
       producer.releasePool.insert(handler)
     }
     return producer
+  }
+
+  internal func makeChannel<T>(executor: Executor, onPeriodic: @escaping (PeriodicalValue, (T) -> Void) -> Void) -> Channel<T> {
+    return self.makeProducer(executor: executor) { (periodicalValue: PeriodicalValue, producer: Producer<T>) -> Void in
+      onPeriodic(periodicalValue, producer.send)
+    }
   }
 
   func next() -> PeriodicalValue {
