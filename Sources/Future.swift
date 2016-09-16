@@ -101,6 +101,16 @@ public func future<T, U : ExecutionContext>(context: U, executor: Executor? = ni
   }
 }
 
+public extension DispatchGroup {
+    var completionFuture: Future<Void> {
+        let promise = Promise<Void>()
+        self.notify(queue: DispatchQueue.global(qos: .default)) { [weak promise] in
+            promise?.complete(with: Void())
+        }
+        return promise
+    }
+}
+
 /// **Internal use only**
 ///
 /// Each subscription to a future value will be expressed in such handler.
