@@ -53,6 +53,10 @@ public extension Future {
   final func map<U: ExecutionContext, V>(context: U, executor: Executor? = nil, transform: @escaping (U, FinalValue) throws -> V) -> FallibleFuture<V> {
     return self.mapFinal(context: context, executor: executor, transform: transform)
   }
+  
+  func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, FinalValue) -> Void) {
+    self.onFinal(context: context, block: block)
+  }
 }
 
 public extension Finite where FinalValue : _Fallible {

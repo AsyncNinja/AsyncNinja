@@ -38,15 +38,19 @@ public class Channel<T> : Periodical {
 }
 
 public extension Channel {
-  public func map<T>(executor: Executor, transform: @escaping (Value) -> T) -> Channel<T> {
+  func map<T>(executor: Executor, transform: @escaping (Value) -> T) -> Channel<T> {
     return self.mapPeriodic(executor: executor, transform: transform)
   }
+  
+  func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, PeriodicalValue) -> Void) {
+    self.onPeriodic(context: context, block: block)
+  }
 
-  public func flatMap<T>(executor: Executor = .primary, transform: @escaping (PeriodicalValue) -> T?) -> Channel<T> {
+  func flatMap<T>(executor: Executor = .primary, transform: @escaping (PeriodicalValue) -> T?) -> Channel<T> {
     return self.flatMapPeriodical(executor: executor, transform: transform)
   }
 
-  public func flatMap<S: Sequence>(executor: Executor = .primary, transform: @escaping (PeriodicalValue) -> S) -> Channel<S.Iterator.Element> {
+  func flatMap<S: Sequence>(executor: Executor = .primary, transform: @escaping (PeriodicalValue) -> S) -> Channel<S.Iterator.Element> {
     return self.flatMapPeriodical(executor: executor, transform: transform)
   }
 

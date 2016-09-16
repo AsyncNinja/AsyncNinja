@@ -54,7 +54,7 @@ class BatchFutureTests : XCTestCase {
         else { return $0 + $1 }
       }
       .wait()
-    XCTAssertEqual(TestError.testCode, value.failureValue as! TestError)
+    XCTAssertEqual(TestError.testCode, value.failure as! TestError)
   }
 
   func testMapToFuture() {

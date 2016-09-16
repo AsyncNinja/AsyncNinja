@@ -119,45 +119,45 @@ public extension Finite where FinalValue : _Fallible {
   }
 
   func mapSuccess<T>(executor: Executor, transform: @escaping (FinalValue.Success) throws -> T) -> FallibleFuture<T> {
-    return self.mapFinal(executor: executor) { $0.liftSuccess(transform: transform) }
+    return self.mapFinal(executor: executor) { $0.mapSuccess(transform: transform) }
   }
 
   func mapFailure(executor: Executor, transform: @escaping (Error) -> FinalValue.Success) -> Future<FinalValue.Success> {
-    return self.mapFinal(executor: executor) { $0.liftFailure(transform: transform) }
+    return self.mapFinal(executor: executor) { $0.mapFailure(transform: transform) }
   }
 
   func mapFailure(executor: Executor, transform: @escaping (Error) throws -> FinalValue.Success) -> FallibleFuture<FinalValue.Success> {
-    return self.mapFinal(executor: executor) { $0.liftFailure(transform: transform) }
+    return self.mapFinal(executor: executor) { $0.mapFailure(transform: transform) }
   }
 }
 
 public extension Finite where FinalValue : _Fallible {
   final public func mapSuccess<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, FinalValue.Success) throws -> T) -> FallibleFuture<T> {
     return self.mapFinal(context: context, executor: executor) { (context, value) -> T in
-      let successValue = try value.fetchSuccessValue()
-      return try transform(context, successValue)
+      let success = try value.liftSuccess()
+      return try transform(context, success)
     }
   }
 
   final public func onSuccess<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, FinalValue.Success) -> Void) {
     self.onFinal(context: context, executor: executor) { (context, value) in
-      guard let successValue = value.successValue else { return }
-      block(context, successValue)
+      guard let success = value.success else { return }
+      block(context, success)
     }
   }
 
   final public func mapFailure<U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Error) throws -> FinalValue.Success) -> FallibleFuture<FinalValue.Success> {
     return self.mapFinal(context: context, executor: executor) { (context, value) -> FinalValue.Success in
-      if let failureValue = value.failureValue { return try transform(context, failureValue) }
-      if let successValue = value.successValue { return successValue }
+      if let failure = value.failure { return try transform(context, failure) }
+      if let success = value.success { return success }
       fatalError()
     }
   }
 
   final public func onFailure<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, Error) -> Void) {
     self.onFinal(context: context, executor: executor) { (context, value) in
-      guard let failureValue = value.failureValue else { return }
-      block(context, failureValue)
+      guard let failure = value.failure else { return }
+      block(context, failure)
     }
   }
 }

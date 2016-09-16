@@ -49,6 +49,17 @@ public class FiniteChannel<T, U> : Periodical, Finite {
     /* abstract */
     fatalError()
   }
+  
+  public func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, Value) -> Void) {
+    let handler = self.makeHandler(executor: executor ?? context.executor) { [weak context] (value) in
+      guard let context = context else { return }
+      block(context, value)
+    }
+    
+    if let handler = handler {
+      context.releaseOnDeinit(handler)
+    }
+  }
 }
 
 public enum FiniteChannelValue<T, U> {

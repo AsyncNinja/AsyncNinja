@@ -39,62 +39,62 @@ public enum Fallible<T> : _Fallible {
 }
 
 public extension Fallible {
-  var successValue: Success? {
-    if case let .success(successValue) = self { return successValue }
+  var success: Success? {
+    if case let .success(success) = self { return success }
     else { return nil }
   }
 
-  var failureValue: Error? {
-    if case let .failure(failureValue) = self { return failureValue }
+  var failure: Error? {
+    if case let .failure(failure) = self { return failure }
     else { return nil }
   }
 
-  func fetchSuccessValue() throws -> Success {
+  func liftSuccess() throws -> Success {
     switch self {
-    case let .success(successValue): return successValue
+    case let .success(success): return success
     case let .failure(error): throw error
     }
   }
 
   func onSuccess(_ handler: (Success) throws -> Void) rethrows {
-    if case let .success(successValue) = self {
-      try handler(successValue)
+    if case let .success(success) = self {
+      try handler(success)
     }
   }
 
   func onFailure(_ handler: (Error) throws -> Void) rethrows {
-    if case let .failure(failureValue) = self {
-      try handler(failureValue)
+    if case let .failure(failure) = self {
+      try handler(failure)
     }
   }
 
-  func liftSuccess<T>(transform: (Success) throws -> T) -> Fallible<T> {
-    return self.liftSuccess { .success(try transform($0)) }
+  func mapSuccess<T>(transform: (Success) throws -> T) -> Fallible<T> {
+    return self.mapSuccess { .success(try transform($0)) }
   }
 
-  func liftSuccess<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T> {
+  func mapSuccess<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T> {
     switch self {
-    case let .success(successValue):
-      return fallible { try transform(successValue) }
-    case let .failure(failureValue):
-      return .failure(failureValue)
+    case let .success(success):
+      return fallible { try transform(success) }
+    case let .failure(failure):
+      return .failure(failure)
     }
   }
 
-  func liftFailure(transform: (Error) throws -> Success) -> Fallible<Success> {
+  func mapFailure(transform: (Error) throws -> Success) -> Fallible<Success> {
     switch self {
-    case let .success(successValue):
-      return .success(successValue)
+    case let .success(success):
+      return .success(success)
     case let .failure(error):
       do { return .success(try transform(error)) }
       catch { return .failure(error) }
     }
   }
 
-  func liftFailure(transform: (Error) -> Success) -> Success {
+  func mapFailure(transform: (Error) -> Success) -> Success {
     switch self {
-    case let .success(successValue):
-      return successValue
+    case let .success(success):
+      return success
     case let .failure(error):
       return transform(error)
     }
@@ -104,9 +104,9 @@ public extension Fallible {
 //public extension Fallible where Success : _Fallible {
 //  func flattern() -> Fallible<Success.Success> {
 //    switch self {
-//    case let .success(successValue):
-//      switch successValue {
-//      case let .success(successValue): return successValue
+//    case let .success(success):
+//      switch success {
+//      case let .success(success): return success
 //      case let .failure(error): throw error
 //      }
 //    case let .failure(error): throw error
@@ -132,8 +132,8 @@ public func fallible<T>(block: () throws -> Fallible<T>) -> Fallible<T> {
 public protocol _Fallible { // hacking type system once
   associatedtype Success
 
-  var successValue: Success? { get }
-  var failureValue: Error? { get }
+  var success: Success? { get }
+  var failure: Error? { get }
 
   init(success: Success)
   init(failure: Error)
@@ -142,17 +142,17 @@ public protocol _Fallible { // hacking type system once
   func onFailure(_ handler: (Error) throws -> Void) rethrows
 
   // (success or failure) * (try transform success to success) -> (success or failure)
-  func liftSuccess<T>(transform: (Success) throws -> T) -> Fallible<T>
+  func mapSuccess<T>(transform: (Success) throws -> T) -> Fallible<T>
 
   // (success or failure) * (try transform success to (success or failure)) -> (success or failure)
-  func liftSuccess<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>
+  func mapSuccess<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>
 
   // (success or failure) * (try transform failure to success) -> (success or failure)
-  func liftFailure(transform: (Error) throws -> Success) -> Fallible<Success>
+  func mapFailure(transform: (Error) throws -> Success) -> Fallible<Success>
 
   // (success or failure) * (transform failure to success) -> success
-  func liftFailure(transform: (Error) -> Success) -> Success
+  func mapFailure(transform: (Error) -> Success) -> Success
 
   // returns success or throws failure
-  func fetchSuccessValue() throws -> Success
+  func liftSuccess() throws -> Success
 }

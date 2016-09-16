@@ -54,7 +54,7 @@ class ExecutionContextTests : XCTestCase {
         return "\(value) to"
     }
 
-    XCTAssertEqual(halfOfFutureValue.wait().successValue!, "Hello to")
+    XCTAssertEqual(halfOfFutureValue.wait().success!, "Hello to")
     let fullFutureValue = halfOfFutureValue
       .map(context: object!) { (object, value) -> String in
       if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
@@ -64,6 +64,6 @@ class ExecutionContextTests : XCTestCase {
     }
     object = nil
     
-    XCTAssertEqual(fullFutureValue.wait().failureValue as! ConcurrencyError, ConcurrencyError.contextDeallocated)
+    XCTAssertEqual(fullFutureValue.wait().failure as! ConcurrencyError, ConcurrencyError.contextDeallocated)
   }
 }
