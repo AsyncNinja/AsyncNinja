@@ -42,20 +42,34 @@ public class Future<T> : Finite {
 }
 
 public extension Future {
-  final func map<T>(executor: Executor = .primary, transform: @escaping (FinalValue) -> T) -> Future<T> {
+  func map<T>(executor: Executor = .primary,
+           transform: @escaping (FinalValue) -> T) -> Future<T> {
+    // Test: FutureTests.testMapFinalToFinal
     return self.mapFinal(executor: executor, transform: transform)
   }
 
   final func map<T>(executor: Executor = .primary, transform: @escaping (FinalValue) throws -> T) -> FallibleFuture<T> {
+    // Test: FutureTests.testMapFinalToFallibleFinal_Success
+    // Test: FutureTests.testMapFinalToFallibleFinal_Failure
     return self.mapFinal(executor: executor, transform: transform)
   }
 
   final func map<U: ExecutionContext, V>(context: U, executor: Executor? = nil, transform: @escaping (U, FinalValue) throws -> V) -> FallibleFuture<V> {
+    // Test: FutureTests.testMapContextualFinalToFinal_Success_ContextAlive
+    // Test: FutureTests.testMapContextualFinalToFinal_Success_ContextDead
+    // Test: FutureTests.testMapContextualFinalToFinal_Failure_ContextAlive
+    // Test: FutureTests.testMapContextualFinalToFinal_Failure_ContextDead
     return self.mapFinal(context: context, executor: executor, transform: transform)
   }
   
   func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil, block: @escaping (U, FinalValue) -> Void) {
+    // Test: FutureTests.testOnValueContextual_ContextAlive
+    // Test: FutureTests.testOnValueContextual_ContextDead
     self.onFinal(context: context, block: block)
+  }
+
+  func delayed(timeout: Double) -> Future<FinalValue> {
+    return self.delayedFinal(timeout: timeout)
   }
 }
 

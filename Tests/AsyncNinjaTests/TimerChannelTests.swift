@@ -40,10 +40,7 @@ class TimerChannelTests : XCTestCase {
       XCTAssertNotNil(weakTimer)
 
       let mappedTimer = timer.map(executor: .utility) { _ -> DispatchTime in
-        if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
-          dispatchPrecondition(condition: .onQueue(DispatchQueue.global(qos: .utility)))
-        }
-
+        assert(qos: .utility)
         return DispatchTime.now()
       }
       weakMappedTimer = mappedTimer

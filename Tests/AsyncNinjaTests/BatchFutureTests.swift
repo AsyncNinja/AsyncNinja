@@ -26,10 +26,6 @@ import Dispatch
 
 class BatchFutureTests : XCTestCase {
 
-  enum TestError : Error {
-    case testCode
-  }
-
   func testJoined() {
     let value: [Int] = (1...5)
       .map { value in future(after: 1.0 - TimeInterval(value) / 5.0, block: { value }) }

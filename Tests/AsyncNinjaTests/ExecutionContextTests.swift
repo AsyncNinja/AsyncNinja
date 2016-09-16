@@ -29,41 +29,24 @@ struct SimpleResponse {}
 
 class ExecutionContextTests : XCTestCase {
   func testFailure() {
-    class ObjectToDeallocate : ExecutionContext, ReleasePoolOwner {
-      let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
-      var executor: Executor { return .queue(self.internalQueue) }
-      let releasePool = ReleasePool()
-
-      func perform(request: SimpleRequest) -> FallibleFuture<SimpleResponse> {
-        return future(context: self) { try $0._perform(request: request) }
-      }
-
-      private func _perform(request: SimpleRequest) throws -> SimpleResponse {
-        // do work
-        return SimpleResponse()
-      }
-    }
-
-    var object : ObjectToDeallocate? = ObjectToDeallocate()
+    var object : TestActor? = TestActor()
 
     let halfOfFutureValue = future(value: "Hello")
       .map(context: object!) { (object, value) -> String in
-        if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
-          dispatchPrecondition(condition: .onQueue(object.internalQueue))
-        }
+        assert(on: object.internalQueue)
         return "\(value) to"
     }
 
     XCTAssertEqual(halfOfFutureValue.wait().success!, "Hello to")
     let fullFutureValue = halfOfFutureValue
       .map(context: object!) { (object, value) -> String in
-      if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
-        dispatchPrecondition(condition: .onQueue(object.internalQueue))
-      }
-      return "\(value) dead"
+        assert(on: object.internalQueue)
+        return "\(value) dead"
     }
     object = nil
-    
-    XCTAssertEqual(fullFutureValue.wait().failure as! ConcurrencyError, ConcurrencyError.contextDeallocated)
+
+    let failure = fullFutureValue.wait().failure
+    XCTAssertNotNil(failure)
+    XCTAssertEqual(failure as! ConcurrencyError, ConcurrencyError.contextDeallocated)
   }
 }

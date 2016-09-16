@@ -153,6 +153,17 @@ public extension Periodical {
 }
 
 public extension Periodical {
+  func delayedPeriodical(timeout: Double) -> Channel<PeriodicalValue> {
+    return self.makeProducer(executor: .immediate) { (periodicalValue: PeriodicalValue, producer: Producer<PeriodicalValue>) -> Void in
+      Executor.primary.execute(after: timeout) { [weak producer] in
+        guard let producer = producer else { return }
+        producer.send(periodicalValue)
+      }
+    }
+  }
+}
+
+public extension Periodical {
   func mapPeriodic<U: ExecutionContext, V>(context: U, executor: Executor? = nil, transform: @escaping (U, PeriodicalValue) -> V) -> Channel<V> {
     return self.makeChannel(executor: executor ?? context.executor) { [weak context] (value, send) in
       guard let context = context else { return }

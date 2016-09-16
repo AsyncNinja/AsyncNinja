@@ -111,6 +111,24 @@ public extension Finite {
   }
 }
 
+public extension Finite {
+  func delayedFinal(timeout: Double) -> Future<FinalValue> {
+    let promise = Promise<FinalValue>()
+    let handler = self.makeFinalHandler(executor: .immediate) { [weak promise] (value) in
+      guard let promise = promise else { return }
+      Executor.primary.execute(after: timeout) { [weak promise] in
+        guard let promise = promise else { return }
+        promise.complete(with: value)
+      }
+    }
+    if let handler = handler {
+      promise.releasePool.insert(handler)
+    }
+
+    return promise
+  }
+}
+
 public extension Finite where FinalValue : _Fallible {
   func mapFinal<T>(executor: Executor = .primary, transform: @escaping (FinalValue) throws -> T) -> FallibleFuture<T> {
     return self.mapFinal(executor: executor) { final -> Fallible<T> in

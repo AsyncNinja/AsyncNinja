@@ -59,6 +59,9 @@ public extension Channel {
     return self.filterPeriodical(executor: executor, predicate: predicate)
   }
 
+  func delayed(timeout: Double) -> Channel<PeriodicalValue> {
+    return self.delayedPeriodical(timeout: timeout)
+  }
 }
 
 /// **internal use only**
