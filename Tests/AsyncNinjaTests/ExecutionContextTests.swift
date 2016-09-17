@@ -39,6 +39,7 @@ class ExecutionContextTests : XCTestCase {
 
     XCTAssertEqual(halfOfFutureValue.wait().success!, "Hello to")
     let fullFutureValue = halfOfFutureValue
+      .delayed(timeout: 0.1)
       .map(context: object!) { (object, value) -> String in
         assert(on: object.internalQueue)
         return "\(value) dead"
