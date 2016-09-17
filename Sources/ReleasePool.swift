@@ -25,7 +25,7 @@ import Dispatch
 public typealias Releasable = Any
 
 final public class ReleasePool : ThreadSafeContainer {
-  typealias ThreadSafeItem = DisposableObjectContainer
+  typealias ThreadSafeItem = ReleasePoolItem
 
   var head: ThreadSafeItem? = nil
 
@@ -41,7 +41,11 @@ final public class ReleasePool : ThreadSafeContainer {
   #endif
 
   public func insert(_ releasable: Releasable) {
-    self.updateHead { .replace(DisposableObjectContainer(object: releasable, next: $0)) }
+    self.updateHead { .replace(ReleasableReleasePoolItem(object: releasable, next: $0)) }
+  }
+
+  public func notifyDrain(_ block: @escaping () -> Void) {
+    self.updateHead { .replace(NotifyReleasePoolItem(notifyBlock: block, next: $0)) }
   }
 
   public func drain() {
@@ -49,12 +53,32 @@ final public class ReleasePool : ThreadSafeContainer {
   }
 }
 
-final class DisposableObjectContainer {
-  let object: Releasable
-  let next: DisposableObjectContainer?
+class ReleasePoolItem {
+  let next: ReleasePoolItem?
 
-  init(object: Releasable, next: DisposableObjectContainer?) {
-    self.object = object
+  init(next: ReleasePoolItem?) {
     self.next = next
+  }
+}
+
+final class NotifyReleasePoolItem : ReleasePoolItem {
+  let notifyBlock: () -> Void
+
+  init (notifyBlock: @escaping () -> Void, next: ReleasePoolItem?) {
+    self.notifyBlock = notifyBlock
+    super.init(next: next)
+  }
+
+  deinit {
+    self.notifyBlock()
+  }
+}
+
+final class ReleasableReleasePoolItem : ReleasePoolItem {
+  let object: Releasable
+
+  init(object: Releasable, next: ReleasePoolItem?) {
+    self.object = object
+    super.init(next: next)
   }
 }
