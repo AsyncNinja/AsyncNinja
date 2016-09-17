@@ -21,11 +21,9 @@
 //
 
 import XCTest
-
 import AsyncNinjaTests
 
-let tests: [XCTestCaseEntry] = [
-	AsyncNinjaTests.allTests()
-]
+var tests = [XCTestCaseEntry]()
+tests += AsyncNinjaTests.allTests()
 
 XCTMain(tests)

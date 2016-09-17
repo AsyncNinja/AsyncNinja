@@ -42,6 +42,7 @@ class FallibleTests : XCTestCase {
     ("testMapFailure2OnFailure", testMapFailure2OnFailure),
     ("testMapFailure2OnThrow", testMapFailure2OnThrow),
     ("testMakeFallibleSuccess", testMakeFallibleSuccess),
+    ("testMakeFallibleFailure", testMakeFallibleFailure),
     ]
 
   func testSuccess() {
