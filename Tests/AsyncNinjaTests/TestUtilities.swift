@@ -8,6 +8,10 @@
 
 import Dispatch
 
+#if os(Linux)
+  import Glibc
+#endif
+
 func assert(on queue: DispatchQueue) {
   if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
     dispatchPrecondition(condition: .onQueue(queue))
@@ -69,4 +73,8 @@ class TestActor : ExecutionContext, ReleasePoolOwner {
   let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
   var executor: Executor { return .queue(self.internalQueue) }
   let releasePool = ReleasePool()
+}
+
+func eval<Result>(invoking body: () throws -> Result) rethrows -> Result {
+  return try body()
 }

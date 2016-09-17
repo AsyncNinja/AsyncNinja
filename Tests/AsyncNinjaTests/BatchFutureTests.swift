@@ -28,7 +28,7 @@ class BatchFutureTests : XCTestCase {
 
   func testJoined() {
     let value: [Int] = (1...5)
-      .map { value in future(after: 1.0 - TimeInterval(value) / 5.0, block: { value }) }
+      .map { value in future(after: 1.0 - Double(value) / 5.0, block: { value }) }
       .joined()
       .wait()
     XCTAssertEqual([1, 2, 3, 4, 5], Set(value))
@@ -36,7 +36,7 @@ class BatchFutureTests : XCTestCase {
 
   func testReduce() {
     let value: Int = (1...5)
-      .map { value in future(after: TimeInterval(value) / 10.0) { value } }
+      .map { value in future(after: Double(value) / 10.0) { value } }
       .reduce(initialResult: 5) { $0 + $1 }
       .wait()
     XCTAssertEqual(20, value)
@@ -44,7 +44,7 @@ class BatchFutureTests : XCTestCase {
 
   func testReduceThrows() {
     let value = (1...5)
-      .map { value in future(after: TimeInterval(value) / 10.0) { value } }
+      .map { value in future(after: Double(value) / 10.0) { value } }
       .reduce(initialResult: 5) {
         if 3 == $1 { throw TestError.testCode }
         else { return $0 + $1 }
@@ -55,7 +55,7 @@ class BatchFutureTests : XCTestCase {
 
   func testMapToFuture() {
     let value = (1...5)
-      .asyncMap(executor: .utility) { value in future(after: TimeInterval(value) / 10.0) { value } }
+      .asyncMap(executor: .utility) { value in future(after: Double(value) / 10.0) { value } }
       .map { $0.reduce(5, +) }
       .wait()
     XCTAssertEqual(20, value)

@@ -31,7 +31,7 @@ class FutureTests : XCTestCase {
     weak var weakFuture: Future<Int>?
     weak var weakMappedFuture: Future<Int>?
 
-    let result: Int = autoreleasepool {
+    let result: Int = eval {
       let futureValue = future(value: 1)
       let mappedFutureValue = futureValue.map(executor: .utility) { (value) -> Int in
         if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
@@ -86,7 +86,7 @@ class FutureTests : XCTestCase {
     let value = pickInt()
     let valueSquared = square(value)
 
-    let mappedFuture: Future<Int> = autoreleasepool {
+    let mappedFuture: Future<Int> = eval {
       let initialFuture = future(value: value)
       weakInitialFuture = initialFuture
       return initialFuture
@@ -110,7 +110,7 @@ class FutureTests : XCTestCase {
     let value = pickInt()
     let valueSquared = square(value)
 
-    let mappedFuture: FallibleFuture<Int> = autoreleasepool {
+    let mappedFuture: FallibleFuture<Int> = eval {
       let initialFuture = future(value: value)
       weakInitialFuture = initialFuture
       return initialFuture
@@ -134,7 +134,7 @@ class FutureTests : XCTestCase {
     let value = pickInt()
 //    let valueSquared = square(value)
 
-    let mappedFuture: FallibleFuture<Int> = autoreleasepool {
+    let mappedFuture: FallibleFuture<Int> = eval {
       let initialFuture = future(value: value)
       weakInitialFuture = initialFuture
       return initialFuture
@@ -158,7 +158,7 @@ class FutureTests : XCTestCase {
     let value = pickInt()
     let valueSquared = square(value)
 
-    let mappedFuture: FallibleFuture<Int> = autoreleasepool {
+    let mappedFuture: FallibleFuture<Int> = eval {
       let initialFuture = future(value: value)
       weakInitialFuture = initialFuture
       return initialFuture
@@ -181,7 +181,7 @@ class FutureTests : XCTestCase {
     let value = pickInt()
 //    let valueSquared = square(value)
 
-    let mappedFuture: FallibleFuture<Int> = autoreleasepool {
+    let mappedFuture: FallibleFuture<Int> = eval {
       let initialFuture = future(value: value)
       weakInitialFuture = initialFuture
       let actor = TestActor()
@@ -208,7 +208,7 @@ class FutureTests : XCTestCase {
     let value = pickInt()
     //let valueSquared = square(value)
 
-    let mappedFuture: FallibleFuture<Int> = autoreleasepool {
+    let mappedFuture: FallibleFuture<Int> = eval {
       let initialFuture = future(value: value)
       weakInitialFuture = initialFuture
       return initialFuture
@@ -231,7 +231,7 @@ class FutureTests : XCTestCase {
     let value = pickInt()
     //let valueSquared = square(value)
 
-    let mappedFuture: FallibleFuture<Int> = autoreleasepool {
+    let mappedFuture: FallibleFuture<Int> = eval {
       let initialFuture = future(value: value)
       weakInitialFuture = initialFuture
       let actor = TestActor()
@@ -257,7 +257,7 @@ class FutureTests : XCTestCase {
     weak var weakInitialFuture: Future<Int>?
     let value = pickInt()
 
-    autoreleasepool {
+    eval {
       let initialFuture = future(value: value)
       weakInitialFuture = initialFuture
       initialFuture.onValue(context: actor) { (actor, value_) in
@@ -275,7 +275,7 @@ class FutureTests : XCTestCase {
     weak var weakInitialFuture: Future<Int>?
     let value = pickInt()
 
-    autoreleasepool {
+    eval {
       let actor = TestActor()
       let initialFuture = future(value: value)
       weakInitialFuture = initialFuture

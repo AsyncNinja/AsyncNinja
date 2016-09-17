@@ -34,7 +34,7 @@ class TimerChannelTests : XCTestCase {
     weak var weakMappedTimer: Channel<DispatchTime>? = nil
     weak var weakTimesBuffer: Channel<[DispatchTime]>? = nil
 
-    let times: [DispatchTime] = autoreleasepool {
+    let times: [DispatchTime] = eval {
       let timer = makeTimer(interval: interval)
       weakTimer = timer
       XCTAssertNotNil(weakTimer)
