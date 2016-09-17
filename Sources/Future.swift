@@ -29,6 +29,12 @@ public class Future<T> : Finite {
   public typealias Handler = FutureHandler<Value>
   public typealias FinalHandler = Handler
 
+  public var finalValue: FinalValue? {
+    /* abstract */
+    fatalError()
+  }
+  public var value: Value? { return self.finalValue }
+
   /// Base future is **abstract**.
   ///
   /// Use `Promise` or `future(executor:block)` or `future(context:executor:block)` to make future.
@@ -78,6 +84,7 @@ public extension Future {
 
 /// Asynchrounously executes block on executor and wraps returned value into future
 public func future<T>(executor: Executor, block: @escaping () -> T) -> Future<T> {
+  // Test: FutureTests.testMakeFutureOfBlock
   let promise = Promise<T>()
   executor.execute { [weak promise] in promise?.complete(with: block()) }
   return promise
@@ -85,12 +92,21 @@ public func future<T>(executor: Executor, block: @escaping () -> T) -> Future<T>
 
 /// Asynchrounously executes block on executor and wraps returned value into future
 public func future<T>(executor: Executor, block: @escaping () throws -> T) -> FallibleFuture<T> {
+  // Test: FutureTests.testMakeFallibleFutureOfBlock_Success
+  // Test: FutureTests.testMakeFallibleFutureOfBlock_Failure
   return future(executor: executor) { fallible(block: block) }
 }
 
 /// Asynchrounously executes block after timeout on executor and wraps returned value into future
 public func future<T>(executor: Executor = .primary, after timeout: Double,
                    block: @escaping () -> T) -> Future<T> {
+  // Test: FutureTests.testMakeFutureOfDelayedBlock
+  // Test: FutureTests.testMakeFutureOfDelayedBlock_lifetime
+  return promise(executor: executor, after: timeout, block: block)
+}
+
+private func promise<T>(executor: Executor, after timeout: Double,
+                   block: @escaping () -> T) -> Promise<T> {
   let promise = Promise<T>()
   executor.execute(after: timeout) { [weak promise] in
     guard let promise = promise else { return }
@@ -100,13 +116,19 @@ public func future<T>(executor: Executor = .primary, after timeout: Double,
 }
 
 /// Asynchrounously executes block after timeout on executor and wraps returned value into future
-public func future<T>(after timeout: Double,
+public func future<T>(executor: Executor = .primary, after timeout: Double,
                    block: @escaping () throws -> T) -> FallibleFuture<T> {
-  return future(after: timeout) { fallible(block: block) }
+  // Test: FutureTests.testMakeFutureOfDelayedFallibleBlock_Success
+  // Test: FutureTests.testMakeFutureOfDelayedFallibleBlock_Failure
+  return future(executor: executor, after: timeout) { fallible(block: block) }
 }
 
 public func future<T, U : ExecutionContext>(context: U, executor: Executor? = nil,
                    block: @escaping (U) throws -> T) -> FallibleFuture<T> {
+  // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Success_ContextAlive
+  // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Success_ContextDead
+  // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive
+  // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Failure_ContextDead
   return future(executor: executor ?? context.executor) { [weak context] () -> T in
     guard let context = context
       else { throw ConcurrencyError.contextDeallocated }
@@ -115,14 +137,35 @@ public func future<T, U : ExecutionContext>(context: U, executor: Executor? = ni
   }
 }
 
+public func future<T, U : ExecutionContext>(context: U, executor: Executor? = nil, after timeout: Double,
+                   block: @escaping (U) throws -> T) -> FallibleFuture<T> {
+  // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive
+  // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextDead
+  // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Success_EarlyContextDead
+  // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextAlive
+  // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextDead
+  // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead
+  let promiseValue = promise(executor: executor ?? context.executor, after: timeout) { [weak context] () -> Fallible<T> in
+    guard let context = context
+      else { return Fallible(failure: ConcurrencyError.contextDeallocated) }
+
+    return fallible { try block(context) }
+  }
+
+  context.notifyDeinit { [weak promiseValue] in promiseValue?.cancelBecauseOfDeallicatedContext() }
+
+  return promiseValue
+}
+
 public extension DispatchGroup {
-    var completionFuture: Future<Void> {
-        let promise = Promise<Void>()
-        self.notify(queue: DispatchQueue.global(qos: .default)) { [weak promise] in
-            promise?.complete(with: Void())
-        }
-        return promise
+  // Test: FutureTests.testGroupCompletionFuture
+  var completionFuture: Future<Void> {
+    let promise = Promise<Void>()
+    self.notify(queue: DispatchQueue.global(qos: .default)) { [weak promise] in
+      promise?.complete(with: Void())
     }
+    return promise
+  }
 }
 
 /// **Internal use only**

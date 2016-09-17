@@ -27,6 +27,7 @@ final public class Promise<T> : Future<T>, ThreadSafeContainer {
   typealias ThreadSafeItem = AbstractPromiseState<T>
   var head: ThreadSafeItem?
   let releasePool = ReleasePool()
+  override public var finalValue: FinalValue? { return (self.head as? CompletedPromiseState)?.value }
 
   override public init() { }
 

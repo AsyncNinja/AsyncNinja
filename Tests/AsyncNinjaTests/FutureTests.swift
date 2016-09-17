@@ -41,6 +41,23 @@ class FutureTests : XCTestCase {
     ("testMapContextualFinalToFinal_Failure_ContextDead", testMapContextualFinalToFinal_Failure_ContextDead),
     ("testOnValueContextual_ContextAlive", testOnValueContextual_ContextAlive),
     ("testOnValueContextual_ContextDead", testOnValueContextual_ContextDead),
+    ("testMakeFutureOfBlock", testMakeFutureOfBlock),
+    ("testMakeFallibleFutureOfBlock_Success", testMakeFallibleFutureOfBlock_Success),
+    ("testMakeFallibleFutureOfBlock_Failure", testMakeFallibleFutureOfBlock_Failure),
+    ("testMakeFutureOfDelayedBlock", testMakeFutureOfDelayedBlock),
+    ("testMakeFutureOfDelayedBlock_lifetime", testMakeFutureOfDelayedBlock_lifetime),
+    ("testMakeFutureOfDelayedFallibleBlock_Success", testMakeFutureOfDelayedFallibleBlock_Success),
+    ("testMakeFutureOfDelayedFallibleBlock_Failure", testMakeFutureOfDelayedFallibleBlock_Failure),
+    ("testMakeFutureOfContextualFallibleBlock_Success_ContextAlive", testMakeFutureOfContextualFallibleBlock_Success_ContextAlive),
+    ("testMakeFutureOfContextualFallibleBlock_Success_ContextDead", testMakeFutureOfContextualFallibleBlock_Success_ContextDead),
+    ("testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive", testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive),
+    ("testMakeFutureOfContextualFallibleBlock_Failure_ContextDead", testMakeFutureOfContextualFallibleBlock_Failure_ContextDead),
+    ("testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive", testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive),
+    ("testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextDead", testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextDead),
+    ("testMakeFutureOfDelayedContextualFallibleBlock_Success_EarlyContextDead", testMakeFutureOfDelayedContextualFallibleBlock_Success_EarlyContextDead),
+    ("testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextAlive", testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextAlive),
+    ("testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead", testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead),
+    ("testGroupCompletionFuture", testGroupCompletionFuture),
     ]
 
   func testLifetime() {
@@ -306,5 +323,297 @@ class FutureTests : XCTestCase {
 
     sleep(1)
     XCTAssertNil(weakInitialFuture)
+  }
+
+  func testMakeFutureOfBlock() {
+    let qos = pickQoS()
+    let value = pickInt()
+    let expectation = self.expectation(description: "block called")
+
+    let futureValue = future(executor: .queue(qos)) { () -> Int in
+      assert(qos: qos)
+      expectation.fulfill()
+      return square(value)
+    }
+
+    self.waitForExpectations(timeout: 0.1)
+    XCTAssertEqual(futureValue.value, square(value))
+  }
+
+  func testMakeFallibleFutureOfBlock_Success() {
+    let qos = pickQoS()
+    let value = pickInt()
+    let expectation = self.expectation(description: "block called")
+
+    let futureValue = future(executor: .queue(qos)) { () -> Int in
+      assert(qos: qos)
+      expectation.fulfill()
+      return try square_success(value)
+    }
+
+    self.waitForExpectations(timeout: 0.1)
+    XCTAssertEqual(futureValue.success, square(value))
+  }
+
+  func testMakeFallibleFutureOfBlock_Failure() {
+    let qos = pickQoS()
+    let value = pickInt()
+    let expectation = self.expectation(description: "block called")
+
+    let futureValue = future(executor: .queue(qos)) { () -> Int in
+      assert(qos: qos)
+      expectation.fulfill()
+      return try square_failure(value)
+    }
+
+    self.waitForExpectations(timeout: 0.1)
+    XCTAssertEqual(futureValue.failure as? TestError, TestError.testCode)
+  }
+
+  func testMakeFutureOfDelayedBlock() {
+    let qos = pickQoS()
+    let value = pickInt()
+    let expectation = self.expectation(description: "block called")
+
+    let futureValue = future(executor: .queue(qos), after: 0.2) { () -> Int in
+      assert(qos: qos)
+      expectation.fulfill()
+      return square(value)
+    }
+
+    usleep(150_000)
+    XCTAssertNil(futureValue.value)
+
+    self.waitForExpectations(timeout: 0.3)
+    XCTAssertEqual(futureValue.value, square(value))
+  }
+
+  func testMakeFutureOfDelayedBlock_lifetime() {
+    let qos = pickQoS()
+    let value = pickInt()
+
+    var futureValue: Future<Int>? = future(executor: .queue(qos), after: 0.2) { () -> Int in
+      XCTFail()
+      return value
+    }
+
+    usleep(150_000)
+    XCTAssertNil(futureValue?.value)
+    futureValue = nil
+
+    usleep(250_000)
+  }
+
+  func testMakeFutureOfDelayedFallibleBlock_Success() {
+    let qos = pickQoS()
+    let value = pickInt()
+    let expectation = self.expectation(description: "block called")
+
+    let futureValue = future(executor: .queue(qos), after: 0.2) { () -> Int in
+      assert(qos: qos)
+      expectation.fulfill()
+      return try square_success(value)
+    }
+
+    usleep(150_000)
+    XCTAssertNil(futureValue.value)
+
+    self.waitForExpectations(timeout: 0.3)
+    XCTAssertEqual(futureValue.success, square(value))
+  }
+
+  func testMakeFutureOfDelayedFallibleBlock_Failure() {
+    let qos = pickQoS()
+    let value = pickInt()
+    let expectation = self.expectation(description: "block called")
+
+    let futureValue = future(executor: .queue(qos), after: 0.2) { () -> Int in
+      assert(qos: qos)
+      expectation.fulfill()
+      return try square_failure(value)
+    }
+
+    usleep(150_000)
+    XCTAssertNil(futureValue.value)
+
+    self.waitForExpectations(timeout: 0.3)
+    XCTAssertEqual(futureValue.failure as? TestError, TestError.testCode)
+  }
+
+  func testMakeFutureOfContextualFallibleBlock_Success_ContextAlive() {
+    let actor = TestActor()
+    let value = pickInt()
+    let expectation = self.expectation(description: "block called")
+
+    let futureValue = future(context: actor) { (actor) -> Int in
+      assert(actor: actor)
+      expectation.fulfill()
+      return try square_success(value)
+    }
+
+    self.waitForExpectations(timeout: 0.1)
+    XCTAssertEqual(futureValue.success, square(value))
+  }
+
+  func testMakeFutureOfContextualFallibleBlock_Success_ContextDead() {
+    let value = pickInt()
+
+    let futureValue: FallibleFuture<Int> = eval {
+      let actor = TestActor()
+      return future(context: actor) { (actor) -> Int in
+        XCTFail()
+        assert(actor: actor)
+        return try square_success(value)
+      }
+    }
+
+    usleep(100_000)
+    XCTAssertEqual(futureValue.failure as? ConcurrencyError, ConcurrencyError.contextDeallocated)
+  }
+
+  func testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive() {
+    let actor = TestActor()
+    let value = pickInt()
+    let expectation = self.expectation(description: "block called")
+
+    let futureValue = future(context: actor) { (actor) -> Int in
+      assert(actor: actor)
+      expectation.fulfill()
+      return try square_failure(value)
+    }
+
+    self.waitForExpectations(timeout: 0.1)
+    XCTAssertEqual(futureValue.failure as? TestError, TestError.testCode)
+  }
+  
+  func testMakeFutureOfContextualFallibleBlock_Failure_ContextDead() {
+    let value = pickInt()
+
+    let futureValue: FallibleFuture<Int> = eval {
+      let actor = TestActor()
+      return future(context: actor) { (actor) -> Int in
+        XCTFail()
+        assert(actor: actor)
+        return try square_failure(value)
+      }
+    }
+
+    usleep(100_000)
+    XCTAssertEqual(futureValue.failure as? ConcurrencyError, ConcurrencyError.contextDeallocated)
+  }
+  
+  func testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive() {
+    let actor = TestActor()
+    let value = pickInt()
+    let expectation = self.expectation(description: "block called")
+
+    let futureValue = future(context: actor, after: 0.2) { (actor) -> Int in
+      assert(actor: actor)
+      expectation.fulfill()
+      return try square_success(value)
+    }
+
+    usleep(150_000)
+    XCTAssertNil(futureValue.value)
+
+    self.waitForExpectations(timeout: 0.3)
+    XCTAssertEqual(futureValue.success, square(value))
+  }
+  
+  func testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextDead() {
+    var actor: TestActor? = TestActor()
+    let value = pickInt()
+
+    let futureValue = future(context: actor!, after: 0.2) { (actor) -> Int in
+      XCTFail()
+      assert(actor: actor)
+      return try square_success(value)
+    }
+
+    usleep(150_000)
+    XCTAssertNil(futureValue.value)
+    actor = nil
+
+    usleep(250_000)
+    XCTAssertEqual(futureValue.failure as? ConcurrencyError, ConcurrencyError.contextDeallocated)
+  }
+
+  func testMakeFutureOfDelayedContextualFallibleBlock_Success_EarlyContextDead() {
+    var actor: TestActor? = TestActor()
+    let value = pickInt()
+
+    let futureValue = future(context: actor!, after: 0.2) { (actor) -> Int in
+      XCTFail()
+      assert(actor: actor)
+      return try square_success(value)
+    }
+
+    actor = nil
+    usleep(100_000)
+    XCTAssertEqual(futureValue.failure as? ConcurrencyError, ConcurrencyError.contextDeallocated)
+  }
+
+  func testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextAlive() {
+    let actor = TestActor()
+    let value = pickInt()
+    let expectation = self.expectation(description: "block called")
+
+    let futureValue = future(context: actor, after: 0.2) { (actor) -> Int in
+      assert(actor: actor)
+      expectation.fulfill()
+      return try square_failure(value)
+    }
+
+    usleep(150_000)
+    XCTAssertNil(futureValue.value)
+
+    self.waitForExpectations(timeout: 0.3)
+    XCTAssertEqual(futureValue.failure as? TestError, TestError.testCode)
+  }
+
+  func testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextDead() {
+    var actor: TestActor? = TestActor()
+    let value = pickInt()
+
+    let futureValue = future(context: actor!, after: 0.2) { (actor) -> Int in
+      XCTFail()
+      assert(actor: actor)
+      return try square_success(value)
+    }
+
+    usleep(150_000)
+    XCTAssertNil(futureValue.value)
+    actor = nil
+
+    usleep(250_000)
+    XCTAssertEqual(futureValue.failure as? ConcurrencyError, ConcurrencyError.contextDeallocated)
+  }
+
+  func testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead() {
+    var actor: TestActor? = TestActor()
+    let value = pickInt()
+
+    let futureValue = future(context: actor!, after: 0.2) { (actor) -> Int in
+      XCTFail()
+      assert(actor: actor)
+      return try square_success(value)
+    }
+
+    actor = nil
+    usleep(100_000)
+    XCTAssertEqual(futureValue.failure as? ConcurrencyError, ConcurrencyError.contextDeallocated)
+  }
+
+  func testGroupCompletionFuture() {
+    let group = DispatchGroup()
+    group.enter()
+    let completionFuture = group.completionFuture
+
+    usleep(100_000)
+    XCTAssertNil(completionFuture.value)
+    group.leave()
+
+    usleep(100_000)
+    XCTAssertNotNil(completionFuture.value)
   }
 }

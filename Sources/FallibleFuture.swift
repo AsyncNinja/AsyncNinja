@@ -23,20 +23,30 @@
 import Dispatch
 
 public typealias FallibleFuture<T> = Future<Fallible<T>>
+
+public extension Future where T : _Fallible {
+  public var success: FinalValue.Success? { return self.value?.success }
+  public var failure: Error? { return self.value?.failure }
+}
+
 public typealias FalliblePromise<T> = Promise<Fallible<T>>
 
 public extension Promise where T : _Fallible {
-    final public func succeed(with success: FinalValue.Success) {
-        self.complete(with: T(success: success))
-    }
-    
-    final public func fail(with failure: Error) {
-        self.complete(with: T(failure: failure))
-    }
-    
-    final public func cancel() {
-        self.fail(with: ConcurrencyError.cancelled)
-    }
+  final public func succeed(with success: FinalValue.Success) {
+    self.complete(with: FinalValue(success: success))
+  }
+
+  final public func fail(with failure: Error) {
+    self.complete(with: FinalValue(failure: failure))
+  }
+
+  final public func cancel() {
+    self.fail(with: ConcurrencyError.cancelled)
+  }
+
+  final func cancelBecauseOfDeallicatedContext() {
+    self.fail(with: ConcurrencyError.contextDeallocated)
+  }
 }
 
 public func fallible<T>(_ future: Future<T>) -> FallibleFuture<T> {

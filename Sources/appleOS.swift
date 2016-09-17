@@ -100,7 +100,7 @@
       context?.notifyDeinit {
         [weak task, weak promise] in
         task?.cancel()
-        promise?.cancel()
+        promise?.cancelBecauseOfDeallicatedContext()
       }
 
       task.resume()
