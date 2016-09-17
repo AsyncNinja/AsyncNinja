@@ -23,6 +23,9 @@
 import XCTest
 import Dispatch
 @testable import AsyncNinja
+#if os(Linux)
+  import Glibc
+#endif
 
 class ReleasePoolTests : XCTestCase {
   func testSequential() {

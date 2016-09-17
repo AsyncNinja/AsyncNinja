@@ -6,8 +6,9 @@
 //
 //
 
+import XCTest
 import Dispatch
-
+@testable import AsyncNinja
 #if os(Linux)
   import Glibc
 #endif
