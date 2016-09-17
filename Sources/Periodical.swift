@@ -127,6 +127,19 @@ public extension Periodical {
     }
   }
 
+  #if os(Linux)
+  func enumerated() -> Channel<(Int, PeriodicalValue)> {
+    let sema = DispatchSemaphore(value: 1)
+    var index = 0
+    return self.mapPeriodic(executor: .immediate) {
+      sema.wait()
+      defer { sema.signal() }
+      let localIndex = index
+      index += 1
+      return (localIndex, $0)
+    }
+  }
+  #else
   func enumerated() -> Channel<(Int, PeriodicalValue)> {
     var index: OSAtomic_int64_aligned64_t = -1
     return self.mapPeriodic(executor: .immediate) {
@@ -134,6 +147,7 @@ public extension Periodical {
       return (localIndex, $0)
     }
   }
+  #endif
 
   func bufferedPairs() -> Channel<(PeriodicalValue, PeriodicalValue)> {
     return self.buffered(capacity: 2).map(executor: .immediate) { ($0[0], $0[1]) }

@@ -30,6 +30,15 @@ final public class Promise<T> : Future<T>, ThreadSafeContainer {
 
   override public init() { }
 
+  #if os(Linux)
+  let sema = DispatchSemaphore(value: 1)
+  public func synchronized<T>(_ block: () -> T) -> T {
+  self.sema.wait()
+  defer { self.sema.signal() }
+  return block()
+  }
+  #endif
+
   /// **internal use only**
   override public func makeFinalHandler(executor: Executor,
                                         block: @escaping (FinalValue) -> Void) -> FutureHandler<T>? {

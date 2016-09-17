@@ -27,7 +27,16 @@ final public class Producer<T> : Channel<T>, ThreadSafeContainer {
   var head: ThreadSafeItem?
   
   override public init() { }
-  
+
+  #if os(Linux)
+  let sema = DispatchSemaphore(value: 1)
+  public func synchronized<T>(_ block: () -> T) -> T {
+  self.sema.wait()
+  defer { self.sema.signal() }
+  return block()
+  }
+  #endif
+
   /// **internal use only**
   override public func makePeriodicalHandler(executor: Executor,
                                              block: @escaping (T) -> Void) -> ChannelHandler<T>? {

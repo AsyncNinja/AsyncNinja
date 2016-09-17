@@ -27,29 +27,59 @@ import Dispatch
 protocol ThreadSafeContainer : class {
   associatedtype ThreadSafeItem: AnyObject
   var head: ThreadSafeItem? { get set }
+  #if os(Linux)
+  func synchronized<T>(_ block: () -> T) -> T
+  #endif
 }
 
 extension ThreadSafeContainer {
   @discardableResult
   func updateHead(_ block: (ThreadSafeItem?) -> HeadChange<ThreadSafeItem>) -> (oldHead: ThreadSafeItem?, newHead: ThreadSafeItem?) {
-    while true {
-      let localHead = self.head
+    #if os(Linux)
+      while true {
+        let localHead = self.head
 
-      switch block(localHead) {
-      case .keep:
-        if self.head === localHead {
-          return (localHead, localHead)
-        }
-      case .remove:
-        if compareAndSwap(old: localHead, new: nil, to: &self.head) {
-          return (localHead, nil)
-        }
-      case let .replace(newHead):
-        if compareAndSwap(old: localHead, new: newHead, to: &self.head) {
-          return (localHead, newHead)
+        switch block(localHead) {
+        case .keep:
+          if self.head === localHead {
+            return (localHead, localHead)
+          }
+        case .remove:
+          let didApply: Bool = self.synchronized {
+            guard self.head === localHead else { return false }
+            self.head = nil
+            return true
+          }
+          if didApply { return (localHead, nil) }
+        case let .replace(newHead):
+          let didApply: Bool = self.synchronized {
+            guard self.head === localHead else { return false }
+            self.head = newHead
+            return true
+          }
+          if didApply { return (localHead, newHead) }
         }
       }
-    }
+    #else
+      while true {
+        let localHead = self.head
+
+        switch block(localHead) {
+        case .keep:
+          if self.head === localHead {
+            return (localHead, localHead)
+          }
+        case .remove:
+          if compareAndSwap(old: localHead, new: nil, to: &self.head) {
+            return (localHead, nil)
+          }
+        case let .replace(newHead):
+          if compareAndSwap(old: localHead, new: newHead, to: &self.head) {
+            return (localHead, newHead)
+          }
+        }
+      }
+    #endif
   }
 }
 
@@ -58,6 +88,9 @@ enum HeadChange<T : AnyObject> {
   case remove
   case replace(T)
 }
+
+#if os(Linux)
+#else
 
 @inline(__always)
 fileprivate func compareAndSwap<T: AnyObject>(old: T, new: T, to toPtr: UnsafeMutablePointer<T>) -> Bool {
@@ -90,3 +123,5 @@ fileprivate func compareAndSwap<T: AnyObject>(old: T?, new: T?, to toPtr: Unsafe
     return false
   }
 }
+
+#endif
