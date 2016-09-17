@@ -31,11 +31,24 @@
 
   public protocol ObjCInjectedExecutionContext : ExecutionContext, NSObjectProtocol { }
 
+  private class DeinitNotifier {
+    let block: () -> Void
+    init(block: @escaping () -> Void) {
+      self.block = block
+    }
+
+    deinit { self.block() }
+  }
+
   public extension ObjCInjectedExecutionContext {
     func releaseOnDeinit(_ object: AnyObject) {
       Statics.withUniqueKey {
         objc_setAssociatedObject(self, $0, object, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
       }
+    }
+
+    func notifyDeinit(_ block: @escaping () -> Void) {
+      self.releaseOnDeinit(DeinitNotifier(block: block))
     }
   }
 
@@ -64,6 +77,59 @@
 
   extension NSPersistentStoreCoordinator : ObjCInjectedExecutionContext {
     public var executor: Executor { return Executor { [weak self] in self?.perform($0) } }
+  }
+
+  public extension URLSession {
+    private func dataFuture(context: ExecutionContext?, cancellationToken: CancellationToken?, makeTask: (@escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask) -> FallibleFuture<(Data?, URLResponse)> {
+      let promise = FalliblePromise<(Data?, URLResponse)>()
+      let task = makeTask { [weak promise] (data, response, error) in
+        guard let promise = promise else { return }
+        guard let error = error else { promise.succeed(with: (data, response!)); return }
+        if let error = error as? URLError, error.code == .cancelled {
+          promise.fail(with: ConcurrencyError.cancelled)
+        } else {
+          promise.fail(with: error)
+        }
+      }
+      promise.releasePool.notifyDrain { [weak task] in task?.cancel() }
+      cancellationToken?.notifyCancellation {
+        [weak task, weak promise] in
+        task?.cancel()
+        promise?.cancel()
+      }
+      context?.notifyDeinit {
+        [weak task, weak promise] in
+        task?.cancel()
+        promise?.cancel()
+      }
+
+      task.resume()
+      return promise
+    }
+
+    func data(at url: URL, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> FallibleFuture<(Data?, URLResponse)> {
+      return self.dataFuture(context: context, cancellationToken: cancellationToken) {
+        self.dataTask(with: url, completionHandler: $0)
+      }
+    }
+
+    func data(with request: URLRequest, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> FallibleFuture<(Data?, URLResponse)> {
+      return self.dataFuture(context: context, cancellationToken: cancellationToken) {
+        self.dataTask(with: request, completionHandler: $0)
+      }
+    }
+
+    func upload(with request: URLRequest, fromFile fileURL: URL, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> FallibleFuture<(Data?, URLResponse)> {
+      return self.dataFuture(context: context, cancellationToken: cancellationToken) {
+        self.uploadTask(with: request, fromFile: fileURL, completionHandler: $0)
+      }
+    }
+
+    func upload(with request: URLRequest, from bodyData: Data?, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> FallibleFuture<(Data?, URLResponse)> {
+      return self.dataFuture(context: context, cancellationToken: cancellationToken) {
+        self.uploadTask(with: request, from: bodyData, completionHandler: $0)
+      }
+    }
   }
 #endif
 
