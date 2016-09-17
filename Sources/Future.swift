@@ -83,7 +83,7 @@ public extension Future {
 }
 
 /// Asynchrounously executes block on executor and wraps returned value into future
-public func future<T>(executor: Executor, block: @escaping () -> T) -> Future<T> {
+public func future<T>(executor: Executor = .primary, block: @escaping () -> T) -> Future<T> {
   // Test: FutureTests.testMakeFutureOfBlock
   let promise = Promise<T>()
   executor.execute { [weak promise] in promise?.complete(with: block()) }
@@ -91,7 +91,7 @@ public func future<T>(executor: Executor, block: @escaping () -> T) -> Future<T>
 }
 
 /// Asynchrounously executes block on executor and wraps returned value into future
-public func future<T>(executor: Executor, block: @escaping () throws -> T) -> FallibleFuture<T> {
+public func future<T>(executor: Executor = .primary, block: @escaping () throws -> T) -> FallibleFuture<T> {
   // Test: FutureTests.testMakeFallibleFutureOfBlock_Success
   // Test: FutureTests.testMakeFallibleFutureOfBlock_Failure
   return future(executor: executor) { fallible(block: block) }

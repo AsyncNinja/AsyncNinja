@@ -40,7 +40,7 @@ public class Channel<T> : Periodical {
 }
 
 public extension Channel {
-  func map<T>(executor: Executor,
+  func map<T>(executor: Executor = .primary,
            transform: @escaping (Value) -> T) -> Channel<T> {
     return self.mapPeriodic(executor: executor, transform: transform)
   }

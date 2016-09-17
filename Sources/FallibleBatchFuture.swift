@@ -42,19 +42,19 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
 
 public extension Collection where Self.IndexDistance == Int {
   /// transforms each element of collection on executor and provides future array of transformed values
-  public func asyncMap<T>(executor: Executor,
+  public func asyncMap<T>(executor: Executor = .primary,
                        transform: @escaping (Self.Iterator.Element) throws -> T) -> FallibleFuture<[T]> {
     return self.asyncMap(executor: executor) { future(success: try transform($0)) }
   }
 
   /// transforms each element of collection to future values on executor and provides future array of transformed values
-  public func asyncMap<T>(executor: Executor,
+  public func asyncMap<T>(executor: Executor = .primary,
                        transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> FallibleFuture<[T]> {
     return self.asyncMap(executor: executor) { fallible(try transform($0)) }
   }
 
   /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
-  public func asyncMap<T>(executor: Executor,
+  public func asyncMap<T>(executor: Executor = .primary,
                        transform: @escaping (Self.Iterator.Element) throws -> FallibleFuture<T>) -> FallibleFuture<[T]> {
     let promise = Promise<Fallible<[T]>>()
     let sema = DispatchSemaphore(value: 1)

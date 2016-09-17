@@ -149,17 +149,17 @@ public extension Finite where FinalValue : _Fallible {
     }
   }
 
-  func mapSuccess<T>(executor: Executor,
+  func mapSuccess<T>(executor: Executor = .primary,
                   transform: @escaping (FinalValue.Success) throws -> T) -> FallibleFuture<T> {
     return self.mapFinal(executor: executor) { $0.mapSuccess(transform: transform) }
   }
 
-  func mapFailure(executor: Executor,
+  func mapFailure(executor: Executor = .primary,
                   transform: @escaping (Error) -> FinalValue.Success) -> Future<FinalValue.Success> {
     return self.mapFinal(executor: executor) { $0.mapFailure(transform: transform) }
   }
 
-  func mapFailure(executor: Executor,
+  func mapFailure(executor: Executor = .primary,
                   transform: @escaping (Error) throws -> FinalValue.Success) -> FallibleFuture<FinalValue.Success> {
     return self.mapFinal(executor: executor) { $0.mapFailure(transform: transform) }
   }
