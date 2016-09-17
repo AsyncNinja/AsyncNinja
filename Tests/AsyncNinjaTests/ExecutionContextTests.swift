@@ -31,6 +31,11 @@ struct SimpleRequest {}
 struct SimpleResponse {}
 
 class ExecutionContextTests : XCTestCase {
+
+  static let allTests = [
+    ("testFailure", testFailure),
+    ]
+
   func testFailure() {
     var object : TestActor? = TestActor()
 

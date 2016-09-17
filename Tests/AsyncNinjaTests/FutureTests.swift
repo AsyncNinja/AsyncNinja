@@ -29,6 +29,20 @@ import Dispatch
 
 class FutureTests : XCTestCase {
 
+  static let allTests = [
+    ("testLifetime", testLifetime),
+    ("testPerformanceFuture", testPerformanceFuture),
+    ("testMapFinalToFinal", testMapFinalToFinal),
+    ("testMapFinalToFallibleFinal_Success", testMapFinalToFallibleFinal_Success),
+    ("testMapFinalToFallibleFinal_Failure", testMapFinalToFallibleFinal_Failure),
+    ("testMapContextualFinalToFinal_Success_ContextAlive", testMapContextualFinalToFinal_Success_ContextAlive),
+    ("testMapContextualFinalToFinal_Success_ContextDead", testMapContextualFinalToFinal_Success_ContextDead),
+    ("testMapContextualFinalToFinal_Failure_ContextAlive", testMapContextualFinalToFinal_Failure_ContextAlive),
+    ("testMapContextualFinalToFinal_Failure_ContextDead", testMapContextualFinalToFinal_Failure_ContextDead),
+    ("testOnValueContextual_ContextAlive", testOnValueContextual_ContextAlive),
+    ("testOnValueContextual_ContextDead", testOnValueContextual_ContextDead),
+    ]
+
   func testLifetime() {
 
     weak var weakFuture: Future<Int>?

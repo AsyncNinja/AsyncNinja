@@ -29,6 +29,10 @@ import Dispatch
 
 class TimerChannelTests : XCTestCase {
 
+  static let allTests = [
+    ("testLifetime", testLifetime),
+    ]
+
   func testLifetime() {
     let interval = 0.2
     let initialTime = DispatchTime.now()

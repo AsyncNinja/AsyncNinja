@@ -29,6 +29,14 @@ import Dispatch
 
 class BatchFutureTests : XCTestCase {
 
+  static let allTests = [
+    ("testJoined", testJoined),
+    ("testReduce", testReduce),
+    ("testReduceThrows", testReduceThrows),
+    ("testMapToFuture", testMapToFuture),
+    ("testMapToValue", testMapToValue),
+    ]
+
   func testJoined() {
     let value: [Int] = (1...5)
       .map { value in future(after: 1.0 - Double(value) / 5.0, block: { value }) }

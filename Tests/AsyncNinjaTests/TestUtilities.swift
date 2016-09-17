@@ -56,6 +56,7 @@ func pickInt(max: Int = 100) -> Int {
 
 enum TestError : Error {
   case testCode
+  case otherCode
 }
 
 func square(_ value: Int) -> Int {

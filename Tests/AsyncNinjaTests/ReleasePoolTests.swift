@@ -28,6 +28,11 @@ import Dispatch
 #endif
 
 class ReleasePoolTests : XCTestCase {
+  static let allTests = [
+    ("testSequential", testSequential),
+    ("testConcurrent", testConcurrent),
+    ]
+
   func testSequential() {
     let releasePool = ReleasePool()
     var boxedOne: Box<Int>? = Box(1)

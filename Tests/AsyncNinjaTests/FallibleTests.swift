@@ -28,10 +28,21 @@ import Dispatch
 #endif
 
 class FallibleTests : XCTestCase {
-  enum TestError : Error {
-    case testCode
-    case otherCode
-  }
+  static let allTests = [
+    ("testSuccess", testSuccess),
+    ("testFailure", testFailure),
+    ("testOnSuccess", testOnSuccess),
+    ("testOnFailure", testOnFailure),
+    ("testMapSuccessForSuccess", testMapSuccessForSuccess),
+    ("testMapSuccessForFailure", testMapSuccessForFailure),
+    ("testMapSuccessForThrow", testMapSuccessForThrow),
+    ("testMapFailureForSuccess", testMapFailureForSuccess),
+    ("testMapFailureOnFailure", testMapFailureOnFailure),
+    ("testMapFailure2OnSuccess", testMapFailure2OnSuccess),
+    ("testMapFailure2OnFailure", testMapFailure2OnFailure),
+    ("testMapFailure2OnThrow", testMapFailure2OnThrow),
+    ("testMakeFallibleSuccess", testMakeFallibleSuccess),
+    ]
 
   func testSuccess() {
     let value = Fallible(success: 3)
