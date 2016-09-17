@@ -3,7 +3,7 @@
 Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
 
 ![License:MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
-![Platform:macOS|iOS|tvOS|watchOS](https://img.shields.io/badge/platform-macOS%7CiOS%7CtvOS%7CwatchOS-orange.svg)
+![Platform:macOS|iOS|tvOS|watchOS|Linux](https://img.shields.io/badge/platform-macOS%7CiOS%7CtvOS%7CwatchOS%7CLinux-orange.svg)
 ![Swift](https://img.shields.io/badge/Swift-3.0-orange.svg)
 
 [Found issue? Have feature request? Have question?](https://github.com/AsyncNinja/AsyncNinja/issues)
