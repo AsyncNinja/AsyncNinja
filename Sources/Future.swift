@@ -76,18 +76,6 @@ public extension Future {
   }
 }
 
-public extension Finite where FinalValue : _Fallible {
-  func map<T>(executor: Executor = .primary,
-           transform: @escaping (FinalValue) throws -> T) -> FallibleFuture<T> {
-    return self.mapFinal(executor: executor, transform: transform)
-  }
-
-  func map<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-           transform: @escaping (U, FinalValue) throws -> T) -> FallibleFuture<T> {
-    return self.mapFinal(context: context, executor: executor, transform: transform)
-  }
-}
-
 /// Asynchrounously executes block on executor and wraps returned value into future
 public func future<T>(executor: Executor, block: @escaping () -> T) -> Future<T> {
   let promise = Promise<T>()
