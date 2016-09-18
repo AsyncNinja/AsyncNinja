@@ -27,6 +27,7 @@ public func allTests() -> [XCTestCaseEntry] {
     return [
 		testCase(BatchFutureTests.allTests),
 		testCase(ExecutionContextTests.allTests),
+		testCase(ExecutorTests.allTests),
 		testCase(FallibleTests.allTests),
 		testCase(FutureTests.allTests),
 		testCase(ReleasePoolTests.allTests),

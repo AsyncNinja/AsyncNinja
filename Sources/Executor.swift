@@ -31,6 +31,7 @@ public struct Executor {
     _impl = impl
   }
 
+  // Test: ExecutorTests.testCustomHandler
   /// Initialiaes executor with custom handler
   public init(handler: @escaping Handler) {
     _impl = HandlerBasedExecutorImpl(handler: handler)
@@ -46,36 +47,45 @@ public struct Executor {
 }
 
 public extension Executor {
+  // Test: ExecutorTests.testPrimary
   /// primary executor is primary because it will be used as default value when executor argument is ommited
   static let primary = Executor.default
 
   /// shortcut to main queue executor
   static let main = Executor.queue(DispatchQueue.main)
 
+  // Test: ExecutorTests.testUserInteractive
   /// shortcut to global concurrent user interactive queue executor
   static let userInteractive = Executor.queue(.userInteractive)
 
+  // Test: ExecutorTests.testUserInitiated
   /// shortcut to global concurrent user initiated queue executor
   static let userInitiated = Executor.queue(.userInitiated)
 
+  // Test: ExecutorTests.testDefault
   /// shortcut to global concurrent default queue executor
   static let `default` = Executor.queue(.default)
 
+  // Test: ExecutorTests.testUtility
   /// shortcut to global concurrent utility queue executor
   static let utility = Executor.queue(.utility)
 
+  // Test: ExecutorTests.testBackground
   /// shortcut to global concurrent background queue executor
   static let background = Executor.queue(.background)
 
+  // Test: ExecutorTests.testImmediate
   /// executes block immediately. Not suitable for long running calculations
   static let immediate = Executor(handler: { $0() })
 
   /// initializes executor based on specified queue
+  // Test: ExecutorTests.testCustomQueue
   static func queue(_ queue: DispatchQueue) -> Executor {
     return Executor(impl: queue)
   }
 
   /// initializes executor based on global queue with specified QoS class
+  // Test: ExecutorTests.testCustomQoS
   static func queue(_ qos: DispatchQoS.QoSClass) -> Executor {
     return Executor.queue(DispatchQueue.global(qos: qos))
   }
