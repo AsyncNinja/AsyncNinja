@@ -68,7 +68,7 @@ class TimerChannelTests : XCTestCase {
 
     for (index, time) in times.enumerated() {
       let minTime = initialTime + Double(index + 1) * interval
-      let maxTime = initialTime + Double(index + 2) * interval
+      let maxTime = initialTime + Double(index + 3) * interval
       XCTAssertLessThanOrEqual(minTime, time)
       XCTAssertLessThanOrEqual(time, maxTime)
     }

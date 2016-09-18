@@ -301,7 +301,7 @@ class FutureTests : XCTestCase {
       }
     }
 
-    self.waitForExpectations(timeout: 0.1)
+    self.waitForExpectations(timeout: 0.2)
     XCTAssertNil(weakInitialFuture)
   }
 
