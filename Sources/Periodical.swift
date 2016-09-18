@@ -108,7 +108,7 @@ public extension Periodical {
     }
   }
 
-  func filterPeriodical(executor: Executor = .primary,
+  func filterPeriodical(executor: Executor = .immediate,
                         predicate: @escaping (PeriodicalValue) -> Bool) -> Channel<PeriodicalValue> {
     return self.makeChannel(executor: executor) { (PeriodicalValue, send) in
       if predicate(PeriodicalValue) {

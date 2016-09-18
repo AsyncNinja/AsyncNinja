@@ -60,7 +60,7 @@ public extension Channel {
     return self.flatMapPeriodical(executor: executor, transform: transform)
   }
 
-  func filter(executor: Executor = .primary,
+  func filter(executor: Executor = .immediate,
               predicate: @escaping (Value) -> Bool) -> Channel<Value> {
     return self.filterPeriodical(executor: executor, predicate: predicate)
   }

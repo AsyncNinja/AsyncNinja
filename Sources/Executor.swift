@@ -67,8 +67,8 @@ public extension Executor {
   /// shortcut to global concurrent background queue executor
   static let background = Executor.queue(.background)
 
-  /// **internal use only**
-  internal static let immediate = Executor(handler: { $0() })
+  /// executes block immediately. Not suitable for long running calculations
+  static let immediate = Executor(handler: { $0() })
 
   /// initializes executor based on specified queue
   static func queue(_ queue: DispatchQueue) -> Executor {
