@@ -3,14 +3,14 @@
 `Fallible` is a box that contains either success or failure.
 
 ##### Contents
-*    [Concept](#Concept)
-    *    [`throws` vs. `Fallible`](#throws-vs-Fallible)
-    *     [Summary](#Summary)
-*    [Reference](#Reference)
-    *    [Creating `Fallible`](#Creating-Fallible)
-    *     [Transforming `Fallible`](#Transforming-Fallible)
-    *  [Unwrapping `Fallible`](#Unwrapping-Fallible)
-*    [Asynchronous Operations with Error Handling](#Asynchronous-Operations-with-Error-Handling)
+*    [Concept](#concept)
+    *    [`throws` vs. `Fallible`](#throws-vs-fallible)
+    *     [Summary](#summary)
+*    [Reference](#reference)
+    *    [Creating `Fallible`](#creating-fallible)
+    *     [Transforming `Fallible`](#transforming-fallible)
+    *  [Unwrapping `Fallible`](#unwrapping-fallible)
+*    [Asynchronous Operations with Error Handling](#asynchronous-operations-with-error-handling)
 
 ## Concept
 
@@ -122,7 +122,7 @@ Both approaches have their advantages and disadvantages. After consideration and
 *    `func Fallible<Success>.liftSuccess() throws -> Success`
 
 ## Asynchronous Operations with Error Handling
-`Fallible` is most useful in asynchronous execution (see [Cheet Sheet](#Cheet-Sheet)). The first asynchronous primitive of AsyncNinja is `Future`. Combining `Future` and `Fallible` gives us **asynchronous operations with error handling** with `Future<Fallible<T>>` (or simply `FallibleFuture<T>`).
+`Fallible` is most useful in asynchronous execution (see [Cheet Sheet](#cheet-sheet)). The first asynchronous primitive of AsyncNinja is `Future`. Combining `Future` and `Fallible` gives us **asynchronous operations with error handling** with `Future<Fallible<T>>` (or simply `FallibleFuture<T>`).
 
 #### Example
 

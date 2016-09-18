@@ -2,15 +2,15 @@
 This document describes concept and use of `Future`.
 
 ##### Contents
-*    [Concept](#Concept)
-    *     [Implementation Details](#Implementation-Details)
-    *    [Example: Solution based on callbacks](#Solution-based-on-callbacks)
-    *     [Example: Solution based on futures](#Solution-based-on-futures)
-*  [Reference](#Reference)
-    *  [Creating `Future`](#Creating-Future)
-    *  [Transforming `Future`](#Transforming-Future)
-    *  [Combining `Future`s](#Combining-Futures)
-    *  [Changing Mutable State with Future](#Changing-Mutable-State-with-Future)
+*    [Concept](#concept)
+    *     [Implementation Details](#implementation-details)
+    *    [Example: Solution based on callbacks](#solution-based-on-callbacks)
+    *     [Example: Solution based on futures](#solution-based-on-futures)
+*  [Reference](#reference)
+    *  [Creating `Future`](#creating-future)
+    *  [Transforming `Future`](#transforming-future)
+    *  [Combining `Future`s](#combining-futures)
+    *  [Changing Mutable State with Future](#changing-mutable-state-with-future)
 
 ##Concept
 [As Wikipedia says](https://en.wikipedia.org/wiki/Futures_and_promises) `Future` is an object that acts as a proxy for a result that is initially unknown, usually because the computation of its value is yet incomplete. 
