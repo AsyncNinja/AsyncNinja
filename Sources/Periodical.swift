@@ -92,7 +92,7 @@ public extension Periodical {
     }
   }
 
-  func flatMapPeriodical<T>(executor: Executor = .primary,
+  func flatMapPeriodic<T>(executor: Executor = .primary,
                          transform: @escaping (PeriodicalValue) -> T?) -> Channel<T> {
     return self.makeChannel(executor: executor) { (PeriodicalValue, send) in
       if let transformedValue = transform(PeriodicalValue) {
@@ -101,7 +101,7 @@ public extension Periodical {
     }
   }
 
-  func flatMapPeriodical<S: Sequence>(executor: Executor = .primary,
+  func flatMapPeriodic<S: Sequence>(executor: Executor = .primary,
                          transform: @escaping (PeriodicalValue) -> S) -> Channel<S.Iterator.Element> {
     return self.makeChannel(executor: executor) { (PeriodicalValue, send) in
       transform(PeriodicalValue).forEach(send)

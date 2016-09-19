@@ -60,6 +60,7 @@ final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContain
     return handler
   }
 
+  @discardableResult
   private func notify(_ value: Value, head: ThreadSafeItem?) -> Bool {
     guard let regularState = head as? RegularState else { return false }
     var nextItem: RegularState? = regularState
@@ -70,12 +71,14 @@ final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContain
     }
     return true
   }
-  
-  public func send(periodical: PeriodicalValue) -> Bool {
+
+  @discardableResult
+  public func send(_ periodical: PeriodicalValue) -> Bool {
     return self.notify(.periodical(periodical), head: self.head)
   }
   
-  public func send(final: FinalValue) -> Bool {
+  @discardableResult
+  public func complete(with final: FinalValue) -> Bool {
     let (oldHead, newHead) = self.updateHead {
       switch $0 {
       case .none:
