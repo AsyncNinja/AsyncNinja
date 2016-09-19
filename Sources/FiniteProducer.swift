@@ -23,9 +23,9 @@
 import Dispatch
 
 final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContainer {
-  typealias ThreadSafeItem = FiniteProducerState<PeriodicalValue, FinalValue>
-  typealias RegularState = RegularFiniteProducerState<PeriodicalValue, FinalValue>
-  typealias FinalState = FinalFiniteProducerState<PeriodicalValue, FinalValue>
+  typealias ThreadSafeItem = FiniteProducerState<PeriodicValue, FinalValue>
+  typealias RegularState = RegularFiniteProducerState<PeriodicValue, FinalValue>
+  typealias FinalState = FinalFiniteProducerState<PeriodicValue, FinalValue>
   var head: ThreadSafeItem?
 
   override public init() { }
@@ -73,8 +73,8 @@ final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContain
   }
 
   @discardableResult
-  public func send(_ periodical: PeriodicalValue) -> Bool {
-    return self.notify(.periodical(periodical), head: self.head)
+  public func send(_ periodic: PeriodicValue) -> Bool {
+    return self.notify(.periodic(periodic), head: self.head)
   }
   
   @discardableResult

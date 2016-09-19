@@ -23,19 +23,19 @@
 import Dispatch
 
 final class ConstantFiniteChannel<S: Sequence, U> : FiniteChannel<S.Iterator.Element, U> {
-  private let _periodicalValues: S
+  private let _periodicValues: S
   private let _finalValue: U
   
-  init(periodicalValues: S, finalValue: U) {
-    _periodicalValues = periodicalValues
+  init(periodicValues: S, finalValue: U) {
+    _periodicValues = periodicValues
     _finalValue = finalValue
   }
   
   override func makeHandler(executor: Executor,
                             block: @escaping (Value) -> Void) -> Handler? {
     executor.execute {
-      for periodicalValue in self._periodicalValues {
-        block(.periodical(periodicalValue))
+      for periodicValue in self._periodicValues {
+        block(.periodic(periodicValue))
       }
       
       block(.final(self._finalValue))
@@ -45,6 +45,6 @@ final class ConstantFiniteChannel<S: Sequence, U> : FiniteChannel<S.Iterator.Ele
   
 }
 
-public func finiteChannel<S: Sequence, U>(periodicalValues: S, finalValue: U) -> FiniteChannel<S.Iterator.Element, U> {
-  return ConstantFiniteChannel(periodicalValues: periodicalValues, finalValue: finalValue)
+public func finiteChannel<S: Sequence, U>(periodicValues: S, finalValue: U) -> FiniteChannel<S.Iterator.Element, U> {
+  return ConstantFiniteChannel(periodicValues: periodicValues, finalValue: finalValue)
 }

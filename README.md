@@ -28,11 +28,11 @@ This framework is an implementation of following principles:
     *  use validation monads (`Fallible<T>`) for asynchronous execution
 
 ###Primitives
-|               |`Finite`|`Periodical`|
-|---------------|:------:|:----------:|
-|`Future`       | ✓      | ✕          |
-|`Channel`      | ✕      | ✓          |
-|`FiniteChannel`| ✓      | ✓          |
+|               |`Finite`|`Periodic`|
+|---------------|:------:|:--------:|
+|`Future`       | ✓      | ✕        |
+|`Channel`      | ✕      | ✓        |
+|`FiniteChannel`| ✓      | ✓        |
 
 
 ##    Documentation

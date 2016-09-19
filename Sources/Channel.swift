@@ -22,18 +22,18 @@
 
 import Dispatch
 
-public class Channel<T> : Periodical {
-  public typealias PeriodicalValue = T
-  public typealias Value = PeriodicalValue
+public class Channel<T> : Periodic {
+  public typealias PeriodicValue = T
+  public typealias Value = PeriodicValue
   public typealias Handler = ChannelHandler<Value>
-  public typealias PeriodicalHandler = Handler
+  public typealias PeriodicHandler = Handler
 
   let releasePool = ReleasePool()
 
   init() { }
 
-  public func makePeriodicalHandler(executor: Executor,
-                                    block: @escaping (PeriodicalValue) -> Void) -> Handler? {
+  public func makePeriodicHandler(executor: Executor,
+                                    block: @escaping (PeriodicValue) -> Void) -> Handler? {
     /* abstract */
     fatalError()
   }
@@ -62,112 +62,45 @@ public extension Channel {
 
   func filter(executor: Executor = .immediate,
               predicate: @escaping (Value) -> Bool) -> Channel<Value> {
-    return self.filterPeriodical(executor: executor, predicate: predicate)
+    return self.filterPeriodic(executor: executor, predicate: predicate)
   }
 
-  func delayed(timeout: Double) -> Channel<PeriodicalValue> {
-    return self.delayedPeriodical(timeout: timeout)
-  }
-}
-
-extension Channel {
-  func makeFiniteProducer<T>(executor: Executor, cancellationToken: CancellationToken?,
-                                   onPeriodic: @escaping (PeriodicalValue, FiniteProducer<T, Error>) throws -> Void) -> FiniteProducer<T, Error> {
-    let producer = FiniteProducer<T, Error>()
-    let handler = self.makePeriodicalHandler(executor: executor) { [weak producer] (periodicalValue) in
-      guard let producer = producer else { return }
-      do { try onPeriodic(periodicalValue, producer) }
-      catch { producer.complete(with: error) }
-    }
-
-    if let handler = handler {
-      producer.releasePool.insert(handler)
-    }
-
-    if let cancellationToken = cancellationToken {
-      cancellationToken.notifyCancellation { [weak producer] in
-        producer?.complete(with: ConcurrencyError.cancelled)
-      }
-    }
-
-    return producer
-  }
-
-  func makeFiniteProducer<T, U: ExecutionContext>(context: U, executor: Executor?, cancellationToken: CancellationToken?,
-                                   onPeriodic: @escaping (U, PeriodicalValue, FiniteProducer<T, Error>) throws -> Void) -> FiniteProducer<T, Error> {
-    let producer: FiniteProducer<T, Error> = self.makeFiniteProducer(executor: executor ?? context.executor, cancellationToken: cancellationToken) {
-      [weak context] (periodicalValue, producer) in
-      guard let context = context else { return }
-      try onPeriodic(context, periodicalValue, producer)
-    }
-    context.notifyDeinit { [weak producer] (periodicalValue) in
-      guard let producer = producer else { return }
-      producer.complete(with: ConcurrencyError.contextDeallocated)
-    }
-    return producer
-  }
-
-  func makeFiniteChannel<T>(executor: Executor, cancellationToken: CancellationToken?,
-                         onPeriodic: @escaping (PeriodicalValue, (T) throws -> Void) throws -> Void) -> FiniteChannel<T, Error> {
-    return self.makeFiniteProducer(executor: executor, cancellationToken: cancellationToken) { (periodicalValue: PeriodicalValue, producer: FiniteProducer<T, Error>) -> Void in
-      try onPeriodic(periodicalValue) { producer.send($0) }
-    }
-  }
-
-  func makeFiniteChannel<T, U: ExecutionContext>(context: U, executor: Executor?, cancellationToken: CancellationToken?,
-                                  onPeriodic: @escaping (U, PeriodicalValue, (T) throws -> Void) throws -> Void) -> FiniteChannel<T, Error> {
-    return self.makeFiniteProducer(context: context, executor: executor, cancellationToken: cancellationToken) {
-      (context, periodicalValue, producer) -> Void in
-      try onPeriodic(context, periodicalValue) { producer.send($0) }
-    }
+  func delayed(timeout: Double) -> Channel<PeriodicValue> {
+    return self.delayedPeriodic(timeout: timeout)
   }
 }
 
 public extension Channel {
   func map<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
                    transform: @escaping (U, Value) throws -> T) -> FiniteChannel<T, Error> {
-    return self.makeFiniteChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
-      (context: U, periodicalValue: Channel.PeriodicalValue, send: (T) throws -> Void) in
-      let transformedValue = try transform(context, periodicalValue)
-      try send(transformedValue)
-    }
+    return self.mapPeriodic(context: context, executor: executor, cancellationToken: cancellationToken, transform: transform)
   }
 
   func flatMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
                transform: @escaping (U, Value) throws -> T?) -> FiniteChannel<T, Error> {
-    return self.makeFiniteChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
-      (context: U, periodicalValue: Channel.PeriodicalValue, send: (T) throws -> Void) in
-      if let transformedValue = try transform(context, periodicalValue) {
-        try send(transformedValue)
-      }
-    }
+    return self.flatMapPeriodic(context: context, executor: executor, cancellationToken: cancellationToken, transform: transform)
   }
 
   func flatMap<S: Sequence, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
                transform: @escaping (U, Value) throws -> S) -> FiniteChannel<S.Iterator.Element, Error> {
-    return self.makeFiniteChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
-      (context: U, periodicalValue: Channel.PeriodicalValue, send: (S.Iterator.Element) throws -> Void) in
-      for transformedValue in try transform(context, periodicalValue) {
-        try send(transformedValue)
-      }
-    }
+    return self.flatMapPeriodic(context: context, executor: executor, cancellationToken: cancellationToken, transform: transform)
   }
 }
 
 /// **internal use only**
 final public class ChannelHandler<T> {
-  public typealias PeriodicalValue = T
+  public typealias PeriodicValue = T
 
   let executor: Executor
-  let block: (PeriodicalValue) -> Void
+  let block: (PeriodicValue) -> Void
 
   public init(executor: Executor,
-              block: @escaping (PeriodicalValue) -> Void) {
+              block: @escaping (PeriodicValue) -> Void) {
     self.executor = executor
     self.block = block
   }
 
-  func handle(_ value: PeriodicalValue) {
+  func handle(_ value: PeriodicValue) {
     let block = self.block
     self.executor.execute { block(value) }
   }

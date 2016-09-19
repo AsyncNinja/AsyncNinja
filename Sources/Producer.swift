@@ -38,28 +38,28 @@ final public class Producer<T> : Channel<T>, ThreadSafeContainer {
   #endif
 
   /// **internal use only**
-  override public func makePeriodicalHandler(executor: Executor,
+  override public func makePeriodicHandler(executor: Executor,
                                              block: @escaping (T) -> Void) -> ChannelHandler<T>? {
-    let handler = PeriodicalHandler(executor: executor, block: block)
+    let handler = PeriodicHandler(executor: executor, block: block)
     self.updateHead {
       .replace(ThreadSafeItem(handler: handler, next: $0))
     }
     return handler
   }
   
-  final public func send(_ periodical: PeriodicalValue) {
+  final public func send(_ periodic: PeriodicValue) {
     var nextItem = self.head
     while let currentItem = nextItem {
-      currentItem.handler?.handle(periodical)
+      currentItem.handler?.handle(periodic)
       nextItem = currentItem.next
     }
   }
   
-  final func send<S: Sequence>(_ periodicals: S) where S.Iterator.Element == PeriodicalValue {
+  final func send<S: Sequence>(_ periodics: S) where S.Iterator.Element == PeriodicValue {
     var nextItem = self.head
     while let currentItem = nextItem {
       if let handler = currentItem.handler {
-        periodicals.forEach(handler.handle)
+        periodics.forEach(handler.handle)
       }
       nextItem = currentItem.next
     }

@@ -22,10 +22,10 @@
 
 import Dispatch
 
-public extension Periodical where PeriodicalValue : Finite {
-  final func flattern(isOrdered: Bool = false) -> Channel<PeriodicalValue.FinalValue> {
-    return self.makeProducer(executor: .immediate) { (periodicalValue, producer) in
-      let handler = periodicalValue.makeFinalHandler(executor: .immediate) { [weak producer] (finalValue) in
+public extension Periodic where PeriodicValue : Finite {
+  final func flattern(isOrdered: Bool = false) -> Channel<PeriodicValue.FinalValue> {
+    return self.makeProducer(executor: .immediate) { (periodicValue, producer) in
+      let handler = periodicValue.makeFinalHandler(executor: .immediate) { [weak producer] (finalValue) in
         guard let producer = producer else { return }
         producer.send(finalValue)
       }

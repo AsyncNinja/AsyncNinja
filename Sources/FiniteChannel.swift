@@ -22,12 +22,12 @@
 
 import Dispatch
 
-public class FiniteChannel<T, U> : Periodical, Finite {
-  public typealias PeriodicalValue = T
+public class FiniteChannel<T, U> : Periodic, Finite {
+  public typealias PeriodicValue = T
   public typealias FinalValue = U
-  public typealias Value = FiniteChannelValue<PeriodicalValue, FinalValue>
-  public typealias Handler = FiniteChannelHandler<PeriodicalValue, FinalValue>
-  public typealias PeriodicalHandler = Handler
+  public typealias Value = FiniteChannelValue<PeriodicValue, FinalValue>
+  public typealias Handler = FiniteChannelHandler<PeriodicValue, FinalValue>
+  public typealias PeriodicHandler = Handler
   public typealias FinalHandler = Handler
 
   let releasePool = ReleasePool()
@@ -41,10 +41,10 @@ public class FiniteChannel<T, U> : Periodical, Finite {
     }
   }
 
-  final public func makePeriodicalHandler(executor: Executor,
-                                          block: @escaping (PeriodicalValue) -> Void) -> Handler? {
+  final public func makePeriodicHandler(executor: Executor,
+                                          block: @escaping (PeriodicValue) -> Void) -> Handler? {
     return self.makeHandler(executor: executor) {
-      if case .periodical(let value) = $0 { block(value) }
+      if case .periodic(let value) = $0 { block(value) }
     }
   }
   public func makeHandler(executor: Executor,
@@ -67,18 +67,18 @@ public class FiniteChannel<T, U> : Periodical, Finite {
 }
 
 public enum FiniteChannelValue<T, U> {
-  public typealias PeriodicalValue = T
+  public typealias PeriodicValue = T
   public typealias FinalValue = U
 
-  case periodical(PeriodicalValue)
+  case periodic(PeriodicValue)
   case final(FinalValue)
 }
 
 /// **internal use only**
 final public class FiniteChannelHandler<T, U> {
-  public typealias PeriodicalValue = T
+  public typealias PeriodicValue = T
   public typealias FinalValue = U
-  public typealias Value = FiniteChannelValue<PeriodicalValue, FinalValue>
+  public typealias Value = FiniteChannelValue<PeriodicValue, FinalValue>
 
   let executor: Executor
   let block: (Value) -> Void
