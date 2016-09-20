@@ -39,7 +39,7 @@ public class Channel<T> : Periodic {
   }
   
   func insertToReleasePool(_ releasable: Releasable) {
-    assert((releasable as AnyObject) !== self)
+    assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     self.releasePool.insert(releasable)
   }
   

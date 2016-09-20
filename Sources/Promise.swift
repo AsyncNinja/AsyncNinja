@@ -92,7 +92,7 @@ final public class Promise<T> : Future<T>, ThreadSafeContainer {
   }
   
   func insertToReleasePool(_ releasable: Releasable) {
-    assert((releasable as AnyObject) !== self)
+    assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     assert((releasable as? Handler)?.owner !== self)
     self.releasePool.insert(releasable)
   }
