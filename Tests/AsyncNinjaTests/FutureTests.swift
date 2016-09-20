@@ -136,6 +136,26 @@ class FutureTests : XCTestCase {
     XCTAssertNil(weakInitialFuture)
     XCTAssertEqual(result, valueSquared)
   }
+    
+  func testMapLifetime() {
+    let qos = pickQoS()
+    
+    weak var weakFutureValue: Future<Int>?
+    weak var weakMappedFuture: Future<String>?
+    eval { () -> Void in
+        var futureValue: Future<Int>? = future(executor: .queue(qos), after: 1.0) { 1 }
+        weakFutureValue = futureValue
+        
+        var mappedFuture: Future<String>? = futureValue!.map { _ in "hello" }
+        weakMappedFuture = mappedFuture
+        
+        mappedFuture = nil
+        futureValue = nil
+    }
+    
+    XCTAssertNil(weakFutureValue)
+    XCTAssertNil(weakMappedFuture)
+  }
 
   func testMapFinalToFallibleFinal_Success() {
     let transformExpectation = self.expectation(description: "transform called")
