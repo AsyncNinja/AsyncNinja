@@ -23,6 +23,7 @@
 import Dispatch
 
 public protocol MutableFinite : Finite {
+  init()
   /// Completes promise with value and returns true.
   /// Returns false if promise was completed before.
   @discardableResult
