@@ -24,6 +24,7 @@ import Dispatch
 
 final class ConstantFuture<T> : Future<T> {
   private var _value: Value
+  override public var finalValue: Value? { return _value }
 
   init(value: Value) {
     _value = value

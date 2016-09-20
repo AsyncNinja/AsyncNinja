@@ -25,6 +25,7 @@ import Dispatch
 final class ConstantFiniteChannel<S: Sequence, U> : FiniteChannel<S.Iterator.Element, U> {
   private let _periodicValues: S
   private let _finalValue: U
+  override public var finalValue: FinalValue? { return _finalValue }
   
   init(periodicValues: S, finalValue: U) {
     _periodicValues = periodicValues
