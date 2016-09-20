@@ -33,7 +33,7 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
 
   ///
   func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, SuccessValue) throws -> Result) -> Future<Result> {
-    return self.joined().mapSuccess(executor: executor) {
+    return self.joined().map(executor: executor) {
       try $0.reduce(initialResult, nextPartialResult)
     }
   }

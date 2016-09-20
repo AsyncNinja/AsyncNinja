@@ -34,7 +34,7 @@ class WebService {
             -> Future<User> {
         let request = self.makeSignInRequest(email: email, password: password)
         return self.urlSession.data(with: request)
-            .mapSuccess(executor: .queue(self.internalQueue)) { (data, response) -> User in
+            .map(executor: .queue(self.internalQueue)) { (data, response) -> User in
                 let user = try self.makeUser(data: data, response: response)
                 self.register(user: user) // changes internal state
                 return user
@@ -42,7 +42,7 @@ class WebService {
     }
 }
 ```
-This is a place where hidden memory issues may appear. Closure passed to `mapSuccess` retains `self` that may lead to retain cycle. Adding bunch of `weak`s will help but it will increase complexity of code. Let's conform `WebService` to `ExecutionContext` and see what happens.
+This is a place where hidden memory issues may appear. Closure passed to `map` retains `self` that may lead to retain cycle. Adding bunch of `weak`s will help but it will increase complexity of code. Let's conform `WebService` to `ExecutionContext` and see what happens.
 
 ```
 class WebService: ExecutionContext, ReleasePoolOwner {
@@ -54,7 +54,7 @@ class WebService: ExecutionContext, ReleasePoolOwner {
             -> Future<User> {
         let request = self.makeSignInRequest(email: email, password: password)
         return self.urlSession.data(with: request)
-            .mapSuccess(context: self) { (self, dataAndResponse) -> User in
+            .map(context: self) { (self, dataAndResponse) -> User in
                 let (data, response) = dataAndResponse
                 let user = try self.makeUser(data: data, response: response)
                 self.register(user: user) // changes internal state
@@ -63,7 +63,7 @@ class WebService: ExecutionContext, ReleasePoolOwner {
     }
 }
 ```
-`self` passed as argument to closure in `mapSuccess`. `self` is not retained and execution depends on `WebService` lifetime, so you may not bother cancelling background operations on `WebService.deinit`.
+`self` passed as argument to closure in `map`. `self` is not retained and execution depends on `WebService` lifetime, so you may not bother cancelling background operations on `WebService.deinit`.
 
 ## Relation to Concurrency Primitives
 `Future`, `Channel` and `FiniteChannel` have contextual variants of all transformations. For example `Future` has both:

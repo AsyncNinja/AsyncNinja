@@ -40,7 +40,7 @@ class ExecutionContextTests : XCTestCase {
     var object : TestActor? = TestActor()
 
     let halfOfFutureValue = future(success: "Hello")
-      .mapSuccess(context: object!) { (object, value) -> String in
+      .map(context: object!) { (object, value) -> String in
         assert(on: object.internalQueue)
         return "\(value) to"
     }

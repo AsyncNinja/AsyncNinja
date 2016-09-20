@@ -50,19 +50,19 @@ public class Future<T> : Finite {
 
 public extension Future {
   final func map<T>(executor: Executor = .primary,
-                 transform: @escaping (Fallible<SuccessValue>) throws -> T) -> Future<T> {
+                 transform: @escaping (SuccessValue) throws -> T) -> Future<T> {
     // Test: FutureTests.testMapFinalToFallibleFinal_Success
     // Test: FutureTests.testMapFinalToFallibleFinal_Failure
-    return self.mapFinal(executor: executor, transform: transform)
+    return self.mapSuccess(executor: executor, transform: transform)
   }
 
   final func map<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-                 transform: @escaping (U, Fallible<SuccessValue>) throws -> T) -> Future<T> {
+                 transform: @escaping (U, SuccessValue) throws -> T) -> Future<T> {
     // Test: FutureTests.testMapContextualFinalToFinal_Success_ContextAlive
     // Test: FutureTests.testMapContextualFinalToFinal_Success_ContextDead
     // Test: FutureTests.testMapContextualFinalToFinal_Failure_ContextAlive
     // Test: FutureTests.testMapContextualFinalToFinal_Failure_ContextDead
-    return self.mapFinal(context: context, executor: executor, transform: transform)
+    return self.mapSuccess(context: context, executor: executor, transform: transform)
   }
 
   func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil,

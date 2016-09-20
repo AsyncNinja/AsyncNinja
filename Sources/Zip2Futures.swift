@@ -68,5 +68,5 @@ public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, 
 }
 
 public func zip<A, B>(_ futureA: Future<A>, _ valueB: B) -> Future<(A, B)> {
-  return futureA.mapSuccess(executor: .immediate) { ($0, valueB) }
+  return futureA.map(executor: .immediate) { ($0, valueB) }
 }

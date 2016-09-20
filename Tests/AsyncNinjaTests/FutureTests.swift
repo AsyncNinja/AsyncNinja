@@ -68,7 +68,7 @@ class FutureTests : XCTestCase {
 
     let result: Int = eval {
       let futureValue = future(success: 1)
-      let mappedFutureValue = futureValue.mapSuccess(executor: .utility) { (value) -> Int in
+      let mappedFutureValue = futureValue.map(executor: .utility) { (value) -> Int in
         if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
           assert(qos: .utility)
         }
@@ -97,18 +97,18 @@ class FutureTests : XCTestCase {
       }
       
       let result1 = future(success: 1)
-        .mapSuccess(executor: .userInteractive, transform: makePerformer(globalQOS: .userInteractive, multiplier: 2))
-        .mapSuccess(executor: .default, transform: makePerformer(globalQOS: .default, multiplier: 3))
-        .mapSuccess(executor: .utility, transform: makePerformer(globalQOS: .utility, multiplier: 4))
-        .mapSuccess(executor: .background, transform: makePerformer(globalQOS: .background, multiplier: 5))
+        .map(executor: .userInteractive, transform: makePerformer(globalQOS: .userInteractive, multiplier: 2))
+        .map(executor: .default, transform: makePerformer(globalQOS: .default, multiplier: 3))
+        .map(executor: .utility, transform: makePerformer(globalQOS: .utility, multiplier: 4))
+        .map(executor: .background, transform: makePerformer(globalQOS: .background, multiplier: 5))
 
       let result2 = future(success: 2)
-        .mapSuccess(executor: .background, transform: makePerformer(globalQOS: .background, multiplier: 5))
-        .mapSuccess(executor: .utility, transform: makePerformer(globalQOS: .utility, multiplier: 4))
-        .mapSuccess(executor: .default, transform: makePerformer(globalQOS: .default, multiplier: 3))
-        .mapSuccess(executor: .userInteractive, transform: makePerformer(globalQOS: .userInteractive, multiplier: 2))
+        .map(executor: .background, transform: makePerformer(globalQOS: .background, multiplier: 5))
+        .map(executor: .utility, transform: makePerformer(globalQOS: .utility, multiplier: 4))
+        .map(executor: .default, transform: makePerformer(globalQOS: .default, multiplier: 3))
+        .map(executor: .userInteractive, transform: makePerformer(globalQOS: .userInteractive, multiplier: 2))
       
-      let result = zip(result1, result2).mapSuccess { $0 + $1 }.wait().success!
+      let result = zip(result1, result2).map { $0 + $1 }.wait().success!
 
       XCTAssertEqual(result, 360)
     }
@@ -125,7 +125,7 @@ class FutureTests : XCTestCase {
       let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       return initialFuture
-        .mapSuccess(executor: .queue(qos)) {
+        .map(executor: .queue(qos)) {
           assert(qos: qos)
           transformExpectation.fulfill()
           return square($0)
@@ -169,7 +169,7 @@ class FutureTests : XCTestCase {
       let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       return initialFuture
-        .mapSuccess(executor: .queue(qos)) {
+        .map(executor: .queue(qos)) {
           assert(qos: qos)
           transformExpectation.fulfill()
           return try square_success($0)
@@ -193,7 +193,7 @@ class FutureTests : XCTestCase {
       let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       return initialFuture
-        .mapSuccess(executor: .queue(qos)) {
+        .map(executor: .queue(qos)) {
           assert(qos: qos)
           transformExpectation.fulfill()
           return try square_failure($0)
@@ -217,7 +217,7 @@ class FutureTests : XCTestCase {
       let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       return initialFuture
-        .mapSuccess(context: actor) { (actor, value) in
+        .map(context: actor) { (actor, value) in
           assert(actor: actor)
           transformExpectation.fulfill()
           return try square_success(value)
@@ -242,7 +242,7 @@ class FutureTests : XCTestCase {
       let actor = TestActor()
       return initialFuture
         .delayed(timeout: 0.1)
-        .mapSuccess(context: actor) { (actor, value) in
+        .map(context: actor) { (actor, value) in
           assert(actor: actor)
           XCTFail()
 //          transformExpectation.fulfill()
@@ -267,7 +267,7 @@ class FutureTests : XCTestCase {
       let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       return initialFuture
-        .mapSuccess(context: actor) { (actor, value) in
+        .map(context: actor) { (actor, value) in
           assert(actor: actor)
           transformExpectation.fulfill()
           return try square_failure(value)
@@ -292,7 +292,7 @@ class FutureTests : XCTestCase {
       let actor = TestActor()
       return initialFuture
         .delayed(timeout: 0.1)
-        .mapSuccess(context: actor) { (actor, value) in
+        .map(context: actor) { (actor, value) in
           XCTFail()
           assert(actor: actor)
           //transformExpectation.fulfill()

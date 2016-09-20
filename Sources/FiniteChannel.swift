@@ -246,8 +246,8 @@ extension FiniteChannel where U : _Fallible {
 }
 
 public extension FiniteChannel where U : _Fallible {
-  func mapPeriodic<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-                   transform: @escaping (U, PeriodicValue) throws -> T) -> FiniteChannel<T, SuccessValue> {
+  func map<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
+           transform: @escaping (U, PeriodicValue) throws -> T) -> FiniteChannel<T, SuccessValue> {
     return self.makeFiniteChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
       (context: U, periodicValue: Channel.PeriodicValue, send: (T) throws -> Void) in
       let transformedValue = try transform(context, periodicValue)
@@ -255,8 +255,8 @@ public extension FiniteChannel where U : _Fallible {
     }
   }
 
-  func flatMapPeriodic<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-                       transform: @escaping (U, PeriodicValue) throws -> T?) -> FiniteChannel<T, SuccessValue> {
+  func flatMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
+               transform: @escaping (U, PeriodicValue) throws -> T?) -> FiniteChannel<T, SuccessValue> {
     return self.makeFiniteChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
       (context: U, periodicValue: Channel.PeriodicValue, send: (T) throws -> Void) in
       if let transformedValue = try transform(context, periodicValue) {
@@ -265,8 +265,8 @@ public extension FiniteChannel where U : _Fallible {
     }
   }
 
-  func flatMapPeriodic<S: Sequence, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-                       transform: @escaping (U, PeriodicValue) throws -> S) -> FiniteChannel<S.Iterator.Element, SuccessValue> {
+  func flatMap<S: Sequence, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
+               transform: @escaping (U, PeriodicValue) throws -> S) -> FiniteChannel<S.Iterator.Element, SuccessValue> {
     return self.makeFiniteChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
       (context: U, periodicValue: Channel.PeriodicValue, send: (S.Iterator.Element) throws -> Void) in
       for transformedValue in try transform(context, periodicValue) {
