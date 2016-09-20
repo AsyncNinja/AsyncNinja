@@ -77,6 +77,30 @@ public extension Future {
   }
 }
 
+public extension Future where T : Finite {
+  /// flattens combination of two nested unfaillable futures to a signle unfallible one
+  final func flatten() -> Future<SuccessValue.SuccessValue> {
+    let promise = Promise<SuccessValue.SuccessValue>()
+
+    let handler = self.makeFinalHandler(executor: .immediate) { [weak promise] (future) in
+      guard let promise = promise else { return }
+      let handler = (future as! Future<SuccessValue.SuccessValue>)
+        .makeFinalHandler(executor: .immediate) { [weak promise] (final) in
+          promise?.complete(with: final)
+      }
+      if let handler = handler {
+        promise.insertToReleasePool(handler)
+      }
+    }
+
+    if let handler = handler {
+      promise.insertToReleasePool(handler)
+    }
+
+    return promise
+  }
+}
+
 /// Asynchrounously executes block on executor and wraps returned value into future
 public func future<T>(executor: Executor = .primary, block: @escaping () throws -> T) -> Future<T> {
   // Test: FutureTests.testMakeFutureOfBlock_Success

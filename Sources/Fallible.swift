@@ -102,7 +102,7 @@ public extension Fallible {
 }
 
 //public extension Fallible where Success : _Fallible {
-//  func flattern() -> Fallible<Success.Success> {
+//  func flatten() -> Fallible<Success.Success> {
 //    switch self {
 //    case let .success(success):
 //      switch success {
