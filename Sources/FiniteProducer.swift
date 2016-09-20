@@ -28,6 +28,8 @@ final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContain
   typealias FinalState = FinalFiniteProducerState<PeriodicValue, FinalValue>
   var head: ThreadSafeItem?
 
+  override public var finalValue: FinalValue? { return (self.head as? FinalState)?.final }
+
   override public init() { }
 
   #if os(Linux)

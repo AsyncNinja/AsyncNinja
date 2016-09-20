@@ -32,6 +32,11 @@ public class FiniteChannel<T, U> : Periodic, Finite {
 
   private let releasePool = ReleasePool()
 
+  public var finalValue: FinalValue? {
+    /* abstact */
+    fatalError()
+  }
+
   init() { }
 
   final public func makeFinalHandler(executor: Executor,

@@ -32,6 +32,7 @@ class FutureTests : XCTestCase {
   static let allTests = [
     ("testLifetime", testLifetime),
     ("testPerformanceFuture", testPerformanceFuture),
+    ("testMapLifetime", testMapLifetime),
     ("testMapFinalToFinal", testMapFinalToFinal),
     ("testMapFinalToFallibleFinal_Success", testMapFinalToFallibleFinal_Success),
     ("testMapFinalToFallibleFinal_Failure", testMapFinalToFallibleFinal_Failure),

@@ -23,7 +23,7 @@
 import Dispatch
 
 /// Promise that may be manually completed by owner.
-final public class Promise<T> : Future<T>, ThreadSafeContainer {
+final public class Promise<T> : Future<T>, MutableFinite, ThreadSafeContainer {
   typealias ThreadSafeItem = AbstractPromiseState<T>
   var head: ThreadSafeItem?
   private let releasePool = ReleasePool()
@@ -79,19 +79,8 @@ final public class Promise<T> : Future<T>, ThreadSafeContainer {
     return true
   }
 
-  /// Completes promise when specified future completes.
-  /// `self` will retain specified future until it`s completion
-  @discardableResult
-  final public func complete(with future: Future<Value>) {
-    let handler = future.makeFinalHandler(executor: .immediate) { [weak self] in
-      self?.complete(with: $0)
-    }
-    if let handler = handler {
-      self.insertToReleasePool(handler)
-    }
-  }
   
-  func insertToReleasePool(_ releasable: Releasable) {
+  public func insertToReleasePool(_ releasable: Releasable) {
     assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     assert((releasable as? Handler)?.owner !== self)
     self.releasePool.insert(releasable)

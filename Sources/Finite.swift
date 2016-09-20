@@ -27,6 +27,8 @@ public protocol Finite : class {
   associatedtype FinalValue
   associatedtype FinalHandler : AnyObject
 
+  var finalValue: FinalValue? { get }
+
   /// **internal use only**
   func makeFinalHandler(executor: Executor,
                         block: @escaping (FinalValue) -> Void) -> FinalHandler?
@@ -168,6 +170,9 @@ public extension Finite where FinalValue : _Fallible {
 }
 
 public extension Finite where FinalValue : _Fallible {
+  public var success: FinalValue.Success? { return self.finalValue?.success }
+  public var failure: Error? { return self.finalValue?.failure }
+
   final public func mapSuccess<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
                                transform: @escaping (U, FinalValue.Success) throws -> T) -> FallibleFuture<T> {
     return self.mapFinal(context: context, executor: executor) { (context, value) -> T in
