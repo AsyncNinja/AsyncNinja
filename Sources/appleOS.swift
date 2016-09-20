@@ -91,7 +91,7 @@
           promise.fail(with: error)
         }
       }
-      promise.releasePool.notifyDrain { [weak task] in task?.cancel() }
+      promise.notifyDrain { [weak task] in task?.cancel() }
       cancellationToken?.notifyCancellation {
         [weak task, weak promise] in
         task?.cancel()

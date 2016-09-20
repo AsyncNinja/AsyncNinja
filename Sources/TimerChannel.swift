@@ -28,7 +28,7 @@ private func makeTimer(dispatchTimer: DispatchSourceTimer) -> Channel<Void> {
     producer?.send(())
   }
   dispatchTimer.resume()
-  producer.releasePool.insert(dispatchTimer)
+  producer.insertToReleasePool(dispatchTimer)
   return producer
 }
 

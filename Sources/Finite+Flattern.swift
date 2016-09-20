@@ -34,12 +34,12 @@ public extension Finite where FinalValue : Finite {
         promise?.complete(with: final)
       }
       if let handler = handler {
-        promise.releasePool.insert(handler)
+        promise.insertToReleasePool(handler)
       }
     }
 
     if let handler = handler {
-      promise.releasePool.insert(handler)
+      promise.insertToReleasePool(handler)
     }
 
     return promise
@@ -61,13 +61,13 @@ public extension Finite where FinalValue : _Fallible, FinalValue.Success : Finit
         }
 
         if let handler = handler {
-          promise.releasePool.insert(handler)
+          promise.insertToReleasePool(handler)
         }
       }
     }
 
     if let handler = handler {
-      promise.releasePool.insert(handler)
+      promise.insertToReleasePool(handler)
     }
     return promise
   }
@@ -87,13 +87,13 @@ public extension Finite where FinalValue : _Fallible, FinalValue.Success : Finit
           promise?.complete(with: value)
         }
         if let handler = handler {
-          promise.releasePool.insert(handler)
+          promise.insertToReleasePool(handler)
         }
       }
     }
 
     if let handler = handler {
-      promise.releasePool.insert(handler)
+      promise.insertToReleasePool(handler)
     }
     return promise
   }

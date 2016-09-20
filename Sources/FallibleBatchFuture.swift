@@ -100,12 +100,12 @@ public extension Collection where Self.IndexDistance == Int {
         }
 
         if let handler = handler {
-          promise.releasePool.insert(handler)
+          promise.insertToReleasePool(handler)
         }
       }
     }
 
-    promise.releasePool.insert(self)
+    promise.insertToReleasePool(self)
 
     return promise
   }

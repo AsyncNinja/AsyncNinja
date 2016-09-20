@@ -46,7 +46,7 @@ public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> 
     }
   }
   if let leftHandler = leftHandler {
-    resultChannel.releasePool.insert(leftHandler)
+    resultChannel.insertToReleasePool(leftHandler)
   }
 
   let rightHandler = rightChannel.makePeriodicHandler(executor: .immediate) { [weak resultChannel] rightValue in
@@ -60,7 +60,7 @@ public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> 
   }
 
   if let rightHandler = rightHandler {
-    resultChannel.releasePool.insert(rightHandler)
+    resultChannel.insertToReleasePool(rightHandler)
   }
 
   return resultChannel

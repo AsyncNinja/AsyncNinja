@@ -30,7 +30,7 @@ public class FiniteChannel<T, U> : Periodic, Finite {
   public typealias PeriodicHandler = Handler
   public typealias FinalHandler = Handler
 
-  let releasePool = ReleasePool()
+  private let releasePool = ReleasePool()
 
   init() { }
 
@@ -63,6 +63,15 @@ public class FiniteChannel<T, U> : Periodic, Finite {
     if let handler = handler {
       context.releaseOnDeinit(handler)
     }
+  }
+  
+  func insertToReleasePool(_ releasable: Releasable) {
+    assert((releasable as AnyObject) !== self)
+    self.releasePool.insert(releasable)
+  }
+  
+  func notifyDrain(_ block: @escaping () -> Void) {
+    self.releasePool.notifyDrain(block)
   }
 }
 

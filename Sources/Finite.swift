@@ -46,7 +46,9 @@ public extension Finite {
       guard let promise = promise else { return }
       promise.complete(with: transform(final))
     }
-    promise.releasePool.insert(handler)
+    if let handler = handler {
+      promise.insertToReleasePool(handler)
+    }
     return promise
   }
 
@@ -127,7 +129,7 @@ public extension Finite {
       }
     }
     if let handler = handler {
-      promise.releasePool.insert(handler)
+      promise.insertToReleasePool(handler)
     }
 
     return promise

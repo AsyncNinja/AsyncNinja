@@ -26,7 +26,7 @@ import Dispatch
 final public class Promise<T> : Future<T>, ThreadSafeContainer {
   typealias ThreadSafeItem = AbstractPromiseState<T>
   var head: ThreadSafeItem?
-  let releasePool = ReleasePool()
+  private let releasePool = ReleasePool()
   override public var finalValue: FinalValue? { return (self.head as? CompletedPromiseState)?.value }
 
   override public init() { }
@@ -50,9 +50,9 @@ final public class Promise<T> : Future<T>, ThreadSafeContainer {
         handler.handle(completedState.value)
         return .keep
       case let incompleteState as SubscribedPromiseState<Value>:
-        return .replace(SubscribedPromiseState(handler: handler, next: incompleteState, owner: self))
+        return .replace(SubscribedPromiseState(handler: handler, next: incompleteState))
       case .none:
-        return .replace(SubscribedPromiseState(handler: handler, next: nil, owner: self))
+        return .replace(SubscribedPromiseState(handler: handler, next: nil))
       default:
         fatalError()
       }
@@ -86,7 +86,19 @@ final public class Promise<T> : Future<T>, ThreadSafeContainer {
     let handler = future.makeFinalHandler(executor: .immediate) { [weak self] in
       self?.complete(with: $0)
     }
-    self.releasePool.insert(handler)
+    if let handler = handler {
+      self.insertToReleasePool(handler)
+    }
+  }
+  
+  func insertToReleasePool(_ releasable: Releasable) {
+    assert((releasable as AnyObject) !== self)
+    assert((releasable as? Handler)?.owner !== self)
+    self.releasePool.insert(releasable)
+  }
+  
+  func notifyDrain(_ block: @escaping () -> Void) {
+    self.releasePool.notifyDrain(block)
   }
 }
 
@@ -102,13 +114,11 @@ final class SubscribedPromiseState<T> : AbstractPromiseState<T> {
   
   weak private(set) var handler: Handler?
   let next: SubscribedPromiseState<T>?
-  let owner: Promise<T>
   override var isIncomplete: Bool { return true }
   
-  init(handler: Handler, next: SubscribedPromiseState<T>?, owner: Promise<T>) {
+  init(handler: Handler, next: SubscribedPromiseState<T>?) {
     self.handler = handler
     self.next = next
-    self.owner = owner
   }
 }
 

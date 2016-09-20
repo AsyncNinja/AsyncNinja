@@ -78,7 +78,9 @@ public extension Collection where Self.IndexDistance == Int {
           }
         }
 
-        promise.releasePool.insert(handler)
+        if let handler = handler {
+          promise.insertToReleasePool(handler)
+        }
       }
     }
     

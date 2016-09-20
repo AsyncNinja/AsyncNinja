@@ -28,7 +28,7 @@ public class Channel<T> : Periodic {
   public typealias Handler = ChannelHandler<Value>
   public typealias PeriodicHandler = Handler
 
-  let releasePool = ReleasePool()
+  private let releasePool = ReleasePool()
 
   init() { }
 
@@ -36,6 +36,15 @@ public class Channel<T> : Periodic {
                                     block: @escaping (PeriodicValue) -> Void) -> Handler? {
     /* abstract */
     fatalError()
+  }
+  
+  func insertToReleasePool(_ releasable: Releasable) {
+    assert((releasable as AnyObject) !== self)
+    self.releasePool.insert(releasable)
+  }
+  
+  func notifyDrain(_ block: @escaping () -> Void) {
+    self.releasePool.notifyDrain(block)
   }
 }
 

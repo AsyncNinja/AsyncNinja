@@ -40,7 +40,7 @@ public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, 
   }
 
   if let handlerA = handlerA {
-    promise.releasePool.insert(handlerA)
+    promise.insertToReleasePool(handlerA)
   }
 
   let handlerB = futureB.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueB) in
@@ -55,7 +55,7 @@ public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, 
   }
 
   if let handlerB = handlerB {
-    promise.releasePool.insert(handlerB)
+    promise.insertToReleasePool(handlerB)
   }
   
   return promise
@@ -86,7 +86,7 @@ public func zip<A, B>(_ futureA: FallibleFuture<A>, _ futureB: FallibleFuture<B>
   }
 
   if let handlerA = handlerA {
-    promise.releasePool.insert(handlerA)
+    promise.insertToReleasePool(handlerA)
   }
 
   let handlerB = futureB.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueB) in
@@ -104,7 +104,7 @@ public func zip<A, B>(_ futureA: FallibleFuture<A>, _ futureB: FallibleFuture<B>
   }
   
   if let handlerB = handlerB {
-    promise.releasePool.insert(handlerB)
+    promise.insertToReleasePool(handlerB)
   }
 
   return promise
@@ -131,7 +131,7 @@ public func zip<A, B>(_ futureA: FallibleFuture<A>, _ futureB: Future<B>) -> Fal
   }
 
   if let handlerA = handlerA {
-    promise.releasePool.insert(handlerA)
+    promise.insertToReleasePool(handlerA)
   }
 
   let handlerB = futureB.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueB) in
@@ -146,7 +146,7 @@ public func zip<A, B>(_ futureA: FallibleFuture<A>, _ futureB: Future<B>) -> Fal
   }
 
   if let handlerB = handlerB {
-    promise.releasePool.insert(handlerB)
+    promise.insertToReleasePool(handlerB)
   }
 
   return promise

@@ -30,7 +30,7 @@ public extension Periodic where PeriodicValue : Finite {
         producer.send(finalValue)
       }
       if let handler = handler {
-        producer.releasePool.insert(handler)
+        producer.insertToReleasePool(handler)
       }
     }
   }

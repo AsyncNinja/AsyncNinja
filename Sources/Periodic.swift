@@ -42,7 +42,7 @@ public extension Periodic {
     }
 
     if let handler = handler {
-      producer.releasePool.insert(handler)
+      producer.insertToReleasePool(handler)
     }
     return producer
   }
@@ -217,7 +217,7 @@ extension Periodic {
     }
 
     if let handler = handler {
-      producer.releasePool.insert(handler)
+      producer.insertToReleasePool(handler)
     }
 
     if let cancellationToken = cancellationToken {
