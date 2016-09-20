@@ -22,10 +22,11 @@
 
 import Dispatch
 
-final public class Producer<T> : Channel<T>, ThreadSafeContainer {
+final public class Producer<T> : Channel<T>, ThreadSafeContainer, MutablePeriodic {
   typealias ThreadSafeItem = SubscribedProducerState<T>
   var head: ThreadSafeItem?
-  
+  private let releasePool = ReleasePool()
+
   override public init() { }
 
   #if os(Linux)
@@ -55,7 +56,7 @@ final public class Producer<T> : Channel<T>, ThreadSafeContainer {
     }
   }
   
-  final func send<S: Sequence>(_ periodics: S) where S.Iterator.Element == PeriodicValue {
+  final public func send<S: Sequence>(_ periodics: S) where S.Iterator.Element == PeriodicValue {
     var nextItem = self.head
     while let currentItem = nextItem {
       if let handler = currentItem.handler {
@@ -63,6 +64,15 @@ final public class Producer<T> : Channel<T>, ThreadSafeContainer {
       }
       nextItem = currentItem.next
     }
+  }
+
+  func insertToReleasePool(_ releasable: Releasable) {
+    assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
+    self.releasePool.insert(releasable)
+  }
+
+  func notifyDrain(_ block: @escaping () -> Void) {
+    self.releasePool.notifyDrain(block)
   }
 }
 

@@ -22,11 +22,12 @@
 
 import Dispatch
 
-final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContainer {
+final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContainer, MutableFinite, MutablePeriodic {
   typealias ThreadSafeItem = FiniteProducerState<PeriodicValue, FinalValue>
   typealias RegularState = RegularFiniteProducerState<PeriodicValue, FinalValue>
   typealias FinalState = FinalFiniteProducerState<PeriodicValue, FinalValue>
   var head: ThreadSafeItem?
+  private let releasePool = ReleasePool()
 
   override public var finalValue: FinalValue? { return (self.head as? FinalState)?.final }
 
@@ -74,9 +75,16 @@ final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContain
     return true
   }
 
-  @discardableResult
-  public func send(_ periodic: PeriodicValue) -> Bool {
-    return self.notify(.periodic(periodic), head: self.head)
+  public func send(_ periodic: PeriodicValue) {
+    self.notify(.periodic(periodic), head: self.head)
+  }
+
+  public func send<S : Sequence>(_ periodics: S)
+    where S.Iterator.Element == PeriodicValue {
+      let localHead = self.head
+      for periodic in periodics {
+        self.notify(.periodic(periodic), head: localHead)
+      }
   }
   
   @discardableResult
@@ -97,6 +105,15 @@ final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContain
     guard nil != newHead else { return false }
     
     return self.notify(.final(final), head: oldHead)
+  }
+
+  public func insertToReleasePool(_ releasable: Releasable) {
+    assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
+    self.releasePool.insert(releasable)
+  }
+
+  func notifyDrain(_ block: @escaping () -> Void) {
+    self.releasePool.notifyDrain(block)
   }
 }
 

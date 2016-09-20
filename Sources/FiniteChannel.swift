@@ -30,8 +30,6 @@ public class FiniteChannel<T, U> : Periodic, Finite {
   public typealias PeriodicHandler = Handler
   public typealias FinalHandler = Handler
 
-  private let releasePool = ReleasePool()
-
   public var finalValue: FinalValue? {
     /* abstact */
     fatalError()
@@ -68,16 +66,7 @@ public class FiniteChannel<T, U> : Periodic, Finite {
     if let handler = handler {
       context.releaseOnDeinit(handler)
     }
-  }
-  
-  func insertToReleasePool(_ releasable: Releasable) {
-    assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
-    self.releasePool.insert(releasable)
-  }
-  
-  func notifyDrain(_ block: @escaping () -> Void) {
-    self.releasePool.notifyDrain(block)
-  }
+  }  
 }
 
 public enum FiniteChannelValue<T, U> {

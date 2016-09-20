@@ -28,23 +28,12 @@ public class Channel<T> : Periodic {
   public typealias Handler = ChannelHandler<Value>
   public typealias PeriodicHandler = Handler
 
-  private let releasePool = ReleasePool()
-
   init() { }
 
   public func makePeriodicHandler(executor: Executor,
                                     block: @escaping (PeriodicValue) -> Void) -> Handler? {
     /* abstract */
     fatalError()
-  }
-  
-  func insertToReleasePool(_ releasable: Releasable) {
-    assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
-    self.releasePool.insert(releasable)
-  }
-  
-  func notifyDrain(_ block: @escaping () -> Void) {
-    self.releasePool.notifyDrain(block)
   }
 }
 
