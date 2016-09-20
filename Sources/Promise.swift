@@ -27,7 +27,7 @@ final public class Promise<T> : Future<T>, MutableFinite, ThreadSafeContainer {
   typealias ThreadSafeItem = AbstractPromiseState<T>
   var head: ThreadSafeItem?
   private let releasePool = ReleasePool()
-  override public var finalValue: FinalValue? { return (self.head as? CompletedPromiseState)?.value }
+  override public var finalValue: Fallible<SuccessValue>? { return (self.head as? CompletedPromiseState)?.value }
 
   override public init() { }
 
@@ -42,14 +42,14 @@ final public class Promise<T> : Future<T>, MutableFinite, ThreadSafeContainer {
 
   /// **internal use only**
   override public func makeFinalHandler(executor: Executor,
-                                        block: @escaping (FinalValue) -> Void) -> FutureHandler<T>? {
+                                        block: @escaping (Fallible<SuccessValue>) -> Void) -> FinalHandler? {
     let handler = Handler(executor: executor, block: block, owner: self)
     self.updateHead {
       switch $0 {
-      case let completedState as CompletedPromiseState<Value>:
+      case let completedState as CompletedPromiseState<SuccessValue>:
         handler.handle(completedState.value)
         return .keep
-      case let incompleteState as SubscribedPromiseState<Value>:
+      case let incompleteState as SubscribedPromiseState<SuccessValue>:
         return .replace(SubscribedPromiseState(handler: handler, next: incompleteState))
       case .none:
         return .replace(SubscribedPromiseState(handler: handler, next: nil))
@@ -70,7 +70,7 @@ final public class Promise<T> : Future<T>, MutableFinite, ThreadSafeContainer {
     guard didComplete else { return false }
     
     var nextItem = oldHead
-    while let currentItem = nextItem as? SubscribedPromiseState<Value> {
+    while let currentItem = nextItem as? SubscribedPromiseState<SuccessValue> {
       currentItem.handler?.handle(final)
       nextItem = currentItem.next
     }
@@ -98,8 +98,8 @@ class AbstractPromiseState<T> {
 
 /// **internal use only**
 final class SubscribedPromiseState<T> : AbstractPromiseState<T> {
-  typealias Value = T
-  typealias Handler = FutureHandler<Value>
+  typealias Value = Fallible<T>
+  typealias Handler = FutureHandler<T>
   
   weak private(set) var handler: Handler?
   let next: SubscribedPromiseState<T>?
@@ -113,10 +113,10 @@ final class SubscribedPromiseState<T> : AbstractPromiseState<T> {
 
 /// **internal use only**
 final class CompletedPromiseState<T> : AbstractPromiseState<T> {
-  let value: T
+  let value: Fallible<T>
   override var isIncomplete: Bool { return false }
   
-  init(value: T) {
+  init(value: Fallible<T>) {
     self.value = value
   }
 }

@@ -23,18 +23,18 @@
 import Dispatch
 
 /// Single failure fails them all
-public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : Finite, Self.Iterator.Element.FinalValue : _Fallible {
-  fileprivate typealias FinalValue = Self.Iterator.Element.FinalValue.Success
+public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : Finite {
+  fileprivate typealias SuccessValue = Self.Iterator.Element.SuccessValue
 
   /// joins an array of futures to a future array
-  func joined() -> FallibleFuture<[FinalValue]> {
-    return self.asyncMap(executor: .immediate) { $0 as! FallibleFuture<FinalValue> }
+  func joined() -> Future<[SuccessValue]> {
+    return self.asyncMap(executor: .immediate) { $0 as! Future<SuccessValue> }
   }
 
   ///
-  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, FinalValue) throws -> Result) -> FallibleFuture<Result> {
-    return self.joined().mapFinal(executor: executor) {
-      $0.mapSuccess { try $0.reduce(initialResult, nextPartialResult) }
+  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, SuccessValue) throws -> Result) -> Future<Result> {
+    return self.joined().mapSuccess(executor: executor) {
+      try $0.reduce(initialResult, nextPartialResult)
     }
   }
 
@@ -43,20 +43,14 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
 public extension Collection where Self.IndexDistance == Int {
   /// transforms each element of collection on executor and provides future array of transformed values
   public func asyncMap<T>(executor: Executor = .primary,
-                       transform: @escaping (Self.Iterator.Element) throws -> T) -> FallibleFuture<[T]> {
+                       transform: @escaping (Self.Iterator.Element) throws -> T) -> Future<[T]> {
     return self.asyncMap(executor: executor) { future(success: try transform($0)) }
-  }
-
-  /// transforms each element of collection to future values on executor and provides future array of transformed values
-  public func asyncMap<T>(executor: Executor = .primary,
-                       transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> FallibleFuture<[T]> {
-    return self.asyncMap(executor: executor) { fallible(try transform($0)) }
   }
 
   /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
   public func asyncMap<T>(executor: Executor = .primary,
-                       transform: @escaping (Self.Iterator.Element) throws -> FallibleFuture<T>) -> FallibleFuture<[T]> {
-    let promise = Promise<Fallible<[T]>>()
+                       transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
+    let promise = Promise<[T]>()
     let sema = DispatchSemaphore(value: 1)
 
     var canContinue = true
@@ -73,7 +67,7 @@ public extension Collection where Self.IndexDistance == Int {
 
         guard canContinue_ else { return }
 
-        let futureSubvalue: FallibleFuture<T>
+        let futureSubvalue: Future<T>
         do { futureSubvalue = try transform(value) }
         catch { futureSubvalue = future(failure: error) }
 
@@ -88,13 +82,13 @@ public extension Collection where Self.IndexDistance == Int {
             subvalues[index] = $0
             unknownSubvaluesCount -= 1
             if 0 == unknownSubvaluesCount {
-              promise.complete(with: Fallible(success: subvalues.flatMap { $0 }))
+              promise.succeed(with: subvalues.flatMap { $0 })
               canContinue = false
             }
           }
 
           subvalue.onFailure {
-            promise.complete(with: Fallible(failure: $0))
+            promise.fail(with: $0)
             canContinue = false
           }
         }
@@ -111,7 +105,7 @@ public extension Collection where Self.IndexDistance == Int {
   }
 
   public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-                       transform: @escaping (U, Self.Iterator.Element) throws -> T) -> FallibleFuture<[T]> {
+                       transform: @escaping (U, Self.Iterator.Element) throws -> T) -> Future<[T]> {
     return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> T in
       guard let context = context else { throw ConcurrencyError.contextDeallocated }
       return try transform(context, value)
@@ -119,16 +113,8 @@ public extension Collection where Self.IndexDistance == Int {
   }
   
   public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-                       transform: @escaping (U, Self.Iterator.Element) throws -> Future<T>) -> FallibleFuture<[T]> {
+                       transform: @escaping (U, Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
     return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> Future<T> in
-      guard let context = context else { throw ConcurrencyError.contextDeallocated }
-      return try transform(context, value)
-    }
-  }
-  
-  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-                       transform: @escaping (U, Self.Iterator.Element) throws -> FallibleFuture<T>) -> FallibleFuture<[T]> {
-    return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> FallibleFuture<T> in
       guard let context = context else { throw ConcurrencyError.contextDeallocated }
       return try transform(context, value)
     }

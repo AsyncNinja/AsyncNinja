@@ -26,7 +26,7 @@ public protocol MutableFinite : Finite {
   /// Completes promise with value and returns true.
   /// Returns false if promise was completed before.
   @discardableResult
-  func complete(with final: FinalValue) -> Bool
+  func complete(with final: Fallible<SuccessValue>) -> Bool
 
   func insertToReleasePool(_ releasable: Releasable)
 }
@@ -35,7 +35,7 @@ public extension MutableFinite {
   /// Completes promise when specified future completes.
   /// `self` will retain specified future until it`s completion
   @discardableResult
-  final public func complete(with future: Future<FinalValue>) {
+  final public func complete(with future: Future<SuccessValue>) {
     let handler = future.makeFinalHandler(executor: .immediate) { [weak self] in
       self?.complete(with: $0)
     }
@@ -43,22 +43,20 @@ public extension MutableFinite {
       self.insertToReleasePool(handler)
     }
   }
-}
 
-public extension MutableFinite where FinalValue : _Fallible {
-  final public func succeed(with success: FinalValue.Success) {
-    self.complete(with: FinalValue(success: success))
+  func succeed(with success: SuccessValue) {
+    self.complete(with: Fallible(success: success))
   }
 
-  final public func fail(with failure: Error) {
-    self.complete(with: FinalValue(failure: failure))
+  public func fail(with failure: Error) {
+    self.complete(with: Fallible(failure: failure))
   }
 
-  final public func cancel() {
+  public func cancel() {
     self.fail(with: ConcurrencyError.cancelled)
   }
 
-  final func cancelBecauseOfDeallicatedContext() {
+  func cancelBecauseOfDeallicatedContext() {
     self.fail(with: ConcurrencyError.contextDeallocated)
   }
 }

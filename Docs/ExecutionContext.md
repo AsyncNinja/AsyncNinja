@@ -31,7 +31,7 @@ class WebService {
     let internalQueue: DispatchQueue // queue to modify internal state on
     ...    
     func signInUser(email: String, password: String)
-            -> FallibleFuture<User> {
+            -> Future<User> {
         let request = self.makeSignInRequest(email: email, password: password)
         return self.urlSession.data(with: request)
             .mapSuccess(executor: .queue(self.internalQueue)) { (data, response) -> User in
@@ -51,7 +51,7 @@ class WebService: ExecutionContext, ReleasePoolOwner {
     let releasePool = ReleasePool()
     ...    
     func signInUser(email: String, password: String)
-            -> FallibleFuture<User> {
+            -> Future<User> {
         let request = self.makeSignInRequest(email: email, password: password)
         return self.urlSession.data(with: request)
             .mapSuccess(context: self) { (self, dataAndResponse) -> User in
@@ -68,8 +68,8 @@ class WebService: ExecutionContext, ReleasePoolOwner {
 ## Relation to Concurrency Primitives
 `Future`, `Channel` and `FiniteChannel` have contextual variants of all transformations. For example `Future` has both:
 
-* `func map<T>(executor: Executor, transform: @escaping (Value) throws -> T) -> FallibleFuture<T>` 
-*  `func map<T, U: ExecutionContext>(context: U, transform: @escaping (U, Value) throws -> T) -> FallibleFuture<T>`
+* `func map<T>(executor: Executor, transform: @escaping (Value) throws -> T) -> Future<T>` 
+*  `func map<T, U: ExecutionContext>(context: U, transform: @escaping (U, Value) throws -> T) -> Future<T>`
 
 It should help in making concurrency-aware active objects (actors and components of actors).
 

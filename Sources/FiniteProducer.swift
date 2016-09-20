@@ -23,13 +23,13 @@
 import Dispatch
 
 final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContainer, MutableFinite, MutablePeriodic {
-  typealias ThreadSafeItem = FiniteProducerState<PeriodicValue, FinalValue>
-  typealias RegularState = RegularFiniteProducerState<PeriodicValue, FinalValue>
-  typealias FinalState = FinalFiniteProducerState<PeriodicValue, FinalValue>
+  typealias ThreadSafeItem = FiniteProducerState<PeriodicValue, SuccessValue>
+  typealias RegularState = RegularFiniteProducerState<PeriodicValue, SuccessValue>
+  typealias FinalState = FinalFiniteProducerState<PeriodicValue, SuccessValue>
   var head: ThreadSafeItem?
   private let releasePool = ReleasePool()
 
-  override public var finalValue: FinalValue? { return (self.head as? FinalState)?.final }
+  override public var finalValue: Fallible<SuccessValue>? { return (self.head as? FinalState)?.final }
 
   override public init() { }
 
@@ -88,7 +88,7 @@ final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContain
   }
   
   @discardableResult
-  public func complete(with final: FinalValue) -> Bool {
+  public func complete(with final: Fallible<SuccessValue>) -> Bool {
     let (oldHead, newHead) = self.updateHead {
       switch $0 {
       case .none:
@@ -135,9 +135,9 @@ final class RegularFiniteProducerState<T, U> : FiniteProducerState<T, U> {
 }
 
 final class FinalFiniteProducerState<T, U> : FiniteProducerState<T, U> {
-  let final: U
+  let final: Fallible<U>
   
-  init(final: U) {
+  init(final: Fallible<U>) {
     self.final = final
   }
 }

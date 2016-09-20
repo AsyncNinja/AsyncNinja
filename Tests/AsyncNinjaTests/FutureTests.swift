@@ -43,8 +43,8 @@ class FutureTests : XCTestCase {
     ("testOnValueContextual_ContextAlive", testOnValueContextual_ContextAlive),
     ("testOnValueContextual_ContextDead", testOnValueContextual_ContextDead),
     ("testMakeFutureOfBlock", testMakeFutureOfBlock),
-    ("testMakeFallibleFutureOfBlock_Success", testMakeFallibleFutureOfBlock_Success),
-    ("testMakeFallibleFutureOfBlock_Failure", testMakeFallibleFutureOfBlock_Failure),
+    ("testMakeFutureOfBlock_Success", testMakeFutureOfBlock_Success),
+    ("testMakeFutureOfBlock_Failure", testMakeFutureOfBlock_Failure),
     ("testMakeFutureOfDelayedBlock", testMakeFutureOfDelayedBlock),
     ("testMakeFutureOfDelayedBlock_lifetime", testMakeFutureOfDelayedBlock_lifetime),
     ("testMakeFutureOfDelayedFallibleBlock_Success", testMakeFutureOfDelayedFallibleBlock_Success),
@@ -67,8 +67,8 @@ class FutureTests : XCTestCase {
     weak var weakMappedFuture: Future<Int>?
 
     let result: Int = eval {
-      let futureValue = future(value: 1)
-      let mappedFutureValue = futureValue.map(executor: .utility) { (value) -> Int in
+      let futureValue = future(success: 1)
+      let mappedFutureValue = futureValue.mapSuccess(executor: .utility) { (value) -> Int in
         if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
           assert(qos: .utility)
         }
@@ -76,7 +76,7 @@ class FutureTests : XCTestCase {
       }
       weakFuture = futureValue
       weakMappedFuture = mappedFutureValue
-      return mappedFutureValue.wait()
+      return mappedFutureValue.wait().success!
     }
 
     sleep(1) // this test succeeds when utility queue has time to release futures
@@ -96,19 +96,19 @@ class FutureTests : XCTestCase {
         }
       }
       
-      let result1 = future(value: 1)
-        .map(executor: .userInteractive, transform: makePerformer(globalQOS: .userInteractive, multiplier: 2))
-        .map(executor: .default, transform: makePerformer(globalQOS: .default, multiplier: 3))
-        .map(executor: .utility, transform: makePerformer(globalQOS: .utility, multiplier: 4))
-        .map(executor: .background, transform: makePerformer(globalQOS: .background, multiplier: 5))
+      let result1 = future(success: 1)
+        .mapSuccess(executor: .userInteractive, transform: makePerformer(globalQOS: .userInteractive, multiplier: 2))
+        .mapSuccess(executor: .default, transform: makePerformer(globalQOS: .default, multiplier: 3))
+        .mapSuccess(executor: .utility, transform: makePerformer(globalQOS: .utility, multiplier: 4))
+        .mapSuccess(executor: .background, transform: makePerformer(globalQOS: .background, multiplier: 5))
 
-      let result2 = future(value: 2)
-        .map(executor: .background, transform: makePerformer(globalQOS: .background, multiplier: 5))
-        .map(executor: .utility, transform: makePerformer(globalQOS: .utility, multiplier: 4))
-        .map(executor: .default, transform: makePerformer(globalQOS: .default, multiplier: 3))
-        .map(executor: .userInteractive, transform: makePerformer(globalQOS: .userInteractive, multiplier: 2))
+      let result2 = future(success: 2)
+        .mapSuccess(executor: .background, transform: makePerformer(globalQOS: .background, multiplier: 5))
+        .mapSuccess(executor: .utility, transform: makePerformer(globalQOS: .utility, multiplier: 4))
+        .mapSuccess(executor: .default, transform: makePerformer(globalQOS: .default, multiplier: 3))
+        .mapSuccess(executor: .userInteractive, transform: makePerformer(globalQOS: .userInteractive, multiplier: 2))
       
-      let result = zip(result1, result2).map { $0 + $1 }.wait()
+      let result = zip(result1, result2).mapSuccess { $0 + $1 }.wait().success!
 
       XCTAssertEqual(result, 360)
     }
@@ -122,10 +122,10 @@ class FutureTests : XCTestCase {
     let valueSquared = square(value)
 
     let mappedFuture: Future<Int> = eval {
-      let initialFuture = future(value: value)
+      let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       return initialFuture
-        .map(executor: .queue(qos)) {
+        .mapSuccess(executor: .queue(qos)) {
           assert(qos: qos)
           transformExpectation.fulfill()
           return square($0)
@@ -133,7 +133,7 @@ class FutureTests : XCTestCase {
     }
 
     self.waitForExpectations(timeout: 0.1)
-    let result = mappedFuture.wait()
+    let result = mappedFuture.wait().success!
     XCTAssertNil(weakInitialFuture)
     XCTAssertEqual(result, valueSquared)
   }
@@ -165,11 +165,11 @@ class FutureTests : XCTestCase {
     let value = pickInt()
     let valueSquared = square(value)
 
-    let mappedFuture: FallibleFuture<Int> = eval {
-      let initialFuture = future(value: value)
+    let mappedFuture: Future<Int> = eval {
+      let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       return initialFuture
-        .map(executor: .queue(qos)) {
+        .mapSuccess(executor: .queue(qos)) {
           assert(qos: qos)
           transformExpectation.fulfill()
           return try square_success($0)
@@ -189,11 +189,11 @@ class FutureTests : XCTestCase {
     let value = pickInt()
 //    let valueSquared = square(value)
 
-    let mappedFuture: FallibleFuture<Int> = eval {
-      let initialFuture = future(value: value)
+    let mappedFuture: Future<Int> = eval {
+      let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       return initialFuture
-        .map(executor: .queue(qos)) {
+        .mapSuccess(executor: .queue(qos)) {
           assert(qos: qos)
           transformExpectation.fulfill()
           return try square_failure($0)
@@ -213,11 +213,11 @@ class FutureTests : XCTestCase {
     let value = pickInt()
     let valueSquared = square(value)
 
-    let mappedFuture: FallibleFuture<Int> = eval {
-      let initialFuture = future(value: value)
+    let mappedFuture: Future<Int> = eval {
+      let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       return initialFuture
-        .map(context: actor) { (actor, value) in
+        .mapSuccess(context: actor) { (actor, value) in
           assert(actor: actor)
           transformExpectation.fulfill()
           return try square_success(value)
@@ -236,13 +236,13 @@ class FutureTests : XCTestCase {
     let value = pickInt()
 //    let valueSquared = square(value)
 
-    let mappedFuture: FallibleFuture<Int> = eval {
-      let initialFuture = future(value: value)
+    let mappedFuture: Future<Int> = eval {
+      let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       let actor = TestActor()
       return initialFuture
         .delayed(timeout: 0.1)
-        .map(context: actor) { (actor, value) in
+        .mapSuccess(context: actor) { (actor, value) in
           assert(actor: actor)
           XCTFail()
 //          transformExpectation.fulfill()
@@ -263,11 +263,11 @@ class FutureTests : XCTestCase {
     let value = pickInt()
     //let valueSquared = square(value)
 
-    let mappedFuture: FallibleFuture<Int> = eval {
-      let initialFuture = future(value: value)
+    let mappedFuture: Future<Int> = eval {
+      let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       return initialFuture
-        .map(context: actor) { (actor, value) in
+        .mapSuccess(context: actor) { (actor, value) in
           assert(actor: actor)
           transformExpectation.fulfill()
           return try square_failure(value)
@@ -286,13 +286,13 @@ class FutureTests : XCTestCase {
     let value = pickInt()
     //let valueSquared = square(value)
 
-    let mappedFuture: FallibleFuture<Int> = eval {
-      let initialFuture = future(value: value)
+    let mappedFuture: Future<Int> = eval {
+      let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       let actor = TestActor()
       return initialFuture
         .delayed(timeout: 0.1)
-        .map(context: actor) { (actor, value) in
+        .mapSuccess(context: actor) { (actor, value) in
           XCTFail()
           assert(actor: actor)
           //transformExpectation.fulfill()
@@ -313,9 +313,9 @@ class FutureTests : XCTestCase {
     let value = pickInt()
 
     eval {
-      let initialFuture = future(value: value)
+      let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
-      initialFuture.onValue(context: actor) { (actor, value_) in
+      initialFuture.onSuccess(context: actor) { (actor, value_) in
         assert(actor: actor)
         XCTAssertEqual(value, value_)
         transformExpectation.fulfill()
@@ -332,7 +332,7 @@ class FutureTests : XCTestCase {
 
     eval {
       let actor = TestActor()
-      let initialFuture = future(value: value)
+      let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       initialFuture
         .delayed(timeout: 0.1)
@@ -358,10 +358,10 @@ class FutureTests : XCTestCase {
     }
 
     self.waitForExpectations(timeout: 0.1)
-    XCTAssertEqual(futureValue.value, square(value))
+    XCTAssertEqual(futureValue.success, square(value))
   }
 
-  func testMakeFallibleFutureOfBlock_Success() {
+  func testMakeFutureOfBlock_Success() {
     let qos = pickQoS()
     let value = pickInt()
     let expectation = self.expectation(description: "block called")
@@ -376,7 +376,7 @@ class FutureTests : XCTestCase {
     XCTAssertEqual(futureValue.success, square(value))
   }
 
-  func testMakeFallibleFutureOfBlock_Failure() {
+  func testMakeFutureOfBlock_Failure() {
     let qos = pickQoS()
     let value = pickInt()
     let expectation = self.expectation(description: "block called")
@@ -406,7 +406,7 @@ class FutureTests : XCTestCase {
     XCTAssertNil(futureValue.value)
 
     self.waitForExpectations(timeout: 0.3)
-    XCTAssertEqual(futureValue.value, square(value))
+    XCTAssertEqual(futureValue.success, square(value))
   }
 
   func testMakeFutureOfDelayedBlock_lifetime() {
@@ -479,7 +479,7 @@ class FutureTests : XCTestCase {
   func testMakeFutureOfContextualFallibleBlock_Success_ContextDead() {
     let value = pickInt()
 
-    let futureValue: FallibleFuture<Int> = eval {
+    let futureValue: Future<Int> = eval {
       let actor = TestActor()
       return future(context: actor) { (actor) -> Int in
         XCTFail()
@@ -510,7 +510,7 @@ class FutureTests : XCTestCase {
   func testMakeFutureOfContextualFallibleBlock_Failure_ContextDead() {
     let value = pickInt()
 
-    let futureValue: FallibleFuture<Int> = eval {
+    let futureValue: Future<Int> = eval {
       let actor = TestActor()
       return future(context: actor) { (actor) -> Int in
         XCTFail()

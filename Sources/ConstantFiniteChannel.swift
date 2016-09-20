@@ -24,9 +24,11 @@ import Dispatch
 
 final class ConstantFiniteChannel<S: Sequence, U> : FiniteChannel<S.Iterator.Element, U> {
   private let _periodicValues: S
-  private let _finalValue: U
-  
-  init(periodicValues: S, finalValue: U) {
+  private let _finalValue: Fallible<U>
+
+  override public var finalValue: Fallible<U>? { return _finalValue }
+
+  init(periodicValues: S, finalValue: Fallible<U>) {
     _periodicValues = periodicValues
     _finalValue = finalValue
   }
@@ -45,6 +47,6 @@ final class ConstantFiniteChannel<S: Sequence, U> : FiniteChannel<S.Iterator.Ele
   
 }
 
-public func finiteChannel<S: Sequence, U>(periodicValues: S, finalValue: U) -> FiniteChannel<S.Iterator.Element, U> {
+public func finiteChannel<S: Sequence, U>(periodicValues: S, finalValue: Fallible<U>) -> FiniteChannel<S.Iterator.Element, U> {
   return ConstantFiniteChannel(periodicValues: periodicValues, finalValue: finalValue)
 }
