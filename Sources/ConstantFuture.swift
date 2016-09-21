@@ -48,3 +48,7 @@ public func future<T>(success: T) -> Future<T> {
 public func future<T>(failure: Error) -> Future<T> {
   return ConstantFuture(value: Fallible(failure: failure))
 }
+
+public func cancelledFuture<T>() -> Future<T> {
+    return future(failure: ConcurrencyError.cancelled)
+}
