@@ -2,9 +2,11 @@
 This document describes concept and use of `Channel`
 
 ##### Contents
-* [Concept][#concept]
-	* [Why?][#why]
-	* [Example][#example]
+**this topic is incomplete**
+
+* [Concept](#concept)
+	* [Why?](#why)
+	* [Example](#example)
 
 ## Concept
 `Channel` represents values that periodically arrive. `Channel` oftenly represents events that appear one-by-one. For example:
