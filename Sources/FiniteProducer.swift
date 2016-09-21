@@ -88,7 +88,7 @@ final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContain
   }
   
   @discardableResult
-  public func complete(with final: Fallible<SuccessValue>) -> Bool {
+  public func tryComplete(with final: Fallible<SuccessValue>) -> Bool {
     let (oldHead, newHead) = self.updateHead {
       switch $0 {
       case .none:

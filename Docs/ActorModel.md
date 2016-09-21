@@ -49,7 +49,7 @@ class MyViewController : UIViewController {
 
 	@IBAction func doWork(_ sender: AnyObject?) {
 		self.myActor.perform(request: SimpleRequest())
-			.onFinal(context: self) { (value, self_) in
+			.onComplete(context: self) { (value, self_) in
 				value.onSuccess(self_.present(response:))
 				value.onFailure(self_.present(error:))
 			}

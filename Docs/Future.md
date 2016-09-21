@@ -197,18 +197,18 @@ There is a specific kind of promise called `Promise` is promise with `Fallible` 
 Transform value when in becomes available into another value.
 
 *    regular
-    *    `func Future<Value>.map<T>(executor: Executor, transform: @escaping (Value) -> T) -> Future<T>`
+    *    `func Future<Value>.mapCompletion<T>(executor: Executor, transform: @escaping (Fallible<SuccessValue>) -> T) -> Future<T>`
 *    [fallible](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md)
-    *    `func Future<Value>.map<T>(executor: Executor, transform: @escaping (Value) throws -> T) -> Future<T>`
-    *    `func Future<Value>.mapSuccess<T>(executor: Executor, transform: @escaping (Value.Success) throws -> T) -> Future<T>`
-    *    `func Future<Value>.mapFailure(executor: Executor, transform: @escaping (Error) -> Value.Success) -> Future<Value.Success>`
-    *    `func Future<Value>.mapFailure(executor: Executor, transform: @escaping (Error) throws -> Value.Success) -> Future<Value.Success> `
+    *    `func Future<Value>.mapCompletion<T>(executor: Executor, transform: @escaping (Fallible<SuccessValue>) throws -> T) -> Future<T>`
+    *    `func Future<Value>.map<T>(executor: Executor, transform: @escaping (SuccessValue) throws -> T) -> Future<T>`
+    *    `func Future<Value>.recover(executor: Executor, transform: @escaping (Error) -> SuccessValue) -> Future<SuccessValue>`
+    *    `func Future<Value>.recover(executor: Executor, transform: @escaping (Error) throws -> SuccessValue) -> Future<SuccessValue> `
 *    [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md)
     *    `func Future<Value>.map<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
 transform: @escaping (U, Value) throws -> T) -> Future<T>`
 *    [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md) and [fallible](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md)
-    *    `func Future<Value>.mapSuccess<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Value.Success) throws -> T) -> Future<T>`
-    * `func Future<Value>.mapFailure<U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Error) throws -> Value.Success) -> Future<Value.Success>`
+    *    `func Future<Value>.map<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, SuccessValue) throws -> T) -> Future<T>`
+    * `func Future<Value>.recover<U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Error) throws -> SuccessValue) -> Future<SuccessValue>`
 *     delayed
     *  `delayed(timeout: Double) -> Future<Value>`
 
@@ -240,6 +240,6 @@ Sometimes there is a possibility to perform multiple independent operations and 
 ### Changing Mutable State with `Future`
 After creation, transformations and combination of futures comes time to store results somewhere. In oppose to previous operations this operation is 100% impure. All of following operations are contextual because of [memory management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/MemoryManagement.md) considerations.
 
-*    `func Future<Value>.onValue<U: ExecutionContext>(context: U, block: @escaping (U, Value) -> Void)`
+*    `func Future<Success>.onComplete<U: ExecutionContext>(context: U, block: @escaping (U, Fallible<Success>) -> Void)`
 *    `func Future<Success>.onSuccess<U: ExecutionContext>(context: U, block: @escaping (U, Success) -> Void)`
 *    `func Future<Success>.onFailure<U: ExecutionContext>(context: U, block: @escaping (U, Error) -> Void)` 

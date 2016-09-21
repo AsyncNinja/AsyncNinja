@@ -69,7 +69,7 @@ func perform(request: Request) throws -> Response { ... }
 
     ...
     let response = fallible { try perform(request: request) }
-        .mapFailure(Response.init(error:))
+        .recover(Response.init(error:))
     ...
 ```
 
@@ -101,11 +101,11 @@ Both approaches have their advantages and disadvantages. After consideration and
 
 ### Transforming `Fallible`
 
-*    `func Fallible<Success>.mapSuccess<T>(transform: (Success) throws -> T) -> Fallible<T>`
-*    `func Fallible<Success>.mapSuccess<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>`
-*    `func Fallible<Success>.mapFailure(transform: (Error) throws -> Success) -> Fallible<Success>`
+*    `func Fallible<Success>.map<T>(transform: (Success) throws -> T) -> Fallible<T>`
+*    `func Fallible<Success>.map<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>`
+*    `func Fallible<Success>.recover(transform: (Error) throws -> Success) -> Fallible<Success>`
 *    **failure recovery**
-    `func Fallible<Success>.mapFailure(transform: (Error) -> Success) -> Success`
+    `func Fallible<Success>.recover(transform: (Error) -> Success) -> Success`
     
 ### Unwrapping `Fallible`    
 
@@ -131,7 +131,7 @@ func perform(request: Request) throws -> Response { ... }
 
 func performAsync(request: Request) -> Response {
     return future { perform(reqeust: request) }
-        .mapFailure(Response.init(error:))
+        .recover(Response.init(error:))
 }
 
 ```

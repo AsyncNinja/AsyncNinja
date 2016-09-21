@@ -68,11 +68,11 @@ public extension Fallible {
     }
   }
 
-  func mapSuccess<T>(transform: (Success) throws -> T) -> Fallible<T> {
-    return self.mapSuccess { .success(try transform($0)) }
+  func map<T>(transform: (Success) throws -> T) -> Fallible<T> {
+    return self.map { .success(try transform($0)) }
   }
 
-  func mapSuccess<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T> {
+  func map<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T> {
     switch self {
     case let .success(success):
       return fallible { try transform(success) }
@@ -81,7 +81,7 @@ public extension Fallible {
     }
   }
 
-  func mapFailure(transform: (Error) throws -> Success) -> Fallible<Success> {
+  func recover(transform: (Error) throws -> Success) -> Fallible<Success> {
     switch self {
     case let .success(success):
       return .success(success)
@@ -91,7 +91,7 @@ public extension Fallible {
     }
   }
 
-  func mapFailure(transform: (Error) -> Success) -> Success {
+  func recover(transform: (Error) -> Success) -> Success {
     switch self {
     case let .success(success):
       return success
@@ -142,16 +142,16 @@ public protocol _Fallible { // hacking type system once
   func onFailure(_ handler: (Error) throws -> Void) rethrows
 
   // (success or failure) * (try transform success to success) -> (success or failure)
-  func mapSuccess<T>(transform: (Success) throws -> T) -> Fallible<T>
+  func map<T>(transform: (Success) throws -> T) -> Fallible<T>
 
   // (success or failure) * (try transform success to (success or failure)) -> (success or failure)
-  func mapSuccess<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>
+  func map<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>
 
   // (success or failure) * (try transform failure to success) -> (success or failure)
-  func mapFailure(transform: (Error) throws -> Success) -> Fallible<Success>
+  func recover(transform: (Error) throws -> Success) -> Fallible<Success>
 
   // (success or failure) * (transform failure to success) -> success
-  func mapFailure(transform: (Error) -> Success) -> Success
+  func recover(transform: (Error) -> Success) -> Success
 
   // returns success or throws failure
   func liftSuccess() throws -> Success

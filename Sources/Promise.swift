@@ -63,7 +63,7 @@ final public class Promise<T> : Future<T>, MutableFinite, ThreadSafeContainer {
   /// Completes promise with value and returns true.
   /// Returns false if promise was completed before.
   @discardableResult
-  final public func complete(with final: Value) -> Bool {
+  final public func tryComplete(with final: Value) -> Bool {
     let completedItem = CompletedPromiseState(value: final)
     let (oldHead, newHead) = self.updateHead { ($0?.isIncomplete ?? true) ? .replace(completedItem) : .keep }
     let didComplete = (completedItem === newHead)

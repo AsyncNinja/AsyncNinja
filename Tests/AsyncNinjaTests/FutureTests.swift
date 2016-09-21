@@ -40,8 +40,8 @@ class FutureTests : XCTestCase {
     ("testMapContextualFinalToFinal_Success_ContextDead", testMapContextualFinalToFinal_Success_ContextDead),
     ("testMapContextualFinalToFinal_Failure_ContextAlive", testMapContextualFinalToFinal_Failure_ContextAlive),
     ("testMapContextualFinalToFinal_Failure_ContextDead", testMapContextualFinalToFinal_Failure_ContextDead),
-    ("testOnValueContextual_ContextAlive", testOnValueContextual_ContextAlive),
-    ("testOnValueContextual_ContextDead", testOnValueContextual_ContextDead),
+    ("testOnCompleteContextual_ContextAlive", testOnCompleteContextual_ContextAlive),
+    ("testOnCompleteContextual_ContextDead", testOnCompleteContextual_ContextDead),
     ("testMakeFutureOfBlock", testMakeFutureOfBlock),
     ("testMakeFutureOfBlock_Success", testMakeFutureOfBlock_Success),
     ("testMakeFutureOfBlock_Failure", testMakeFutureOfBlock_Failure),
@@ -306,7 +306,7 @@ class FutureTests : XCTestCase {
     XCTAssertEqual(result.failure as? ConcurrencyError, .contextDeallocated)
   }
 
-  func testOnValueContextual_ContextAlive() {
+  func testOnCompleteContextual_ContextAlive() {
     let actor = TestActor()
     let transformExpectation = self.expectation(description: "transform called")
     weak var weakInitialFuture: Future<Int>?
@@ -326,7 +326,7 @@ class FutureTests : XCTestCase {
     XCTAssertNil(weakInitialFuture)
   }
 
-  func testOnValueContextual_ContextDead() {
+  func testOnCompleteContextual_ContextDead() {
     weak var weakInitialFuture: Future<Int>?
     let value = pickInt()
 
@@ -336,7 +336,7 @@ class FutureTests : XCTestCase {
       weakInitialFuture = initialFuture
       initialFuture
         .delayed(timeout: 0.1)
-        .onValue(context: actor) { (actor, value_) in
+        .onComplete(context: actor) { (actor, value_) in
           XCTFail()
           assert(actor: actor)
       }

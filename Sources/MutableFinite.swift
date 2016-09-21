@@ -27,7 +27,7 @@ public protocol MutableFinite : Finite {
   /// Completes promise with value and returns true.
   /// Returns false if promise was completed before.
   @discardableResult
-  func complete(with final: Fallible<SuccessValue>) -> Bool
+  func tryComplete(with final: Fallible<SuccessValue>) -> Bool
 
   func insertToReleasePool(_ releasable: Releasable)
 }
@@ -45,8 +45,22 @@ public extension MutableFinite {
     }
   }
 
+  func complete(with final: Fallible<SuccessValue>) {
+    self.tryComplete(with: final)
+  }
+
+  @discardableResult
+  func trySucceed(with success: SuccessValue) -> Bool {
+    return self.tryComplete(with: Fallible(success: success))
+  }
+
   func succeed(with success: SuccessValue) {
     self.complete(with: Fallible(success: success))
+  }
+
+  @discardableResult
+  public func tryFail(with failure: Error) -> Bool {
+    return self.tryComplete(with: Fallible(failure: failure))
   }
 
   public func fail(with failure: Error) {

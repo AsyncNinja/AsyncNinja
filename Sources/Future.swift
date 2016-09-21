@@ -65,13 +65,6 @@ public extension Future {
     return self.mapSuccess(context: context, executor: executor, transform: transform)
   }
 
-  func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil,
-               block: @escaping (U, Fallible<SuccessValue>) -> Void) {
-    // Test: FutureTests.testOnValueContextual_ContextAlive
-    // Test: FutureTests.testOnValueContextual_ContextDead
-    self.onFinal(context: context, block: block)
-  }
-
   func delayed(timeout: Double) -> Future<SuccessValue> {
     return self.delayedFinal(timeout: timeout)
   }
@@ -84,8 +77,8 @@ public extension Future where T : Finite {
 
     let handler = self.makeFinalHandler(executor: .immediate) { [weak promise] (future) in
       guard let promise = promise else { return }
-      let handler = (future as! Future<SuccessValue.SuccessValue>)
-        .makeFinalHandler(executor: .immediate) { [weak promise] (final) in
+      let handler = (future.success as? Future<SuccessValue.SuccessValue>)?
+        .makeFinalHandler(executor: .immediate) { [weak promise] (final) -> Void in
           promise?.complete(with: final)
       }
       if let handler = handler {

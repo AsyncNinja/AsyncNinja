@@ -75,8 +75,8 @@ It should help in making concurrency-aware active objects (actors and components
 
 There are also some methods that are implemented to work with context only:
 
-* `func onValue<U: ExecutionContext>(context: U, block: @escaping (U, Value) -> Void)`
-* `func onSuccess<U: ExecutionContext>(context: U, block: @escaping (U, Value.Success) -> Void)`
+* `func onComplete<U: ExecutionContext>(context: U, block: @escaping (U, Value) -> Void)`
+* `func onSuccess<U: ExecutionContext>(context: U, block: @escaping (U, Success) -> Void)`
 * `func onFailure<U: ExecutionContext>(context: U, block: @escaping (U, Error) -> Void)`
 
 As you might see these methods do not return any value. That means that they are made to change an internal state of `ExecutionContext`.
@@ -93,7 +93,7 @@ class NiceViewController : UIViewController {
     ...
     @IBAction func signIn(_ sender: Any?) {
         self.webService.signInUser(email: self.emailField.text ?? "", password: self.passwordField.text ?? "")
-            .onValue(context: self) { (self, fallibleUser) in
+            .onComplete(context: self) { (self, fallibleUser) in
                 fallibleUser.onSuccess { self.user = $0 }
                 fallibleUser.onFailure(self.present(error:))
             }
@@ -102,7 +102,7 @@ class NiceViewController : UIViewController {
 }
 ```
 **What did just happen?**
-On `signIn` web service will be requested for sign in. When resonse from web service arrived closure passed to `onValue` will be called to on `Executor` provided by `ExecutionContext`. So we have
+On `signIn` web service will be requested for sign in. When resonse from web service arrived closure passed to `onComplete` will be called to on `Executor` provided by `ExecutionContext`. So we have
 
 * clean code
 * no retain cycles
