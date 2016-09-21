@@ -23,9 +23,6 @@ This framework is an implementation of following principles:
     *    [`Executor`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Executor.md) is object made to execute escaped block `(Void) -> Void`. Its propose is to encapsulate a way of an execution.
     *    [`ExecutionContext`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md) is a protocol concurrency-aware objects must conform to. It basically make them actors or components of actor.
     *    [`Fallible`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md) is validation monad. Is an object that represents either success value of failure value (Error).
-*    implement error handling
-    *     use default swift error handling model (throwing errors) for synchronous execution 
-    *  use validation monads (`Fallible<T>`) for asynchronous execution
 
 ###Primitives
 |               |`Finite`|`Periodic`|

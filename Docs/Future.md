@@ -2,10 +2,9 @@
 This document describes concept and use of `Future`.
 
 ##### Contents
-*    [Concept](#concept)
-    *     [Implementation Details](#implementation-details)
-    *    [Example: Solution based on callbacks](#solution-based-on-callbacks)
-    *     [Example: Solution based on futures](#solution-based-on-futures)
+* [Concept](#concept)
+    * [Example: Solution based on callbacks](#solution-based-on-callbacks)
+    * [Example: Solution based on futures](#solution-based-on-futures)
 *  [Reference](#reference)
     *  [Creating `Future`](#creating-future)
     *  [Transforming `Future`](#transforming-future)
@@ -22,10 +21,10 @@ func perform(request: Request, callback: @escaping (Response) -> Void)
 
 But this solution has multiple disadvantages:
 
-*    so called ["callback hell"](http://callbackhell.com) or ["pyramid of doom"](https://en.wikipedia.org/wiki/Pyramid_of_doom_(programming))
-*    combining multiple asynchronous operations is a complete disaster
-*    it is hard to think of response as a result of operation because it placed inside function arguments
-*    be very attentive to memory management within callback closure
+* so called ["callback hell"](http://callbackhell.com) or ["pyramid of doom"](https://en.wikipedia.org/wiki/Pyramid_of_doom_(programming))
+* combining multiple asynchronous operations is a complete disaster
+*  it is hard to think of response as a result of operation because it placed inside function arguments
+* be very attentive to memory management within callback closure
 
 Function declaration that incorporates `Future` will look like this:
 ```
@@ -34,13 +33,10 @@ func perform(request: Request) -> Future<Response>
 
 Solutions based on `Future`
 
-*    are shorter
-*    you are getting something as returned value
-*    are designed to be highly combinable
-*     AsyncNinja's [memory management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/MemoryManagement.md) helps to avoid majority of memory issues
-
-#### Implementation Details
-In oppose to other implementations future may not complete with an error by default. The combination of `Future<Fallible<T>>` must be used in order to have this feature (`Future<T>` type alias is preferred).
+* are shorter
+* you are getting something as returned value
+* are designed to be highly combinable
+* AsyncNinja's [memory management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/MemoryManagement.md) helps to avoid majority of memory issues
 
 #### Example
 
@@ -154,17 +150,13 @@ In oppose to other implementations future may not complete with an error by defa
 In most cases, initial future is a result of the asynchronous operation.
 
 ###### Simple
-*    regular
-    *    `func future<T>(executor: Executor, block: @escaping () -> T) -> Future<T>` 
-*    [fallible](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md)
-    *     `func future<T>(executor: Executor, block: @escaping () throws -> T) -> Future<T>`
-*  [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md
-    *    `func future<T, U : ExecutionContext>(context: U, executor: AsyncNinja.Executor?, block: @escaping (U) throws -> T) -> Future<T>`
+* regular
+	* `func future<T>(executor: Executor, block: @escaping () throws -> T) -> Future<T>`
+* [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md)
+    * `func future<T, U : ExecutionContext>(context: U, executor: AsyncNinja.Executor?, block: @escaping (U) throws -> T) -> Future<T>`
 
 ###### Delayed
 *    regular
-    *  `func future<T>(executor: Executor, after timeout: Double, block: @escaping () -> T) -> Future<T>` 
-*  [fallible](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md)
     *  `func future<T>(executor: Executor, after timeout: Double, block: @escaping () throws -> T) -> Future<T>`
 *  [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md)
     *  `func future<T, U : ExecutionContext>(context: U, executor: AsyncNinja.Executor?, after timeout: Double, block: @escaping (U) throws -> T) -> Future<T>`
@@ -172,11 +164,9 @@ In most cases, initial future is a result of the asynchronous operation.
 #### `Future` with predefined value
 In some cases, it is convenient to make future with a predefined value.
 
-*    regular
-    *    `func future<T>(value: T) -> Future<T>`
-*    [fallible](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md)
-    *    `func future<T>(success: T) -> Future<T>`
-    *     `func future<T>(failure: Error) -> Future<T>`
+* `func future<T>(value: T) -> Future<T>`
+* `func future<T>(success: T) -> Future<T>`
+* `func future<T>(failure: Error) -> Future<T>`
 
 #### `Promise`
 `Promise` is a specific subclass of `Future` that can be instantiated with public initializer and can be manually completed with `func complete(with final: Value) -> Bool` and `func complete(with future: Future<Value>)`. `Promise` is useful when you have to manage completion manually. Bridging from API based on callbacks is a very common case of using `Promise`:
@@ -185,7 +175,7 @@ In some cases, it is convenient to make future with a predefined value.
     func perform(request: Request) -> Future<Response> {
         let promise = Promise<Response>
         _oldAPI.perform(request: request) { [weak promise] in
-            promise?.complete(with: $0)
+            promise?.succeed(with: $0)
         }
         return promise
     }
@@ -196,18 +186,14 @@ There is a specific kind of promise called `Promise` is promise with `Fallible` 
 ### Transforming `Future`
 Transform value when in becomes available into another value.
 
-*    regular
-    *    `func Future<Value>.mapCompletion<T>(executor: Executor, transform: @escaping (Fallible<SuccessValue>) -> T) -> Future<T>`
-*    [fallible](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md)
-    *    `func Future<Value>.mapCompletion<T>(executor: Executor, transform: @escaping (Fallible<SuccessValue>) throws -> T) -> Future<T>`
-    *    `func Future<Value>.map<T>(executor: Executor, transform: @escaping (SuccessValue) throws -> T) -> Future<T>`
-    *    `func Future<Value>.recover(executor: Executor, transform: @escaping (Error) -> SuccessValue) -> Future<SuccessValue>`
-    *    `func Future<Value>.recover(executor: Executor, transform: @escaping (Error) throws -> SuccessValue) -> Future<SuccessValue> `
-*    [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md)
-    *    `func Future<Value>.map<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-transform: @escaping (U, Value) throws -> T) -> Future<T>`
-*    [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md) and [fallible](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md)
-    *    `func Future<Value>.map<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, SuccessValue) throws -> T) -> Future<T>`
+* regular
+	* `func Future<Value>.mapCompletion<T>(executor: Executor, transform: @escaping (Fallible<SuccessValue>) throws -> T) -> Future<T>`
+	* `func Future<Value>.map<T>(executor: Executor, transform: @escaping (SuccessValue) throws -> T) -> Future<T>`
+	* `func Future<Value>.recover(executor: Executor, transform: @escaping (Error) throws -> SuccessValue) -> Future<SuccessValue> `
+* [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md)
+	* `func Future<Value>.mapCompletion<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
+transform: @escaping (U, Fallible<SuccessValue>) throws -> T) -> Future<T>`
+	* `func Future<Value>.map<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, SuccessValue) throws -> T) -> Future<T>`
     * `func Future<Value>.recover<U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Error) throws -> SuccessValue) -> Future<SuccessValue>`
 *     delayed
     *  `delayed(timeout: Double) -> Future<Value>`
@@ -216,30 +202,20 @@ transform: @escaping (U, Value) throws -> T) -> Future<T>`
 ### Combining `Future`s
 Sometimes there is a possibility to perform multiple independent operations and use combined results. AsyncNinja provides multiple ways to do this.
 
-*    regular zipping few `Future`s with different value types
-    *    `func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, B)>`
-    *    `func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: Future<C>) -> Future<(A, B, C)>`
-*    [fallible](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md) zipping few `Future`s with different value types
-    *    `func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Promise<(A, B)>`
-    *    `func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: Future<C>) -> Future<(A, B, C)>`
-*    combining collection of `Future`s into single one
-    *    regular
-        *    `func Collection<Future<Value>>.joined() -> Future<[Value]>`
-    *     [fallible](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md)
-        *  `func Collection<Future<Value>>.joined() -> Future<[Value]>`
-*  reducing over collection of `Future`s into single `Future` of accumulated result
-    *  regular
-        *  `func Collection<Future<Value>>.reduce<Result>(executor: Executor, initialResult: Result, nextPartialResult: @escaping (Result, SuccessValue) -> Result) -> Future<Result>`
-    *  [fallible](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md)
-        *  `func Collection<Future<Value>>.reduce<Result>(executor: Executor, initialResult: Result, nextPartialResult: @escaping (Result, SuccessValue) -> Result) -> Future<Result>`
-        *  `func Collection<Future<Value>>.reduce<Result>(executor: Executor, initialResult: Result, nextPartialResult: @escaping (Result, SuccessValue) throws -> Result) -> Future<Result>`
+* zipping few `Future`s with different value types
+	* `func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, B)>`
+	* `func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: Future<C>) -> Future<(A, B, C)>`
+* combining collection of `Future`s into single one
+	* `func Collection<Future<SuccessValue>>.joined() -> Future<[Value]>`
+* reducing over collection of `Future`s into single `Future` of accumulated result
+	* `func Collection<Future<Value>>.reduce<Result>(executor: Executor, initialResult: Result, nextPartialResult: @escaping (Result, SuccessValue) throws -> Result) -> Future<Result>`
 *  asynchrounously processing each element of collection and combining then unto a single `Future`
-    *  `func Collection<Element>.asyncMap<T>(executor: Executor, ..., transform: (Element) -> T) -> Future<[T]>`
+    * `func Collection<Element>.asyncMap<T>(executor: Executor, ..., transform: (Element) -> T) -> Future<[T]>`
               
 
 ### Changing Mutable State with `Future`
 After creation, transformations and combination of futures comes time to store results somewhere. In oppose to previous operations this operation is 100% impure. All of following operations are contextual because of [memory management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/MemoryManagement.md) considerations.
 
 *    `func Future<Success>.onComplete<U: ExecutionContext>(context: U, block: @escaping (U, Fallible<Success>) -> Void)`
-*    `func Future<Success>.onSuccess<U: ExecutionContext>(context: U, block: @escaping (U, Success) -> Void)`
+*    `func Future<Success>.onSuccess<U: ExecutionContext>(context: U, block: @escaping (U, SuccessValue) -> Void)`
 *    `func Future<Success>.onFailure<U: ExecutionContext>(context: U, block: @escaping (U, Error) -> Void)` 
