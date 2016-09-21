@@ -22,59 +22,74 @@
 
 import Dispatch
 
+/// Single failure fails them all
 public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : Finite {
-  fileprivate typealias FinalValue = Self.Iterator.Element.FinalValue
+  fileprivate typealias SuccessValue = Self.Iterator.Element.SuccessValue
 
   /// joins an array of futures to a future array
-  func joined() -> Future<[FinalValue]> {
-    return self.asyncMap(executor: .immediate) { $0 as! Future<FinalValue> }
+  func joined() -> Future<[SuccessValue]> {
+    return self.asyncMap(executor: .immediate) { $0 as! Future<SuccessValue> }
   }
 
-  /// reduces results of futures
-  func reduce<Result>(executor: Executor = .primary, initialResult: Result,
-              nextPartialResult: @escaping (Result, FinalValue) -> Result) -> Future<Result> {
-    return self.joined().mapFinal(executor: executor) {
-      $0.reduce(initialResult, nextPartialResult)
+  ///
+  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, SuccessValue) throws -> Result) -> Future<Result> {
+    return self.joined().map(executor: executor) {
+      try $0.reduce(initialResult, nextPartialResult)
     }
   }
 
-  func reduce<Result>(executor: Executor = .primary, initialResult: Result,
-              nextPartialResult: @escaping (Result, FinalValue) throws -> Result) -> FallibleFuture<Result> {
-    return self.joined().mapFinal(executor: executor) { final in
-      fallible { try final.reduce(initialResult, nextPartialResult) }
-    }
-  }
 }
 
 public extension Collection where Self.IndexDistance == Int {
   /// transforms each element of collection on executor and provides future array of transformed values
-  func asyncMap<T>(executor: Executor = .primary,
-                transform: @escaping (Self.Iterator.Element) -> T) -> Future<[T]> {
-    return self.asyncMap(executor: executor) { future(value: transform($0)) }
+  public func asyncMap<T>(executor: Executor = .primary,
+                       transform: @escaping (Self.Iterator.Element) throws -> T) -> Future<[T]> {
+    return self.asyncMap(executor: executor) { future(success: try transform($0)) }
   }
 
-  /// transforms each element of collection to future value on executor and provides future array of transformed values
-  func asyncMap<T>(executor: Executor = .primary,
-                transform: @escaping (Self.Iterator.Element) -> Future<T>) -> Future<[T]> {
+  /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
+  public func asyncMap<T>(executor: Executor = .primary,
+                       transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
     let promise = Promise<[T]>()
     let sema = DispatchSemaphore(value: 1)
 
+    var canContinue = true
     let count = self.count
     var subvalues = [T?](repeating: nil, count: count)
     var unknownSubvaluesCount = count
 
     for (index, value) in self.enumerated() {
-      executor.execute {
-        weak var weakPromise = promise
-        let handler = transform(value).makeFinalHandler(executor: .immediate) {
-          guard let promise = weakPromise else { return }
+      executor.execute { [weak promise] in
+        guard let promise = promise else { return }
+        sema.wait()
+        let canContinue_ = canContinue
+        sema.signal()
+
+        guard canContinue_ else { return }
+
+        let futureSubvalue: Future<T>
+        do { futureSubvalue = try transform(value) }
+        catch { futureSubvalue = future(failure: error) }
+
+        let handler = futureSubvalue.makeFinalHandler(executor: .immediate) { [weak promise] subvalue in
+          guard let promise = promise else { return }
+
           sema.wait()
           defer { sema.signal() }
 
-          subvalues[index] = $0
-          unknownSubvaluesCount -= 1
-          if 0 == unknownSubvaluesCount {
-            promise.complete(with: subvalues.flatMap { $0 })
+          guard canContinue else { return }
+          subvalue.onSuccess {
+            subvalues[index] = $0
+            unknownSubvaluesCount -= 1
+            if 0 == unknownSubvaluesCount {
+              promise.succeed(with: subvalues.flatMap { $0 })
+              canContinue = false
+            }
+          }
+
+          subvalue.onFailure {
+            promise.fail(with: $0)
+            canContinue = false
           }
         }
 
@@ -83,7 +98,25 @@ public extension Collection where Self.IndexDistance == Int {
         }
       }
     }
-    
+
+    promise.insertToReleasePool(self)
+
     return promise
+  }
+
+  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
+                       transform: @escaping (U, Self.Iterator.Element) throws -> T) -> Future<[T]> {
+    return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> T in
+      guard let context = context else { throw ConcurrencyError.contextDeallocated }
+      return try transform(context, value)
+    }
+  }
+  
+  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
+                       transform: @escaping (U, Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
+    return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> Future<T> in
+      guard let context = context else { throw ConcurrencyError.contextDeallocated }
+      return try transform(context, value)
+    }
   }
 }

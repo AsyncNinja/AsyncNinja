@@ -24,13 +24,13 @@ import Dispatch
 
 public class FiniteChannel<T, U> : Periodic, Finite {
   public typealias PeriodicValue = T
-  public typealias FinalValue = U
-  public typealias Value = FiniteChannelValue<PeriodicValue, FinalValue>
-  public typealias Handler = FiniteChannelHandler<PeriodicValue, FinalValue>
+  public typealias SuccessValue = U
+  public typealias Value = FiniteChannelValue<PeriodicValue, SuccessValue>
+  public typealias Handler = FiniteChannelHandler<PeriodicValue, SuccessValue>
   public typealias PeriodicHandler = Handler
   public typealias FinalHandler = Handler
 
-  public var finalValue: FinalValue? {
+  public var finalValue: Fallible<SuccessValue>? {
     /* abstact */
     fatalError()
   }
@@ -38,7 +38,7 @@ public class FiniteChannel<T, U> : Periodic, Finite {
   init() { }
 
   final public func makeFinalHandler(executor: Executor,
-                                     block: @escaping (FinalValue) -> Void) -> Handler? {
+                                     block: @escaping (Fallible<SuccessValue>) -> Void) -> Handler? {
     return self.makeHandler(executor: executor) {
       if case .final(let value) = $0 { block(value) }
     }
@@ -71,17 +71,17 @@ public class FiniteChannel<T, U> : Periodic, Finite {
 
 public enum FiniteChannelValue<T, U> {
   public typealias PeriodicValue = T
-  public typealias FinalValue = U
+  public typealias SuccessValue = U
 
   case periodic(PeriodicValue)
-  case final(FinalValue)
+  case final(Fallible<SuccessValue>)
 }
 
 /// **internal use only**
 final public class FiniteChannelHandler<T, U> {
   public typealias PeriodicValue = T
-  public typealias FinalValue = U
-  public typealias Value = FiniteChannelValue<PeriodicValue, FinalValue>
+  public typealias SuccessValue = U
+  public typealias Value = FiniteChannelValue<PeriodicValue, SuccessValue>
 
   let executor: Executor
   let block: (Value) -> Void
@@ -100,8 +100,8 @@ final public class FiniteChannelHandler<T, U> {
 // this code duplication from Channel is a thing because parametrized associatedtype is not yet a thing.
 extension FiniteChannel {
   func makeFiniteProducer<T>(executor: Executor, cancellationToken: CancellationToken?,
-                          onPeriodic: @escaping (PeriodicValue, FiniteProducer<T, Fallible<FinalValue>>) throws -> Void) -> FiniteProducer<T, Fallible<FinalValue>> {
-    let producer = FiniteProducer<T, Fallible<FinalValue>>()
+                          onPeriodic: @escaping (PeriodicValue, FiniteProducer<T, Fallible<SuccessValue>>) throws -> Void) -> FiniteProducer<T, Fallible<SuccessValue>> {
+    let producer = FiniteProducer<T, Fallible<SuccessValue>>()
     let handler = self.makeHandler(executor: executor) { [weak producer] (value) in
       guard let producer = producer else { return }
       switch value {
@@ -127,8 +127,8 @@ extension FiniteChannel {
   }
 
   func makeFiniteProducer<T, U: ExecutionContext>(context: U, executor: Executor?, cancellationToken: CancellationToken?,
-                          onPeriodic: @escaping (U, PeriodicValue, FiniteProducer<T, Fallible<FinalValue>>) throws -> Void) -> FiniteProducer<T, Fallible<FinalValue>> {
-    let producer: FiniteProducer<T, Fallible<FinalValue>> = self.makeFiniteProducer(executor: executor ?? context.executor, cancellationToken: cancellationToken) {
+                          onPeriodic: @escaping (U, PeriodicValue, FiniteProducer<T, Fallible<SuccessValue>>) throws -> Void) -> FiniteProducer<T, Fallible<SuccessValue>> {
+    let producer: FiniteProducer<T, Fallible<SuccessValue>> = self.makeFiniteProducer(executor: executor ?? context.executor, cancellationToken: cancellationToken) {
       [weak context] (periodicValue, producer) in
       guard let context = context else { return }
       try onPeriodic(context, periodicValue, producer)
@@ -141,14 +141,14 @@ extension FiniteChannel {
   }
 
   func makeFiniteChannel<T>(executor: Executor, cancellationToken: CancellationToken?,
-                         onPeriodic: @escaping (PeriodicValue, (T) throws -> Void) throws -> Void) -> FiniteChannel<T, Fallible<FinalValue>> {
-    return self.makeFiniteProducer(executor: executor, cancellationToken: cancellationToken) { (periodicValue: PeriodicValue, producer: FiniteProducer<T, Fallible<FinalValue>>) -> Void in
+                         onPeriodic: @escaping (PeriodicValue, (T) throws -> Void) throws -> Void) -> FiniteChannel<T, Fallible<SuccessValue>> {
+    return self.makeFiniteProducer(executor: executor, cancellationToken: cancellationToken) { (periodicValue: PeriodicValue, producer: FiniteProducer<T, Fallible<SuccessValue>>) -> Void in
       try onPeriodic(periodicValue) { producer.send($0) }
     }
   }
 
   func makeFiniteChannel<T, U: ExecutionContext>(context: U, executor: Executor?, cancellationToken: CancellationToken?,
-                         onPeriodic: @escaping (U, PeriodicValue, (T) throws -> Void) throws -> Void) -> FiniteChannel<T, Fallible<FinalValue>> {
+                         onPeriodic: @escaping (U, PeriodicValue, (T) throws -> Void) throws -> Void) -> FiniteChannel<T, Fallible<SuccessValue>> {
     return self.makeFiniteProducer(context: context, executor: executor, cancellationToken: cancellationToken) {
       (context, periodicValue, producer) -> Void in
       try onPeriodic(context, periodicValue) { producer.send($0) }
@@ -158,7 +158,7 @@ extension FiniteChannel {
 
 public extension FiniteChannel {
   func mapPeriodic<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-                   transform: @escaping (U, PeriodicValue) throws -> T) -> FiniteChannel<T, Fallible<FinalValue>> {
+                   transform: @escaping (U, PeriodicValue) throws -> T) -> FiniteChannel<T, Fallible<SuccessValue>> {
     return self.makeFiniteChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
       (context: U, periodicValue: Channel.PeriodicValue, send: (T) throws -> Void) in
       let transformedValue = try transform(context, periodicValue)
@@ -167,7 +167,7 @@ public extension FiniteChannel {
   }
 
   func flatMapPeriodic<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-                       transform: @escaping (U, PeriodicValue) throws -> T?) -> FiniteChannel<T, Fallible<FinalValue>> {
+                       transform: @escaping (U, PeriodicValue) throws -> T?) -> FiniteChannel<T, Fallible<SuccessValue>> {
     return self.makeFiniteChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
       (context: U, periodicValue: Channel.PeriodicValue, send: (T) throws -> Void) in
       if let transformedValue = try transform(context, periodicValue) {
@@ -177,7 +177,7 @@ public extension FiniteChannel {
   }
 
   func flatMapPeriodic<S: Sequence, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-                       transform: @escaping (U, PeriodicValue) throws -> S) -> FiniteChannel<S.Iterator.Element, Fallible<FinalValue>> {
+                       transform: @escaping (U, PeriodicValue) throws -> S) -> FiniteChannel<S.Iterator.Element, Fallible<SuccessValue>> {
     return self.makeFiniteChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
       (context: U, periodicValue: Channel.PeriodicValue, send: (S.Iterator.Element) throws -> Void) in
       for transformedValue in try transform(context, periodicValue) {
@@ -189,8 +189,8 @@ public extension FiniteChannel {
 
 extension FiniteChannel where U : _Fallible {
   func makeFiniteProducer<T>(executor: Executor, cancellationToken: CancellationToken?,
-                          onPeriodic: @escaping (PeriodicValue, FiniteProducer<T, FinalValue>) throws -> Void) -> FiniteProducer<T, FinalValue> {
-    let producer = FiniteProducer<T, FinalValue>()
+                          onPeriodic: @escaping (PeriodicValue, FiniteProducer<T, SuccessValue>) throws -> Void) -> FiniteProducer<T, SuccessValue> {
+    let producer = FiniteProducer<T, SuccessValue>()
     let handler = self.makeHandler(executor: executor) { [weak producer] (value) in
       guard let producer = producer else { return }
       switch value {
@@ -216,8 +216,8 @@ extension FiniteChannel where U : _Fallible {
   }
 
   func makeFiniteProducer<T, U: ExecutionContext>(context: U, executor: Executor?, cancellationToken: CancellationToken?,
-                          onPeriodic: @escaping (U, PeriodicValue, FiniteProducer<T, FinalValue>) throws -> Void) -> FiniteProducer<T, FinalValue> {
-    let producer: FiniteProducer<T, FinalValue> = self.makeFiniteProducer(executor: executor ?? context.executor, cancellationToken: cancellationToken) {
+                          onPeriodic: @escaping (U, PeriodicValue, FiniteProducer<T, SuccessValue>) throws -> Void) -> FiniteProducer<T, SuccessValue> {
+    let producer: FiniteProducer<T, SuccessValue> = self.makeFiniteProducer(executor: executor ?? context.executor, cancellationToken: cancellationToken) {
       [weak context] (periodicValue, producer) in
       guard let context = context else { return }
       try onPeriodic(context, periodicValue, producer)
@@ -230,14 +230,14 @@ extension FiniteChannel where U : _Fallible {
   }
 
   func makeFiniteChannel<T>(executor: Executor, cancellationToken: CancellationToken?,
-                         onPeriodic: @escaping (PeriodicValue, (T) throws -> Void) throws -> Void) -> FiniteChannel<T, FinalValue> {
-    return self.makeFiniteProducer(executor: executor, cancellationToken: cancellationToken) { (periodicValue: PeriodicValue, producer: FiniteProducer<T, FinalValue>) -> Void in
+                         onPeriodic: @escaping (PeriodicValue, (T) throws -> Void) throws -> Void) -> FiniteChannel<T, SuccessValue> {
+    return self.makeFiniteProducer(executor: executor, cancellationToken: cancellationToken) { (periodicValue: PeriodicValue, producer: FiniteProducer<T, SuccessValue>) -> Void in
       try onPeriodic(periodicValue) { producer.send($0) }
     }
   }
 
   func makeFiniteChannel<T, U: ExecutionContext>(context: U, executor: Executor?, cancellationToken: CancellationToken?,
-                         onPeriodic: @escaping (U, PeriodicValue, (T) throws -> Void) throws -> Void) -> FiniteChannel<T, FinalValue> {
+                         onPeriodic: @escaping (U, PeriodicValue, (T) throws -> Void) throws -> Void) -> FiniteChannel<T, SuccessValue> {
     return self.makeFiniteProducer(context: context, executor: executor, cancellationToken: cancellationToken) {
       (context, periodicValue, producer) -> Void in
       try onPeriodic(context, periodicValue) { producer.send($0) }
@@ -246,8 +246,8 @@ extension FiniteChannel where U : _Fallible {
 }
 
 public extension FiniteChannel where U : _Fallible {
-  func mapPeriodic<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-                   transform: @escaping (U, PeriodicValue) throws -> T) -> FiniteChannel<T, FinalValue> {
+  func map<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
+           transform: @escaping (U, PeriodicValue) throws -> T) -> FiniteChannel<T, SuccessValue> {
     return self.makeFiniteChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
       (context: U, periodicValue: Channel.PeriodicValue, send: (T) throws -> Void) in
       let transformedValue = try transform(context, periodicValue)
@@ -255,8 +255,8 @@ public extension FiniteChannel where U : _Fallible {
     }
   }
 
-  func flatMapPeriodic<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-                       transform: @escaping (U, PeriodicValue) throws -> T?) -> FiniteChannel<T, FinalValue> {
+  func flatMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
+               transform: @escaping (U, PeriodicValue) throws -> T?) -> FiniteChannel<T, SuccessValue> {
     return self.makeFiniteChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
       (context: U, periodicValue: Channel.PeriodicValue, send: (T) throws -> Void) in
       if let transformedValue = try transform(context, periodicValue) {
@@ -265,8 +265,8 @@ public extension FiniteChannel where U : _Fallible {
     }
   }
 
-  func flatMapPeriodic<S: Sequence, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-                       transform: @escaping (U, PeriodicValue) throws -> S) -> FiniteChannel<S.Iterator.Element, FinalValue> {
+  func flatMap<S: Sequence, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
+               transform: @escaping (U, PeriodicValue) throws -> S) -> FiniteChannel<S.Iterator.Element, SuccessValue> {
     return self.makeFiniteChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
       (context: U, periodicValue: Channel.PeriodicValue, send: (S.Iterator.Element) throws -> Void) in
       for transformedValue in try transform(context, periodicValue) {

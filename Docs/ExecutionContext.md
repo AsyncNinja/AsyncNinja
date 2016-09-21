@@ -31,10 +31,10 @@ class WebService {
     let internalQueue: DispatchQueue // queue to modify internal state on
     ...    
     func signInUser(email: String, password: String)
-            -> FallibleFuture<User> {
+            -> Future<User> {
         let request = self.makeSignInRequest(email: email, password: password)
         return self.urlSession.data(with: request)
-            .mapSuccess(executor: .queue(self.internalQueue)) { (data, response) -> User in
+            .map(executor: .queue(self.internalQueue)) { (data, response) -> User in
                 let user = try self.makeUser(data: data, response: response)
                 self.register(user: user) // changes internal state
                 return user
@@ -42,7 +42,7 @@ class WebService {
     }
 }
 ```
-This is a place where hidden memory issues may appear. Closure passed to `mapSuccess` retains `self` that may lead to retain cycle. Adding bunch of `weak`s will help but it will increase complexity of code. Let's conform `WebService` to `ExecutionContext` and see what happens.
+This is a place where hidden memory issues may appear. Closure passed to `map` retains `self` that may lead to retain cycle. Adding bunch of `weak`s will help but it will increase complexity of code. Let's conform `WebService` to `ExecutionContext` and see what happens.
 
 ```
 class WebService: ExecutionContext, ReleasePoolOwner {
@@ -51,10 +51,10 @@ class WebService: ExecutionContext, ReleasePoolOwner {
     let releasePool = ReleasePool()
     ...    
     func signInUser(email: String, password: String)
-            -> FallibleFuture<User> {
+            -> Future<User> {
         let request = self.makeSignInRequest(email: email, password: password)
         return self.urlSession.data(with: request)
-            .mapSuccess(context: self) { (self, dataAndResponse) -> User in
+            .map(context: self) { (self, dataAndResponse) -> User in
                 let (data, response) = dataAndResponse
                 let user = try self.makeUser(data: data, response: response)
                 self.register(user: user) // changes internal state
@@ -63,20 +63,20 @@ class WebService: ExecutionContext, ReleasePoolOwner {
     }
 }
 ```
-`self` passed as argument to closure in `mapSuccess`. `self` is not retained and execution depends on `WebService` lifetime, so you may not bother cancelling background operations on `WebService.deinit`.
+`self` passed as argument to closure in `map`. `self` is not retained and execution depends on `WebService` lifetime, so you may not bother cancelling background operations on `WebService.deinit`.
 
 ## Relation to Concurrency Primitives
 `Future`, `Channel` and `FiniteChannel` have contextual variants of all transformations. For example `Future` has both:
 
-* `func map<T>(executor: Executor, transform: @escaping (Value) throws -> T) -> FallibleFuture<T>` 
-*  `func map<T, U: ExecutionContext>(context: U, transform: @escaping (U, Value) throws -> T) -> FallibleFuture<T>`
+* `func map<T>(executor: Executor, transform: @escaping (Value) throws -> T) -> Future<T>` 
+*  `func map<T, U: ExecutionContext>(context: U, transform: @escaping (U, Value) throws -> T) -> Future<T>`
 
 It should help in making concurrency-aware active objects (actors and components of actors).
 
 There are also some methods that are implemented to work with context only:
 
-* `func onValue<U: ExecutionContext>(context: U, block: @escaping (U, Value) -> Void)`
-* `func onSuccess<U: ExecutionContext>(context: U, block: @escaping (U, Value.Success) -> Void)`
+* `func onComplete<U: ExecutionContext>(context: U, block: @escaping (U, Value) -> Void)`
+* `func onSuccess<U: ExecutionContext>(context: U, block: @escaping (U, Success) -> Void)`
 * `func onFailure<U: ExecutionContext>(context: U, block: @escaping (U, Error) -> Void)`
 
 As you might see these methods do not return any value. That means that they are made to change an internal state of `ExecutionContext`.
@@ -93,7 +93,7 @@ class NiceViewController : UIViewController {
     ...
     @IBAction func signIn(_ sender: Any?) {
         self.webService.signInUser(email: self.emailField.text ?? "", password: self.passwordField.text ?? "")
-            .onValue(context: self) { (self, fallibleUser) in
+            .onComplete(context: self) { (self, fallibleUser) in
                 fallibleUser.onSuccess { self.user = $0 }
                 fallibleUser.onFailure(self.present(error:))
             }
@@ -102,7 +102,7 @@ class NiceViewController : UIViewController {
 }
 ```
 **What did just happen?**
-On `signIn` web service will be requested for sign in. When resonse from web service arrived closure passed to `onValue` will be called to on `Executor` provided by `ExecutionContext`. So we have
+On `signIn` web service will be requested for sign in. When resonse from web service arrived closure passed to `onComplete` will be called to on `Executor` provided by `ExecutionContext`. So we have
 
 * clean code
 * no retain cycles

@@ -39,7 +39,7 @@ class ExecutionContextTests : XCTestCase {
   func testFailure() {
     var object : TestActor? = TestActor()
 
-    let halfOfFutureValue = future(value: "Hello")
+    let halfOfFutureValue = future(success: "Hello")
       .map(context: object!) { (object, value) -> String in
         assert(on: object.internalQueue)
         return "\(value) to"

@@ -30,21 +30,21 @@ final class ConstantFuture<T> : Future<T> {
     _value = value
   }
 
-  override func makeFinalHandler(executor: Executor,
-                                 block: @escaping (FinalValue) -> Void) -> FutureHandler<T>? {
+  override public func makeFinalHandler(executor: Executor,
+                                        block: @escaping (Fallible<SuccessValue>) -> Void) -> FinalHandler? {
     executor.execute { block(self._value) }
     return nil
   }
 }
 
-public func future<T>(value: T) -> Future<T> {
+public func future<T>(value: Fallible<T>) -> Future<T> {
   return ConstantFuture(value: value)
 }
 
-public func future<T>(success: T) -> FallibleFuture<T> {
+public func future<T>(success: T) -> Future<T> {
   return ConstantFuture(value: Fallible(success: success))
 }
 
-public func future<T>(failure: Error) -> FallibleFuture<T> {
+public func future<T>(failure: Error) -> Future<T> {
   return ConstantFuture(value: Fallible(failure: failure))
 }

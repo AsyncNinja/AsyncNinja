@@ -80,8 +80,8 @@
   }
 
   public extension URLSession {
-    private func dataFuture(context: ExecutionContext?, cancellationToken: CancellationToken?, makeTask: (@escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask) -> FallibleFuture<(Data?, URLResponse)> {
-      let promise = FalliblePromise<(Data?, URLResponse)>()
+    private func dataFuture(context: ExecutionContext?, cancellationToken: CancellationToken?, makeTask: (@escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask) -> Future<(Data?, URLResponse)> {
+      let promise = Promise<(Data?, URLResponse)>()
       let task = makeTask { [weak promise] (data, response, error) in
         guard let promise = promise else { return }
         guard let error = error else { promise.succeed(with: (data, response!)); return }
@@ -107,25 +107,25 @@
       return promise
     }
 
-    func data(at url: URL, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> FallibleFuture<(Data?, URLResponse)> {
+    func data(at url: URL, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> Future<(Data?, URLResponse)> {
       return self.dataFuture(context: context, cancellationToken: cancellationToken) {
         self.dataTask(with: url, completionHandler: $0)
       }
     }
 
-    func data(with request: URLRequest, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> FallibleFuture<(Data?, URLResponse)> {
+    func data(with request: URLRequest, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> Future<(Data?, URLResponse)> {
       return self.dataFuture(context: context, cancellationToken: cancellationToken) {
         self.dataTask(with: request, completionHandler: $0)
       }
     }
 
-    func upload(with request: URLRequest, fromFile fileURL: URL, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> FallibleFuture<(Data?, URLResponse)> {
+    func upload(with request: URLRequest, fromFile fileURL: URL, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> Future<(Data?, URLResponse)> {
       return self.dataFuture(context: context, cancellationToken: cancellationToken) {
         self.uploadTask(with: request, fromFile: fileURL, completionHandler: $0)
       }
     }
 
-    func upload(with request: URLRequest, from bodyData: Data?, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> FallibleFuture<(Data?, URLResponse)> {
+    func upload(with request: URLRequest, from bodyData: Data?, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> Future<(Data?, URLResponse)> {
       return self.dataFuture(context: context, cancellationToken: cancellationToken) {
         self.uploadTask(with: request, from: bodyData, completionHandler: $0)
       }

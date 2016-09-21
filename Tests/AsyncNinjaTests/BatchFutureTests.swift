@@ -41,7 +41,7 @@ class BatchFutureTests : XCTestCase {
     let value: [Int] = (1...5)
       .map { value in future(after: 1.0 - Double(value) / 5.0, block: { value }) }
       .joined()
-      .wait()
+      .wait().success!
     XCTAssertEqual([1, 2, 3, 4, 5], Set(value))
   }
 
@@ -49,7 +49,7 @@ class BatchFutureTests : XCTestCase {
     let value: Int = (1...5)
       .map { value in future(after: Double(value) / 10.0) { value } }
       .reduce(initialResult: 5) { $0 + $1 }
-      .wait()
+      .wait().success!
     XCTAssertEqual(20, value)
   }
 
@@ -68,7 +68,7 @@ class BatchFutureTests : XCTestCase {
     let value = (1...5)
       .asyncMap(executor: .utility) { value in future(after: Double(value) / 10.0) { value } }
       .map { $0.reduce(5, +) }
-      .wait()
+      .wait().success!
     XCTAssertEqual(20, value)
   }
 
@@ -76,7 +76,7 @@ class BatchFutureTests : XCTestCase {
     let value = (1...5)
       .asyncMap(executor: .utility)  { $0 }
       .map { $0.reduce(5) { $0 + $1 } }
-      .wait()
+      .wait().success!
     XCTAssertEqual(20, value)
   }
 

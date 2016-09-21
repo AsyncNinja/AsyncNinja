@@ -12,14 +12,14 @@ Actor Model is a simple abstraction for concurrent computation. It provides a re
 *	import AsyncNinja
 *	introduce a class with it's own internal queue and conform it to `ExecutionContext`
 *	implement public methods that look like:
-``` public makeSomething(arg1: Arg1, arg2: Arg2) -> FallibleFuture<Something>```
+``` public makeSomething(arg1: Arg1, arg2: Arg2) -> Future<Something>```
 
 #### Example
 ```
 import AsyncNinja
 
 public class MyActor {
-	public func perform(request: SimpleRequest) -> FallibleFuture<SimpleResponse> {
+	public func perform(request: SimpleRequest) -> Future<SimpleResponse> {
 		return future(context: self) { try $0._perform(request: request) }
 	}
 	
@@ -49,7 +49,7 @@ class MyViewController : UIViewController {
 
 	@IBAction func doWork(_ sender: AnyObject?) {
 		self.myActor.perform(request: SimpleRequest())
-			.onFinal(context: self) { (value, self_) in
+			.onComplete(context: self) { (value, self_) in
 				value.onSuccess(self_.present(response:))
 				value.onFailure(self_.present(error:))
 			}

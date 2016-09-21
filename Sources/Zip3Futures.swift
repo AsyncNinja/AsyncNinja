@@ -34,61 +34,6 @@ public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: 
     sema.wait()
     defer { sema.signal() }
     
-    subvalueA = localSubvalueA
-    if let localSubvalueB = subvalueB, let localSubvalueC = subvalueC {
-      promise.complete(with: (localSubvalueA, localSubvalueB, localSubvalueC))
-    }
-  }
-
-  if let handlerA = handlerA {
-    promise.insertToReleasePool(handlerA)
-  }
-
-  let handlerB = futureB.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueB) in
-    guard let promise = promise else { return }
-    sema.wait()
-    defer { sema.signal() }
-    
-    subvalueB = localSubvalueB
-    if let localSubvalueA = subvalueA, let localSubvalueC = subvalueC {
-      promise.complete(with: (localSubvalueA, localSubvalueB, localSubvalueC))
-    }
-  }
-
-  if let handlerB = handlerB {
-    promise.insertToReleasePool(handlerB)
-  }
-
-  let handlerC = futureC.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueC) in
-    guard let promise = promise else { return }
-    sema.wait()
-    defer { sema.signal() }
-    
-    subvalueC = localSubvalueC
-    if let localSubvalueA = subvalueA, let localSubvalueB = subvalueB {
-      promise.complete(with: (localSubvalueA, localSubvalueB, localSubvalueC))
-    }
-  }
-  
-  if let handlerC = handlerC {
-    promise.insertToReleasePool(handlerC)
-  }
-
-  return promise
-}
-
-public func zip<A, B, C>(_ futureA: FallibleFuture<A>, _ futureB: FallibleFuture<B>, _ futureC: FallibleFuture<C>) -> FallibleFuture<(A, B, C)> {
-  let promise = FalliblePromise<(A, B, C)>()
-  let sema = DispatchSemaphore(value: 1)
-  var subvalueA: A? = nil
-  var subvalueB: B? = nil
-  var subvalueC: C? = nil
-  
-  let handlerA = futureA.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueA) in
-    guard let promise = promise else { return }
-    sema.wait()
-    defer { sema.signal() }
-    
     localSubvalueA.onFailure(promise.fail(with:))
     localSubvalueA.onSuccess { localSubvalueA in
       subvalueA = localSubvalueA

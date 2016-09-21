@@ -27,49 +27,6 @@ public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, 
   let sema = DispatchSemaphore(value: 1)
   var subvalueA: A? = nil
   var subvalueB: B? = nil
-
-  let handlerA = futureA.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueA) in
-    guard let promise = promise else { return }
-    sema.wait()
-    defer { sema.signal() }
-    
-    subvalueA = localSubvalueA
-    if let localSubvalueB = subvalueB {
-      promise.complete(with: (localSubvalueA, localSubvalueB))
-    }
-  }
-
-  if let handlerA = handlerA {
-    promise.insertToReleasePool(handlerA)
-  }
-
-  let handlerB = futureB.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueB) in
-    guard let promise = promise else { return }
-    sema.wait()
-    defer { sema.signal() }
-    
-    subvalueB = localSubvalueB
-    if let localSubvalueA = subvalueA {
-      promise.complete(with: (localSubvalueA, localSubvalueB))
-    }
-  }
-
-  if let handlerB = handlerB {
-    promise.insertToReleasePool(handlerB)
-  }
-  
-  return promise
-}
-
-public func zip<A, B>(_ futureA: Future<A>, _ valueB: B) -> Future<(A, B)> {
-  return futureA.mapFinal(executor: .immediate) { ($0, valueB) }
-}
-
-public func zip<A, B>(_ futureA: FallibleFuture<A>, _ futureB: FallibleFuture<B>) -> FalliblePromise<(A, B)> {
-  let promise = FalliblePromise<(A, B)>()
-  let sema = DispatchSemaphore(value: 1)
-  var subvalueA: A? = nil
-  var subvalueB: B? = nil
   
   let handlerA = futureA.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueA) in
     guard let promise = promise else { return }
@@ -102,48 +59,6 @@ public func zip<A, B>(_ futureA: FallibleFuture<A>, _ futureB: FallibleFuture<B>
       }
     }
   }
-  
-  if let handlerB = handlerB {
-    promise.insertToReleasePool(handlerB)
-  }
-
-  return promise
-}
-
-public func zip<A, B>(_ futureA: FallibleFuture<A>, _ futureB: Future<B>) -> FalliblePromise<(A, B)> {
-  let promise = FalliblePromise<(A, B)>()
-  let sema = DispatchSemaphore(value: 1)
-  var subvalueA: A? = nil
-  var subvalueB: B? = nil
-  
-  let handlerA = futureA.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueA) in
-    guard let promise = promise else { return }
-    sema.wait()
-    defer { sema.signal() }
-    
-    localSubvalueA.onFailure(promise.fail(with:))
-    localSubvalueA.onSuccess { localSubvalueA in
-      subvalueA = localSubvalueA
-      if let localSubvalueB = subvalueB {
-        promise.succeed(with: (localSubvalueA, localSubvalueB))
-      }
-    }
-  }
-
-  if let handlerA = handlerA {
-    promise.insertToReleasePool(handlerA)
-  }
-
-  let handlerB = futureB.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueB) in
-    guard let promise = promise else { return }
-    sema.wait()
-    defer { sema.signal() }
-    
-    subvalueB = localSubvalueB
-    if let localSubvalueA = subvalueA {
-      promise.succeed(with: (localSubvalueA, localSubvalueB))
-    }
-  }
 
   if let handlerB = handlerB {
     promise.insertToReleasePool(handlerB)
@@ -152,6 +67,6 @@ public func zip<A, B>(_ futureA: FallibleFuture<A>, _ futureB: Future<B>) -> Fal
   return promise
 }
 
-public func zip<A, B>(_ futureA: FallibleFuture<A>, _ valueB: B) -> FallibleFuture<(A, B)> {
-  return futureA.mapSuccess(executor: .immediate) { ($0, valueB) }
+public func zip<A, B>(_ futureA: Future<A>, _ valueB: B) -> Future<(A, B)> {
+  return futureA.map(executor: .immediate) { ($0, valueB) }
 }

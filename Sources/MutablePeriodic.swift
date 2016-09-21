@@ -23,6 +23,7 @@
 import Dispatch
 
 public protocol MutablePeriodic : Periodic {
+  init()
   func send(_ periodic: PeriodicValue)
   func send<S: Sequence>(_ periodics: S) where S.Iterator.Element == PeriodicValue
 }

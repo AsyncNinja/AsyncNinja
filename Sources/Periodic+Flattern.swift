@@ -23,7 +23,7 @@
 import Dispatch
 
 public extension Periodic where PeriodicValue : Finite {
-  final func flattern(isOrdered: Bool = false) -> Channel<PeriodicValue.FinalValue> {
+  final func flatten(isOrdered: Bool = false) -> Channel<Fallible<PeriodicValue.SuccessValue>> {
     return self.makeProducer(executor: .immediate) { (periodicValue, producer) in
       let handler = periodicValue.makeFinalHandler(executor: .immediate) { [weak producer] (finalValue) in
         guard let producer = producer else { return }
