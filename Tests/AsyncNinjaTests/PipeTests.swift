@@ -21,18 +21,47 @@
 //
 
 import XCTest
-
-#if !os(macOS)
-public func allTests() -> [XCTestCaseEntry] {
-    return [
-		testCase(BatchFutureTests.allTests),
-		testCase(ExecutionContextTests.allTests),
-		testCase(ExecutorTests.allTests),
-		testCase(FallibleTests.allTests),
-		testCase(FutureTests.allTests),
-		testCase(PipeTests.allTests),
-		testCase(ReleasePoolTests.allTests),
-		testCase(TimerChannelTests.allTests),
-    ]
-}
+import Dispatch
+@testable import AsyncNinja
+#if os(Linux)
+  import Glibc
 #endif
+
+class PipeTests : XCTestCase {
+  static let allTests = [
+    ("testSimple", testSimple),
+    ]
+  
+  func testSimple() {
+    let queueA = DispatchQueue(label: "queueA")
+    let queueB = DispatchQueue(label: "queueB")
+    
+    self.measure {
+      let pipesPair: PipesPair<Int, String> = makePipesPair()
+      let (pipeInput, pipeOutput) = pipesPair
+      queueA.async {
+        pipeInput.push(periodic: 1)
+        pipeInput.push(periodic: 2)
+        pipeInput.push(periodic: 3)
+        pipeInput.push(periodic: 4)
+        pipeInput.push(success: "bye")
+      }
+      
+      let (ints, final) = future(executor: .queue(queueB)) { () -> ([Int], Fallible<String>) in
+        var ints = [Int]()
+        while true {
+          switch pipeOutput.pop() {
+          case let .periodic(periodic):
+            ints.append(periodic)
+          case let .final(final):
+            return (ints, final)
+          }
+        }
+        }
+        .wait().success!
+      
+      XCTAssertEqual(ints, [1, 2, 3, 4])
+      XCTAssertEqual(final.success, "bye")
+    }
+  }
+}
