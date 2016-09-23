@@ -22,14 +22,14 @@
 
 import Dispatch
 
-final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContainer, MutableFinite, MutablePeriodic {
-  typealias ThreadSafeItem = FiniteProducerState<PeriodicValue, SuccessValue>
-  typealias RegularState = RegularFiniteProducerState<PeriodicValue, SuccessValue>
-  typealias FinalState = FinalFiniteProducerState<PeriodicValue, SuccessValue>
+final public class FiniteProducer<PeriodicValue, FinalValue> : FiniteChannel<PeriodicValue, FinalValue>, ThreadSafeContainer, MutableFinite, MutablePeriodic {
+  typealias ThreadSafeItem = FiniteProducerState<PeriodicValue, FinalValue>
+  typealias RegularState = RegularFiniteProducerState<PeriodicValue, FinalValue>
+  typealias FinalState = FinalFiniteProducerState<PeriodicValue, FinalValue>
   var head: ThreadSafeItem?
   private let releasePool = ReleasePool()
 
-  override public var finalValue: Fallible<SuccessValue>? { return (self.head as? FinalState)?.final }
+  override public var finalValue: Fallible<FinalValue>? { return (self.head as? FinalState)?.final }
 
   override public init() { }
 
@@ -88,7 +88,7 @@ final public class FiniteProducer<T, U> : FiniteChannel<T, U>, ThreadSafeContain
   }
   
   @discardableResult
-  public func tryComplete(with final: Fallible<SuccessValue>) -> Bool {
+  public func tryComplete(with final: Fallible<FinalValue>) -> Bool {
     let (oldHead, newHead) = self.updateHead {
       switch $0 {
       case .none:

@@ -22,8 +22,7 @@
 
 import Dispatch
 
-public class Channel<T> : Periodic {
-  public typealias PeriodicValue = T
+public class Channel<PeriodicValue> : Periodic {
   public typealias Value = PeriodicValue
   public typealias Handler = ChannelHandler<Value>
   public typealias PeriodicHandler = Handler

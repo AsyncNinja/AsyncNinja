@@ -23,9 +23,7 @@
 import Dispatch
 
 /// Fallible is an implementation of validation monad. May contain either success value or falilure in form of `Error`.
-public enum Fallible<T> : _Fallible {
-  public typealias Success = T
-
+public enum Fallible<Success> : _Fallible {
   case success(Success)
   case failure(Error)
 

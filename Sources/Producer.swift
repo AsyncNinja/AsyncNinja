@@ -22,8 +22,8 @@
 
 import Dispatch
 
-final public class Producer<T> : Channel<T>, ThreadSafeContainer, MutablePeriodic {
-  typealias ThreadSafeItem = SubscribedProducerState<T>
+final public class Producer<PeriodicValue> : Channel<PeriodicValue>, ThreadSafeContainer, MutablePeriodic {
+  typealias ThreadSafeItem = SubscribedProducerState<PeriodicValue>
   var head: ThreadSafeItem?
   private let releasePool = ReleasePool()
 
@@ -40,7 +40,7 @@ final public class Producer<T> : Channel<T>, ThreadSafeContainer, MutablePeriodi
 
   /// **internal use only**
   override public func makePeriodicHandler(executor: Executor,
-                                             block: @escaping (T) -> Void) -> ChannelHandler<T>? {
+                                             block: @escaping (PeriodicValue) -> Void) -> ChannelHandler<PeriodicValue>? {
     let handler = PeriodicHandler(executor: executor, block: block)
     self.updateHead {
       .replace(ThreadSafeItem(handler: handler, next: $0))

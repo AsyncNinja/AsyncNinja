@@ -23,8 +23,8 @@
 import Dispatch
 
 /// Promise that may be manually completed by owner.
-final public class Promise<T> : Future<T>, MutableFinite, ThreadSafeContainer {
-  typealias ThreadSafeItem = AbstractPromiseState<T>
+final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite, ThreadSafeContainer {
+  typealias ThreadSafeItem = AbstractPromiseState<FinalValue>
   var head: ThreadSafeItem?
   private let releasePool = ReleasePool()
   override public var finalValue: Fallible<FinalValue>? { return (self.head as? CompletedPromiseState)?.value }

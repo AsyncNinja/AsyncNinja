@@ -22,7 +22,7 @@
 
 import Dispatch
 
-final class ConstantFuture<T> : Future<T> {
+final class ConstantFuture<FinalValue> : Future<FinalValue> {
   private var _value: Value
   override public var finalValue: Value? { return _value }
 

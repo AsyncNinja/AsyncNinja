@@ -23,8 +23,7 @@
 import Dispatch
 
 /// Future is a proxy of value that will be available at some point in the future.
-public class Future<T> : Finite {
-  public typealias FinalValue = T
+public class Future<FinalValue> : Finite {
   public typealias Value = Fallible<FinalValue>
   public typealias Handler = FutureHandler<FinalValue>
   public typealias FinalHandler = Handler
@@ -70,9 +69,9 @@ public extension Future {
   }
 }
 
-public extension Future where T : Finite {
+public extension Future where FinalValue : Finite {
   /// flattens combination of two nested unfaillable futures to a signle unfallible one
-  final func flatten() -> Future<T.FinalValue> {
+  final func flatten() -> Future<FinalValue.FinalValue> {
     let promise = Promise<FinalValue.FinalValue>()
 
     let handler = self.makeFinalHandler(executor: .immediate) { [weak promise] (future) in
