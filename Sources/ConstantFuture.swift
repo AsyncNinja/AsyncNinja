@@ -31,7 +31,7 @@ final class ConstantFuture<T> : Future<T> {
   }
 
   override public func makeFinalHandler(executor: Executor,
-                                        block: @escaping (Fallible<SuccessValue>) -> Void) -> FinalHandler? {
+                                        block: @escaping (Fallible<FinalValue>) -> Void) -> FinalHandler? {
     executor.execute { block(self._value) }
     return nil
   }

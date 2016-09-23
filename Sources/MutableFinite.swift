@@ -24,10 +24,11 @@ import Dispatch
 
 public protocol MutableFinite : Finite {
   init()
+
   /// Completes promise with value and returns true.
   /// Returns false if promise was completed before.
   @discardableResult
-  func tryComplete(with final: Fallible<SuccessValue>) -> Bool
+  func tryComplete(with final: Fallible<FinalValue>) -> Bool
 
   func insertToReleasePool(_ releasable: Releasable)
 }
@@ -36,7 +37,7 @@ public extension MutableFinite {
   /// Completes promise when specified future completes.
   /// `self` will retain specified future until it`s completion
   @discardableResult
-  final public func complete(with future: Future<SuccessValue>) {
+  func complete(with future: Future<FinalValue>) {
     let handler = future.makeFinalHandler(executor: .immediate) { [weak self] in
       self?.complete(with: $0)
     }
@@ -45,16 +46,16 @@ public extension MutableFinite {
     }
   }
 
-  func complete(with final: Fallible<SuccessValue>) {
+  func complete(with final: Fallible<FinalValue>) {
     self.tryComplete(with: final)
   }
 
   @discardableResult
-  func trySucceed(with success: SuccessValue) -> Bool {
+  func trySucceed(with success: FinalValue) -> Bool {
     return self.tryComplete(with: Fallible(success: success))
   }
 
-  func succeed(with success: SuccessValue) {
+  func succeed(with success: FinalValue) {
     self.complete(with: Fallible(success: success))
   }
 

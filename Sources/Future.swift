@@ -24,12 +24,12 @@ import Dispatch
 
 /// Future is a proxy of value that will be available at some point in the future.
 public class Future<T> : Finite {
-  public typealias SuccessValue = T
-  public typealias Value = Fallible<SuccessValue>
-  public typealias Handler = FutureHandler<SuccessValue>
+  public typealias FinalValue = T
+  public typealias Value = Fallible<FinalValue>
+  public typealias Handler = FutureHandler<FinalValue>
   public typealias FinalHandler = Handler
 
-  public var finalValue: Fallible<SuccessValue>? {
+  public var finalValue: Fallible<FinalValue>? {
     /* abstract */
     fatalError()
   }
@@ -42,7 +42,7 @@ public class Future<T> : Finite {
 
   /// **Internal use only**.
   public func makeFinalHandler(executor: Executor,
-                               block: @escaping (Fallible<SuccessValue>) -> Void) -> FinalHandler? {
+                               block: @escaping (Fallible<FinalValue>) -> Void) -> FinalHandler? {
     /* abstract */
     fatalError()
   }
@@ -50,14 +50,14 @@ public class Future<T> : Finite {
 
 public extension Future {
   final func map<T>(executor: Executor = .primary,
-                 transform: @escaping (SuccessValue) throws -> T) -> Future<T> {
+                 transform: @escaping (FinalValue) throws -> T) -> Future<T> {
     // Test: FutureTests.testMapFinalToFallibleFinal_Success
     // Test: FutureTests.testMapFinalToFallibleFinal_Failure
     return self.mapSuccess(executor: executor, transform: transform)
   }
 
   final func map<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-                 transform: @escaping (U, SuccessValue) throws -> T) -> Future<T> {
+                 transform: @escaping (U, FinalValue) throws -> T) -> Future<T> {
     // Test: FutureTests.testMapContextualFinalToFinal_Success_ContextAlive
     // Test: FutureTests.testMapContextualFinalToFinal_Success_ContextDead
     // Test: FutureTests.testMapContextualFinalToFinal_Failure_ContextAlive
@@ -65,19 +65,19 @@ public extension Future {
     return self.mapSuccess(context: context, executor: executor, transform: transform)
   }
 
-  func delayed(timeout: Double) -> Future<SuccessValue> {
+  func delayed(timeout: Double) -> Future<FinalValue> {
     return self.delayedFinal(timeout: timeout)
   }
 }
 
 public extension Future where T : Finite {
   /// flattens combination of two nested unfaillable futures to a signle unfallible one
-  final func flatten() -> Future<SuccessValue.SuccessValue> {
-    let promise = Promise<SuccessValue.SuccessValue>()
+  final func flatten() -> Future<T.FinalValue> {
+    let promise = Promise<FinalValue.FinalValue>()
 
     let handler = self.makeFinalHandler(executor: .immediate) { [weak promise] (future) in
       guard let promise = promise else { return }
-      let handler = (future.success as? Future<SuccessValue.SuccessValue>)?
+      let handler = (future.success as? Future<FinalValue.FinalValue>)?
         .makeFinalHandler(executor: .immediate) { [weak promise] (final) -> Void in
           promise?.complete(with: final)
       }

@@ -205,3 +205,17 @@ public extension Periodic {
     }
   }
 }
+
+public extension Periodic where PeriodicValue : Finite {
+  final func flatten(isOrdered: Bool = false) -> Channel<Fallible<PeriodicValue.FinalValue>> {
+    return self.makeProducer(executor: .immediate) { (periodicValue, producer) in
+      let handler = periodicValue.makeFinalHandler(executor: .immediate) { [weak producer] (finalValue) in
+        guard let producer = producer else { return }
+        producer.send(finalValue)
+      }
+      if let handler = handler {
+        producer.insertToReleasePool(handler)
+      }
+    }
+  }
+}

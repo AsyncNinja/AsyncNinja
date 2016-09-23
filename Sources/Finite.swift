@@ -24,66 +24,140 @@ import Dispatch
 
 public protocol Finite : class {
   associatedtype Value
-  associatedtype SuccessValue
+  associatedtype FinalValue
   associatedtype FinalHandler : AnyObject
-//  typealias SuccessValue = Fallible<SuccessValue>
 
-  var isComplete: Bool { get }
-  var finalValue: Fallible<SuccessValue>? { get }
+  var finalValue: Fallible<FinalValue>? { get }
 
   /// **internal use only**
   func makeFinalHandler(executor: Executor,
-                        block: @escaping (Fallible<SuccessValue>) -> Void) -> FinalHandler?
+                        block: @escaping (Fallible<FinalValue>) -> Void) -> FinalHandler?
 }
 
 public extension Finite {
   var isComplete: Bool { return nil != self.finalValue }
+  var success: FinalValue? { return self.finalValue?.success }
+  var failure: Error? { return self.finalValue?.failure }
 }
 
-/// Each of these methods transform one future into another.
-///
-/// Returned future will own self until it`s completion.
-/// Use this method only for **pure** transformations (not changing shared state).
-/// Use methods map(context:executor:transform:) for state changing transformations.
 public extension Finite {
-
   /// Transforms Finite<TypeA> => Future<TypeB>
-  func mapCompletion<T>(executor: Executor = .primary,
-                transform: @escaping (Fallible<SuccessValue>) throws -> T) -> Future<T> {
-    let promise = Promise<T>()
-    let handler = self.makeFinalHandler(executor: executor) { [weak promise] (final) -> Void in
-      guard let promise = promise else { return }
-      promise.complete(with: fallible { try transform(final) } )
+  ///
+  /// This method is suitable for **pure**ish transformations (not changing shared state).
+  /// Use method mapCompletion(context:executor:transform:) for state changing transformations.
+  func mapCompletion<TransformedValue>(executor: Executor = .primary,
+                     transform: @escaping (Fallible<FinalValue>) throws -> TransformedValue) -> Future<TransformedValue> {
+    let promise = Promise<TransformedValue>()
+    let handler = self.makeFinalHandler(executor: executor) {
+      [weak promise] (value) -> Void in
+      guard nil != promise else { return }
+      let transformedValue = fallible { try transform(value) }
+      promise?.complete(with: transformedValue )
     }
     if let handler = handler {
       promise.insertToReleasePool(handler)
     }
     return promise
   }
-}
 
-public extension Finite {
-  func mapCompletion<U: ExecutionContext, V>(context: U, executor: Executor? = nil,
-                transform: @escaping (U, Fallible<SuccessValue>) throws -> V) -> Future<V> {
-    return self.mapCompletion(executor: executor ?? context.executor) { [weak context] (final) -> V in
-      guard let context = context
-        else { throw ConcurrencyError.contextDeallocated }
-      return try transform(context, final)
+  /// Transforms Finite<TypeA> => Future<TypeB>
+  ///
+  /// This is the same as mapCompletion(executor:transform:) but does not perform transformation if this future fails.
+  func mapSuccess<TransformedValue>(executor: Executor = .primary,
+                         transform: @escaping (FinalValue) throws -> TransformedValue) -> Future<TransformedValue> {
+    return self.mapCompletion(executor: executor) {
+      (value) -> TransformedValue in
+      let transformedValue = try value.liftSuccess()
+      return try transform(transformedValue)
     }
   }
 
+  /// Recovers failure of this future if there is one.
+  func recover(executor: Executor = .primary,
+               transform: @escaping (Error) throws -> FinalValue) -> Future<FinalValue> {
+    return self.mapCompletion(executor: executor) {
+      (value) -> FinalValue in
+      if let failure = value.failure { return try transform(failure) }
+      if let success = value.success { return success }
+      fatalError()
+    }
+  }
+}
+
+public extension Finite {
+  /// Transforms Finite<TypeA> => Future<TypeB>
+  ///
+  /// This method is suitable for impure transformations (changing state of context).
+  /// Use method mapCompletion(context:transform:) for pure -ish transformations.
+  func mapCompletion<TransformedValue, U: ExecutionContext>(context: U, executor: Executor? = nil,
+                     transform: @escaping (U, Fallible<FinalValue>) throws -> TransformedValue) -> Future<TransformedValue> {
+    return self.mapCompletion(executor: executor ?? context.executor) {
+      [weak context] (value) -> TransformedValue in
+      guard let context = context else { throw ConcurrencyError.contextDeallocated }
+      return try transform(context, value)
+    }
+  }
+
+  /// Transforms Finite<TypeA> => Future<TypeB>
+  ///
+  /// This is the same as mapCompletion(context:executor:transform:) but does not perform transformation if this future fails.
+  func mapSuccess<TransformedValue, U: ExecutionContext>(context: U, executor: Executor? = nil,
+                  transform: @escaping (U, FinalValue) throws -> TransformedValue) -> Future<TransformedValue> {
+    return self.mapCompletion(context: context, executor: executor) {
+      (context, value) -> TransformedValue in
+      let success = try value.liftSuccess()
+      return try transform(context, success)
+    }
+  }
+
+  /// Recovers failure of this future if there is one with contextual transformer.
+  func recover<U: ExecutionContext>(context: U, executor: Executor? = nil,
+               transform: @escaping (U, Error) throws -> FinalValue) -> Future<FinalValue> {
+    return self.mapCompletion(context: context, executor: executor) {
+      (context, value) -> FinalValue in
+      if let failure = value.failure { return try transform(context, failure) }
+      if let success = value.success { return success }
+      fatalError()
+    }
+  }
+}
+
+public extension Finite {
+  /// Performs block when final value or failure becomes available.
+  ///
+  /// This method is suitable for applying final value of future to context.
   func onComplete<U: ExecutionContext>(context: U, executor: Executor? = nil,
-               block: @escaping (U, Fallible<SuccessValue>) -> Void) {
+               block: @escaping (U, Fallible<FinalValue>) -> Void) {
     // Test: FutureTests.testOnCompleteContextual_ContextAlive
     // Test: FutureTests.testOnCompleteContextual_ContextDead
-    let handler = self.makeFinalHandler(executor: executor ?? context.executor) { [weak context] (final) in
-      guard let context = context
-        else { return }
+    let handler = self.makeFinalHandler(executor: executor ?? context.executor) {
+      [weak context] (final) in
+      guard let context = context else { return }
       block(context, final)
     }
 
     if let handler = handler {
       context.releaseOnDeinit(handler)
+    }
+  }
+
+  /// Performs block when final value becomes available.
+  func onSuccess<U: ExecutionContext>(context: U, executor: Executor? = nil,
+                 block: @escaping (U, FinalValue) -> Void) {
+    self.onComplete(context: context, executor: executor) {
+      (context, value) in
+      guard let success = value.success else { return }
+      block(context, success)
+    }
+  }
+
+  /// Performs block when failure becomes available.
+  func onFailure<U: ExecutionContext>(context: U, executor: Executor? = nil,
+                 block: @escaping (U, Error) -> Void) {
+    self.onComplete(context: context, executor: executor) {
+      (context, value) in
+      guard let failure = value.failure else { return }
+      block(context, failure)
     }
   }
 }
@@ -92,9 +166,9 @@ public extension Finite {
 /// Using this method is **strongly** discouraged. Calling it on the same serial queue
 /// as any code performed on the same queue this future depends on will cause deadlock.
 public extension Finite {
-  func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Fallible<SuccessValue>? {
+  func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Fallible<FinalValue>? {
     let sema = DispatchSemaphore(value: 0)
-    var result: Fallible<SuccessValue>? = nil
+    var result: Fallible<FinalValue>? = nil
 
     var handler = self.makeFinalHandler(executor: .immediate) {
       result = $0
@@ -103,30 +177,29 @@ public extension Finite {
     defer { handler = nil }
 
     switch waitingBlock(sema) {
-    case .success:
-      return result
-    case .timedOut:
-      return nil
+    case .success: return result
+    case .timedOut: return nil
     }
   }
 
-  func wait() -> Fallible<SuccessValue> {
+  func wait() -> Fallible<FinalValue> {
     return self.wait(waitingBlock: { $0.wait(); return .success })!
   }
 
-  func wait(timeout: DispatchTime) -> Fallible<SuccessValue>? {
+  func wait(timeout: DispatchTime) -> Fallible<FinalValue>? {
     return self.wait(waitingBlock: { $0.wait(timeout: timeout) })
   }
 
-  func wait(wallTimeout: DispatchWallTime) -> Fallible<SuccessValue>? {
+  func wait(wallTimeout: DispatchWallTime) -> Fallible<FinalValue>? {
     return self.wait(waitingBlock: { $0.wait(wallTimeout: wallTimeout) })
   }
 }
 
 public extension Finite {
-  func delayedFinal(timeout: Double) -> Future<SuccessValue> {
-    let promise = Promise<SuccessValue>()
-    let handler = self.makeFinalHandler(executor: .immediate) { [weak promise] (value) in
+  func delayedFinal(timeout: Double) -> Future<FinalValue> {
+    let promise = Promise<FinalValue>()
+    let handler = self.makeFinalHandler(executor: .immediate) {
+      [weak promise] (value) in
       guard let promise = promise else { return }
       Executor.primary.execute(after: timeout) { [weak promise] in
         guard let promise = promise else { return }
@@ -138,60 +211,5 @@ public extension Finite {
     }
 
     return promise
-  }
-}
-
-public extension Finite {
-  public var success: SuccessValue? { return self.finalValue?.success }
-  public var failure: Error? { return self.finalValue?.failure }
-
-  final public func mapSuccess<T>(executor: Executor = .primary,
-                               transform: @escaping (SuccessValue) throws -> T) -> Future<T> {
-    return self.mapCompletion(executor: executor) { (value) -> T in
-      let success = try value.liftSuccess()
-      return try transform(success)
-    }
-  }
-
-  final public func mapSuccess<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-                               transform: @escaping (U, SuccessValue) throws -> T) -> Future<T> {
-    return self.mapCompletion(context: context, executor: executor) { (context, value) -> T in
-      let success = try value.liftSuccess()
-      return try transform(context, success)
-    }
-  }
-
-  final public func onSuccess<U: ExecutionContext>(context: U, executor: Executor? = nil,
-                              block: @escaping (U, SuccessValue) -> Void) {
-    self.onComplete(context: context, executor: executor) { (context, value) in
-      guard let success = value.success else { return }
-      block(context, success)
-    }
-  }
-
-  final public func recover(executor: Executor = .primary,
-                               transform: @escaping (Error) throws -> SuccessValue) -> Future<SuccessValue> {
-    return self.mapCompletion(executor: executor) { (value) -> SuccessValue in
-      if let failure = value.failure { return try transform(failure) }
-      if let success = value.success { return success }
-      fatalError()
-    }
-  }
-
-  final public func recover<U: ExecutionContext>(context: U, executor: Executor? = nil,
-                               transform: @escaping (U, Error) throws -> SuccessValue) -> Future<SuccessValue> {
-    return self.mapCompletion(context: context, executor: executor) { (context, value) -> SuccessValue in
-      if let failure = value.failure { return try transform(context, failure) }
-      if let success = value.success { return success }
-      fatalError()
-    }
-  }
-
-  final public func onFailure<U: ExecutionContext>(context: U, executor: Executor? = nil,
-                              block: @escaping (U, Error) -> Void) {
-    self.onComplete(context: context, executor: executor) { (context, value) in
-      guard let failure = value.failure else { return }
-      block(context, failure)
-    }
   }
 }

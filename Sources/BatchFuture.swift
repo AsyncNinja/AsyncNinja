@@ -24,15 +24,15 @@ import Dispatch
 
 /// Single failure fails them all
 public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : Finite {
-  fileprivate typealias SuccessValue = Self.Iterator.Element.SuccessValue
+  fileprivate typealias FinalValue = Self.Iterator.Element.FinalValue
 
   /// joins an array of futures to a future array
-  func joined() -> Future<[SuccessValue]> {
-    return self.asyncMap(executor: .immediate) { $0 as! Future<SuccessValue> }
+  func joined() -> Future<[FinalValue]> {
+    return self.asyncMap(executor: .immediate) { $0 as! Future<FinalValue> }
   }
 
   ///
-  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, SuccessValue) throws -> Result) -> Future<Result> {
+  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, FinalValue) throws -> Result) -> Future<Result> {
     return self.joined().map(executor: executor) {
       try $0.reduce(initialResult, nextPartialResult)
     }

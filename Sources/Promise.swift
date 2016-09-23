@@ -27,7 +27,7 @@ final public class Promise<T> : Future<T>, MutableFinite, ThreadSafeContainer {
   typealias ThreadSafeItem = AbstractPromiseState<T>
   var head: ThreadSafeItem?
   private let releasePool = ReleasePool()
-  override public var finalValue: Fallible<SuccessValue>? { return (self.head as? CompletedPromiseState)?.value }
+  override public var finalValue: Fallible<FinalValue>? { return (self.head as? CompletedPromiseState)?.value }
 
   override public init() { }
 
@@ -42,14 +42,14 @@ final public class Promise<T> : Future<T>, MutableFinite, ThreadSafeContainer {
 
   /// **internal use only**
   override public func makeFinalHandler(executor: Executor,
-                                        block: @escaping (Fallible<SuccessValue>) -> Void) -> FinalHandler? {
+                                        block: @escaping (Fallible<FinalValue>) -> Void) -> FinalHandler? {
     let handler = Handler(executor: executor, block: block, owner: self)
     self.updateHead {
       switch $0 {
-      case let completedState as CompletedPromiseState<SuccessValue>:
+      case let completedState as CompletedPromiseState<FinalValue>:
         handler.handle(completedState.value)
         return .keep
-      case let incompleteState as SubscribedPromiseState<SuccessValue>:
+      case let incompleteState as SubscribedPromiseState<FinalValue>:
         return .replace(SubscribedPromiseState(handler: handler, next: incompleteState))
       case .none:
         return .replace(SubscribedPromiseState(handler: handler, next: nil))
@@ -70,7 +70,7 @@ final public class Promise<T> : Future<T>, MutableFinite, ThreadSafeContainer {
     guard didComplete else { return false }
     
     var nextItem = oldHead
-    while let currentItem = nextItem as? SubscribedPromiseState<SuccessValue> {
+    while let currentItem = nextItem as? SubscribedPromiseState<FinalValue> {
       currentItem.handler?.handle(final)
       nextItem = currentItem.next
     }
