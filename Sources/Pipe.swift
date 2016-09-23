@@ -59,7 +59,7 @@ class Pipe<Periodic, Final> {
 
 public enum PipeValue<Periodic, Final> {
   case periodic(Periodic)
-  case final(Fallible<Final>)
+  case final(Final)
 }
 
 public class PipeInput<Periodic, Final> {
@@ -81,13 +81,20 @@ public class PipeInput<Periodic, Final> {
   }
   
   @discardableResult
-  public func push(success: Final) -> Bool {
-    return self.push(.final(Fallible(success: success)))
+  public func push(final: Final) -> Bool {
+    return self.push(.final(final))
   }
-  
+}
+
+public extension PipeInput where Final : _Fallible {
+  @discardableResult
+  public func push(success: Final.Success) -> Bool {
+    return self.push(final: Final(success: success))
+  }
+
   @discardableResult
   public func push(failure: Error) -> Bool {
-    return self.push(.final(Fallible(failure: failure)))
+    return self.push(.final(Final(failure: failure)))
   }
 }
 

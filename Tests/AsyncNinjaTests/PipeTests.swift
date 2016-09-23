@@ -44,10 +44,10 @@ class PipeTests : XCTestCase {
         pipeInput.push(periodic: 2)
         pipeInput.push(periodic: 3)
         pipeInput.push(periodic: 4)
-        pipeInput.push(success: "bye")
+        pipeInput.push(final: "bye")
       }
       
-      let (ints, final) = future(executor: .queue(queueB)) { () -> ([Int], Fallible<String>) in
+      let (ints, final) = future(executor: .queue(queueB)) { () -> ([Int], String) in
         var ints = [Int]()
         while true {
           switch pipeOutput.pop() {
@@ -61,7 +61,7 @@ class PipeTests : XCTestCase {
         .wait().success!
       
       XCTAssertEqual(ints, [1, 2, 3, 4])
-      XCTAssertEqual(final.success, "bye")
+      XCTAssertEqual(final, "bye")
     }
   }
 }
