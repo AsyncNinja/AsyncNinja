@@ -34,7 +34,7 @@ This framework is an implementation of following principles:
 
 ##    Documentation
 *    [`Future`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Future.md)
-*    [`InfiniteChannel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Channel.md)
+*    [`InfiniteChannel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/InfiniteChannel.md)
 *    [`Channel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Channel.md)
 *    [`Executor`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Executor.md)
 *    [`ExecutionContext`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md)
