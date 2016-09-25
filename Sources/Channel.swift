@@ -97,18 +97,16 @@ final public class ChannelHandler<T, U> {
 
 // this code duplication from InfiniteChannel is a thing because parametrized associatedtype is not yet a thing.
 extension Channel {
-  func makeProducer<T>(executor: Executor, cancellationToken: CancellationToken?,
-                          onPeriodic: @escaping (PeriodicValue, Producer<T, FinalValue>) throws -> Void) -> Producer<T, FinalValue> {
-    let producer = Producer<T, FinalValue>()
-    let handler = self.makeHandler(executor: executor) { [weak producer] (value) in
+  func makeProducer<TransformedPeriodicValue, TransformedFinalValue>(
+    executor: Executor, cancellationToken: CancellationToken?,
+    onValue: @escaping (Value, Producer<TransformedPeriodicValue, TransformedFinalValue>) throws -> Void
+    ) -> Producer<TransformedPeriodicValue, TransformedFinalValue> {
+    let producer = Producer<TransformedPeriodicValue, TransformedFinalValue>()
+    let handler = self.makeHandler(executor: executor) {
+      [weak producer] (value) in
       guard let producer = producer else { return }
-      switch value {
-      case .periodic(let periodicValue):
-        do { try onPeriodic(periodicValue, producer) }
-        catch { producer.fail(with: error) }
-      case .final(let final):
-        producer.complete(with: final)
-      }
+      do { try onValue(value, producer) }
+      catch { producer.fail(with: error) }
     }
 
     if let handler = handler {
@@ -124,12 +122,15 @@ extension Channel {
     return producer
   }
 
-  func makeProducer<T, U: ExecutionContext>(context: U, executor: Executor?, cancellationToken: CancellationToken?,
-                          onPeriodic: @escaping (U, PeriodicValue, Producer<T, FinalValue>) throws -> Void) -> Producer<T, FinalValue> {
-    let producer: Producer<T, FinalValue> = self.makeProducer(executor: executor ?? context.executor, cancellationToken: cancellationToken) {
-      [weak context] (periodicValue, producer) in
-      guard let context = context else { return }
-      try onPeriodic(context, periodicValue, producer)
+  func makeProducer<TransformedPeriodicValue, TransformedFinalValue, U: ExecutionContext>(
+    context: U, executor: Executor?, cancellationToken: CancellationToken?,
+    onValue: @escaping (U, Value, Producer<TransformedPeriodicValue, TransformedFinalValue>) throws -> Void
+    ) -> Producer<TransformedPeriodicValue, TransformedFinalValue> {
+    let producer: Producer<TransformedPeriodicValue, TransformedFinalValue>
+      = self.makeProducer(executor: executor ?? context.executor, cancellationToken: cancellationToken) {
+        [weak context] (value, producer) in
+        guard let context = context else { return }
+        try onValue(context, value, producer)
     }
     context.notifyDeinit { [weak producer] (periodicValue) in
       guard let producer = producer else { return }
@@ -137,138 +138,145 @@ extension Channel {
     }
     return producer
   }
-
-  func makeChannel<T>(executor: Executor, cancellationToken: CancellationToken?,
-                         onPeriodic: @escaping (PeriodicValue, (T) throws -> Void) throws -> Void) -> Channel<T, FinalValue> {
-    return self.makeProducer(executor: executor, cancellationToken: cancellationToken) { (periodicValue: PeriodicValue, producer: Producer<T, FinalValue>) -> Void in
-      try onPeriodic(periodicValue) { producer.send($0) }
-    }
-  }
-
-  func makeChannel<T, U: ExecutionContext>(context: U, executor: Executor?, cancellationToken: CancellationToken?,
-                         onPeriodic: @escaping (U, PeriodicValue, (T) throws -> Void) throws -> Void) -> Channel<T, FinalValue> {
-    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken) {
-      (context, periodicValue, producer) -> Void in
-      try onPeriodic(context, periodicValue) { producer.send($0) }
-    }
-  }
 }
 
 public extension Channel {
-  func mapPeriodic<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-                   transform: @escaping (U, PeriodicValue) throws -> T) -> Channel<T, FinalValue> {
-    return self.makeChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
-      (context: U, periodicValue: PeriodicValue, send: (T) throws -> Void) in
-      let transformedValue = try transform(context, periodicValue)
-      try send(transformedValue)
+  func mapPeriodic<TransformedPeriodicValue, U: ExecutionContext>(
+    context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
+    transform: @escaping (U, PeriodicValue) throws -> TransformedPeriodicValue
+    ) -> Channel<TransformedPeriodicValue, FinalValue> {
+    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken) {
+      (context, value, producer) in
+      switch value {
+      case .periodic(let periodic):
+        let transformedValue = try transform(context, periodic)
+        producer.send(transformedValue)
+      case .final(let final):
+        producer.complete(with: final)
+      }
     }
   }
 
-  func flatMapPeriodic<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-                       transform: @escaping (U, PeriodicValue) throws -> T?) -> Channel<T, FinalValue> {
-    return self.makeChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
-      (context: U, periodicValue: PeriodicValue, send: (T) throws -> Void) in
-      if let transformedValue = try transform(context, periodicValue) {
-        try send(transformedValue)
+  func mapPeriodic<TransformedPeriodicValue>(
+    executor: Executor = .primary, cancellationToken: CancellationToken? = nil,
+    transform: @escaping (PeriodicValue) throws -> TransformedPeriodicValue
+    ) -> Channel<TransformedPeriodicValue, FinalValue> {
+    return self.makeProducer(executor: executor, cancellationToken: cancellationToken) {
+      (value, producer) in
+      switch value {
+      case .periodic(let periodic):
+        let transformedValue = try transform(periodic)
+        producer.send(transformedValue)
+      case .final(let final):
+        producer.complete(with: final)
+      }
+    }
+  }
+
+  func flatMapPeriodic<TransformedPeriodicValue, U: ExecutionContext>(
+    context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
+    transform: @escaping (U, PeriodicValue) throws -> TransformedPeriodicValue?
+    ) -> Channel<TransformedPeriodicValue, FinalValue> {
+    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken) {
+      (context, value, producer) in
+      switch value {
+      case .periodic(let periodic):
+        if let transformedValue = try transform(context, periodic) {
+          producer.send(transformedValue)
+        }
+      case .final(let final):
+        producer.complete(with: final)
+      }
+    }
+  }
+
+  func flatMapPeriodic<TransformedPeriodicValue>(
+    executor: Executor = .primary, cancellationToken: CancellationToken? = nil,
+    transform: @escaping (PeriodicValue) throws -> TransformedPeriodicValue?
+    ) -> Channel<TransformedPeriodicValue, FinalValue> {
+    return self.makeProducer(executor: executor, cancellationToken: cancellationToken) {
+      (value, producer) in
+      switch value {
+      case .periodic(let periodic):
+        if let transformedValue = try transform(periodic) {
+          producer.send(transformedValue)
+        }
+      case .final(let final):
+        producer.complete(with: final)
       }
     }
   }
 
   func flatMapPeriodic<S: Sequence, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
                        transform: @escaping (U, PeriodicValue) throws -> S) -> Channel<S.Iterator.Element, FinalValue> {
-    return self.makeChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
-      (context: U, periodicValue: PeriodicValue, send: (S.Iterator.Element) throws -> Void) in
-      for transformedValue in try transform(context, periodicValue) {
-        try send(transformedValue)
-      }
-    }
-  }
-}
-
-extension Channel where FinalValue : _Fallible {
-  func makeProducer<T>(executor: Executor, cancellationToken: CancellationToken?,
-                          onPeriodic: @escaping (PeriodicValue, Producer<T, FinalValue>) throws -> Void) -> Producer<T, FinalValue> {
-    let producer = Producer<T, FinalValue>()
-    let handler = self.makeHandler(executor: executor) { [weak producer] (value) in
-      guard let producer = producer else { return }
+    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken) {
+      (context, value, producer) in
       switch value {
-      case .periodic(let periodicValue):
-        do { try onPeriodic(periodicValue, producer) }
-        catch { producer.fail(with: error) }
+      case .periodic(let periodic):
+        try transform(context, periodic).forEach(producer.send)
       case .final(let final):
         producer.complete(with: final)
       }
     }
+  }
 
-    if let handler = handler {
-      producer.insertToReleasePool(handler)
-    }
-
-    if let cancellationToken = cancellationToken {
-      cancellationToken.notifyCancellation { [weak producer] in
-        producer?.cancel()
+  func flatMapPeriodic<S: Sequence>(executor: Executor = .primary, cancellationToken: CancellationToken? = nil,
+                       transform: @escaping (PeriodicValue) throws -> S) -> Channel<S.Iterator.Element, FinalValue> {
+    return self.makeProducer(executor: executor, cancellationToken: cancellationToken) {
+      (value, producer) in
+      switch value {
+      case .periodic(let periodic):
+        try transform(periodic).forEach(producer.send)
+      case .final(let final):
+        producer.complete(with: final)
       }
-    }
-
-    return producer
-  }
-
-  func makeProducer<T, U: ExecutionContext>(context: U, executor: Executor?, cancellationToken: CancellationToken?,
-                          onPeriodic: @escaping (U, PeriodicValue, Producer<T, FinalValue>) throws -> Void) -> Producer<T, FinalValue> {
-    let producer: Producer<T, FinalValue> = self.makeProducer(executor: executor ?? context.executor, cancellationToken: cancellationToken) {
-      [weak context] (periodicValue, producer) in
-      guard let context = context else { return }
-      try onPeriodic(context, periodicValue, producer)
-    }
-    context.notifyDeinit { [weak producer] (periodicValue) in
-      guard let producer = producer else { return }
-      producer.cancelBecauseOfDeallicatedContext()
-    }
-    return producer
-  }
-
-  func makeChannel<T>(executor: Executor, cancellationToken: CancellationToken?,
-                         onPeriodic: @escaping (PeriodicValue, (T) throws -> Void) throws -> Void) -> Channel<T, FinalValue> {
-    return self.makeProducer(executor: executor, cancellationToken: cancellationToken) { (periodicValue: PeriodicValue, producer: Producer<T, FinalValue>) -> Void in
-      try onPeriodic(periodicValue) { producer.send($0) }
-    }
-  }
-
-  func makeChannel<T, U: ExecutionContext>(context: U, executor: Executor?, cancellationToken: CancellationToken?,
-                         onPeriodic: @escaping (U, PeriodicValue, (T) throws -> Void) throws -> Void) -> Channel<T, FinalValue> {
-    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken) {
-      (context, periodicValue, producer) -> Void in
-      try onPeriodic(context, periodicValue) { producer.send($0) }
     }
   }
 }
 
-public extension Channel where FinalValue : _Fallible {
-  func map<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-           transform: @escaping (U, PeriodicValue) throws -> T) -> Channel<T, FinalValue> {
-    return self.makeChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
-      (context: U, periodicValue: PeriodicValue, send: (T) throws -> Void) in
-      let transformedValue = try transform(context, periodicValue)
-      try send(transformedValue)
+public extension Channel {
+  func map<TransformedPeriodicValue, TransformedFinalValue, U: ExecutionContext>(
+    context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
+    transform: @escaping (U, Value) throws -> ChannelValue<TransformedPeriodicValue, TransformedFinalValue>
+    ) -> Channel<TransformedPeriodicValue, TransformedFinalValue> {
+    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken) {
+      (context, value, producer) in
+      let transformedValue = try transform(context, value)
+      producer.apply(transformedValue)
     }
   }
 
-  func flatMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-               transform: @escaping (U, PeriodicValue) throws -> T?) -> Channel<T, FinalValue> {
-    return self.makeChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
-      (context: U, periodicValue: PeriodicValue, send: (T) throws -> Void) in
-      if let transformedValue = try transform(context, periodicValue) {
-        try send(transformedValue)
+  func map<TransformedPeriodicValue, TransformedFinalValue>(
+    executor: Executor = .primary, cancellationToken: CancellationToken? = nil,
+    transform: @escaping (Value) throws -> ChannelValue<TransformedPeriodicValue, TransformedFinalValue>
+    ) -> Channel<TransformedPeriodicValue, TransformedFinalValue> {
+    return self.makeProducer(executor: executor, cancellationToken: cancellationToken) {
+      (value, producer) in
+      let transformedValue = try transform(value)
+      producer.apply(transformedValue)
+    }
+  }
+
+  func flatMap<TransformedPeriodicValue, TransformedFinalValue, U: ExecutionContext>(
+    context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
+    transform: @escaping (U, Value) throws -> ChannelValue<TransformedPeriodicValue, TransformedFinalValue>?
+    ) -> Channel<TransformedPeriodicValue, TransformedFinalValue> {
+    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken) {
+      (context, value, producer) in
+      if let transformedValue = try transform(context, value) {
+        producer.apply(transformedValue)
       }
     }
   }
 
-  func flatMap<S: Sequence, U: ExecutionContext>(context: U, executor: Executor? = nil, cancellationToken: CancellationToken? = nil,
-               transform: @escaping (U, PeriodicValue) throws -> S) -> Channel<S.Iterator.Element, FinalValue> {
-    return self.makeChannel(context: context, executor: executor, cancellationToken: cancellationToken) {
-      (context: U, periodicValue: PeriodicValue, send: (S.Iterator.Element) throws -> Void) in
-      for transformedValue in try transform(context, periodicValue) {
-        try send(transformedValue)
+  func flatMap<TransformedPeriodicValue, TransformedFinalValue>(
+    executor: Executor = .primary, cancellationToken: CancellationToken? = nil,
+    transform: @escaping (Value) throws -> ChannelValue<TransformedPeriodicValue, TransformedFinalValue>?
+    ) -> Channel<TransformedPeriodicValue, TransformedFinalValue> {
+    return self.makeProducer(executor: executor, cancellationToken: cancellationToken) {
+      (value, producer) in
+      if let transformedValue = try transform(value) {
+        producer.apply(transformedValue)
       }
     }
   }

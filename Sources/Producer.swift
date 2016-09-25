@@ -65,6 +65,15 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     return true
   }
 
+  public func apply(_ value: Value) {
+    switch value {
+    case let .periodic(periodic):
+      self.send(periodic)
+    case let .final(final):
+      self.complete(with: final)
+    }
+  }
+
   public func send(_ periodic: PeriodicValue) {
     self.notify(.periodic(periodic), head: _container.head as! ProducerState<PeriodicValue, FinalValue>?)
   }
