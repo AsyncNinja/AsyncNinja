@@ -28,44 +28,22 @@ final class LockFreeThreadSafeContainer<Item : AnyObject> : ThreadSafeContainer<
   @discardableResult
   override func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
     while true {
+      // this is a hard way to make atomic compare and swap of swift references
       let oldHead = self.head
       let newHead = block(oldHead)
-      if compareAndSwap(old: oldHead, new: newHead, to: &self.head) {
+      let oldRef = oldHead.map(Unmanaged.passUnretained)
+      let newRef = newHead.map(Unmanaged.passRetained)
+      let oldPtr = oldRef?.toOpaque() ?? nil
+      let newPtr = newRef?.toOpaque() ?? nil
+
+      if OSAtomicCompareAndSwapPtrBarrier(oldPtr, newPtr, UnsafeMutableRawPointer(&self.head).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)) {
+        oldRef?.release()
         return (oldHead, newHead)
+      } else {
+        newRef?.release()
       }
+
     }
-  }
-}
-
-@inline(__always)
-fileprivate func compareAndSwap<T: AnyObject>(old: T, new: T, to toPtr: UnsafeMutablePointer<T>) -> Bool {
-  let oldRef = Unmanaged.passUnretained(old)
-  let newRef = Unmanaged.passRetained(new)
-  let oldPtr = oldRef.toOpaque()
-  let newPtr = newRef.toOpaque()
-
-  if OSAtomicCompareAndSwapPtrBarrier(UnsafeMutableRawPointer(oldPtr), UnsafeMutableRawPointer(newPtr), UnsafeMutableRawPointer(toPtr).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)) {
-    oldRef.release()
-    return true
-  } else {
-    newRef.release()
-    return false
-  }
-}
-
-@inline(__always)
-fileprivate func compareAndSwap<T: AnyObject>(old: T?, new: T?, to toPtr: UnsafeMutablePointer<T?>) -> Bool {
-  let oldRef = old.map(Unmanaged.passUnretained)
-  let newRef = new.map(Unmanaged.passRetained)
-  let oldPtr = oldRef?.toOpaque() ?? nil
-  let newPtr = newRef?.toOpaque() ?? nil
-
-  if OSAtomicCompareAndSwapPtrBarrier(UnsafeMutableRawPointer(oldPtr), UnsafeMutableRawPointer(newPtr), UnsafeMutableRawPointer(toPtr).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)) {
-    oldRef?.release()
-    return true
-  } else {
-    newRef?.release()
-    return false
   }
 }
 
