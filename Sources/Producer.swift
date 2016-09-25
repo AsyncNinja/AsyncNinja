@@ -26,7 +26,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   typealias RegularState = RegularFiniteProducerState<PeriodicValue, FinalValue>
   typealias FinalState = FinalFiniteProducerState<PeriodicValue, FinalValue>
   private let releasePool = ReleasePool()
-  private let _container: ThreadSafeContainer<ProducerState<PeriodicValue, FinalValue>> = makeThreadSafeContainer()
+  private let _container = makeThreadSafeContainer()
 
   override public var finalValue: Fallible<FinalValue>? { return (_container.head as? FinalState)?.final }
 
@@ -66,14 +66,14 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   }
 
   public func send(_ periodic: PeriodicValue) {
-    self.notify(.periodic(periodic), head: _container.head)
+    self.notify(.periodic(periodic), head: _container.head as! ProducerState<PeriodicValue, FinalValue>?)
   }
 
   public func send<S : Sequence>(_ periodics: S)
     where S.Iterator.Element == PeriodicValue {
       let localHead = _container.head
       for periodic in periodics {
-        self.notify(.periodic(periodic), head: localHead)
+        self.notify(.periodic(periodic), head: localHead as! ProducerState<PeriodicValue, FinalValue>?)
       }
   }
   
@@ -94,7 +94,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     
     guard nil != newHead else { return false }
     
-    return self.notify(.final(final), head: oldHead)
+    return self.notify(.final(final), head: oldHead as! ProducerState<PeriodicValue, FinalValue>?)
   }
 
   public func insertToReleasePool(_ releasable: Releasable) {

@@ -23,7 +23,7 @@
 import Dispatch
 
 final public class InfiniteProducer<PeriodicValue> : InfiniteChannel<PeriodicValue>, MutablePeriodic {
-  private let _container: ThreadSafeContainer<SubscribedProducerState<PeriodicValue>> = makeThreadSafeContainer()
+  private let _container = makeThreadSafeContainer()
   private let releasePool = ReleasePool()
 
   override public init() { }
@@ -33,13 +33,13 @@ final public class InfiniteProducer<PeriodicValue> : InfiniteChannel<PeriodicVal
                                              block: @escaping (PeriodicValue) -> Void) -> InfiniteChannelHandler<PeriodicValue>? {
     let handler = PeriodicHandler(executor: executor, block: block)
     _container.updateHead {
-      return SubscribedProducerState(handler: handler, next: $0)
+      return SubscribedProducerState(handler: handler, next: $0 as! SubscribedProducerState<PeriodicValue>?)
     }
     return handler
   }
   
   final public func send(_ periodic: PeriodicValue) {
-    var nextItem = _container.head
+    var nextItem = _container.head as! SubscribedProducerState<PeriodicValue>?
     while let currentItem = nextItem {
       currentItem.handler?.handle(periodic)
       nextItem = currentItem.next
@@ -47,7 +47,7 @@ final public class InfiniteProducer<PeriodicValue> : InfiniteChannel<PeriodicVal
   }
   
   final public func send<S: Sequence>(_ periodics: S) where S.Iterator.Element == PeriodicValue {
-    var nextItem = _container.head
+    var nextItem = _container.head as! SubscribedProducerState<PeriodicValue>?
     while let currentItem = nextItem {
       if let handler = currentItem.handler {
         periodics.forEach(handler.handle)

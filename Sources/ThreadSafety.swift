@@ -26,7 +26,7 @@ private struct Constants {
   static let isLockFreeUseAllowed = true
 }
 
-func makeThreadSafeContainer<Item : AnyObject>() -> ThreadSafeContainer<Item> {
+func makeThreadSafeContainer() -> ThreadSafeContainer {
   #if os(Linux)
     return DispatchSemaphoreThreadSafeContainer()
   #else
@@ -39,26 +39,23 @@ func makeThreadSafeContainer<Item : AnyObject>() -> ThreadSafeContainer<Item> {
 }
 
 /// ThreadSafeContainer is a data structure that has head and can change this head with thread safety.
-/// Current implementation is lock-free that has to be perfect for quick and often updates.
-class ThreadSafeContainer<Item : AnyObject> {
-  var head: Item?
+protocol ThreadSafeContainer {
+  var head: AnyObject? { get }
 
   @discardableResult
-  func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
-    fatalError()
-    /* abstact */
-  }
+  func updateHead(_ block: (AnyObject?) -> AnyObject?) -> (oldHead: AnyObject?, newHead: AnyObject?)
 }
 
-final private class LockingThreadSafeContainer<Item : AnyObject> : ThreadSafeContainer<Item> {
+final private class LockingThreadSafeContainer : ThreadSafeContainer {
   private let _locking: Locking
+  var head: AnyObject?
 
   init(locking: Locking) {
     _locking = locking
   }
 
   @discardableResult
-  override func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
+  func updateHead(_ block: (AnyObject?) -> AnyObject?) -> (oldHead: AnyObject?, newHead: AnyObject?) {
     _locking.lock()
     defer { _locking.unlock() }
 

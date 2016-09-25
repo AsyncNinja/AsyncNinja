@@ -24,9 +24,11 @@
 
 import Dispatch
 
-final class LockFreeThreadSafeContainer<Item : AnyObject> : ThreadSafeContainer<Item> {
+final class LockFreeThreadSafeContainer : ThreadSafeContainer {
+  var head: AnyObject?
+
   @discardableResult
-  override func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
+  func updateHead(_ block: (AnyObject?) -> AnyObject?) -> (oldHead: AnyObject?, newHead: AnyObject?) {
     while true {
       // this is a hard way to make atomic compare and swap of swift references
       let oldHead = self.head

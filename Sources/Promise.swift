@@ -24,7 +24,7 @@ import Dispatch
 
 /// Promise that may be manually completed by owner.
 final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
-  private let _container: ThreadSafeContainer<AbstractPromiseState<FinalValue>> = makeThreadSafeContainer()
+  private let _container = makeThreadSafeContainer()
   private let releasePool = ReleasePool()
   override public var finalValue: Fallible<FinalValue>? { return (_container.head as? CompletedPromiseState)?.value }
 
@@ -55,7 +55,11 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
   @discardableResult
   final public func tryComplete(with final: Value) -> Bool {
     let completedItem = CompletedPromiseState(value: final)
-    let (oldHead, newHead) = _container.updateHead { ($0?.isIncomplete ?? true) ? completedItem : $0 }
+    let (oldHead, newHead) = _container.updateHead {
+      (($0 as! AbstractPromiseState<FinalValue>?)?.isIncomplete ?? true)
+        ? completedItem
+        : $0
+    }
     let didComplete = (completedItem === newHead)
     guard didComplete else { return false }
     

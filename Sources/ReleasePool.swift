@@ -25,16 +25,16 @@ import Dispatch
 public typealias Releasable = Any
 
 final public class ReleasePool {
-  private let _container: ThreadSafeContainer<Item> = makeThreadSafeContainer()
+  private let _container = makeThreadSafeContainer()
 
   public init() { }
 
   public func insert(_ releasable: Releasable) {
-    _container.updateHead { ReleasableItem(object: releasable, next: $0) }
+    _container.updateHead { ReleasableItem(object: releasable, next: $0 as! Item?) }
   }
 
   public func notifyDrain(_ block: @escaping () -> Void) {
-    _container.updateHead { NotifyItem(notifyBlock: block, next: $0) }
+    _container.updateHead { NotifyItem(notifyBlock: block, next: $0 as! Item?) }
   }
 
   public func drain() {
