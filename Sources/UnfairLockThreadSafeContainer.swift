@@ -22,31 +22,18 @@
 
 import Dispatch
 
-private struct Constants {
-  static let isLockFreeUseAllowed = true
-}
-
-/// ThreadSafeContainer is a data structure that has head and can change this head with thread safety.
-/// Current implementation is lock-free that has to be perfect for quick and often updates.
-class ThreadSafeContainer<Item : AnyObject> {
-  static func make() -> ThreadSafeContainer<Item> {
-    #if os(Linux)
-      return DispatchSemaphoreThreadSafeContainer()
-    #else
-      if Constants.isLockFreeUseAllowed {
-        return LockFreeThreadSafeContainer()
-      } else if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
-        return UnfairLockThreadSafeContainer()
-      } else {
-        return SpinLockThreadSafeContainer()
-      }
-    #endif
-  }
-  var head: Item?
+@available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *)
+final class UnfairLockThreadSafeContainer<Item : AnyObject> : ThreadSafeContainer<Item> {
+  private var _lock = os_unfair_lock_s()
 
   @discardableResult
-  func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
-    fatalError()
-    /* abstact */
+  override func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
+    os_unfair_lock_lock(&_lock)
+    defer { os_unfair_lock_unlock(&_lock) }
+
+    let oldHead = self.head
+    let newHead = block(oldHead)
+    self.head = newHead
+    return (oldHead, newHead)
   }
 }

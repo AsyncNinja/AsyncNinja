@@ -22,31 +22,21 @@
 
 import Dispatch
 
-private struct Constants {
-  static let isLockFreeUseAllowed = true
-}
-
-/// ThreadSafeContainer is a data structure that has head and can change this head with thread safety.
-/// Current implementation is lock-free that has to be perfect for quick and often updates.
-class ThreadSafeContainer<Item : AnyObject> {
-  static func make() -> ThreadSafeContainer<Item> {
-    #if os(Linux)
-      return DispatchSemaphoreThreadSafeContainer()
-    #else
-      if Constants.isLockFreeUseAllowed {
-        return LockFreeThreadSafeContainer()
-      } else if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
-        return UnfairLockThreadSafeContainer()
-      } else {
-        return SpinLockThreadSafeContainer()
-      }
-    #endif
-  }
-  var head: Item?
+@available(macOS, deprecated: 10.12, message: "Use SpinLockThreadSafeContainer instead")
+@available(iOS, deprecated: 10.0, message: "Use SpinLockThreadSafeContainer instead")
+@available(tvOS, deprecated: 10.0, message: "Use SpinLockThreadSafeContainer instead")
+@available(watchOS, deprecated: 3.0, message: "Use SpinLockThreadSafeContainer instead")
+final class SpinLockThreadSafeContainer<Item : AnyObject> : ThreadSafeContainer<Item> {
+  private var _lock: OSSpinLock = OS_SPINLOCK_INIT
 
   @discardableResult
-  func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
-    fatalError()
-    /* abstact */
+  override func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
+    OSSpinLockLock(&_lock)
+    defer { OSSpinLockUnlock(&_lock) }
+
+    let oldHead = self.head
+    let newHead = block(oldHead)
+    self.head = newHead
+    return (oldHead, newHead)
   }
 }
