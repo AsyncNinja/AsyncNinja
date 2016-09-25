@@ -24,10 +24,8 @@ import Dispatch
 
 public typealias Releasable = Any
 
-final public class ReleasePool : ThreadSafeContainer {
-  typealias ThreadSafeItem = ReleasePoolItem
-
-  var head: ThreadSafeItem? = nil
+final public class ReleasePool {
+  private let _container = ThreadSafeContainer<Item>()
 
   public init() { }
 
@@ -41,44 +39,44 @@ final public class ReleasePool : ThreadSafeContainer {
   #endif
 
   public func insert(_ releasable: Releasable) {
-    self.updateHead { .replace(ReleasableReleasePoolItem(object: releasable, next: $0)) }
+    _container.updateHead { .replace(ReleasableItem(object: releasable, next: $0)) }
   }
 
   public func notifyDrain(_ block: @escaping () -> Void) {
-    self.updateHead { .replace(NotifyReleasePoolItem(notifyBlock: block, next: $0)) }
+    _container.updateHead { .replace(NotifyItem(notifyBlock: block, next: $0)) }
   }
 
   public func drain() {
-    self.updateHead { _ in .remove }
-  }
-}
-
-class ReleasePoolItem {
-  let next: ReleasePoolItem?
-
-  init(next: ReleasePoolItem?) {
-    self.next = next
-  }
-}
-
-final class NotifyReleasePoolItem : ReleasePoolItem {
-  let notifyBlock: () -> Void
-
-  init (notifyBlock: @escaping () -> Void, next: ReleasePoolItem?) {
-    self.notifyBlock = notifyBlock
-    super.init(next: next)
+    _container.updateHead { _ in .remove }
   }
 
-  deinit {
-    self.notifyBlock()
+  class Item {
+    let next: Item?
+
+    init(next: Item?) {
+      self.next = next
+    }
   }
-}
 
-final class ReleasableReleasePoolItem : ReleasePoolItem {
-  let object: Releasable
+  final class NotifyItem : Item {
+    let notifyBlock: () -> Void
 
-  init(object: Releasable, next: ReleasePoolItem?) {
-    self.object = object
-    super.init(next: next)
+    init (notifyBlock: @escaping () -> Void, next: Item?) {
+      self.notifyBlock = notifyBlock
+      super.init(next: next)
+    }
+
+    deinit {
+      self.notifyBlock()
+    }
+  }
+
+  final class ReleasableItem : Item {
+    let object: Releasable
+
+    init(object: Releasable, next: Item?) {
+      self.object = object
+      super.init(next: next)
+    }
   }
 }

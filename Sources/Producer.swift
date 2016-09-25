@@ -22,14 +22,13 @@
 
 import Dispatch
 
-final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, FinalValue>, ThreadSafeContainer, MutableFinite, MutablePeriodic {
-  typealias ThreadSafeItem = ProducerState<PeriodicValue, FinalValue>
+final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, FinalValue>, MutableFinite, MutablePeriodic {
   typealias RegularState = RegularFiniteProducerState<PeriodicValue, FinalValue>
   typealias FinalState = FinalFiniteProducerState<PeriodicValue, FinalValue>
-  var head: ThreadSafeItem?
   private let releasePool = ReleasePool()
+  private let _container = ThreadSafeContainer<ProducerState<PeriodicValue, FinalValue>>()
 
-  override public var finalValue: Fallible<FinalValue>? { return (self.head as? FinalState)?.final }
+  override public var finalValue: Fallible<FinalValue>? { return (_container.head as? FinalState)?.final }
 
   override public init() { }
 
@@ -46,7 +45,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   override public func makeHandler(executor: Executor,
                                    block: @escaping (Value) -> Void) -> Handler? {
     let handler = Handler(executor: executor, block: block)
-    self.updateHead {
+    _container.updateHead {
       switch $0 {
       case .none:
         return .replace(RegularState(handler: handler, next: nil))
@@ -64,7 +63,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   }
 
   @discardableResult
-  private func notify(_ value: Value, head: ThreadSafeItem?) -> Bool {
+  private func notify(_ value: Value, head: ProducerState<PeriodicValue, FinalValue>?) -> Bool {
     guard let regularState = head as? RegularState else { return false }
     var nextItem: RegularState? = regularState
     
@@ -76,12 +75,12 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   }
 
   public func send(_ periodic: PeriodicValue) {
-    self.notify(.periodic(periodic), head: self.head)
+    self.notify(.periodic(periodic), head: _container.head)
   }
 
   public func send<S : Sequence>(_ periodics: S)
     where S.Iterator.Element == PeriodicValue {
-      let localHead = self.head
+      let localHead = _container.head
       for periodic in periodics {
         self.notify(.periodic(periodic), head: localHead)
       }
@@ -89,7 +88,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   
   @discardableResult
   public func tryComplete(with final: Fallible<FinalValue>) -> Bool {
-    let (oldHead, newHead) = self.updateHead {
+    let (oldHead, newHead) = _container.updateHead {
       switch $0 {
       case .none:
         return .replace(FinalState(final: final))

@@ -22,65 +22,16 @@
 
 import Dispatch
 
-/// ThreadSafeContainer is a data structure (mixin) that has head and can change this head with thread safety.
+/// ThreadSafeContainer is a data structure that has head and can change this head with thread safety.
 /// Current implementation is lock-free that has to be perfect for quick and often updates.
-protocol ThreadSafeContainer : class {
-  associatedtype ThreadSafeItem: AnyObject
-  var head: ThreadSafeItem? { get set }
-  #if os(Linux)
-  func synchronized<T>(_ block: () -> T) -> T
-  #endif
-}
+typealias ThreadSafeContainer<Item : AnyObject> = LockFreeThreadSafeContainer<Item>
 
-extension ThreadSafeContainer {
+protocol _ThreadSafeContainer : class {
+  associatedtype Item: AnyObject
+  var head: Item? { get }
+
   @discardableResult
-  func updateHead(_ block: (ThreadSafeItem?) -> HeadChange<ThreadSafeItem>) -> (oldHead: ThreadSafeItem?, newHead: ThreadSafeItem?) {
-    #if os(Linux)
-      while true {
-        let localHead = self.head
-
-        switch block(localHead) {
-        case .keep:
-          if self.head === localHead {
-            return (localHead, localHead)
-          }
-        case .remove:
-          let didApply: Bool = self.synchronized {
-            guard self.head === localHead else { return false }
-            self.head = nil
-            return true
-          }
-          if didApply { return (localHead, nil) }
-        case let .replace(newHead):
-          let didApply: Bool = self.synchronized {
-            guard self.head === localHead else { return false }
-            self.head = newHead
-            return true
-          }
-          if didApply { return (localHead, newHead) }
-        }
-      }
-    #else
-      while true {
-        let localHead = self.head
-
-        switch block(localHead) {
-        case .keep:
-          if self.head === localHead {
-            return (localHead, localHead)
-          }
-        case .remove:
-          if compareAndSwap(old: localHead, new: nil, to: &self.head) {
-            return (localHead, nil)
-          }
-        case let .replace(newHead):
-          if compareAndSwap(old: localHead, new: newHead, to: &self.head) {
-            return (localHead, newHead)
-          }
-        }
-      }
-    #endif
-  }
+  func updateHead(_ block: (Item?) -> HeadChange<Item>) -> (oldHead: Item?, newHead: Item?)
 }
 
 enum HeadChange<T : AnyObject> {
@@ -88,40 +39,3 @@ enum HeadChange<T : AnyObject> {
   case remove
   case replace(T)
 }
-
-#if os(Linux)
-#else
-
-@inline(__always)
-fileprivate func compareAndSwap<T: AnyObject>(old: T, new: T, to toPtr: UnsafeMutablePointer<T>) -> Bool {
-  let oldRef = Unmanaged.passUnretained(old)
-  let newRef = Unmanaged.passRetained(new)
-  let oldPtr = oldRef.toOpaque()
-  let newPtr = newRef.toOpaque()
-
-  if OSAtomicCompareAndSwapPtrBarrier(UnsafeMutableRawPointer(oldPtr), UnsafeMutableRawPointer(newPtr), UnsafeMutableRawPointer(toPtr).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)) {
-    oldRef.release()
-    return true
-  } else {
-    newRef.release()
-    return false
-  }
-}
-
-@inline(__always)
-fileprivate func compareAndSwap<T: AnyObject>(old: T?, new: T?, to toPtr: UnsafeMutablePointer<T?>) -> Bool {
-  let oldRef = old.map(Unmanaged.passUnretained)
-  let newRef = new.map(Unmanaged.passRetained)
-  let oldPtr = oldRef?.toOpaque() ?? nil
-  let newPtr = newRef?.toOpaque() ?? nil
-
-  if OSAtomicCompareAndSwapPtrBarrier(UnsafeMutableRawPointer(oldPtr), UnsafeMutableRawPointer(newPtr), UnsafeMutableRawPointer(toPtr).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)) {
-    oldRef?.release()
-    return true
-  } else {
-    newRef?.release()
-    return false
-  }
-}
-
-#endif

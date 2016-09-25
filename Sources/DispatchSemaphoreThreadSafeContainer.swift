@@ -22,49 +22,25 @@
 
 import Dispatch
 
-public class CancellationToken {
-  private let _container = ThreadSafeContainer<Item>()
-  var isCancelled: Bool { return _container.head is CancelledItem }
+final class DispatchSemaphoreThreadSafeContainer<Item : AnyObject> : _ThreadSafeContainer {
+  fileprivate(set) var head: Item?
+  private let _sema = DispatchSemaphore(value: 1)
 
-  public init() { }
+  @discardableResult
+  func updateHead(_ block: (Item?) -> HeadChange<Item>) -> (oldHead: Item?, newHead: Item?) {
+    _sema.wait()
+    defer { _sema.signal() }
 
-  #if os(Linux)
-  let sema = DispatchSemaphore(value: 1)
-  public func synchronized<T>(_ block: () -> T) -> T {
-  self.sema.wait()
-  defer { self.sema.signal() }
-  return block()
-  }
-  #endif
-
-  public func notifyCancellation(_ block: @escaping () -> Void) {
-    _container.updateHead {
-      if let notifyItem = $0 as? NotifyItem {
-        return .replace(NotifyItem(block: block, next: notifyItem))
-      } else {
-        return .keep
-      }
+    let localHead = self.head
+    switch block(localHead) {
+    case .keep:
+      return (localHead, localHead)
+    case .remove:
+      self.head = nil
+      return (localHead, nil)
+    case let .replace(newHead):
+      self.head = newHead
+      return (localHead, newHead)
     }
   }
-
-  class Item {
-    init() { }
-  }
-
-  final class NotifyItem : Item {
-    let block: () -> Void
-    let next: NotifyItem?
-
-    init(block: @escaping () -> Void, next: NotifyItem?) {
-      self.block = block
-      self.next = next
-    }
-
-    deinit {
-      self.block()
-    }
-  }
-
-  final class CancelledItem : Item { }
-  
 }

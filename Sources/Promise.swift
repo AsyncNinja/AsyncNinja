@@ -23,28 +23,18 @@
 import Dispatch
 
 /// Promise that may be manually completed by owner.
-final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite, ThreadSafeContainer {
-  typealias ThreadSafeItem = AbstractPromiseState<FinalValue>
-  var head: ThreadSafeItem?
+final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
+  private let _container = ThreadSafeContainer<AbstractPromiseState<FinalValue>>()
   private let releasePool = ReleasePool()
-  override public var finalValue: Fallible<FinalValue>? { return (self.head as? CompletedPromiseState)?.value }
+  override public var finalValue: Fallible<FinalValue>? { return (_container.head as? CompletedPromiseState)?.value }
 
   override public init() { }
-
-  #if os(Linux)
-  let sema = DispatchSemaphore(value: 1)
-  public func synchronized<T>(_ block: () -> T) -> T {
-  self.sema.wait()
-  defer { self.sema.signal() }
-  return block()
-  }
-  #endif
 
   /// **internal use only**
   override public func makeFinalHandler(executor: Executor,
                                         block: @escaping (Fallible<FinalValue>) -> Void) -> FinalHandler? {
     let handler = Handler(executor: executor, block: block, owner: self)
-    self.updateHead {
+    _container.updateHead {
       switch $0 {
       case let completedState as CompletedPromiseState<FinalValue>:
         handler.handle(completedState.value)
@@ -65,7 +55,7 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite, Thre
   @discardableResult
   final public func tryComplete(with final: Value) -> Bool {
     let completedItem = CompletedPromiseState(value: final)
-    let (oldHead, newHead) = self.updateHead { ($0?.isIncomplete ?? true) ? .replace(completedItem) : .keep }
+    let (oldHead, newHead) = _container.updateHead { ($0?.isIncomplete ?? true) ? .replace(completedItem) : .keep }
     let didComplete = (completedItem === newHead)
     guard didComplete else { return false }
     
