@@ -33,20 +33,16 @@ class FutureTests : XCTestCase {
     ("testLifetime", testLifetime),
     ("testPerformanceFuture", testPerformanceFuture),
     ("testMapLifetime", testMapLifetime),
-    ("testMapFinalToFinal", testMapFinalToFinal),
-    ("testMapFinalToFallibleFinal_Success", testMapFinalToFallibleFinal_Success),
-    ("testMapFinalToFallibleFinal_Failure", testMapFinalToFallibleFinal_Failure),
-    ("testMapContextualFinalToFinal_Success_ContextAlive", testMapContextualFinalToFinal_Success_ContextAlive),
-    ("testMapContextualFinalToFinal_Success_ContextDead", testMapContextualFinalToFinal_Success_ContextDead),
-    ("testMapContextualFinalToFinal_Failure_ContextAlive", testMapContextualFinalToFinal_Failure_ContextAlive),
-    ("testMapContextualFinalToFinal_Failure_ContextDead", testMapContextualFinalToFinal_Failure_ContextDead),
+    ("testMap_Success", testMap_Success),
+    ("testMap_Failure", testMap_Failure),
+    ("testMapContextual_Success_ContextAlive", testMapContextual_Success_ContextAlive),
+    ("testMapContextual_Success_ContextDead", testMapContextual_Success_ContextDead),
+    ("testMapContextual_Failure_ContextAlive", testMapContextual_Failure_ContextAlive),
+    ("testMapContextual_Failure_ContextDead", testMapContextual_Failure_ContextDead),
     ("testOnCompleteContextual_ContextAlive", testOnCompleteContextual_ContextAlive),
     ("testOnCompleteContextual_ContextDead", testOnCompleteContextual_ContextDead),
-    ("testMakeFutureOfBlock", testMakeFutureOfBlock),
     ("testMakeFutureOfBlock_Success", testMakeFutureOfBlock_Success),
     ("testMakeFutureOfBlock_Failure", testMakeFutureOfBlock_Failure),
-    ("testMakeFutureOfDelayedBlock", testMakeFutureOfDelayedBlock),
-    ("testMakeFutureOfDelayedBlock_lifetime", testMakeFutureOfDelayedBlock_lifetime),
     ("testMakeFutureOfDelayedFallibleBlock_Success", testMakeFutureOfDelayedFallibleBlock_Success),
     ("testMakeFutureOfDelayedFallibleBlock_Failure", testMakeFutureOfDelayedFallibleBlock_Failure),
     ("testMakeFutureOfContextualFallibleBlock_Success_ContextAlive", testMakeFutureOfContextualFallibleBlock_Success_ContextAlive),
@@ -114,30 +110,6 @@ class FutureTests : XCTestCase {
     }
   }
 
-  func testMapFinalToFinal() {
-    let transformExpectation = self.expectation(description: "transform called")
-    let qos = pickQoS()
-    weak var weakInitialFuture: Future<Int>?
-    let value = pickInt()
-    let valueSquared = square(value)
-
-    let mappedFuture: Future<Int> = eval {
-      let initialFuture = future(success: value)
-      weakInitialFuture = initialFuture
-      return initialFuture
-        .map(executor: .queue(qos)) {
-          assert(qos: qos)
-          transformExpectation.fulfill()
-          return square($0)
-      }
-    }
-
-    self.waitForExpectations(timeout: 0.1)
-    let result = mappedFuture.wait().success!
-    XCTAssertNil(weakInitialFuture)
-    XCTAssertEqual(result, valueSquared)
-  }
-    
   func testMapLifetime() {
     let qos = pickQoS()
     
@@ -158,7 +130,7 @@ class FutureTests : XCTestCase {
     XCTAssertNil(weakMappedFuture)
   }
 
-  func testMapFinalToFallibleFinal_Success() {
+  func testMap_Success() {
     let transformExpectation = self.expectation(description: "transform called")
     let qos = pickQoS()
     weak var weakInitialFuture: Future<Int>?
@@ -182,7 +154,7 @@ class FutureTests : XCTestCase {
     XCTAssertEqual(result.success, valueSquared)
   }
 
-  func testMapFinalToFallibleFinal_Failure() {
+  func testMap_Failure() {
     let transformExpectation = self.expectation(description: "transform called")
     let qos = pickQoS()
     weak var weakInitialFuture: Future<Int>?
@@ -206,7 +178,7 @@ class FutureTests : XCTestCase {
     XCTAssertEqual(result.failure as? TestError, .testCode)
   }
 
-  func testMapContextualFinalToFinal_Success_ContextAlive() {
+  func testMapContextual_Success_ContextAlive() {
     let actor = TestActor()
     let transformExpectation = self.expectation(description: "transform called")
     weak var weakInitialFuture: Future<Int>?
@@ -230,7 +202,7 @@ class FutureTests : XCTestCase {
     XCTAssertEqual(result.success, valueSquared)
   }
 
-  func testMapContextualFinalToFinal_Success_ContextDead() {
+  func testMapContextual_Success_ContextDead() {
 //    let transformExpectation = self.expectation(description: "transform called")
     weak var weakInitialFuture: Future<Int>?
     let value = pickInt()
@@ -256,7 +228,7 @@ class FutureTests : XCTestCase {
     XCTAssertEqual(result.failure as? ConcurrencyError, .contextDeallocated)
   }
 
-  func testMapContextualFinalToFinal_Failure_ContextAlive() {
+  func testMapContextual_Failure_ContextAlive() {
     let actor = TestActor()
     let transformExpectation = self.expectation(description: "transform called")
     weak var weakInitialFuture: Future<Int>?
@@ -280,7 +252,7 @@ class FutureTests : XCTestCase {
     XCTAssertEqual(result.failure as? TestError, .testCode)
   }
 
-  func testMapContextualFinalToFinal_Failure_ContextDead() {
+  func testMapContextual_Failure_ContextDead() {
     //let transformExpectation = self.expectation(description: "transform called")
     weak var weakInitialFuture: Future<Int>?
     let value = pickInt()
@@ -346,21 +318,6 @@ class FutureTests : XCTestCase {
     XCTAssertNil(weakInitialFuture)
   }
 
-  func testMakeFutureOfBlock() {
-    let qos = pickQoS()
-    let value = pickInt()
-    let expectation = self.expectation(description: "block called")
-
-    let futureValue = future(executor: .queue(qos)) { () -> Int in
-      assert(qos: qos)
-      expectation.fulfill()
-      return square(value)
-    }
-
-    self.waitForExpectations(timeout: 0.1)
-    XCTAssertEqual(futureValue.success, square(value))
-  }
-
   func testMakeFutureOfBlock_Success() {
     let qos = pickQoS()
     let value = pickInt()
@@ -389,40 +346,6 @@ class FutureTests : XCTestCase {
 
     self.waitForExpectations(timeout: 0.1)
     XCTAssertEqual(futureValue.failure as? TestError, TestError.testCode)
-  }
-
-  func testMakeFutureOfDelayedBlock() {
-    let qos = pickQoS()
-    let value = pickInt()
-    let expectation = self.expectation(description: "block called")
-
-    let futureValue = future(executor: .queue(qos), after: 0.2) { () -> Int in
-      assert(qos: qos)
-      expectation.fulfill()
-      return square(value)
-    }
-
-    usleep(150_000)
-    XCTAssertNil(futureValue.value)
-
-    self.waitForExpectations(timeout: 0.3)
-    XCTAssertEqual(futureValue.success, square(value))
-  }
-
-  func testMakeFutureOfDelayedBlock_lifetime() {
-    let qos = pickQoS()
-    let value = pickInt()
-
-    var futureValue: Future<Int>? = future(executor: .queue(qos), after: 0.2) { () -> Int in
-      XCTFail()
-      return value
-    }
-
-    usleep(150_000)
-    XCTAssertNil(futureValue?.value)
-    futureValue = nil
-
-    usleep(250_000)
   }
 
   func testMakeFutureOfDelayedFallibleBlock_Success() {
