@@ -22,22 +22,31 @@
 
 import Dispatch
 
-final class ConstantChannel<S: Sequence> : Channel<S.Iterator.Element> {
+final class ConstantChannel<S: Sequence, U> : Channel<S.Iterator.Element, U> {
   private let _periodicValues: S
+  private let _finalValue: Fallible<U>
 
-  init(periodicValues: S) {
+  override public var finalValue: Fallible<U>? { return _finalValue }
+
+  init(periodicValues: S, finalValue: Fallible<U>) {
     _periodicValues = periodicValues
+    _finalValue = finalValue
   }
-
-  override func makePeriodicHandler(executor: Executor,
-                                      block: @escaping (S.Iterator.Element) -> Void) -> Handler? {
+  
+  override func makeHandler(executor: Executor,
+                            block: @escaping (Value) -> Void) -> Handler? {
     executor.execute {
-      self._periodicValues.forEach(block)
+      for periodicValue in self._periodicValues {
+        block(.periodic(periodicValue))
+      }
+      
+      block(.final(self._finalValue))
     }
     return nil
   }
+  
 }
 
-public func channel<S: Sequence>(periodicValues: S) -> Channel<S.Iterator.Element> {
-  return ConstantChannel(periodicValues: periodicValues)
+public func channel<S: Sequence, U>(periodicValues: S, finalValue: Fallible<U>) -> Channel<S.Iterator.Element, U> {
+  return ConstantChannel(periodicValues: periodicValues, finalValue: finalValue)
 }

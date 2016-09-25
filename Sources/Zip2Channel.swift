@@ -22,8 +22,8 @@
 
 import Dispatch
 
-public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> Channel<(T, U)> {
-  let resultChannel = Producer<(T, U)>()
+public func zip<T, U>(_ leftChannel: InfiniteChannel<T>, _ rightChannel: InfiniteChannel<U>) -> InfiniteChannel<(T, U)> {
+  let resultChannel = InfiniteProducer<(T, U)>()
   let leftQueue = QueueImpl<T>()
   let rightQueue = QueueImpl<U>()
   let sema = DispatchSemaphore(value: 1)

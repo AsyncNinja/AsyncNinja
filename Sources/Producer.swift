@@ -22,10 +22,14 @@
 
 import Dispatch
 
-final public class Producer<PeriodicValue> : Channel<PeriodicValue>, ThreadSafeContainer, MutablePeriodic {
-  typealias ThreadSafeItem = SubscribedProducerState<PeriodicValue>
+final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, FinalValue>, ThreadSafeContainer, MutableFinite, MutablePeriodic {
+  typealias ThreadSafeItem = ProducerState<PeriodicValue, FinalValue>
+  typealias RegularState = RegularFiniteProducerState<PeriodicValue, FinalValue>
+  typealias FinalState = FinalFiniteProducerState<PeriodicValue, FinalValue>
   var head: ThreadSafeItem?
   private let releasePool = ReleasePool()
+
+  override public var finalValue: Fallible<FinalValue>? { return (self.head as? FinalState)?.final }
 
   override public init() { }
 
@@ -39,34 +43,71 @@ final public class Producer<PeriodicValue> : Channel<PeriodicValue>, ThreadSafeC
   #endif
 
   /// **internal use only**
-  override public func makePeriodicHandler(executor: Executor,
-                                             block: @escaping (PeriodicValue) -> Void) -> ChannelHandler<PeriodicValue>? {
-    let handler = PeriodicHandler(executor: executor, block: block)
+  override public func makeHandler(executor: Executor,
+                                   block: @escaping (Value) -> Void) -> Handler? {
+    let handler = Handler(executor: executor, block: block)
     self.updateHead {
-      .replace(ThreadSafeItem(handler: handler, next: $0))
+      switch $0 {
+      case .none:
+        return .replace(RegularState(handler: handler, next: nil))
+      case let regularState as RegularState:
+        return .replace(RegularState(handler: handler, next: regularState))
+      case let finalState as FinalState:
+        handler.handle(.final(finalState.final))
+        return .keep
+      default:
+        fatalError()
+      }
     }
+
     return handler
   }
-  
-  final public func send(_ periodic: PeriodicValue) {
-    var nextItem = self.head
+
+  @discardableResult
+  private func notify(_ value: Value, head: ThreadSafeItem?) -> Bool {
+    guard let regularState = head as? RegularState else { return false }
+    var nextItem: RegularState? = regularState
+    
     while let currentItem = nextItem {
-      currentItem.handler?.handle(periodic)
+      currentItem.handler?.handle(value)
       nextItem = currentItem.next
     }
-  }
-  
-  final public func send<S: Sequence>(_ periodics: S) where S.Iterator.Element == PeriodicValue {
-    var nextItem = self.head
-    while let currentItem = nextItem {
-      if let handler = currentItem.handler {
-        periodics.forEach(handler.handle)
-      }
-      nextItem = currentItem.next
-    }
+    return true
   }
 
-  func insertToReleasePool(_ releasable: Releasable) {
+  public func send(_ periodic: PeriodicValue) {
+    self.notify(.periodic(periodic), head: self.head)
+  }
+
+  public func send<S : Sequence>(_ periodics: S)
+    where S.Iterator.Element == PeriodicValue {
+      let localHead = self.head
+      for periodic in periodics {
+        self.notify(.periodic(periodic), head: localHead)
+      }
+  }
+  
+  @discardableResult
+  public func tryComplete(with final: Fallible<FinalValue>) -> Bool {
+    let (oldHead, newHead) = self.updateHead {
+      switch $0 {
+      case .none:
+        return .replace(FinalState(final: final))
+      case is RegularState:
+        return .replace(FinalState(final: final))
+      case is FinalState:
+        return .keep
+      default:
+        fatalError()
+      }
+    }
+    
+    guard nil != newHead else { return false }
+    
+    return self.notify(.final(final), head: oldHead)
+  }
+
+  public func insertToReleasePool(_ releasable: Releasable) {
     assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     self.releasePool.insert(releasable)
   }
@@ -76,15 +117,27 @@ final public class Producer<PeriodicValue> : Channel<PeriodicValue>, ThreadSafeC
   }
 }
 
-final class SubscribedProducerState<T> {
-  typealias Periodic = T
-  typealias Handler = ChannelHandler<Periodic>
+class ProducerState<T, U> {
+  typealias Value = ChannelValue<T, U>
+  typealias Handler = ChannelHandler<T, U>
   
+  init() { }
+}
+
+final class RegularFiniteProducerState<T, U> : ProducerState<T, U> {
   weak var handler: Handler?
-  let next: SubscribedProducerState<T>?
+  let next: RegularFiniteProducerState<T, U>?
   
-  init(handler: Handler, next: SubscribedProducerState<T>?) {
+  init(handler: Handler, next: RegularFiniteProducerState<T, U>?) {
     self.handler = handler
     self.next = next
+  }
+}
+
+final class FinalFiniteProducerState<T, U> : ProducerState<T, U> {
+  let final: Fallible<U>
+  
+  init(final: Fallible<U>) {
+    self.final = final
   }
 }

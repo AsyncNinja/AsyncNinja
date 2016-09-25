@@ -66,7 +66,7 @@ class WebService: ExecutionContext, ReleasePoolOwner {
 `self` passed as argument to closure in `map`. `self` is not retained and execution depends on `WebService` lifetime, so you may not bother cancelling background operations on `WebService.deinit`.
 
 ## Relation to Concurrency Primitives
-`Future`, `Channel` and `FiniteChannel` have contextual variants of all transformations. For example `Future` has both:
+`Future`, `Channel` and `Channel` have contextual variants of all transformations. For example `Future` has both:
 
 * `func map<T>(executor: Executor, transform: @escaping (Value) throws -> T) -> Future<T>` 
 *  `func map<T, U: ExecutionContext>(context: U, transform: @escaping (U, Value) throws -> T) -> Future<T>`

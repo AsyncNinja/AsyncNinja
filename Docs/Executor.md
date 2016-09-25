@@ -20,7 +20,7 @@ struct Executor {
 ##### Why?
 There are multiple ways to execute block asynchronously: `DispatchQueue`, `OperationQueue`, `NSManagedObjectContext` and etc. You will pick one of them depending on your needs. `Executor` was introduced to accept any of them.
 
-`Executor` is an often argument in methods found in `Future`, `Channel` and `FiniteChannel` to specify how closure must be executed.
+`Executor` is an often argument in methods found in `Future`, `Channel` and `Channel` to specify how closure must be executed.
 
 ## Reference
 #### Acquiring Executor

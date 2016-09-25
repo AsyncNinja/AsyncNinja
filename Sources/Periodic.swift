@@ -34,8 +34,8 @@ public protocol Periodic : class {
 
 public extension Periodic {
   internal func makeProducer<T>(executor: Executor,
-                             onPeriodic: @escaping (PeriodicValue, Producer<T>) -> Void) -> Producer<T> {
-    let producer = Producer<T>()
+                             onPeriodic: @escaping (PeriodicValue, InfiniteProducer<T>) -> Void) -> InfiniteProducer<T> {
+    let producer = InfiniteProducer<T>()
     let handler = self.makePeriodicHandler(executor: executor) { [weak producer] (periodicValue) in
       guard let producer = producer else { return }
       onPeriodic(periodicValue, producer)
@@ -48,8 +48,8 @@ public extension Periodic {
   }
 
   internal func makeChannel<T>(executor: Executor,
-                            onPeriodic: @escaping (PeriodicValue, (T) -> Void) -> Void) -> Channel<T> {
-    return self.makeProducer(executor: executor) { (periodicValue: PeriodicValue, producer: Producer<T>) -> Void in
+                            onPeriodic: @escaping (PeriodicValue, (T) -> Void) -> Void) -> InfiniteChannel<T> {
+    return self.makeProducer(executor: executor) { (periodicValue: PeriodicValue, producer: InfiniteProducer<T>) -> Void in
       onPeriodic(periodicValue, producer.send)
     }
   }
@@ -85,7 +85,7 @@ public extension Periodic {
   }
 
   func mapPeriodic<T>(executor: Executor = .primary,
-                   transform: @escaping (PeriodicValue) -> T) -> Channel<T> {
+                   transform: @escaping (PeriodicValue) -> T) -> InfiniteChannel<T> {
     return self.makeChannel(executor: executor) { (PeriodicValue, send) in
       let transformedValue = transform(PeriodicValue)
       send(transformedValue)
@@ -93,7 +93,7 @@ public extension Periodic {
   }
 
   func flatMapPeriodic<T>(executor: Executor = .primary,
-                         transform: @escaping (PeriodicValue) -> T?) -> Channel<T> {
+                         transform: @escaping (PeriodicValue) -> T?) -> InfiniteChannel<T> {
     return self.makeChannel(executor: executor) { (PeriodicValue, send) in
       if let transformedValue = transform(PeriodicValue) {
         send(transformedValue)
@@ -102,14 +102,14 @@ public extension Periodic {
   }
 
   func flatMapPeriodic<S: Sequence>(executor: Executor = .primary,
-                         transform: @escaping (PeriodicValue) -> S) -> Channel<S.Iterator.Element> {
+                         transform: @escaping (PeriodicValue) -> S) -> InfiniteChannel<S.Iterator.Element> {
     return self.makeChannel(executor: executor) { (PeriodicValue, send) in
       transform(PeriodicValue).forEach(send)
     }
   }
 
   func filterPeriodic(executor: Executor = .immediate,
-                        predicate: @escaping (PeriodicValue) -> Bool) -> Channel<PeriodicValue> {
+                        predicate: @escaping (PeriodicValue) -> Bool) -> InfiniteChannel<PeriodicValue> {
     return self.makeChannel(executor: executor) { (PeriodicValue, send) in
       if predicate(PeriodicValue) {
         send(PeriodicValue)
@@ -117,7 +117,7 @@ public extension Periodic {
     }
   }
 
-  func changes() -> Channel<(PeriodicValue?, PeriodicValue)> {
+  func changes() -> InfiniteChannel<(PeriodicValue?, PeriodicValue)> {
     var previousValue: PeriodicValue? = nil
 
     return self.makeChannel(executor: .immediate) { (value, send) in
@@ -128,7 +128,7 @@ public extension Periodic {
   }
 
   #if os(Linux)
-  func enumerated() -> Channel<(Int, PeriodicValue)> {
+  func enumerated() -> InfiniteChannel<(Int, PeriodicValue)> {
     let sema = DispatchSemaphore(value: 1)
     var index = 0
     return self.mapPeriodic(executor: .immediate) {
@@ -140,7 +140,7 @@ public extension Periodic {
     }
   }
   #else
-  func enumerated() -> Channel<(Int, PeriodicValue)> {
+  func enumerated() -> InfiniteChannel<(Int, PeriodicValue)> {
     var index: OSAtomic_int64_aligned64_t = -1
     return self.mapPeriodic(executor: .immediate) {
       let localIndex = Int(OSAtomicIncrement64(&index))
@@ -149,11 +149,11 @@ public extension Periodic {
   }
   #endif
 
-  func bufferedPairs() -> Channel<(PeriodicValue, PeriodicValue)> {
+  func bufferedPairs() -> InfiniteChannel<(PeriodicValue, PeriodicValue)> {
     return self.buffered(capacity: 2).map(executor: .immediate) { ($0[0], $0[1]) }
   }
 
-  func buffered(capacity: Int) -> Channel<[PeriodicValue]> {
+  func buffered(capacity: Int) -> InfiniteChannel<[PeriodicValue]> {
     var buffer = [PeriodicValue]()
     buffer.reserveCapacity(capacity)
     let sema = DispatchSemaphore(value: 1)
@@ -174,8 +174,8 @@ public extension Periodic {
 }
 
 public extension Periodic {
-  func delayedPeriodic(timeout: Double) -> Channel<PeriodicValue> {
-    return self.makeProducer(executor: .immediate) { (periodicValue: PeriodicValue, producer: Producer<PeriodicValue>) -> Void in
+  func delayedPeriodic(timeout: Double) -> InfiniteChannel<PeriodicValue> {
+    return self.makeProducer(executor: .immediate) { (periodicValue: PeriodicValue, producer: InfiniteProducer<PeriodicValue>) -> Void in
       Executor.primary.execute(after: timeout) { [weak producer] in
         guard let producer = producer else { return }
         producer.send(periodicValue)
@@ -186,7 +186,7 @@ public extension Periodic {
 
 public extension Periodic {
   func mapPeriodic<U: ExecutionContext, V>(context: U, executor: Executor? = nil,
-                   transform: @escaping (U, PeriodicValue) -> V) -> Channel<V> {
+                   transform: @escaping (U, PeriodicValue) -> V) -> InfiniteChannel<V> {
     return self.makeChannel(executor: executor ?? context.executor) { [weak context] (value, send) in
       guard let context = context else { return }
       send(transform(context, value))
@@ -207,7 +207,7 @@ public extension Periodic {
 }
 
 public extension Periodic where PeriodicValue : Finite {
-  final func flatten(isOrdered: Bool = false) -> Channel<Fallible<PeriodicValue.FinalValue>> {
+  final func flatten(isOrdered: Bool = false) -> InfiniteChannel<Fallible<PeriodicValue.FinalValue>> {
     return self.makeProducer(executor: .immediate) { (periodicValue, producer) in
       let handler = periodicValue.makeFinalHandler(executor: .immediate) { [weak producer] (finalValue) in
         guard let producer = producer else { return }
