@@ -24,16 +24,16 @@ import Dispatch
 
 public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: Future<C>) -> Future<(A, B, C)> {
   let promise = Promise<(A, B, C)>()
-  let sema = DispatchSemaphore(value: 1)
+  let locking = makeLocking()
   var subvalueA: A? = nil
   var subvalueB: B? = nil
   var subvalueC: C? = nil
   
   let handlerA = futureA.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueA) in
     guard let promise = promise else { return }
-    sema.wait()
-    defer { sema.signal() }
-    
+    locking.lock()
+    defer { locking.unlock() }
+
     localSubvalueA.onFailure(promise.fail(with:))
     localSubvalueA.onSuccess { localSubvalueA in
       subvalueA = localSubvalueA
@@ -49,9 +49,9 @@ public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: 
 
   let handlerB = futureB.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueB) in
     guard let promise = promise else { return }
-    sema.wait()
-    defer { sema.signal() }
-    
+    locking.lock()
+    defer { locking.unlock() }
+
     localSubvalueB.onFailure(promise.fail(with:))
     localSubvalueB.onSuccess { localSubvalueB in
       subvalueB = localSubvalueB
@@ -67,8 +67,8 @@ public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: 
 
   let handlerC = futureC.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueC) in
     guard let promise = promise else { return }
-    sema.wait()
-    defer { sema.signal() }
+    locking.lock()
+    defer { locking.unlock() }
     
     localSubvalueC.onFailure(promise.fail(with:))
     localSubvalueC.onSuccess { localSubvalueC in

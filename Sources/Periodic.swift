@@ -156,18 +156,18 @@ public extension Periodic {
   func buffered(capacity: Int) -> InfiniteChannel<[PeriodicValue]> {
     var buffer = [PeriodicValue]()
     buffer.reserveCapacity(capacity)
-    let sema = DispatchSemaphore(value: 1)
+    let locking = makeLocking()
 
     return self.makeChannel(executor: .immediate) { (PeriodicValue, send) in
-      sema.wait()
+      locking.lock()
       buffer.append(PeriodicValue)
       if capacity == buffer.count {
         let localBuffer = buffer
         buffer.removeAll(keepingCapacity: true)
-        sema.signal()
+        locking.unlock()
         send(localBuffer)
       } else {
-        sema.signal()
+        locking.unlock()
       }
     }
   }

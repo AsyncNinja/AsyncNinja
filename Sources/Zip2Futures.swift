@@ -24,15 +24,15 @@ import Dispatch
 
 public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, B)> {
   let promise = Promise<(A, B)>()
-  let sema = DispatchSemaphore(value: 1)
+  let locking = makeLocking()
   var subvalueA: A? = nil
   var subvalueB: B? = nil
   
   let handlerA = futureA.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueA) in
     guard let promise = promise else { return }
-    sema.wait()
-    defer { sema.signal() }
-    
+    locking.lock()
+    defer { locking.unlock() }
+
     localSubvalueA.onFailure(promise.fail(with:))
     localSubvalueA.onSuccess { localSubvalueA in
       subvalueA = localSubvalueA
@@ -48,8 +48,8 @@ public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, 
 
   let handlerB = futureB.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueB) in
     guard let promise = promise else { return }
-    sema.wait()
-    defer { sema.signal() }
+    locking.lock()
+    defer { locking.unlock() }
     
     localSubvalueB.onFailure(promise.fail(with:))
     localSubvalueB.onSuccess { localSubvalueB in

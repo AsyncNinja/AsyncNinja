@@ -51,7 +51,7 @@ public extension Collection where Self.IndexDistance == Int {
   public func asyncMap<T>(executor: Executor = .primary,
                        transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
     let promise = Promise<[T]>()
-    let sema = DispatchSemaphore(value: 1)
+    let locking = makeLocking()
 
     var canContinue = true
     let count = self.count
@@ -61,11 +61,7 @@ public extension Collection where Self.IndexDistance == Int {
     for (index, value) in self.enumerated() {
       executor.execute { [weak promise] in
         guard let promise = promise else { return }
-        sema.wait()
-        let canContinue_ = canContinue
-        sema.signal()
-
-        guard canContinue_ else { return }
+        guard canContinue else { return }
 
         let futureSubvalue: Future<T>
         do { futureSubvalue = try transform(value) }
@@ -74,8 +70,8 @@ public extension Collection where Self.IndexDistance == Int {
         let handler = futureSubvalue.makeFinalHandler(executor: .immediate) { [weak promise] subvalue in
           guard let promise = promise else { return }
 
-          sema.wait()
-          defer { sema.signal() }
+          locking.lock()
+          defer { locking.unlock() }
 
           guard canContinue else { return }
           subvalue.onSuccess {

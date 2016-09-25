@@ -26,7 +26,7 @@ public func zip<T, U>(_ leftChannel: InfiniteChannel<T>, _ rightChannel: Infinit
   let resultChannel = InfiniteProducer<(T, U)>()
   let leftQueue = QueueImpl<T>()
   let rightQueue = QueueImpl<U>()
-  let sema = DispatchSemaphore(value: 1)
+  let locking = makeLocking()
 
   func makeElement(_ leftQueue: QueueImpl<T>, _ rightQueue: QueueImpl<U>) -> (T, U)? {
     if leftQueue.isEmpty || rightQueue.isEmpty {
@@ -38,8 +38,8 @@ public func zip<T, U>(_ leftChannel: InfiniteChannel<T>, _ rightChannel: Infinit
 
   let leftHandler = leftChannel.makePeriodicHandler(executor: .immediate) { [weak resultChannel] leftValue in
     guard let resultChannel = resultChannel else { return }
-    sema.wait()
-    defer { sema.signal() }
+    locking.lock()
+    defer { locking.unlock() }
     leftQueue.push(leftValue)
     if let element = makeElement(leftQueue, rightQueue) {
       resultChannel.send(element)
@@ -51,8 +51,8 @@ public func zip<T, U>(_ leftChannel: InfiniteChannel<T>, _ rightChannel: Infinit
 
   let rightHandler = rightChannel.makePeriodicHandler(executor: .immediate) { [weak resultChannel] rightValue in
     guard let resultChannel = resultChannel else { return }
-    sema.wait()
-    defer { sema.signal() }
+    locking.lock()
+    defer { locking.unlock() }
     rightQueue.push(rightValue)
     if let element = makeElement(leftQueue, rightQueue) {
       resultChannel.send(element)
