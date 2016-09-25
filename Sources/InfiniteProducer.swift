@@ -23,7 +23,7 @@
 import Dispatch
 
 final public class InfiniteProducer<PeriodicValue> : InfiniteChannel<PeriodicValue>, MutablePeriodic {
-  private let _container = ThreadSafeContainer<SubscribedProducerState<PeriodicValue>>.make()
+  private let _container: ThreadSafeContainer<SubscribedProducerState<PeriodicValue>> = makeThreadSafeContainer()
   private let releasePool = ReleasePool()
 
   override public init() { }

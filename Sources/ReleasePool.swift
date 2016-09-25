@@ -25,7 +25,7 @@ import Dispatch
 public typealias Releasable = Any
 
 final public class ReleasePool {
-  private let _container = ThreadSafeContainer<Item>.make()
+  private let _container: ThreadSafeContainer<Item> = makeThreadSafeContainer()
 
   public init() { }
 

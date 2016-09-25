@@ -22,14 +22,45 @@
 
 import Dispatch
 
-@available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *)
-final class UnfairLockThreadSafeContainer<Item : AnyObject> : ThreadSafeContainer<Item> {
-  private var _lock = os_unfair_lock_s()
+private struct Constants {
+  static let isLockFreeUseAllowed = true
+}
+
+func makeThreadSafeContainer<Item : AnyObject>() -> ThreadSafeContainer<Item> {
+  #if os(Linux)
+    return DispatchSemaphoreThreadSafeContainer()
+  #else
+    if Constants.isLockFreeUseAllowed {
+      return LockFreeThreadSafeContainer()
+    } else {
+      return LockingThreadSafeContainer(locking: makeLocking())
+    }
+  #endif
+}
+
+/// ThreadSafeContainer is a data structure that has head and can change this head with thread safety.
+/// Current implementation is lock-free that has to be perfect for quick and often updates.
+class ThreadSafeContainer<Item : AnyObject> {
+  var head: Item?
+
+  @discardableResult
+  func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
+    fatalError()
+    /* abstact */
+  }
+}
+
+final private class LockingThreadSafeContainer<Item : AnyObject> : ThreadSafeContainer<Item> {
+  private let _locking: Locking
+
+  init(locking: Locking) {
+    _locking = locking
+  }
 
   @discardableResult
   override func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
-    os_unfair_lock_lock(&_lock)
-    defer { os_unfair_lock_unlock(&_lock) }
+    _locking.lock()
+    defer { _locking.unlock() }
 
     let oldHead = self.head
     let newHead = block(oldHead)
