@@ -51,6 +51,7 @@ final class DispatchSemaphoreLocking : Locking {
   }
 }
 
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 @available(macOS, deprecated: 10.12, message: "Use UnfairLockLocking instead")
 @available(iOS, deprecated: 10.0, message: "Use UnfairLockLocking instead")
 @available(tvOS, deprecated: 10.0, message: "Use UnfairLockLocking instead")
@@ -79,3 +80,4 @@ final private class UnfairLockLocking : Locking {
     os_unfair_lock_unlock(&_lock)
   }
 }
+#endif

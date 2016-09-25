@@ -22,19 +22,21 @@
 
 import Dispatch
 
-private struct Constants {
-  static let isLockFreeUseAllowed = true
-}
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+  private struct Constants {
+    static let isLockFreeUseAllowed = true
+  }
+#endif
 
 func makeThreadSafeContainer() -> ThreadSafeContainer {
-  #if os(Linux)
-    return DispatchSemaphoreThreadSafeContainer()
-  #else
+  #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
     if Constants.isLockFreeUseAllowed {
       return LockFreeThreadSafeContainer()
     } else {
       return LockingThreadSafeContainer(locking: makeLocking())
     }
+  #else
+    return LockingThreadSafeContainer(locking: makeLocking())
   #endif
 }
 
