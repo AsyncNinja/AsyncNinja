@@ -23,8 +23,8 @@
 import Dispatch
 
 final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, FinalValue>, MutableFinite, MutablePeriodic {
-  typealias RegularState = RegularFiniteProducerState<PeriodicValue, FinalValue>
-  typealias FinalState = FinalFiniteProducerState<PeriodicValue, FinalValue>
+  typealias RegularState = RegularProducerState<PeriodicValue, FinalValue>
+  typealias FinalState = FinalProducerState<PeriodicValue, FinalValue>
   private let releasePool = ReleasePool()
   private let _container = makeThreadSafeContainer()
 
@@ -114,17 +114,17 @@ class ProducerState<T, U> {
   init() { }
 }
 
-final class RegularFiniteProducerState<T, U> : ProducerState<T, U> {
+final class RegularProducerState<T, U> : ProducerState<T, U> {
   weak var handler: Handler?
-  let next: RegularFiniteProducerState<T, U>?
+  let next: RegularProducerState<T, U>?
   
-  init(handler: Handler, next: RegularFiniteProducerState<T, U>?) {
+  init(handler: Handler, next: RegularProducerState<T, U>?) {
     self.handler = handler
     self.next = next
   }
 }
 
-final class FinalFiniteProducerState<T, U> : ProducerState<T, U> {
+final class FinalProducerState<T, U> : ProducerState<T, U> {
   let final: Fallible<U>
   
   init(final: Fallible<U>) {

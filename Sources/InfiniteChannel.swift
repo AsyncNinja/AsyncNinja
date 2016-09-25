@@ -102,7 +102,7 @@ final public class InfiniteChannelHandler<T> {
 }
 
 extension InfiniteChannel {
-  func makeFiniteProducer<T>(executor: Executor, cancellationToken: CancellationToken?,
+  func makeProducer<T>(executor: Executor, cancellationToken: CancellationToken?,
                           onPeriodic: @escaping (PeriodicValue, Producer<T, Void>) throws -> Void) -> Producer<T, Void> {
     let producer = Producer<T, Void>()
     let handler = self.makePeriodicHandler(executor: executor) { [weak producer] (periodicValue) in
@@ -124,9 +124,9 @@ extension InfiniteChannel {
     return producer
   }
 
-  func makeFiniteProducer<T, U: ExecutionContext>(context: U, executor: Executor?, cancellationToken: CancellationToken?,
+  func makeProducer<T, U: ExecutionContext>(context: U, executor: Executor?, cancellationToken: CancellationToken?,
                           onPeriodic: @escaping (U, PeriodicValue, Producer<T, Void>) throws -> Void) -> Producer<T, Void> {
-    let producer: Producer<T, Void> = self.makeFiniteProducer(executor: executor ?? context.executor, cancellationToken: cancellationToken) {
+    let producer: Producer<T, Void> = self.makeProducer(executor: executor ?? context.executor, cancellationToken: cancellationToken) {
       [weak context] (periodicValue, producer) in
       guard let context = context else { return }
       try onPeriodic(context, periodicValue, producer)
@@ -140,14 +140,14 @@ extension InfiniteChannel {
 
   func makeChannel<T>(executor: Executor, cancellationToken: CancellationToken?,
                          onPeriodic: @escaping (PeriodicValue, (T) throws -> Void) throws -> Void) -> Channel<T, Void> {
-    return self.makeFiniteProducer(executor: executor, cancellationToken: cancellationToken) { (periodicValue: PeriodicValue, producer: Producer<T, Void>) -> Void in
+    return self.makeProducer(executor: executor, cancellationToken: cancellationToken) { (periodicValue: PeriodicValue, producer: Producer<T, Void>) -> Void in
       try onPeriodic(periodicValue) { producer.send($0) }
     }
   }
 
   func makeChannel<T, U: ExecutionContext>(context: U, executor: Executor?, cancellationToken: CancellationToken?,
                          onPeriodic: @escaping (U, PeriodicValue, (T) throws -> Void) throws -> Void) -> Channel<T, Void> {
-    return self.makeFiniteProducer(context: context, executor: executor, cancellationToken: cancellationToken) {
+    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken) {
       (context, periodicValue, producer) -> Void in
       try onPeriodic(context, periodicValue) { producer.send($0) }
     }
