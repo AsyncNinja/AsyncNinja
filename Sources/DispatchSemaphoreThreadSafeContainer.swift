@@ -22,12 +22,11 @@
 
 import Dispatch
 
-final class DispatchSemaphoreThreadSafeContainer<Item : AnyObject> : _ThreadSafeContainer {
-  fileprivate(set) var head: Item?
+final class DispatchSemaphoreThreadSafeContainer<Item : AnyObject> : ThreadSafeContainer<Item> {
   private let _sema = DispatchSemaphore(value: 1)
 
   @discardableResult
-  func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
+  override func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
     _sema.wait()
     defer { _sema.signal() }
 

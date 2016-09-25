@@ -24,12 +24,19 @@ import Dispatch
 
 /// ThreadSafeContainer is a data structure that has head and can change this head with thread safety.
 /// Current implementation is lock-free that has to be perfect for quick and often updates.
-typealias ThreadSafeContainer<Item : AnyObject> = LockFreeThreadSafeContainer<Item>
-
-protocol _ThreadSafeContainer : class {
-  associatedtype Item: AnyObject
-  var head: Item? { get }
+class ThreadSafeContainer<Item : AnyObject> {
+  static func make() -> ThreadSafeContainer<Item> {
+    #if os(Linux)
+      return DispatchSemaphoreThreadSafeContainer()
+    #else
+      return LockFreeThreadSafeContainer()
+    #endif
+  }
+  var head: Item?
 
   @discardableResult
-  func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?)
+  func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
+    fatalError()
+    /* abstact */
+  }
 }

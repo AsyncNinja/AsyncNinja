@@ -20,13 +20,13 @@
 //  IN THE SOFTWARE.
 //
 
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+
 import Dispatch
 
-final class LockFreeThreadSafeContainer<Item : AnyObject> : _ThreadSafeContainer {
-  fileprivate(set) var head: Item?
-
+final class LockFreeThreadSafeContainer<Item : AnyObject> : ThreadSafeContainer<Item> {
   @discardableResult
-  func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
+  override func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
     while true {
       let oldHead = self.head
       let newHead = block(oldHead)
@@ -68,3 +68,5 @@ fileprivate func compareAndSwap<T: AnyObject>(old: T?, new: T?, to toPtr: Unsafe
     return false
   }
 }
+
+#endif

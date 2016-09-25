@@ -23,7 +23,7 @@
 import Dispatch
 
 public class CancellationToken {
-  private let _container = ThreadSafeContainer<Item>()
+  private let _container = ThreadSafeContainer<Item>.make()
   var isCancelled: Bool { return _container.head is CancelledItem }
 
   public init() { }

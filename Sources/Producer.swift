@@ -26,7 +26,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   typealias RegularState = RegularFiniteProducerState<PeriodicValue, FinalValue>
   typealias FinalState = FinalFiniteProducerState<PeriodicValue, FinalValue>
   private let releasePool = ReleasePool()
-  private let _container = ThreadSafeContainer<ProducerState<PeriodicValue, FinalValue>>()
+  private let _container = ThreadSafeContainer<ProducerState<PeriodicValue, FinalValue>>.make()
 
   override public var finalValue: Fallible<FinalValue>? { return (_container.head as? FinalState)?.final }
 
