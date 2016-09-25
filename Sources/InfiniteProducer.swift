@@ -42,7 +42,7 @@ final public class InfiniteProducer<PeriodicValue> : InfiniteChannel<PeriodicVal
                                              block: @escaping (PeriodicValue) -> Void) -> InfiniteChannelHandler<PeriodicValue>? {
     let handler = PeriodicHandler(executor: executor, block: block)
     _container.updateHead {
-      .replace(SubscribedProducerState(handler: handler, next: $0))
+      return SubscribedProducerState(handler: handler, next: $0)
     }
     return handler
   }

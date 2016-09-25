@@ -31,11 +31,5 @@ protocol _ThreadSafeContainer : class {
   var head: Item? { get }
 
   @discardableResult
-  func updateHead(_ block: (Item?) -> HeadChange<Item>) -> (oldHead: Item?, newHead: Item?)
-}
-
-enum HeadChange<T : AnyObject> {
-  case keep
-  case remove
-  case replace(T)
+  func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?)
 }

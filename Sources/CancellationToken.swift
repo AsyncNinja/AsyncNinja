@@ -40,9 +40,9 @@ public class CancellationToken {
   public func notifyCancellation(_ block: @escaping () -> Void) {
     _container.updateHead {
       if let notifyItem = $0 as? NotifyItem {
-        return .replace(NotifyItem(block: block, next: notifyItem))
+        return NotifyItem(block: block, next: notifyItem)
       } else {
-        return .keep
+        return $0
       }
     }
   }

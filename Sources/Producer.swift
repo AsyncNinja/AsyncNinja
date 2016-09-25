@@ -48,12 +48,12 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     _container.updateHead {
       switch $0 {
       case .none:
-        return .replace(RegularState(handler: handler, next: nil))
+        return RegularState(handler: handler, next: nil)
       case let regularState as RegularState:
-        return .replace(RegularState(handler: handler, next: regularState))
+        return RegularState(handler: handler, next: regularState)
       case let finalState as FinalState:
         handler.handle(.final(finalState.final))
-        return .keep
+        return $0
       default:
         fatalError()
       }
@@ -91,11 +91,11 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     let (oldHead, newHead) = _container.updateHead {
       switch $0 {
       case .none:
-        return .replace(FinalState(final: final))
+        return FinalState(final: final)
       case is RegularState:
-        return .replace(FinalState(final: final))
+        return FinalState(final: final)
       case is FinalState:
-        return .keep
+        return $0
       default:
         fatalError()
       }

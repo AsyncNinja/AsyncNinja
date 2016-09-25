@@ -38,11 +38,11 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
       switch $0 {
       case let completedState as CompletedPromiseState<FinalValue>:
         handler.handle(completedState.value)
-        return .keep
+        return $0
       case let incompleteState as SubscribedPromiseState<FinalValue>:
-        return .replace(SubscribedPromiseState(handler: handler, next: incompleteState))
+        return SubscribedPromiseState(handler: handler, next: incompleteState)
       case .none:
-        return .replace(SubscribedPromiseState(handler: handler, next: nil))
+        return SubscribedPromiseState(handler: handler, next: nil)
       default:
         fatalError()
       }
@@ -55,7 +55,7 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
   @discardableResult
   final public func tryComplete(with final: Value) -> Bool {
     let completedItem = CompletedPromiseState(value: final)
-    let (oldHead, newHead) = _container.updateHead { ($0?.isIncomplete ?? true) ? .replace(completedItem) : .keep }
+    let (oldHead, newHead) = _container.updateHead { ($0?.isIncomplete ?? true) ? completedItem : $0 }
     let didComplete = (completedItem === newHead)
     guard didComplete else { return false }
     

@@ -26,23 +26,12 @@ final class LockFreeThreadSafeContainer<Item : AnyObject> : _ThreadSafeContainer
   fileprivate(set) var head: Item?
 
   @discardableResult
-  func updateHead(_ block: (Item?) -> HeadChange<Item>) -> (oldHead: Item?, newHead: Item?) {
+  func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
     while true {
-      let localHead = self.head
-
-      switch block(localHead) {
-      case .keep:
-        if self.head === localHead {
-          return (localHead, localHead)
-        }
-      case .remove:
-        if compareAndSwap(old: localHead, new: nil, to: &self.head) {
-          return (localHead, nil)
-        }
-      case let .replace(newHead):
-        if compareAndSwap(old: localHead, new: newHead, to: &self.head) {
-          return (localHead, newHead)
-        }
+      let oldHead = self.head
+      let newHead = block(oldHead)
+      if compareAndSwap(old: oldHead, new: newHead, to: &self.head) {
+        return (oldHead, newHead)
       }
     }
   }

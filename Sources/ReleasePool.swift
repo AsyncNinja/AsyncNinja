@@ -39,15 +39,15 @@ final public class ReleasePool {
   #endif
 
   public func insert(_ releasable: Releasable) {
-    _container.updateHead { .replace(ReleasableItem(object: releasable, next: $0)) }
+    _container.updateHead { ReleasableItem(object: releasable, next: $0) }
   }
 
   public func notifyDrain(_ block: @escaping () -> Void) {
-    _container.updateHead { .replace(NotifyItem(notifyBlock: block, next: $0)) }
+    _container.updateHead { NotifyItem(notifyBlock: block, next: $0) }
   }
 
   public func drain() {
-    _container.updateHead { _ in .remove }
+    _container.updateHead { _ in return nil }
   }
 
   class Item {

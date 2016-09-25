@@ -27,20 +27,13 @@ final class DispatchSemaphoreThreadSafeContainer<Item : AnyObject> : _ThreadSafe
   private let _sema = DispatchSemaphore(value: 1)
 
   @discardableResult
-  func updateHead(_ block: (Item?) -> HeadChange<Item>) -> (oldHead: Item?, newHead: Item?) {
+  func updateHead(_ block: (Item?) -> Item?) -> (oldHead: Item?, newHead: Item?) {
     _sema.wait()
     defer { _sema.signal() }
 
-    let localHead = self.head
-    switch block(localHead) {
-    case .keep:
-      return (localHead, localHead)
-    case .remove:
-      self.head = nil
-      return (localHead, nil)
-    case let .replace(newHead):
-      self.head = newHead
-      return (localHead, newHead)
-    }
+    let oldHead = self.head
+    let newHead = block(oldHead)
+    self.head = newHead
+    return (oldHead, newHead)
   }
 }
