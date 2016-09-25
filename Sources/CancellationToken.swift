@@ -28,15 +28,6 @@ public class CancellationToken {
 
   public init() { }
 
-  #if os(Linux)
-  let sema = DispatchSemaphore(value: 1)
-  public func synchronized<T>(_ block: () -> T) -> T {
-  self.sema.wait()
-  defer { self.sema.signal() }
-  return block()
-  }
-  #endif
-
   public func notifyCancellation(_ block: @escaping () -> Void) {
     _container.updateHead {
       if let notifyItem = $0 as? NotifyItem {
