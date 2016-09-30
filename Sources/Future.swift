@@ -72,6 +72,7 @@ public extension Future {
 public extension Future where FinalValue : Finite {
   /// flattens combination of two nested unfaillable futures to a signle unfallible one
   final func flatten() -> Future<FinalValue.FinalValue> {
+    // Test: FutureTests.testFlatten
     let promise = Promise<FinalValue.FinalValue>()
 
     let handler = self.makeFinalHandler(executor: .immediate) { [weak promise] (future) in

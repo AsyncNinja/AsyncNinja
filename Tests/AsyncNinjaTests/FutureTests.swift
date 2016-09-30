@@ -49,6 +49,7 @@ class FutureTests : XCTestCase {
     ("testMakeFutureOfContextualFallibleBlock_Success_ContextDead", testMakeFutureOfContextualFallibleBlock_Success_ContextDead),
     ("testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive", testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive),
     ("testMakeFutureOfContextualFallibleBlock_Failure_ContextDead", testMakeFutureOfContextualFallibleBlock_Failure_ContextDead),
+    ("testFlatten", testFlatten),
     ("testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive", testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive),
     ("testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextDead", testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextDead),
     ("testMakeFutureOfDelayedContextualFallibleBlock_Success_EarlyContextDead", testMakeFutureOfDelayedContextualFallibleBlock_Success_EarlyContextDead),
@@ -452,6 +453,17 @@ class FutureTests : XCTestCase {
 
     usleep(100_000)
     XCTAssertEqual(futureValue.failure as? AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
+  }
+  
+  func testFlatten() {
+    let startTime = DispatchTime.now()
+    let value = pickInt()
+    let future3D = future(after: 0.2) { return future(after: 0.3) { value } }
+    let future2D = future3D.flatten()
+    XCTAssertEqual(future2D.wait().success!, value)
+    let finishTime = DispatchTime.now()
+    XCTAssert(startTime + 0.4 < finishTime)
+    XCTAssert(startTime + 0.6 > finishTime)
   }
   
   func testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive() {
