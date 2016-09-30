@@ -108,11 +108,17 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
 
   public func insertToReleasePool(_ releasable: Releasable) {
     assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
-    self.releasePool.insert(releasable)
+    if !self.isComplete {
+      self.releasePool.insert(releasable)
+    }
   }
 
   func notifyDrain(_ block: @escaping () -> Void) {
-    self.releasePool.notifyDrain(block)
+    if self.isComplete {
+      block()
+    } else {
+      self.releasePool.notifyDrain(block)
+    }
   }
 }
 
