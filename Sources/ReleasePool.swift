@@ -27,7 +27,9 @@ public typealias Releasable = Any
 final public class ReleasePool {
   private let _tier1Container = makeThreadSafeContainer()
   private let _tier2Container = makeThreadSafeContainer()
+  private let _tier3Container = makeThreadSafeContainer()
   static let numberOfItemsForTier2 = (1 << 10) - 1
+  static let numberOfItemsForTier3 = (1 << 20) - 1
 
   public init() { }
   
@@ -37,13 +39,17 @@ final public class ReleasePool {
   }
 
   private func updateHead(_ block: (AnyObject?) -> AnyObject?) {
-    let item = _tier1Container.updateHead(block)
-      .newHead as? Item
+    guard let item = _tier1Container.updateHead(block).newHead as? Item
+      else { return }
     
-    if let item = item, (item.index & ReleasePool.numberOfItemsForTier2) == ReleasePool.numberOfItemsForTier2 {
-      _tier2Container.updateHead { Tier2Item(item: item, next: $0 as! Tier2Item?) }
+    if (item.index & ReleasePool.numberOfItemsForTier2) == ReleasePool.numberOfItemsForTier2 {
+      _tier2Container.updateHead { NextTierItem(item: item, next: $0 as! NextTierItem?) }
     }
-  }
+
+    if (item.index & ReleasePool.numberOfItemsForTier3) == ReleasePool.numberOfItemsForTier3 {
+      _tier3Container.updateHead { NextTierItem(item: item, next: $0 as! NextTierItem?) }
+    }
+}
   
   public func insert(_ releasable: Releasable) {
     self.updateHead { ReleasableItem(object: releasable, next: $0 as! Item?) }
@@ -90,10 +96,10 @@ final public class ReleasePool {
     }
   }
   
-  final class Tier2Item {
+  final class NextTierItem {
     let item: Item
-    let next: Tier2Item?
-    init(item: Item, next: Tier2Item?) {
+    let next: NextTierItem?
+    init(item: Item, next: NextTierItem?) {
       self.item = item
       self.next = next
     }
