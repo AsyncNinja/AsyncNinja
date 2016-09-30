@@ -167,6 +167,9 @@ public extension Finite {
 /// as any code performed on the same queue this future depends on will cause deadlock.
 public extension Finite {
   func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Fallible<FinalValue>? {
+    if let finalValue = self.finalValue {
+      return finalValue
+    }
     let sema = DispatchSemaphore(value: 0)
     var result: Fallible<FinalValue>? = nil
 
