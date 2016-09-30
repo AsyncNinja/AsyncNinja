@@ -36,7 +36,7 @@ class PerformanceTests : XCTestCase {
     ("testHugeMapping_Failure", testHugeMapping_Failure),
     ]
   
-  static let runsRange = 0..<10000
+  static let runsRange = 0..<100000
   
   func testConstantFutureWait() {
     self.measure {
@@ -50,7 +50,7 @@ class PerformanceTests : XCTestCase {
   func testMappedFutureWait_Success() {
     self.measure {
       for value in PerformanceTests.runsRange {
-        let futureValue = future(success: value).map { $0 * 2 }
+        let futureValue = future(success: value).map(executor: .immediate) { $0 * 2 }
         XCTAssertEqual(futureValue.wait().success, value * 2)
       }
     }
@@ -59,7 +59,7 @@ class PerformanceTests : XCTestCase {
   func testMappedFutureWait_Failure() {
     self.measure {
       for value in PerformanceTests.runsRange {
-        let futureValue = future(success: value).map { _ in throw TestError.testCode }
+        let futureValue = future(success: value).map(executor: .immediate) { _ in throw TestError.testCode }
         XCTAssertEqual(futureValue.wait().failure as! TestError, TestError.testCode)
       }
     }
@@ -69,7 +69,7 @@ class PerformanceTests : XCTestCase {
     self.measure {
       var futureValue: Future<Int> = future(success: 0)
       for _ in PerformanceTests.runsRange {
-        futureValue = futureValue.map { $0 + 1 }
+        futureValue = futureValue.map(executor: .immediate) { $0 + 1 }
       }
       
       XCTAssertEqual(futureValue.wait().success, PerformanceTests.runsRange.upperBound)
@@ -80,10 +80,20 @@ class PerformanceTests : XCTestCase {
     self.measure {
       var futureValue: Future<Int> = future(failure: TestError.testCode)
       for _ in PerformanceTests.runsRange {
-        futureValue = futureValue.map { $0 + 1 }
+        futureValue = futureValue.map(executor: .immediate) { $0 + 1 }
       }
       
       XCTAssertEqual(futureValue.wait().failure as! TestError, TestError.testCode)
+    }
+  }
+  
+  func testReduce() {
+    self.measure {
+      let resultValue = PerformanceTests.runsRange
+        .map { future(success: $0).map(executor: .immediate) { $0 * 2 } }
+        .reduce(executor: .immediate, initialResult: 0, nextPartialResult: +)
+        .wait().success!
+      XCTAssertEqual(resultValue, (PerformanceTests.runsRange.lowerBound + PerformanceTests.runsRange.upperBound - 1) * PerformanceTests.runsRange.count)
     }
   }
 }
