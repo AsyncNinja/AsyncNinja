@@ -23,6 +23,10 @@
 import Dispatch
 
 public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, B)> {
+  // Test: ZipFuturesTest.test2Simple
+  // Test: ZipFuturesTest.test2Delayed
+  // Test: ZipFuturesTest.test2Failure
+  // Test: ZipFuturesTest.test2Lifetime
   let promise = Promise<(A, B)>()
   let locking = makeLocking()
   var subvalueA: A? = nil
@@ -68,5 +72,6 @@ public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, 
 }
 
 public func zip<A, B>(_ futureA: Future<A>, _ valueB: B) -> Future<(A, B)> {
+  // Test: ZipFuturesTest.test2Constant
   return futureA.map(executor: .immediate) { ($0, valueB) }
 }

@@ -34,6 +34,7 @@ public func allTests() -> [XCTestCaseEntry] {
 		testCase(PipeTests.allTests),
 		testCase(ReleasePoolTests.allTests),
 		testCase(TimerChannelTests.allTests),
+		testCase(ZipFuturesTest.allTests),
     ]
 }
 #endif
