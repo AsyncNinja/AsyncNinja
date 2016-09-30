@@ -31,10 +31,15 @@ class ZipFuturesTest : XCTestCase {
   
   static let allTests = [
     ("test2Simple", test2Simple),
+    ("test3Simple", test3Simple),
     ("test2Delayed", test2Delayed),
     ("test2Constant", test2Constant),
+    ("test3Constant", test3Constant),
+    ("test3Constant", test3Constants),
     ("test2Failure", test2Failure),
+    ("test3Failure", test3Failure),
     ("test2Lifetime", test2Lifetime),
+    ("test3Lifetime", test3Lifetime),
     ]
   
   func test2Simple() {
@@ -47,7 +52,21 @@ class ZipFuturesTest : XCTestCase {
     XCTAssertEqual(valueAB.0, valueA)
     XCTAssertEqual(valueAB.1, valueB)
   }
-  
+
+  func test3Simple() {
+    let valueA = pickInt()
+    let valueB = pickInt()
+    let valueC = pickInt()
+    let futureA = future(success: valueA)
+    let futureB = future(success: valueB)
+    let futureC = future(success: valueC)
+    let futureABC = zip(futureA, futureB, futureC)
+    let valueABC = futureABC.wait().success!
+    XCTAssertEqual(valueABC.0, valueA)
+    XCTAssertEqual(valueABC.1, valueB)
+    XCTAssertEqual(valueABC.2, valueC)
+  }
+
   func test2Delayed() {
     let valueA = pickInt()
     let valueB = pickInt()
@@ -59,6 +78,20 @@ class ZipFuturesTest : XCTestCase {
     XCTAssertEqual(valueAB.1, valueB)
   }
   
+  func test3Delayed() {
+    let valueA = pickInt()
+    let valueB = pickInt()
+    let valueC = pickInt()
+    let futureA = future(after: 0.2) { valueA }
+    let futureB = future(after: 0.3) { valueB }
+    let futureC = future(after: 0.4) { valueC }
+    let futureABC = zip(futureA, futureB, futureC)
+    let valueABC = futureABC.wait().success!
+    XCTAssertEqual(valueABC.0, valueA)
+    XCTAssertEqual(valueABC.1, valueB)
+    XCTAssertEqual(valueABC.2, valueC)
+  }
+  
   func test2Constant() {
     let valueA = pickInt()
     let valueB = pickInt()
@@ -68,17 +101,57 @@ class ZipFuturesTest : XCTestCase {
     XCTAssertEqual(valueAB.0, valueA)
     XCTAssertEqual(valueAB.1, valueB)
   }
-  
+
+  func test3Constant() {
+    let valueA = pickInt()
+    let valueB = pickInt()
+    let valueC = pickInt()
+    let futureA = future(after: 0.2) { valueA }
+    let futureB = future(after: 0.3) { valueB }
+    let futureABC = zip(futureA, futureB, valueC)
+    let valueABC = futureABC.wait().success!
+    XCTAssertEqual(valueABC.0, valueA)
+    XCTAssertEqual(valueABC.1, valueB)
+    XCTAssertEqual(valueABC.2, valueC)
+  }
+
+  func test3Constants() {
+    let valueA = pickInt()
+    let valueB = pickInt()
+    let valueC = pickInt()
+    let futureA = future(after: 0.2) { valueA }
+    let futureABC = zip(futureA, valueB, valueC)
+    let valueABC = futureABC.wait().success!
+    XCTAssertEqual(valueABC.0, valueA)
+    XCTAssertEqual(valueABC.1, valueB)
+    XCTAssertEqual(valueABC.2, valueC)
+  }
+
   func test2Failure() {
     let startTime = DispatchTime.now()
     let valueA = pickInt()
-    let futureA = future(after: 0.2) { valueA }
-    let futureB: Future<Int> = future(failure: TestError.testCode)
+    let futureA = future(after: 0.4) { valueA }
+    let futureB = future(after: 0.2) { throw TestError.testCode  }
     let futureAB = zip(futureA, futureB)
     XCTAssertEqual(futureAB.wait().failure as! TestError, TestError.testCode)
-    XCTAssert(DispatchTime.now() < startTime + 0.1) // early finish
+    XCTAssert(DispatchTime.now() > startTime + 0.2)
+    XCTAssert(DispatchTime.now() < startTime + 0.4)
   }
-  
+
+  func test3Failure() {
+    let startTime = DispatchTime.now()
+    let valueA = pickInt()
+    let valueC = pickInt()
+    let futureA = future(after: 0.2) { valueA }
+    let futureB = future(after: 0.3) { throw TestError.testCode  }
+    let futureC = future(after: 0.4) { valueC }
+    let futureABC = zip(futureA, futureB, futureC)
+    XCTAssertEqual(futureABC.wait().failure as! TestError, TestError.testCode)
+    let finishTime = DispatchTime.now()
+    XCTAssert(finishTime > startTime + 0.2)
+    XCTAssert(finishTime < startTime + 0.4)
+  }
+
   func test2Lifetime() {
     let valueA = pickInt()
     let valueB = pickInt()
@@ -100,5 +173,34 @@ class ZipFuturesTest : XCTestCase {
     XCTAssertNil(weakFutureA)
     XCTAssertNil(weakFutureB)
     XCTAssertNil(weakFutureAB)
+  }
+  
+  func test3Lifetime() {
+    let valueA = pickInt()
+    let valueB = pickInt()
+    let valueC = pickInt()
+    var futureA: Future<Int>? = future(after: 0.2) { XCTFail(); return valueA }
+    weak var weakFutureA = futureA
+    var futureB: Future<Int>? = future(after: 0.3) { XCTFail(); return valueB }
+    weak var weakFutureB = futureB
+    var futureC: Future<Int>? = future(after: 0.4) { XCTFail(); return valueC }
+    weak var weakFutureC = futureC
+    var futureABC: Future<(Int, Int, Int)>? = zip(futureA!, futureB!, futureC!)
+    weak var weakFutureABC = futureABC
+    futureA = nil
+    futureB = nil
+    futureC = nil
+    
+    XCTAssertNotNil(weakFutureA)
+    XCTAssertNotNil(weakFutureB)
+    XCTAssertNotNil(weakFutureC)
+    XCTAssertNotNil(weakFutureABC)
+    
+    futureABC = nil
+    
+    XCTAssertNil(weakFutureA)
+    XCTAssertNil(weakFutureB)
+    XCTAssertNil(weakFutureC)
+    XCTAssertNil(weakFutureABC)
   }
 }
