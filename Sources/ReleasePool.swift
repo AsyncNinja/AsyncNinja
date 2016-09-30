@@ -25,27 +25,46 @@ import Dispatch
 public typealias Releasable = Any
 
 final public class ReleasePool {
-  private let _container = makeThreadSafeContainer()
+  private let _tier1Container = makeThreadSafeContainer()
+  private let _tier2Container = makeThreadSafeContainer()
+  static let numberOfItemsForTier2 = (1 << 10) - 1
 
   public init() { }
+  
+  deinit {
+    _tier1Container.updateHead { _ in return nil }
+    _tier2Container.updateHead { _ in return nil }
+  }
 
+  private func updateHead(_ block: (AnyObject?) -> AnyObject?) {
+    let item = _tier1Container.updateHead(block)
+      .newHead as? Item
+    
+    if let item = item, (item.index & ReleasePool.numberOfItemsForTier2) == ReleasePool.numberOfItemsForTier2 {
+      _tier2Container.updateHead { Tier2Item(item: item, next: $0 as! Tier2Item?) }
+    }
+  }
+  
   public func insert(_ releasable: Releasable) {
-    _container.updateHead { ReleasableItem(object: releasable, next: $0 as! Item?) }
+    self.updateHead { ReleasableItem(object: releasable, next: $0 as! Item?) }
   }
 
   public func notifyDrain(_ block: @escaping () -> Void) {
-    _container.updateHead { NotifyItem(notifyBlock: block, next: $0 as! Item?) }
+    self.updateHead { NotifyItem(notifyBlock: block, next: $0 as! Item?) }
   }
 
   public func drain() {
-    _container.updateHead { _ in return nil }
+    _tier1Container.updateHead { _ in return nil }
+    _tier2Container.updateHead { _ in return nil }
   }
 
   class Item {
     let next: Item?
+    let index: Int
 
     init(next: Item?) {
       self.next = next
+      self.index = next.flatMap { $0.index + 1 } ?? 0
     }
   }
 
@@ -68,6 +87,15 @@ final public class ReleasePool {
     init(object: Releasable, next: Item?) {
       self.object = object
       super.init(next: next)
+    }
+  }
+  
+  final class Tier2Item {
+    let item: Item
+    let next: Tier2Item?
+    init(item: Item, next: Tier2Item?) {
+      self.item = item
+      self.next = next
     }
   }
 }
