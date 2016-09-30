@@ -28,14 +28,15 @@ final public class ReleasePool {
   private let _tier1Container = makeThreadSafeContainer()
   private let _tier2Container = makeThreadSafeContainer()
   private let _tier3Container = makeThreadSafeContainer()
-  static let numberOfItemsForTier2 = (1 << 10) - 1
-  static let numberOfItemsForTier3 = (1 << 20) - 1
+  static let numberOfItemsForTier2 = (1 << 12) - 1
+  static let numberOfItemsForTier3 = (1 << 24) - 1
 
   public init() { }
   
   deinit {
     _tier1Container.updateHead { _ in return nil }
     _tier2Container.updateHead { _ in return nil }
+    _tier3Container.updateHead { _ in return nil }
   }
 
   private func updateHead(_ block: (AnyObject?) -> AnyObject?) {
@@ -62,6 +63,7 @@ final public class ReleasePool {
   public func drain() {
     _tier1Container.updateHead { _ in return nil }
     _tier2Container.updateHead { _ in return nil }
+    _tier3Container.updateHead { _ in return nil }
   }
 
   class Item {
