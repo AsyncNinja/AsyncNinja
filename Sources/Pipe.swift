@@ -93,7 +93,7 @@ public extension PipeInput where Final : _Fallible {
   }
 
   @discardableResult
-  public func push(failure: Error) -> Bool {
+  public func push(failure: Swift.Error) -> Bool {
     return self.push(.final(Final(failure: failure)))
   }
 }

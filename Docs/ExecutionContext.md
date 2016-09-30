@@ -17,7 +17,7 @@ class WebService {
     let internalQueue: DispatchQueue // queue to modify internal state on
     ...
     func signInUser(email: String, password: String,
-                      callback: @escaping (user: User?, error: Error?) -> Void) {
+                      callback: @escaping (user: User?, error: Swift.Error?) -> Void) {
         ...
     }
 }
@@ -77,7 +77,7 @@ There are also some methods that are implemented to work with context only:
 
 * `func onComplete<U: ExecutionContext>(context: U, block: @escaping (U, Value) -> Void)`
 * `func onSuccess<U: ExecutionContext>(context: U, block: @escaping (U, Success) -> Void)`
-* `func onFailure<U: ExecutionContext>(context: U, block: @escaping (U, Error) -> Void)`
+* `func onFailure<U: ExecutionContext>(context: U, block: @escaping (U, Swift.Error) -> Void)`
 
 As you might see these methods do not return any value. That means that they are made to change an internal state of `ExecutionContext`.
 

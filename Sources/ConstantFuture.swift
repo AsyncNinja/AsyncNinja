@@ -45,7 +45,7 @@ public func future<T>(success: T) -> Future<T> {
   return ConstantFuture(value: Fallible(success: success))
 }
 
-public func future<T>(failure: Error) -> Future<T> {
+public func future<T>(failure: Swift.Error) -> Future<T> {
   return ConstantFuture(value: Fallible(failure: failure))
 }
 

@@ -80,7 +80,7 @@
   }
 
   public extension URLSession {
-    private func dataFuture(context: ExecutionContext?, cancellationToken: CancellationToken?, makeTask: (@escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask) -> Future<(Data?, URLResponse)> {
+    private func dataFuture(context: ExecutionContext?, cancellationToken: CancellationToken?, makeTask: (@escaping (Data?, URLResponse?, Swift.Error?) -> Void) -> URLSessionDataTask) -> Future<(Data?, URLResponse)> {
       let promise = Promise<(Data?, URLResponse)>()
       let task = makeTask { [weak promise] (data, response, error) in
         guard let promise = promise else { return }

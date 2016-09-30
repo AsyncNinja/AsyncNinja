@@ -59,7 +59,7 @@ class MyViewController : UIViewController {
 		// present response
 	}
 	
-	func present(error: Error) {
+	func present(error: Swift.Error) {
 		// present error
 	}
 }

@@ -22,12 +22,12 @@
 
 import Dispatch
 
-public enum ConcurrencyError : Error, Equatable {
+public enum ConcurrencyError : Swift.Error, Equatable {
   case cancelled
   case contextDeallocated
 }
 
-public protocol CancellationRepresentableError : Error {
+public protocol CancellationRepresentableError : Swift.Error {
   var representsCancellation: Bool { get }
 }
 

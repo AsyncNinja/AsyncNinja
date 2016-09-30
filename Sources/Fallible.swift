@@ -25,13 +25,13 @@ import Dispatch
 /// Fallible is an implementation of validation monad. May contain either success value or falilure in form of `Error`.
 public enum Fallible<Success> : _Fallible {
   case success(Success)
-  case failure(Error)
+  case failure(Swift.Error)
 
   public init(success: Success) {
     self = .success(success)
   }
 
-  public init(failure: Error) {
+  public init(failure: Swift.Error) {
     self = .failure(failure)
   }
 }
@@ -60,7 +60,7 @@ public extension Fallible {
     }
   }
 
-  func onFailure(_ handler: (Error) throws -> Void) rethrows {
+  func onFailure(_ handler: (Swift.Error) throws -> Void) rethrows {
     if case let .failure(failure) = self {
       try handler(failure)
     }
@@ -79,7 +79,7 @@ public extension Fallible {
     }
   }
 
-  func recover(transform: (Error) throws -> Success) -> Fallible<Success> {
+  func recover(transform: (Swift.Error) throws -> Success) -> Fallible<Success> {
     switch self {
     case let .success(success):
       return .success(success)
@@ -89,7 +89,7 @@ public extension Fallible {
     }
   }
 
-  func recover(transform: (Error) -> Success) -> Success {
+  func recover(transform: (Swift.Error) -> Success) -> Success {
     switch self {
     case let .success(success):
       return success
@@ -131,13 +131,13 @@ public protocol _Fallible { // hacking type system once
   associatedtype Success
 
   var success: Success? { get }
-  var failure: Error? { get }
+  var failure: Swift.Error? { get }
 
   init(success: Success)
-  init(failure: Error)
+  init(failure: Swift.Error)
 
   func onSuccess(_ handler: (Success) throws -> Void) rethrows
-  func onFailure(_ handler: (Error) throws -> Void) rethrows
+  func onFailure(_ handler: (Swift.Error) throws -> Void) rethrows
 
   // (success or failure) * (try transform success to success) -> (success or failure)
   func map<T>(transform: (Success) throws -> T) -> Fallible<T>
@@ -146,10 +146,10 @@ public protocol _Fallible { // hacking type system once
   func map<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>
 
   // (success or failure) * (try transform failure to success) -> (success or failure)
-  func recover(transform: (Error) throws -> Success) -> Fallible<Success>
+  func recover(transform: (Swift.Error) throws -> Success) -> Fallible<Success>
 
   // (success or failure) * (transform failure to success) -> success
-  func recover(transform: (Error) -> Success) -> Success
+  func recover(transform: (Swift.Error) -> Success) -> Success
 
   // returns success or throws failure
   func liftSuccess() throws -> Success

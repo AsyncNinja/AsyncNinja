@@ -166,7 +166,7 @@ In some cases, it is convenient to make future with a predefined value.
 
 * `func future<T>(value: T) -> Future<T>`
 * `func future<T>(success: T) -> Future<T>`
-* `func future<T>(failure: Error) -> Future<T>`
+* `func future<T>(failure: Swift.Error) -> Future<T>`
 
 #### `Promise`
 `Promise` is a specific subclass of `Future` that can be instantiated with public initializer and can be manually completed with `func complete(with final: Value) -> Bool` and `func complete(with future: Future<Value>)`. `Promise` is useful when you have to manage completion manually. Bridging from API based on callbacks is a very common case of using `Promise`:
@@ -189,12 +189,12 @@ Transform value when in becomes available into another value.
 * regular
 	* `func Future<Value>.mapCompletion<T>(executor: Executor, transform: @escaping (Fallible<SuccessValue>) throws -> T) -> Future<T>`
 	* `func Future<Value>.map<T>(executor: Executor, transform: @escaping (SuccessValue) throws -> T) -> Future<T>`
-	* `func Future<Value>.recover(executor: Executor, transform: @escaping (Error) throws -> SuccessValue) -> Future<SuccessValue> `
+	* `func Future<Value>.recover(executor: Executor, transform: @escaping (Swift.Error) throws -> SuccessValue) -> Future<SuccessValue> `
 * [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md)
 	* `func Future<Value>.mapCompletion<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
 transform: @escaping (U, Fallible<SuccessValue>) throws -> T) -> Future<T>`
 	* `func Future<Value>.map<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, SuccessValue) throws -> T) -> Future<T>`
-    * `func Future<Value>.recover<U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Error) throws -> SuccessValue) -> Future<SuccessValue>`
+    * `func Future<Value>.recover<U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, Swift.Error) throws -> SuccessValue) -> Future<SuccessValue>`
 *     delayed
     *  `delayed(timeout: Double) -> Future<Value>`
 
@@ -218,4 +218,4 @@ After creation, transformations and combination of futures comes time to store r
 
 *    `func Future<Success>.onComplete<U: ExecutionContext>(context: U, block: @escaping (U, Fallible<Success>) -> Void)`
 *    `func Future<Success>.onSuccess<U: ExecutionContext>(context: U, block: @escaping (U, SuccessValue) -> Void)`
-*    `func Future<Success>.onFailure<U: ExecutionContext>(context: U, block: @escaping (U, Error) -> Void)` 
+*    `func Future<Success>.onFailure<U: ExecutionContext>(context: U, block: @escaping (U, Swift.Error) -> Void)` 

@@ -37,7 +37,7 @@ public protocol Finite : class {
 public extension Finite {
   var isComplete: Bool { return nil != self.finalValue }
   var success: FinalValue? { return self.finalValue?.success }
-  var failure: Error? { return self.finalValue?.failure }
+  var failure: Swift.Error? { return self.finalValue?.failure }
 }
 
 public extension Finite {
@@ -74,7 +74,7 @@ public extension Finite {
 
   /// Recovers failure of this future if there is one.
   func recover(executor: Executor = .primary,
-               transform: @escaping (Error) throws -> FinalValue) -> Future<FinalValue> {
+               transform: @escaping (Swift.Error) throws -> FinalValue) -> Future<FinalValue> {
     return self.mapCompletion(executor: executor) {
       (value) -> FinalValue in
       if let failure = value.failure { return try transform(failure) }
@@ -112,7 +112,7 @@ public extension Finite {
 
   /// Recovers failure of this future if there is one with contextual transformer.
   func recover<U: ExecutionContext>(context: U, executor: Executor? = nil,
-               transform: @escaping (U, Error) throws -> FinalValue) -> Future<FinalValue> {
+               transform: @escaping (U, Swift.Error) throws -> FinalValue) -> Future<FinalValue> {
     return self.mapCompletion(context: context, executor: executor) {
       (context, value) -> FinalValue in
       if let failure = value.failure { return try transform(context, failure) }
@@ -153,7 +153,7 @@ public extension Finite {
 
   /// Performs block when failure becomes available.
   func onFailure<U: ExecutionContext>(context: U, executor: Executor? = nil,
-                 block: @escaping (U, Error) -> Void) {
+                 block: @escaping (U, Swift.Error) -> Void) {
     self.onComplete(context: context, executor: executor) {
       (context, value) in
       guard let failure = value.failure else { return }

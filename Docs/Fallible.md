@@ -18,7 +18,7 @@
 ```
 enum Fallible<T> {
   case success(T)
-  case failure(Error)
+  case failure(Swift.Error)
 } 
 ``` 
 
@@ -94,7 +94,7 @@ Both approaches have their advantages and disadvantages. After consideration and
 
 #### with `init`
 *    `Fallible<Success>.init(success: Success)`
-*    `Fallible<Success>.init(failure: Error)`
+*    `Fallible<Success>.init(failure: Swift.Error)`
 
 #### from function with `throws`
 *    `func fallible<Success>(block: () throws -> T) -> Fallible<Success>`
@@ -103,19 +103,19 @@ Both approaches have their advantages and disadvantages. After consideration and
 
 *    `func Fallible<Success>.map<T>(transform: (Success) throws -> T) -> Fallible<T>`
 *    `func Fallible<Success>.map<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>`
-*    `func Fallible<Success>.recover(transform: (Error) throws -> Success) -> Fallible<Success>`
+*    `func Fallible<Success>.recover(transform: (Swift.Error) throws -> Success) -> Fallible<Success>`
 *    **failure recovery**
-    `func Fallible<Success>.recover(transform: (Error) -> Success) -> Success`
+    `func Fallible<Success>.recover(transform: (Swift.Error) -> Success) -> Success`
     
 ### Unwrapping `Fallible`    
 
 #### using properties
 *    `var Fallible<Success>.success: Success? { get }`
-*    `var Fallible<Success>.failure: Error? { get }`
+*    `var Fallible<Success>.failure: Swift.Error? { get }`
 
 #### using closures
 *    `func Fallible<Success>.onSuccess(_ handler: (Success) throws -> Void) rethrows`
-*    `func Fallible<Success>.onFailure(_ handler: (Error) throws -> Void) rethrows`
+*    `func Fallible<Success>.onFailure(_ handler: (Swift.Error) throws -> Void) rethrows`
 
 #### using function that `throws`
 

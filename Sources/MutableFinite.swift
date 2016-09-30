@@ -60,11 +60,11 @@ public extension MutableFinite {
   }
 
   @discardableResult
-  public func tryFail(with failure: Error) -> Bool {
+  public func tryFail(with failure: Swift.Error) -> Bool {
     return self.tryComplete(with: Fallible(failure: failure))
   }
 
-  public func fail(with failure: Error) {
+  public func fail(with failure: Swift.Error) {
     self.complete(with: Fallible(failure: failure))
   }
 
