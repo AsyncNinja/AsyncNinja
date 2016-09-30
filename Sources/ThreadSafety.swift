@@ -22,15 +22,9 @@
 
 import Dispatch
 
-#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-  private struct Constants {
-    static let isLockFreeUseAllowed = true
-  }
-#endif
-
 func makeThreadSafeContainer() -> ThreadSafeContainer {
   #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-    if Constants.isLockFreeUseAllowed {
+    if AsyncNinja.isLockFreeUseAllowed {
       return LockFreeThreadSafeContainer()
     } else {
       return LockingThreadSafeContainer(locking: makeLocking())

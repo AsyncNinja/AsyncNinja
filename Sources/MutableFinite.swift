@@ -69,10 +69,10 @@ public extension MutableFinite {
   }
 
   public func cancel() {
-    self.fail(with: ConcurrencyError.cancelled)
+    self.fail(with: AsyncNinja.Error.cancelled)
   }
 
   func cancelBecauseOfDeallicatedContext() {
-    self.fail(with: ConcurrencyError.contextDeallocated)
+    self.fail(with: AsyncNinja.Error.contextDeallocated)
   }
 }

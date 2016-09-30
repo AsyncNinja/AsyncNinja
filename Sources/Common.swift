@@ -22,15 +22,21 @@
 
 import Dispatch
 
-public enum ConcurrencyError : Swift.Error, Equatable {
-  case cancelled
-  case contextDeallocated
+public struct AsyncNinja {
+  #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+  static let isLockFreeUseAllowed = true
+  #endif
+  
+  public enum Error : Swift.Error, Equatable {
+    case cancelled
+    case contextDeallocated
+  }
 }
 
 public protocol CancellationRepresentableError : Swift.Error {
   var representsCancellation: Bool { get }
 }
 
-extension ConcurrencyError : CancellationRepresentableError {
+extension AsyncNinja.Error : CancellationRepresentableError {
   public var representsCancellation : Bool { return .cancelled == self }
 }

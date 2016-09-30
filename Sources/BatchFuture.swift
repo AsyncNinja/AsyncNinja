@@ -103,7 +103,7 @@ public extension Collection where Self.IndexDistance == Int {
   public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
                        transform: @escaping (U, Self.Iterator.Element) throws -> T) -> Future<[T]> {
     return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> T in
-      guard let context = context else { throw ConcurrencyError.contextDeallocated }
+      guard let context = context else { throw AsyncNinja.Error.contextDeallocated }
       return try transform(context, value)
     }
   }
@@ -111,7 +111,7 @@ public extension Collection where Self.IndexDistance == Int {
   public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
                        transform: @escaping (U, Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
     return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> Future<T> in
-      guard let context = context else { throw ConcurrencyError.contextDeallocated }
+      guard let context = context else { throw AsyncNinja.Error.contextDeallocated }
       return try transform(context, value)
     }
   }

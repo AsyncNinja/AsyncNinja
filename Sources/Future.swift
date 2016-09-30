@@ -131,7 +131,7 @@ public func future<T, U : ExecutionContext>(context: U, executor: Executor? = ni
   // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Failure_ContextDead
   return future(executor: executor ?? context.executor) { [weak context] () -> T in
     guard let context = context
-      else { throw ConcurrencyError.contextDeallocated }
+      else { throw AsyncNinja.Error.contextDeallocated }
 
     return try block(context)
   }
@@ -147,7 +147,7 @@ public func future<T, U : ExecutionContext>(context: U, executor: Executor? = ni
   // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead
   let promiseValue = promise(executor: executor ?? context.executor, after: timeout) { [weak context] () -> T in
     guard let context = context
-      else { throw ConcurrencyError.contextDeallocated }
+      else { throw AsyncNinja.Error.contextDeallocated }
 
     return try block(context)
   }

@@ -225,7 +225,7 @@ class FutureTests : XCTestCase {
     // self.waitForExpectations(timeout: 1.0)
     let result = mappedFuture.wait()
     XCTAssertNil(weakInitialFuture)
-    XCTAssertEqual(result.failure as? ConcurrencyError, .contextDeallocated)
+    XCTAssertEqual(result.failure as? AsyncNinja.Error, .contextDeallocated)
   }
 
   func testMapContextual_Failure_ContextAlive() {
@@ -275,7 +275,7 @@ class FutureTests : XCTestCase {
     //self.waitForExpectations(timeout: 0.1)
     let result = mappedFuture.wait()
     XCTAssertNil(weakInitialFuture)
-    XCTAssertEqual(result.failure as? ConcurrencyError, .contextDeallocated)
+    XCTAssertEqual(result.failure as? AsyncNinja.Error, .contextDeallocated)
   }
 
   func testOnCompleteContextual_ContextAlive() {
@@ -412,7 +412,7 @@ class FutureTests : XCTestCase {
     }
 
     usleep(100_000)
-    XCTAssertEqual(futureValue.failure as? ConcurrencyError, ConcurrencyError.contextDeallocated)
+    XCTAssertEqual(futureValue.failure as? AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
   }
 
   func testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive() {
@@ -443,7 +443,7 @@ class FutureTests : XCTestCase {
     }
 
     usleep(100_000)
-    XCTAssertEqual(futureValue.failure as? ConcurrencyError, ConcurrencyError.contextDeallocated)
+    XCTAssertEqual(futureValue.failure as? AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
   }
   
   func testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive() {
@@ -479,7 +479,7 @@ class FutureTests : XCTestCase {
     actor = nil
 
     usleep(250_000)
-    XCTAssertEqual(futureValue.failure as? ConcurrencyError, ConcurrencyError.contextDeallocated)
+    XCTAssertEqual(futureValue.failure as? AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
   }
 
   func testMakeFutureOfDelayedContextualFallibleBlock_Success_EarlyContextDead() {
@@ -494,7 +494,7 @@ class FutureTests : XCTestCase {
 
     actor = nil
     usleep(100_000)
-    XCTAssertEqual(futureValue.failure as? ConcurrencyError, ConcurrencyError.contextDeallocated)
+    XCTAssertEqual(futureValue.failure as? AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
   }
 
   func testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextAlive() {
@@ -530,7 +530,7 @@ class FutureTests : XCTestCase {
     actor = nil
 
     usleep(250_000)
-    XCTAssertEqual(futureValue.failure as? ConcurrencyError, ConcurrencyError.contextDeallocated)
+    XCTAssertEqual(futureValue.failure as? AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
   }
 
   func testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead() {
@@ -545,7 +545,7 @@ class FutureTests : XCTestCase {
 
     actor = nil
     usleep(100_000)
-    XCTAssertEqual(futureValue.failure as? ConcurrencyError, ConcurrencyError.contextDeallocated)
+    XCTAssertEqual(futureValue.failure as? AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
   }
 
   func testGroupCompletionFuture() {

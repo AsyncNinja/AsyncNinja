@@ -42,7 +42,7 @@ public extension Fallible {
     else { return nil }
   }
 
-  var failure: Error? {
+  var failure: Swift.Error? {
     if case let .failure(failure) = self { return failure }
     else { return nil }
   }
