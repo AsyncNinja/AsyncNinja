@@ -352,9 +352,13 @@ class FutureTests : XCTestCase {
     let qos = pickQoS()
     let value = pickInt()
     let expectation = self.expectation(description: "block called")
-
+    let startTime = DispatchTime.now()
+    
     let futureValue = future(executor: .queue(qos), after: 0.2) { () -> Int in
       assert(qos: qos)
+      let finishTime = DispatchTime.now()
+      XCTAssert(startTime + 0.2 < finishTime)
+      XCTAssert(startTime + 0.4 > finishTime)
       expectation.fulfill()
       return try square_success(value)
     }
@@ -362,7 +366,7 @@ class FutureTests : XCTestCase {
     usleep(150_000)
     XCTAssertNil(futureValue.value)
 
-    self.waitForExpectations(timeout: 0.3)
+    self.waitForExpectations(timeout: 0.5)
     XCTAssertEqual(futureValue.success, square(value))
   }
 
@@ -370,9 +374,13 @@ class FutureTests : XCTestCase {
     let qos = pickQoS()
     let value = pickInt()
     let expectation = self.expectation(description: "block called")
+    let startTime = DispatchTime.now()
 
     let futureValue = future(executor: .queue(qos), after: 0.2) { () -> Int in
       assert(qos: qos)
+      let finishTime = DispatchTime.now()
+      XCTAssert(startTime + 0.2 < finishTime)
+      XCTAssert(startTime + 0.4 > finishTime)
       expectation.fulfill()
       return try square_failure(value)
     }
@@ -380,7 +388,7 @@ class FutureTests : XCTestCase {
     usleep(150_000)
     XCTAssertNil(futureValue.value)
 
-    self.waitForExpectations(timeout: 0.3)
+    self.waitForExpectations(timeout: 0.5)
     XCTAssertEqual(futureValue.failure as? TestError, TestError.testCode)
   }
 
