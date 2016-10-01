@@ -21,21 +21,28 @@
 //
 
 import XCTest
-
-#if !os(macOS)
-  public func allTests() -> [XCTestCaseEntry] {
-    return [
-      testCase(BatchFutureTests.allTests),
-      testCase(ChannelTests.allTests),
-      testCase(ExecutionContextTests.allTests),
-      testCase(ExecutorTests.allTests),
-      testCase(FallibleTests.allTests),
-      testCase(FutureTests.allTests),
-      testCase(PerformanceTests.allTests),
-      testCase(PipeTests.allTests),
-      testCase(ReleasePoolTests.allTests),
-      testCase(TimerChannelTests.allTests),
-      testCase(ZipFuturesTest.allTests),
-    ]
-  }
+import Dispatch
+@testable import AsyncNinja
+#if os(Linux)
+  import Glibc
 #endif
+
+class ChannelTests : XCTestCase {
+  
+  static let allTests = [
+    ("testConstant", testConstant),
+]
+  
+  func testConstant() {
+    let numberOfPeriodics = 5
+    let periodics = (0..<numberOfPeriodics).map { _ in pickInt() }
+    let success = "final value"
+    
+    let channelA = channel(periodics: periodics, success: success)
+
+    for periodic in periodics {
+      XCTAssertEqual(channelA.next(), periodic)
+    }
+    XCTAssertEqual(channelA.wait().success!, success)
+  }
+}

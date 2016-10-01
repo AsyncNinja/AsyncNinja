@@ -20,22 +20,8 @@
 //  IN THE SOFTWARE.
 //
 
-import XCTest
+import Dispatch
 
-#if !os(macOS)
-  public func allTests() -> [XCTestCaseEntry] {
-    return [
-      testCase(BatchFutureTests.allTests),
-      testCase(ChannelTests.allTests),
-      testCase(ExecutionContextTests.allTests),
-      testCase(ExecutorTests.allTests),
-      testCase(FallibleTests.allTests),
-      testCase(FutureTests.allTests),
-      testCase(PerformanceTests.allTests),
-      testCase(PipeTests.allTests),
-      testCase(ReleasePoolTests.allTests),
-      testCase(TimerChannelTests.allTests),
-      testCase(ZipFuturesTest.allTests),
-    ]
-  }
-#endif
+public protocol BufferingPeriodic : Periodic {
+  var bufferSize: Int { get }
+}

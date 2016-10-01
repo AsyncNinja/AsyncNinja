@@ -22,15 +22,23 @@
 
 import Dispatch
 
-final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, FinalValue>, MutableFinite, MutablePeriodic {
+final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, FinalValue>, MutableFinite, MutablePeriodic, BufferingPeriodic {
   typealias RegularState = RegularProducerState<PeriodicValue, FinalValue>
   typealias FinalState = FinalProducerState<PeriodicValue, FinalValue>
   private let releasePool = ReleasePool()
   private let _container = makeThreadSafeContainer()
+  private let _buffer: Buffer<PeriodicValue>
+  public var bufferSize: Int { return _buffer.size }
 
   override public var finalValue: Fallible<FinalValue>? { return (_container.head as? FinalState)?.final }
 
-  override public init() { }
+  override public convenience init() {
+    self.init(bufferSize: 0)
+  }
+  
+  public init(bufferSize: Int) {
+    _buffer = makeBuffer(size: bufferSize)
+  }
 
   /// **internal use only**
   override public func makeHandler(executor: Executor,
@@ -49,6 +57,8 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
         fatalError()
       }
     }
+
+    _buffer.apply { block(.periodic($0)) }
 
     return handler
   }
@@ -75,11 +85,13 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   }
 
   public func send(_ periodic: PeriodicValue) {
+    _buffer.push(periodic)
     self.notify(.periodic(periodic), head: _container.head as! ProducerState<PeriodicValue, FinalValue>?)
   }
 
   public func send<S : Sequence>(_ periodics: S)
     where S.Iterator.Element == PeriodicValue {
+      _buffer.push(periodics)
       let localHead = _container.head
       for periodic in periodics {
         self.notify(.periodic(periodic), head: localHead as! ProducerState<PeriodicValue, FinalValue>?)

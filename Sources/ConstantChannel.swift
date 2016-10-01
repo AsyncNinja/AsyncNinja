@@ -22,22 +22,24 @@
 
 import Dispatch
 
-final class ConstantChannel<S: Sequence, U> : Channel<S.Iterator.Element, U> {
-  private let _periodicValues: S
+final class ConstantChannel<S: Collection, U> : Channel<S.Iterator.Element, U>, BufferingPeriodic
+where S.IndexDistance == Int {
+  private let _periodics: S
   private let _finalValue: Fallible<U>
+  public var bufferSize: Int { return _periodics.count }
 
   override public var finalValue: Fallible<U>? { return _finalValue }
 
-  init(periodicValues: S, finalValue: Fallible<U>) {
-    _periodicValues = periodicValues
+  init(periodics: S, finalValue: Fallible<U>) {
+    _periodics = periodics
     _finalValue = finalValue
   }
   
   override func makeHandler(executor: Executor,
                             block: @escaping (Value) -> Void) -> Handler? {
     executor.execute {
-      for periodicValue in self._periodicValues {
-        block(.periodic(periodicValue))
+      for periodic in self._periodics {
+        block(.periodic(periodic))
       }
       
       block(.final(self._finalValue))
@@ -47,6 +49,12 @@ final class ConstantChannel<S: Sequence, U> : Channel<S.Iterator.Element, U> {
   
 }
 
-public func channel<S: Sequence, U>(periodicValues: S, finalValue: Fallible<U>) -> Channel<S.Iterator.Element, U> {
-  return ConstantChannel(periodicValues: periodicValues, finalValue: finalValue)
+public func channel<S: Collection, U>(periodics: S, success: U) -> Channel<S.Iterator.Element, U>
+  where S.IndexDistance == Int {
+    return ConstantChannel(periodics: periodics, finalValue: Fallible(success: success))
+}
+
+public func channel<S: Collection, U>(periodics: S, failure: Swift.Error) -> Channel<S.Iterator.Element, U>
+  where S.IndexDistance == Int {
+    return ConstantChannel(periodics: periodics, finalValue: Fallible(failure: failure))
 }
