@@ -22,21 +22,21 @@
 
 import Dispatch
 
-public struct AsyncNinja {
+public struct AsyncNinjaConstants {
   #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
   static let isLockFreeUseAllowed = true
   #endif
-  
-  public enum Error : Swift.Error, Equatable {
-    case cancelled
-    case contextDeallocated
-  }
+}
+
+public enum AsyncNinjaError : Swift.Error, Equatable {
+  case cancelled
+  case contextDeallocated
 }
 
 public protocol CancellationRepresentableError : Swift.Error {
   var representsCancellation: Bool { get }
 }
 
-extension AsyncNinja.Error : CancellationRepresentableError {
+extension AsyncNinjaError : CancellationRepresentableError {
   public var representsCancellation : Bool { return .cancelled == self }
 }

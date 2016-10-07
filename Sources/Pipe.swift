@@ -22,15 +22,15 @@
 
 import Dispatch
 
-class Pipe<Periodic, Final> {
+public class Pipe<Periodic, Final> : _PipeInput {
   private let _inputSema = DispatchSemaphore(value: 1)
   private let _outputSema = DispatchSemaphore(value: 0)
   private var _value: PipeValue<Periodic, Final>?
   
-  init() {}
+  public init() {}
   
   @discardableResult
-  func push(_ value: PipeValue<Periodic, Final>) -> Bool {
+  public func push(_ value: PipeValue<Periodic, Final>) -> Bool {
     _inputSema.wait()
     defer { _outputSema.signal() }
     
@@ -43,7 +43,7 @@ class Pipe<Periodic, Final> {
     }
   }
   
-  func pop() -> PipeValue<Periodic, Final> {
+  public func pop() -> PipeValue<Periodic, Final> {
     _outputSema.wait()
     defer { _inputSema.signal() }
     let value = _value!
@@ -55,6 +55,8 @@ class Pipe<Periodic, Final> {
     }
     return value
   }
+  
+  
 }
 
 public enum PipeValue<Periodic, Final> {
@@ -62,19 +64,27 @@ public enum PipeValue<Periodic, Final> {
   case final(Final)
 }
 
-public class PipeInput<Periodic, Final> {
+public class PipeInput<Periodic, Final> : _PipeInput {
   weak var pipe: Pipe<Periodic, Final>?
   
-  init(pipe: Pipe<Periodic, Final>) {
+  public init(pipe: Pipe<Periodic, Final>) {
     self.pipe = pipe
   }
   
   @discardableResult
-  func push(_ value: PipeValue<Periodic, Final>) -> Bool {
+  public func push(_ value: PipeValue<Periodic, Final>) -> Bool {
     guard let pipe = self.pipe else { return false }
     return pipe.push(value)
   }
+}
 
+public protocol _PipeInput {
+  associatedtype Periodic
+  associatedtype Final
+  func push(_ value: PipeValue<Periodic, Final>) -> Bool
+}
+
+public extension _PipeInput {
   @discardableResult
   public func push(periodic: Periodic) -> Bool {
     return self.push(.periodic(periodic))
@@ -86,33 +96,14 @@ public class PipeInput<Periodic, Final> {
   }
 }
 
-public extension PipeInput where Final : _Fallible {
+public extension _PipeInput where Final : _Fallible {
   @discardableResult
   public func push(success: Final.Success) -> Bool {
     return self.push(final: Final(success: success))
   }
-
+  
   @discardableResult
   public func push(failure: Swift.Error) -> Bool {
     return self.push(.final(Final(failure: failure)))
   }
-}
-
-public class PipeOutput<Periodic, Final> {
-  let pipe: Pipe<Periodic, Final>
-  
-  init(pipe: Pipe<Periodic, Final>) {
-    self.pipe = pipe
-  }
-  
-  public func pop() -> PipeValue<Periodic, Final> {
-    return self.pipe.pop()
-  }
-}
-
-public typealias PipesPair<Periodic, Final> = (input: PipeInput<Periodic, Final>, output: PipeOutput<Periodic, Final>)
-
-public func makePipesPair<Periodic, Final>() -> PipesPair<Periodic, Final> {
-  let pipe = Pipe<Periodic, Final>()
-  return (PipeInput<Periodic, Final>(pipe: pipe), PipeOutput<Periodic, Final>(pipe: pipe))
 }

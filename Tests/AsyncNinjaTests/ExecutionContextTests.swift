@@ -56,6 +56,6 @@ class ExecutionContextTests : XCTestCase {
 
     let failure = fullFutureValue.wait().failure
     XCTAssertNotNil(failure)
-    XCTAssertEqual(failure as! AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
+    XCTAssertEqual(failure as! AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 }

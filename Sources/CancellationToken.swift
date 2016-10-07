@@ -24,7 +24,7 @@ import Dispatch
 
 public class CancellationToken {
   private let _container = makeThreadSafeContainer()
-  var isCancelled: Bool { return _container.head is CancelledItem }
+  public var isCancelled: Bool { return _container.head is CancelledItem }
 
   public init() { }
 

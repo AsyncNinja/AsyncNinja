@@ -93,7 +93,7 @@ public extension Finite {
                      transform: @escaping (U, Fallible<FinalValue>) throws -> TransformedValue) -> Future<TransformedValue> {
     return self.mapCompletion(executor: executor ?? context.executor) {
       [weak context] (value) -> TransformedValue in
-      guard let context = context else { throw AsyncNinja.Error.contextDeallocated }
+      guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, value)
     }
   }

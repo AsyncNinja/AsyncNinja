@@ -24,7 +24,7 @@ import Dispatch
 
 func makeThreadSafeContainer() -> ThreadSafeContainer {
   #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-    if AsyncNinja.isLockFreeUseAllowed {
+    if AsyncNinjaConstants.isLockFreeUseAllowed {
       return LockFreeThreadSafeContainer()
     } else {
       return LockingThreadSafeContainer(locking: makeLocking())

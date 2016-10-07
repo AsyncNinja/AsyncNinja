@@ -86,7 +86,7 @@
         guard let promise = promise else { return }
         guard let error = error else { promise.succeed(with: (data, response!)); return }
         if let error = error as? URLError, error.code == .cancelled {
-          promise.fail(with: AsyncNinja.Error.cancelled)
+          promise.fail(with: AsyncNinjaError.cancelled)
         } else {
           promise.fail(with: error)
         }
