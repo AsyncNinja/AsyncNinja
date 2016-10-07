@@ -25,7 +25,8 @@ import Dispatch
 public class Pipe<Periodic, Final> : _PipeInput {
   private let _inputSema = DispatchSemaphore(value: 1)
   private let _outputSema = DispatchSemaphore(value: 0)
-  private var _value: PipeValue<Periodic, Final>?
+  private var _periodic: Periodic?
+  private var _final: Final?
   
   public init() {}
   
@@ -33,12 +34,23 @@ public class Pipe<Periodic, Final> : _PipeInput {
   public func push(_ value: PipeValue<Periodic, Final>) -> Bool {
     _inputSema.wait()
     defer { _outputSema.signal() }
-    
-    if nil != _value {
-      _inputSema.signal()
-      return false
+
+    if nil != _final {
+      switch value {
+      case .periodic(let periodic):
+        _periodic = periodic
+        return true
+      case .final:
+        _inputSema.signal()
+        return false
+      }
     } else {
-      _value = value
+      switch value {
+      case .periodic(let periodic):
+        _periodic = periodic
+      case .final(let final):
+        _final = final
+      }
       return true
     }
   }
@@ -46,17 +58,17 @@ public class Pipe<Periodic, Final> : _PipeInput {
   public func pop() -> PipeValue<Periodic, Final> {
     _outputSema.wait()
     defer { _inputSema.signal() }
-    let value = _value!
-    switch value {
-    case .periodic:
-      _value = nil
-    case .final:
+
+    if let periodic = _periodic {
+      _periodic = nil
+      return .periodic(periodic)
+    } else if let final = _final {
       _outputSema.signal()
+      return .final(final)
+    } else {
+      fatalError()
     }
-    return value
   }
-  
-  
 }
 
 public enum PipeValue<Periodic, Final> {

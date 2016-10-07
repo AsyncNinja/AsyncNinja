@@ -41,8 +41,8 @@ class ReleasePoolTests : XCTestCase {
     weak var weakBoxedOne = boxedOne
     weak var weakBoxedTwo = boxedTwo
 
-    releasePool.insert(boxedOne)
-    releasePool.insert(boxedTwo)
+    releasePool.insert(boxedOne!)
+    releasePool.insert(boxedTwo!)
 
     boxedOne = nil
     boxedTwo = nil
