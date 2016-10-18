@@ -73,23 +73,29 @@ public extension Future where FinalValue : Finite {
   /// flattens combination of two nested unfaillable futures to a signle unfallible one
   final func flatten() -> Future<FinalValue.FinalValue> {
     // Test: FutureTests.testFlatten
+    // Test: FutureTests.testFlatten_OuterFailure
+    // Test: FutureTests.testFlatten_InnerFailure
     let promise = Promise<FinalValue.FinalValue>()
-
-    let handler = self.makeFinalHandler(executor: .immediate) { [weak promise] (future) in
+    let handler = self.makeFinalHandler(executor: .immediate) { [weak promise] (failure) in
       guard let promise = promise else { return }
-      let handler = (future.success as? Future<FinalValue.FinalValue>)?
-        .makeFinalHandler(executor: .immediate) { [weak promise] (final) -> Void in
+      switch failure {
+      case .success(let future):
+        let handler = future.makeFinalHandler(executor: .immediate) {
+          [weak promise] (final) -> Void in
           promise?.complete(with: final)
-      }
-      if let handler = handler {
-        promise.insertToReleasePool(handler)
+        }
+        if let handler = handler {
+          promise.insertToReleasePool(handler)
+        }
+      case .failure(let error):
+        promise.fail(with: error)
       }
     }
-
+    
     if let handler = handler {
       promise.insertToReleasePool(handler)
     }
-
+    
     return promise
   }
 }
