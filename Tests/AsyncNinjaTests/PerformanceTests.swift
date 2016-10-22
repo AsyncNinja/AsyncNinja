@@ -92,7 +92,7 @@ class PerformanceTests : XCTestCase {
     self.measure {
       let resultValue = PerformanceTests.runsRange
         .map { future(success: $0).map(executor: .immediate) { $0 * 2 } }
-        .reduce(executor: .immediate, initialResult: 0, nextPartialResult: +)
+        .reduce(initialResult: 0, nextPartialResult: +)
         .wait().success!
       XCTAssertEqual(resultValue, (PerformanceTests.runsRange.lowerBound + PerformanceTests.runsRange.upperBound - 1) * PerformanceTests.runsRange.count)
     }

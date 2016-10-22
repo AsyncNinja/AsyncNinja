@@ -72,11 +72,11 @@
   import CoreData
 
   extension NSManagedObjectContext : ObjCInjectedExecutionContext {
-    public var executor: Executor { return Executor { [weak self] in self?.perform($0) } }
+    public var executor: Executor { return Executor(isSerial: true) { [weak self] in self?.perform($0) } }
   }
 
   extension NSPersistentStoreCoordinator : ObjCInjectedExecutionContext {
-    public var executor: Executor { return Executor { [weak self] in self?.perform($0) } }
+    public var executor: Executor { return Executor(isSerial: true) { [weak self] in self?.perform($0) } }
   }
 
   public extension URLSession {
