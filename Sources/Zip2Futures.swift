@@ -28,7 +28,7 @@ public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, 
   // Test: ZipFuturesTest.test2Failure
   // Test: ZipFuturesTest.test2Lifetime
   let promise = Promise<(A, B)>()
-  let locking = makeLocking()
+  var locking = makeLocking()
   var subvalueA: A? = nil
   var subvalueB: B? = nil
   

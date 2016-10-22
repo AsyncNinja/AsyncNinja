@@ -156,7 +156,7 @@ public extension Periodic {
   func buffered(capacity: Int) -> InfiniteChannel<[PeriodicValue]> {
     var buffer = [PeriodicValue]()
     buffer.reserveCapacity(capacity)
-    let locking = makeLocking()
+    var locking = makeLocking()
 
     return self.makeChannel(executor: .immediate) { (PeriodicValue, send) in
       locking.lock()

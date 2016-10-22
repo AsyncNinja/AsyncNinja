@@ -26,7 +26,7 @@ public func zip<T, U>(_ leftChannel: InfiniteChannel<T>, _ rightChannel: Infinit
   let resultChannel = InfiniteProducer<(T, U)>()
   let leftQueue = QueueImpl<T>()
   let rightQueue = QueueImpl<U>()
-  let locking = makeLocking()
+  var locking = makeLocking()
 
   func makeElement(_ leftQueue: QueueImpl<T>, _ rightQueue: QueueImpl<U>) -> (T, U)? {
     if leftQueue.isEmpty || rightQueue.isEmpty {

@@ -51,7 +51,7 @@ public extension Collection where Self.IndexDistance == Int {
   public func asyncMap<T>(executor: Executor = .primary,
                        transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
     let promise = Promise<[T]>()
-    let locking = makeLocking()
+    var locking = makeLocking()
 
     var canContinue = true
     let count = self.count

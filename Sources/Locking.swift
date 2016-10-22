@@ -23,8 +23,8 @@
 import Dispatch
 
 protocol Locking {
-  func lock()
-  func unlock()
+  mutating func lock()
+  mutating func unlock()
 }
 
 func makeLocking() -> Locking {
@@ -39,14 +39,14 @@ func makeLocking() -> Locking {
   #endif
 }
 
-final class DispatchSemaphoreLocking : Locking {
+struct DispatchSemaphoreLocking : Locking {
   private let _sema = DispatchSemaphore(value: 1)
 
-  func lock() {
+  mutating func lock() {
     _sema.wait()
   }
 
-  func unlock() {
+  mutating func unlock() {
     _sema.signal()
   }
 }
@@ -56,27 +56,27 @@ final class DispatchSemaphoreLocking : Locking {
 @available(iOS, deprecated: 10.0, message: "Use UnfairLockLocking instead")
 @available(tvOS, deprecated: 10.0, message: "Use UnfairLockLocking instead")
 @available(watchOS, deprecated: 3.0, message: "Use UnfairLockLocking instead")
-final private class SpinLockLocking : Locking {
+struct SpinLockLocking : Locking {
   private var _lock: OSSpinLock = OS_SPINLOCK_INIT
 
-  func lock() {
+  mutating func lock() {
     OSSpinLockLock(&_lock)
   }
 
-  func unlock() {
+  mutating func unlock() {
     OSSpinLockUnlock(&_lock)
   }
 }
 
 @available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *)
-final private class UnfairLockLocking : Locking {
+struct  UnfairLockLocking : Locking {
   private var _lock = os_unfair_lock_s()
 
-  func lock() {
+  mutating func lock() {
     os_unfair_lock_lock(&_lock)
   }
 
-  func unlock() {
+  mutating func unlock() {
     os_unfair_lock_unlock(&_lock)
   }
 }

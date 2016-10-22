@@ -43,7 +43,7 @@ protocol ThreadSafeContainer {
 }
 
 private struct LockingThreadSafeContainer : ThreadSafeContainer {
-  private let _locking: Locking
+  private var _locking: Locking
   var head: AnyObject?
 
   init(locking: Locking) {
