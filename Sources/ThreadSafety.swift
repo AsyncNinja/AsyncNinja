@@ -39,10 +39,10 @@ protocol ThreadSafeContainer {
   var head: AnyObject? { get }
 
   @discardableResult
-  func updateHead(_ block: (AnyObject?) -> AnyObject?) -> (oldHead: AnyObject?, newHead: AnyObject?)
+  mutating func updateHead(_ block: (AnyObject?) -> AnyObject?) -> (oldHead: AnyObject?, newHead: AnyObject?)
 }
 
-final private class LockingThreadSafeContainer : ThreadSafeContainer {
+private struct LockingThreadSafeContainer : ThreadSafeContainer {
   private let _locking: Locking
   var head: AnyObject?
 
@@ -51,7 +51,7 @@ final private class LockingThreadSafeContainer : ThreadSafeContainer {
   }
 
   @discardableResult
-  func updateHead(_ block: (AnyObject?) -> AnyObject?) -> (oldHead: AnyObject?, newHead: AnyObject?) {
+  mutating func updateHead(_ block: (AnyObject?) -> AnyObject?) -> (oldHead: AnyObject?, newHead: AnyObject?) {
     _locking.lock()
     defer { _locking.unlock() }
 

@@ -24,7 +24,7 @@ import Dispatch
 
 /// Promise that may be manually completed by owner.
 final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
-  private let _container = makeThreadSafeContainer()
+  private var _container = makeThreadSafeContainer()
   private let releasePool = ReleasePool()
   override public var finalValue: Fallible<FinalValue>? { return (_container.head as? CompletedPromiseState)?.value }
 

@@ -60,7 +60,8 @@ class PerformanceTests : XCTestCase {
     self.measure {
       for value in PerformanceTests.runsRange {
         let futureValue = future(success: value).map(executor: .immediate) { _ in throw TestError.testCode }
-        XCTAssertEqual(futureValue.wait().failure as! TestError, TestError.testCode)
+        let failure = futureValue.wait().failure as! TestError
+        XCTAssertEqual(failure, TestError.testCode)
       }
     }
   }
