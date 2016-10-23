@@ -25,9 +25,9 @@ import Dispatch
 public typealias Releasable = Any
 
 final public class ReleasePool {
-  private let _tier1Container = makeThreadSafeContainer()
-  private let _tier2Container = makeThreadSafeContainer()
-  private let _tier3Container = makeThreadSafeContainer()
+  private var _tier1Container = makeThreadSafeContainer()
+  private var _tier2Container = makeThreadSafeContainer()
+  private var _tier3Container = makeThreadSafeContainer()
   static let numberOfItemsForTier2 = (1 << 12) - 1
   static let numberOfItemsForTier3 = (1 << 24) - 1
 

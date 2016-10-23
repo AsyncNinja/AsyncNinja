@@ -28,7 +28,7 @@ public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: 
   // Test: ZipFuturesTest.test3Failure
   // Test: ZipFuturesTest.test3Lifetime
   let promise = Promise<(A, B, C)>()
-  let locking = makeLocking()
+  var locking = makeLocking()
   var subvalueA: A? = nil
   var subvalueB: B? = nil
   var subvalueC: C? = nil

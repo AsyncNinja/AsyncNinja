@@ -24,7 +24,7 @@ import Dispatch
 
 func makeThreadSafeContainer() -> ThreadSafeContainer {
   #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-    if AsyncNinja.isLockFreeUseAllowed {
+    if AsyncNinjaConstants.isLockFreeUseAllowed {
       return LockFreeThreadSafeContainer()
     } else {
       return LockingThreadSafeContainer(locking: makeLocking())
@@ -39,11 +39,11 @@ protocol ThreadSafeContainer {
   var head: AnyObject? { get }
 
   @discardableResult
-  func updateHead(_ block: (AnyObject?) -> AnyObject?) -> (oldHead: AnyObject?, newHead: AnyObject?)
+  mutating func updateHead(_ block: (AnyObject?) -> AnyObject?) -> (oldHead: AnyObject?, newHead: AnyObject?)
 }
 
-final private class LockingThreadSafeContainer : ThreadSafeContainer {
-  private let _locking: Locking
+private struct LockingThreadSafeContainer : ThreadSafeContainer {
+  private var _locking: Locking
   var head: AnyObject?
 
   init(locking: Locking) {
@@ -51,7 +51,7 @@ final private class LockingThreadSafeContainer : ThreadSafeContainer {
   }
 
   @discardableResult
-  func updateHead(_ block: (AnyObject?) -> AnyObject?) -> (oldHead: AnyObject?, newHead: AnyObject?) {
+  mutating func updateHead(_ block: (AnyObject?) -> AnyObject?) -> (oldHead: AnyObject?, newHead: AnyObject?) {
     _locking.lock()
     defer { _locking.unlock() }
 

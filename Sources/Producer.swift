@@ -26,7 +26,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   typealias RegularState = RegularProducerState<PeriodicValue, FinalValue>
   typealias FinalState = FinalProducerState<PeriodicValue, FinalValue>
   private let releasePool = ReleasePool()
-  private let _container = makeThreadSafeContainer()
+  private var _container = makeThreadSafeContainer()
   private let _buffer: Buffer<PeriodicValue>
   public var bufferSize: Int { return _buffer.size }
 

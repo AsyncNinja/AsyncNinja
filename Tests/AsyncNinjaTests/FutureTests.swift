@@ -50,6 +50,8 @@ class FutureTests : XCTestCase {
     ("testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive", testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive),
     ("testMakeFutureOfContextualFallibleBlock_Failure_ContextDead", testMakeFutureOfContextualFallibleBlock_Failure_ContextDead),
     ("testFlatten", testFlatten),
+    ("testFlatten_OuterFailure", testFlatten_OuterFailure),
+    ("testFlatten_InnerFailure", testFlatten_InnerFailure),
     ("testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive", testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive),
     ("testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextDead", testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextDead),
     ("testMakeFutureOfDelayedContextualFallibleBlock_Success_EarlyContextDead", testMakeFutureOfDelayedContextualFallibleBlock_Success_EarlyContextDead),
@@ -226,7 +228,7 @@ class FutureTests : XCTestCase {
     // self.waitForExpectations(timeout: 1.0)
     let result = mappedFuture.wait()
     XCTAssertNil(weakInitialFuture)
-    XCTAssertEqual(result.failure as? AsyncNinja.Error, .contextDeallocated)
+    XCTAssertEqual(result.failure as? AsyncNinjaError, .contextDeallocated)
   }
 
   func testMapContextual_Failure_ContextAlive() {
@@ -276,7 +278,7 @@ class FutureTests : XCTestCase {
     //self.waitForExpectations(timeout: 0.1)
     let result = mappedFuture.wait()
     XCTAssertNil(weakInitialFuture)
-    XCTAssertEqual(result.failure as? AsyncNinja.Error, .contextDeallocated)
+    XCTAssertEqual(result.failure as? AsyncNinjaError, .contextDeallocated)
   }
 
   func testOnCompleteContextual_ContextAlive() {
@@ -421,7 +423,7 @@ class FutureTests : XCTestCase {
     }
 
     usleep(100_000)
-    XCTAssertEqual(futureValue.failure as? AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
+    XCTAssertEqual(futureValue.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
   func testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive() {
@@ -452,18 +454,55 @@ class FutureTests : XCTestCase {
     }
 
     usleep(100_000)
-    XCTAssertEqual(futureValue.failure as? AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
+    XCTAssertEqual(futureValue.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
   
   func testFlatten() {
     let startTime = DispatchTime.now()
+    let timeout = startTime + 0.7
     let value = pickInt()
     let future3D = future(after: 0.2) { return future(after: 0.3) { value } }
     let future2D = future3D.flatten()
-    XCTAssertEqual(future2D.wait().success!, value)
-    let finishTime = DispatchTime.now()
-    XCTAssert(startTime + 0.4 < finishTime)
-    XCTAssert(startTime + 0.6 > finishTime)
+    if let failable = future2D.wait(timeout: timeout) {
+      XCTAssertEqual(failable.success!, value)
+      let finishTime = DispatchTime.now()
+      XCTAssert(startTime + 0.4 < finishTime)
+      XCTAssert(startTime + 0.6 > finishTime)
+    } else {
+      XCTFail("timeout")
+    }
+  }
+  
+  func testFlatten_OuterFailure() {
+    func fail() throws -> Future<Int> { throw AsyncNinjaError.cancelled }
+    let startTime = DispatchTime.now()
+    let timeout = startTime + 0.4
+    let future3D = future(after: 0.2) { try fail() }
+    let future2D = future3D.flatten()
+    if let failable = future2D.wait(timeout: timeout) {
+      XCTAssertEqual(failable.failure! as? AsyncNinjaError, AsyncNinjaError.cancelled)
+      let finishTime = DispatchTime.now()
+      XCTAssert(startTime + 0.1 < finishTime)
+      XCTAssert(startTime + 0.3 > finishTime)
+    } else {
+      XCTFail("timeout")
+    }
+  }
+  
+  func testFlatten_InnerFailure() {
+    func fail() throws -> Future<Int> { throw AsyncNinjaError.cancelled }
+    let startTime = DispatchTime.now()
+    let timeout = startTime + 0.7
+    let future3D = future(after: 0.2) { return future(after: 0.3) { try fail() } }
+    let future2D = future3D.flatten()
+    if let failable = future2D.wait(timeout: timeout) {
+      XCTAssertEqual(failable.failure! as? AsyncNinjaError, AsyncNinjaError.cancelled)
+      let finishTime = DispatchTime.now()
+      XCTAssert(startTime + 0.4 < finishTime)
+      XCTAssert(startTime + 0.6 > finishTime)
+    } else {
+      XCTFail("timeout")
+    }
   }
   
   func testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive() {
@@ -499,7 +538,7 @@ class FutureTests : XCTestCase {
     actor = nil
 
     usleep(250_000)
-    XCTAssertEqual(futureValue.failure as? AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
+    XCTAssertEqual(futureValue.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
   func testMakeFutureOfDelayedContextualFallibleBlock_Success_EarlyContextDead() {
@@ -514,7 +553,7 @@ class FutureTests : XCTestCase {
 
     actor = nil
     usleep(100_000)
-    XCTAssertEqual(futureValue.failure as? AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
+    XCTAssertEqual(futureValue.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
   func testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextAlive() {
@@ -550,7 +589,7 @@ class FutureTests : XCTestCase {
     actor = nil
 
     usleep(250_000)
-    XCTAssertEqual(futureValue.failure as? AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
+    XCTAssertEqual(futureValue.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
   func testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead() {
@@ -565,7 +604,7 @@ class FutureTests : XCTestCase {
 
     actor = nil
     usleep(100_000)
-    XCTAssertEqual(futureValue.failure as? AsyncNinja.Error, AsyncNinja.Error.contextDeallocated)
+    XCTAssertEqual(futureValue.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
   func testGroupCompletionFuture() {

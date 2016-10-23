@@ -31,11 +31,51 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
     return self.asyncMap(executor: .immediate) { $0 as! Future<FinalValue> }
   }
 
-  ///
-  func reduce<Result>(executor: Executor = .primary, initialResult: Result, nextPartialResult: @escaping (Result, FinalValue) throws -> Result) -> Future<Result> {
-    return self.joined().map(executor: executor) {
-      try $0.reduce(initialResult, nextPartialResult)
-    }
+  /// reduces results of collection of futures to future accumulated value
+  func reduce<Result>(executor: Executor = .primary, initialResult: Result, isOrdered: Bool = false,
+              nextPartialResult: @escaping (Result, FinalValue) throws -> Result)
+    -> Future<Result> {
+
+      guard !isOrdered else {
+        return self.joined().map(executor: executor) {
+          try $0.reduce(initialResult, nextPartialResult)
+        }
+      }
+
+      let promise = Promise<Result>()
+      let executor_ = executor.makeDerivedSerialExecutor()
+
+      var canContinue = true
+      let count = self.count
+      var accumulator = initialResult
+      var unknownSubvaluesCount = count
+
+      for future in self {
+        let handler = future.makeFinalHandler(executor: executor_) { [weak promise] (fallibleValue) -> Void in
+          guard let promise = promise else { return }
+          guard canContinue else { return }
+
+          do {
+            accumulator = try nextPartialResult(accumulator, try fallibleValue.liftSuccess())
+            unknownSubvaluesCount -= 1
+            if 0 == unknownSubvaluesCount {
+              promise.succeed(with: accumulator)
+              canContinue = false
+            }
+          } catch {
+            promise.fail(with: error)
+            canContinue = false
+          }
+        }
+        
+        if let handler = handler {
+          promise.insertToReleasePool(handler)
+        }
+      }
+    
+//      promise.insertToReleasePool(self)
+
+      return promise
   }
 
 }
@@ -51,7 +91,7 @@ public extension Collection where Self.IndexDistance == Int {
   public func asyncMap<T>(executor: Executor = .primary,
                        transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
     let promise = Promise<[T]>()
-    let locking = makeLocking()
+    var locking = makeLocking()
 
     var canContinue = true
     let count = self.count
@@ -95,7 +135,7 @@ public extension Collection where Self.IndexDistance == Int {
       }
     }
 
-    promise.insertToReleasePool(self)
+//    promise.insertToReleasePool(self)
 
     return promise
   }
@@ -103,7 +143,7 @@ public extension Collection where Self.IndexDistance == Int {
   public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
                        transform: @escaping (U, Self.Iterator.Element) throws -> T) -> Future<[T]> {
     return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> T in
-      guard let context = context else { throw AsyncNinja.Error.contextDeallocated }
+      guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, value)
     }
   }
@@ -111,7 +151,7 @@ public extension Collection where Self.IndexDistance == Int {
   public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
                        transform: @escaping (U, Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
     return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> Future<T> in
-      guard let context = context else { throw AsyncNinja.Error.contextDeallocated }
+      guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, value)
     }
   }

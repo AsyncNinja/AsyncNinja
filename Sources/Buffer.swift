@@ -107,7 +107,7 @@ final private class BufferOfMany<Value> : Buffer<Value> {
   private let _size: Int
   private var _container = [Value]()
   private var _indexUpperBound = 0
-  private let _locking = makeLocking()
+  private var _locking = makeLocking()
   override var size: Int { return _size }
 
   fileprivate init(size: Int) {

@@ -33,8 +33,8 @@ public struct Executor {
 
   // Test: ExecutorTests.testCustomHandler
   /// Initialiaes executor with custom handler
-  public init(handler: @escaping Handler) {
-    _impl = HandlerBasedExecutorImpl(handler: handler)
+  public init(isSerial: Bool = false, handler: @escaping Handler) {
+    _impl = HandlerBasedExecutorImpl(handler: handler, isSerial: isSerial)
   }
 
   func execute(_ block: @escaping (Void) -> Void) {
@@ -43,6 +43,10 @@ public struct Executor {
 
   func execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
     _impl.fc_execute(after: timeout, block)
+  }
+
+  func makeDerivedSerialExecutor() -> Executor {
+    return Executor(impl: _impl.fc_makeDerivedSerialExecutor())
   }
 }
 
@@ -95,6 +99,7 @@ public extension Executor {
 protocol ExecutorImpl {
   func fc_execute(_ block: @escaping (Void) -> Void)
   func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void)
+  func fc_makeDerivedSerialExecutor() -> ExecutorImpl
 }
 
 extension DispatchQueue : ExecutorImpl {
@@ -106,14 +111,20 @@ extension DispatchQueue : ExecutorImpl {
     let wallDeadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000_000_000))
     self.asyncAfter(wallDeadline: wallDeadline, execute: block)
   }
+
+  func fc_makeDerivedSerialExecutor() -> ExecutorImpl {
+    return DispatchQueue(label: "derived", qos: .default, attributes: [], target: self)
+  }
 }
 
-final class HandlerBasedExecutorImpl : ExecutorImpl {
+fileprivate class HandlerBasedExecutorImpl : ExecutorImpl {
   public typealias Handler = (@escaping (Void) -> Void) -> Void
   private let _handler: Handler
+  let isSerial: Bool
 
-  init(handler: @escaping Handler) {
+  init(handler: @escaping Handler, isSerial: Bool) {
     _handler = handler
+    self.isSerial = isSerial
   }
 
   func fc_execute(_ block: @escaping (Void) -> Void) {
@@ -125,5 +136,27 @@ final class HandlerBasedExecutorImpl : ExecutorImpl {
     DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
       self.fc_execute(block)
     }
+  }
+
+  func fc_makeDerivedSerialExecutor() -> ExecutorImpl {
+    if self.isSerial {
+      return self
+    } else {
+      return DerivedHandlerBasedExecutorImpl(handler: _handler)
+    }
+  }
+}
+
+fileprivate class DerivedHandlerBasedExecutorImpl : HandlerBasedExecutorImpl {
+  var _locking = makeLocking()
+
+  init(handler: @escaping Handler) {
+    super.init(handler: handler, isSerial: true)
+  }
+
+  override func fc_execute(_ block: @escaping (Void) -> Void) {
+    _locking.lock()
+    super.fc_execute(block)
+    _locking.unlock()
   }
 }

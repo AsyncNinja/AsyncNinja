@@ -50,5 +50,5 @@ public func future<T>(failure: Swift.Error) -> Future<T> {
 }
 
 public func cancelledFuture<T>() -> Future<T> {
-    return future(failure: AsyncNinja.Error.cancelled)
+    return future(failure: AsyncNinjaError.cancelled)
 }

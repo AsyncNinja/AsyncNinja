@@ -37,8 +37,8 @@ class PipeTests : XCTestCase {
     let queueB = DispatchQueue(label: "queueB")
     
     self.measure {
-      let pipesPair: PipesPair<Int, String> = makePipesPair()
-      let (pipeInput, pipeOutput) = pipesPair
+      let pipe: AsyncNinja.Pipe<Int, String> = Pipe()
+      let pipeInput = PipeInput(pipe: pipe)
       queueA.async {
         pipeInput.push(periodic: 1)
         pipeInput.push(periodic: 2)
@@ -50,7 +50,7 @@ class PipeTests : XCTestCase {
       let (ints, final) = future(executor: .queue(queueB)) { () -> ([Int], String) in
         var ints = [Int]()
         while true {
-          switch pipeOutput.pop() {
+          switch pipe.pop() {
           case let .periodic(periodic):
             ints.append(periodic)
           case let .final(final):

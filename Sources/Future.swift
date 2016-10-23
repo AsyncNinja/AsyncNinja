@@ -73,23 +73,29 @@ public extension Future where FinalValue : Finite {
   /// flattens combination of two nested unfaillable futures to a signle unfallible one
   final func flatten() -> Future<FinalValue.FinalValue> {
     // Test: FutureTests.testFlatten
+    // Test: FutureTests.testFlatten_OuterFailure
+    // Test: FutureTests.testFlatten_InnerFailure
     let promise = Promise<FinalValue.FinalValue>()
-
-    let handler = self.makeFinalHandler(executor: .immediate) { [weak promise] (future) in
+    let handler = self.makeFinalHandler(executor: .immediate) { [weak promise] (failure) in
       guard let promise = promise else { return }
-      let handler = (future.success as? Future<FinalValue.FinalValue>)?
-        .makeFinalHandler(executor: .immediate) { [weak promise] (final) -> Void in
+      switch failure {
+      case .success(let future):
+        let handler = future.makeFinalHandler(executor: .immediate) {
+          [weak promise] (final) -> Void in
           promise?.complete(with: final)
-      }
-      if let handler = handler {
-        promise.insertToReleasePool(handler)
+        }
+        if let handler = handler {
+          promise.insertToReleasePool(handler)
+        }
+      case .failure(let error):
+        promise.fail(with: error)
       }
     }
-
+    
     if let handler = handler {
       promise.insertToReleasePool(handler)
     }
-
+    
     return promise
   }
 }
@@ -132,7 +138,7 @@ public func future<T, U : ExecutionContext>(context: U, executor: Executor? = ni
   // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Failure_ContextDead
   return future(executor: executor ?? context.executor) { [weak context] () -> T in
     guard let context = context
-      else { throw AsyncNinja.Error.contextDeallocated }
+      else { throw AsyncNinjaError.contextDeallocated }
 
     return try block(context)
   }
@@ -148,7 +154,7 @@ public func future<T, U : ExecutionContext>(context: U, executor: Executor? = ni
   // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead
   let promiseValue = promise(executor: executor ?? context.executor, after: timeout) { [weak context] () -> T in
     guard let context = context
-      else { throw AsyncNinja.Error.contextDeallocated }
+      else { throw AsyncNinjaError.contextDeallocated }
 
     return try block(context)
   }
