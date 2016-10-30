@@ -25,40 +25,33 @@ import Dispatch
 struct Buffer<Value> {
   let maxSize: Int
   var size: Int { return Int(self._container.count) }
-  private var _container: [Value]
-  private var _indexUpperBound = 0
+  private var _container = QueueImpl<Value>()
   private var _locking = makeLocking()
 
   init(size: Int) {
     assert(size > 0)
     self.maxSize = size
-    _container = []
   }
 
   init<S: Sequence>(_ sequence: S, maxSize: Int? = nil) where S.Iterator.Element == Value {
     let container = Array(sequence)
     self.maxSize = maxSize ?? container.count
-    _container = container
+    for value in sequence {
+      _container.push(value)
+    }
   }
   
   private mutating func _push(_ value: Value) {
-    if self.size < self.maxSize {
-      _container.append(value)
-    } else {
-      _container[_indexUpperBound % self.maxSize] = value
-      _indexUpperBound += 1
+    _container.push(value)
+    if self.size > self.maxSize {
+      _container.pop()
     }
   }
 
   mutating func push(_ value: Value) {
     _locking.lock()
     defer { _locking.unlock() }
-    if _container.count < self.maxSize {
-      _container.append(value)
-    } else {
-      _container[_indexUpperBound % self.maxSize] = value
-      _indexUpperBound += 1
-    }
+    self._push(value)
   }
   
   mutating func push<S : Sequence>(_ values: S)
@@ -74,16 +67,21 @@ struct Buffer<Value> {
     _locking.lock()
     defer { _locking.unlock() }
 
-    for index in 0..<_container.count {
-      let value = _container[(index + _indexUpperBound) % self.maxSize]
+    var iterator = _container.makeIterator()
+    while let value = iterator.next() {
       block(value)
     }
+  }
+
+  mutating func pop() -> Value? {
+    _locking.lock()
+    defer { _locking.unlock() }
+    return _container.pop()
   }
 
   mutating func reset() {
     _locking.lock()
     defer { _locking.unlock() }
     _container.removeAll()
-    _indexUpperBound = 0
   }
 }

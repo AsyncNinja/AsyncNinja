@@ -54,7 +54,8 @@ public class Pipe<Periodic, Final> : _PipeInput {
       return true
     }
   }
-  
+
+  @discardableResult
   public func pop() -> PipeValue<Periodic, Final> {
     _outputSema.wait()
     defer { _inputSema.signal() }

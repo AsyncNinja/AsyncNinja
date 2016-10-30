@@ -34,6 +34,10 @@ public class InfiniteChannel<PeriodicValue> : Periodic {
     /* abstract */
     fatalError()
   }
+
+  public func next() -> PeriodicValue {
+    return self._next()
+  }
 }
 
 public extension InfiniteChannel {

@@ -42,6 +42,10 @@ public class Channel<PeriodicValue, FinalValue> : Periodic, Finite {
     }
   }
 
+  public func next() -> PeriodicValue {
+    fatalError()
+  }
+
   final public func makePeriodicHandler(executor: Executor,
                                           block: @escaping (PeriodicValue) -> Void) -> Handler? {
     return self.makeHandler(executor: executor) {

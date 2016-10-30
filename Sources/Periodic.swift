@@ -30,6 +30,8 @@ public protocol Periodic : class {
   /// **internal use only**
   func makePeriodicHandler(executor: Executor,
                              block: @escaping (PeriodicValue) -> Void) -> PeriodicHandler?
+
+  func next() -> PeriodicValue
 }
 
 public extension Periodic {
@@ -54,7 +56,7 @@ public extension Periodic {
     }
   }
 
-  func next() -> PeriodicValue {
+  func _next() -> PeriodicValue {
     return self.next(waitingBlock: { $0.wait(); return .success })!
   }
 
