@@ -27,8 +27,9 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   typealias FinalState = FinalProducerState<PeriodicValue, FinalValue>
   private let releasePool = ReleasePool()
   private var _container = makeThreadSafeContainer()
-  private let _buffer: Buffer<PeriodicValue>
+  private var _buffer: Buffer<PeriodicValue>
   public var bufferSize: Int { return _buffer.size }
+  public var maxBufferSize: Int { return _buffer.maxSize }
 
   override public var finalValue: Fallible<FinalValue>? { return (_container.head as? FinalState)?.final }
 
@@ -37,7 +38,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   }
   
   public init(bufferSize: Int) {
-    _buffer = makeBuffer(size: bufferSize)
+    _buffer = Buffer(size: bufferSize)
   }
 
   /// **internal use only**

@@ -24,4 +24,5 @@ import Dispatch
 
 public protocol BufferingPeriodic : Periodic {
   var bufferSize: Int { get }
+  var maxBufferSize: Int { get }
 }
