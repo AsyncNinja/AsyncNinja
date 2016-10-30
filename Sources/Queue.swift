@@ -23,21 +23,28 @@
 import Dispatch
 
 class QueueImpl<T> {
-  typealias Wrapper = QueueElementWrapper<T>
+  typealias Iterator = QueueIterator<T>
 
-  var _first: Wrapper? = nil
-  var _last: Wrapper? = nil
+  var _first: Iterator.Wrapper? = nil
+  var _last: Iterator.Wrapper? = nil
+  private(set) var count = 0
+  var isEmpty: Bool { return nil == _first }
 
   init() { }
 
+  func makeIterator() -> Iterator {
+    return Iterator(queueElementWrapper: _first)
+  }
+
   func push(_ element: T) {
-    let new = Wrapper(element: element)
+    let new = Iterator.Wrapper(element: element)
     if let last = _last {
       last.next = new
     } else {
       _first = new
     }
     _last = new
+    self.count += 1
   }
 
   func pop() -> T? {
@@ -48,10 +55,14 @@ class QueueImpl<T> {
       _last = nil
     }
 
+    self.count -= 1
     return first.element
   }
 
-  var isEmpty: Bool { return nil == _first }
+  func removeAll() {
+    _first = nil
+    _last = nil
+  }
 }
 
 class QueueElementWrapper<T> {
@@ -60,5 +71,24 @@ class QueueElementWrapper<T> {
 
   init(element: T) {
     self.element = element
+  }
+}
+
+struct QueueIterator<T> : IteratorProtocol {
+  typealias Element = T
+  typealias Wrapper = QueueElementWrapper<Element>
+  private var _queueElementWrapper: Wrapper?
+
+  init(queueElementWrapper: Wrapper?) {
+    _queueElementWrapper = queueElementWrapper
+  }
+
+  mutating func next() -> Element? {
+    if let wrapper = _queueElementWrapper {
+      _queueElementWrapper = wrapper.next
+      return wrapper.element
+    } else {
+      return nil
+    }
   }
 }
