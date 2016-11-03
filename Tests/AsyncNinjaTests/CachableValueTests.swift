@@ -21,21 +21,36 @@
 //
 
 import XCTest
-
-#if !os(macOS)
-  public func allTests() -> [XCTestCaseEntry] {
-    return [
-      testCase(BatchFutureTests.allTests),
-      testCase(CachableValueTests.allTests),
-      testCase(ExecutionContextTests.allTests),
-      testCase(ExecutorTests.allTests),
-      testCase(FallibleTests.allTests),
-      testCase(FutureTests.allTests),
-      testCase(PerformanceTests.allTests),
-      testCase(PipeTests.allTests),
-      testCase(ReleasePoolTests.allTests),
-      testCase(TimerChannelTests.allTests),
-      testCase(ZipFuturesTest.allTests),
-    ]
-  }
+import Dispatch
+@testable import AsyncNinja
+#if os(Linux)
+  import Glibc
 #endif
+
+class CachableValueTests : XCTestCase {
+  
+  static let allTests = [
+    ("testA", testA),
+    ]
+  
+  func testA() {
+    
+    class CachedValueHolder : ExecutionContext, ReleasePoolOwner {
+      private(set) var cachableValue: SimpleCachableValue<Int, CachedValueHolder>!
+      let executor = Executor.queue(DispatchQueue(label: "cached-value-holder-queue"))
+      let releasePool = ReleasePool()
+      
+      init() {
+        self.cachableValue = SimpleCachableValue(context: self, missHandler: { $0.provideValue() })
+      }
+      
+      private func provideValue() -> Future<Int> {
+        return future(after: 1.0) { 3 }
+      }
+      
+    }
+    
+    let holder = CachedValueHolder()
+    XCTAssertEqual(holder.cachableValue.value().wait().success, 3)
+  }
+}

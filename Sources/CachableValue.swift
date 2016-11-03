@@ -101,3 +101,6 @@ private enum CachableValueState {
   case handling
   case finished
 }
+
+public typealias SimpleCachableValue<Value, Context: ExecutionContext> = CachableValue<Promise<Value>, Context>
+public typealias ReportingCachableValue<PeriodicValue, FinalValue, Context: ExecutionContext> = CachableValue<Producer<PeriodicValue, FinalValue>, Context>
