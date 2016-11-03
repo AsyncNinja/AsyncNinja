@@ -22,26 +22,39 @@
 
 import Dispatch
 
-public class CachableValue<Value, Context: ExecutionContext> : ExecutionContextProxy {
-  public var context: ExecutionContext { return _context }
+public class CachableValue<Value, Context: ExecutionContext> {
+  private var _locking = makeLocking()
+  private let _impl: CachableValueImpl<Value, Context>
+  
+  public init(context: Context, missHandler: @escaping (Context) -> Future<Value>) {
+    _impl = CachableValueImpl(context: context, missHandler: missHandler)
+  }
+  
+  public func value(mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> Future<Value> {
+    _locking.lock()
+    defer { _locking.unlock() }
+    return _impl.value(mustStartHandlingMiss: mustStartHandlingMiss, mustInvalidateOldValue: mustInvalidateOldValue)
+  }
+  
+  public func invalidate() {
+    _locking.lock()
+    defer { _locking.unlock() }
+    return _impl.invalidate()
+  }
+}
+
+class CachableValueImpl<Value, Context: ExecutionContext> {
+  private let _context: Context
   private let _missHandler: (Context) -> Future<Value>
   private var _mutableFinite = Promise<Value>()
   private var _state: CachableValueState = .initial
-  public let _context: Context
   
-  public init(context context_: Context, missHandler: @escaping (Context) -> Future<Value>) {
+  init(context context_: Context, missHandler: @escaping (Context) -> Future<Value>) {
     _context = context_
     _missHandler = missHandler
   }
   
-  public func value(mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> Future<Value> {
-    return future(context: self) { (self) -> Future<Value> in
-      return self._value(mustStartHandlingMiss: mustStartHandlingMiss, mustInvalidateOldValue: mustInvalidateOldValue)
-      }
-      .flatten()
-  }
-
-  func _value(mustStartHandlingMiss: Bool, mustInvalidateOldValue: Bool) -> Future<Value> {
+  func value(mustStartHandlingMiss: Bool, mustInvalidateOldValue: Bool) -> Future<Value> {
     switch self._state {
     case .initial:
       if mustStartHandlingMiss {
@@ -60,10 +73,13 @@ public class CachableValue<Value, Context: ExecutionContext> : ExecutionContextP
     }
     return self._mutableFinite
   }
-
+  
   private func _handleMiss() {
-    self._state = .handling
-    _mutableFinite.complete(with: _missHandler(_context))
+    _state = .handling
+    let mutableFinite = _mutableFinite
+    _context.executor.execute {
+      mutableFinite.complete(with: self._missHandler(self._context))
+    }
   }
   
   public func invalidate() {

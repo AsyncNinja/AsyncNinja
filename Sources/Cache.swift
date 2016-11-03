@@ -22,12 +22,12 @@
 
 import Dispatch
 
-public class Cache<Key: Hashable, Value, Context: ExecutionContext> : ExecutionContextProxy {
-  typealias _CachableValue = CachableValue<Value, Context>
+public class Cache<Key: Hashable, Value, Context: ExecutionContext> {
+  typealias _CachableValue = CachableValueImpl<Value, Context>
   
-  public var context: ExecutionContext { return _context }
-  private let _missHandler: (Context) -> Future<Value>
+  private var _locking = makeLocking()
   public let _context: Context
+  private let _missHandler: (Context) -> Future<Value>
   private var _cachedValuesByKey = [Key:_CachableValue]()
   
   public init(context context_: Context, missHandler: @escaping (Context) -> Future<Value>) {
@@ -36,16 +36,14 @@ public class Cache<Key: Hashable, Value, Context: ExecutionContext> : ExecutionC
   }
 
   public func value(key: Key, mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> Future<Value> {
-    return future(context: self) { (self) -> Future<Value> in
-      
-      func makeCachableValue(key: Key) -> _CachableValue {
-        return CachableValue(context: self._context, missHandler: self._missHandler)
-      }
-      return self._cachedValuesByKey
-        .value(forKey: key, orMake: makeCachableValue)
-        ._value(mustStartHandlingMiss: mustStartHandlingMiss, mustInvalidateOldValue: mustInvalidateOldValue)
-      }
-      .flatten()
+    _locking.lock()
+    defer { _locking.unlock() }
+    func makeCachableValue(key: Key) -> _CachableValue {
+      return _CachableValue(context: self._context, missHandler: self._missHandler)
+    }
+    return self._cachedValuesByKey
+      .value(forKey: key, orMake: makeCachableValue)
+      .value(mustStartHandlingMiss: mustStartHandlingMiss, mustInvalidateOldValue: mustInvalidateOldValue)
   }
   
   public func invalidate(valueForKey key: Key) {
