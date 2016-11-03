@@ -23,6 +23,8 @@
 import Dispatch
 
 public protocol MutableFinite : Finite {
+  associatedtype ImmutableFinite : Finite
+  
   init()
 
   /// Completes promise with value and returns true.

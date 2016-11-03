@@ -23,6 +23,8 @@
 import Dispatch
 
 final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, FinalValue>, MutableFinite, MutablePeriodic {
+  public typealias ImmutableFinite = Channel<PeriodicValue, FinalValue>
+
   typealias RegularState = RegularProducerState<PeriodicValue, FinalValue>
   typealias FinalState = FinalProducerState<PeriodicValue, FinalValue>
   private let releasePool = ReleasePool()
