@@ -116,7 +116,13 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   }
 
   public func complete(with finite: ImmutableFinite) {
-    fatalError() // TODO
+    let handler = finite.makeHandler(executor: .immediate) { [weak self] in
+      self?.apply($0)
+    }
+    
+    if let handler = handler {
+      self.insertToReleasePool(handler)
+    }
   }
 
   func notifyDrain(_ block: @escaping () -> Void) {
