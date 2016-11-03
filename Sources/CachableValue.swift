@@ -22,15 +22,15 @@
 
 import Dispatch
 
-public class CachableValue<Value, Context: ExecutionContext> {
+public class CachableValue<MutableFiniteValue : MutableFinite, Context: ExecutionContext> {
   private var _locking = makeLocking()
-  private let _impl: CachableValueImpl<Value, Context>
+  private let _impl: CachableValueImpl<MutableFiniteValue, Context>
   
-  public init(context: Context, missHandler: @escaping (Context) -> Future<Value>) {
+  public init(context: Context, missHandler: @escaping (Context) -> MutableFiniteValue.ImmutableFinite) {
     _impl = CachableValueImpl(context: context, missHandler: missHandler)
   }
   
-  public func value(mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> Future<Value> {
+  public func value(mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> MutableFiniteValue.ImmutableFinite {
     _locking.lock()
     defer { _locking.unlock() }
     return _impl.value(mustStartHandlingMiss: mustStartHandlingMiss, mustInvalidateOldValue: mustInvalidateOldValue)
@@ -43,18 +43,18 @@ public class CachableValue<Value, Context: ExecutionContext> {
   }
 }
 
-class CachableValueImpl<Value, Context: ExecutionContext> {
+class CachableValueImpl<MutableFiniteValue : MutableFinite, Context: ExecutionContext> {
   private let _context: Context
-  private let _missHandler: (Context) -> Future<Value>
-  private var _mutableFinite = Promise<Value>()
+  private let _missHandler: (Context) -> MutableFiniteValue.ImmutableFinite
+  private var _mutableFinite = MutableFiniteValue()
   private var _state: CachableValueState = .initial
   
-  init(context context_: Context, missHandler: @escaping (Context) -> Future<Value>) {
+  init(context context_: Context, missHandler: @escaping (Context) -> MutableFiniteValue.ImmutableFinite) {
     _context = context_
     _missHandler = missHandler
   }
   
-  func value(mustStartHandlingMiss: Bool, mustInvalidateOldValue: Bool) -> Future<Value> {
+  func value(mustStartHandlingMiss: Bool, mustInvalidateOldValue: Bool) -> MutableFiniteValue.ImmutableFinite {
     switch self._state {
     case .initial:
       if mustStartHandlingMiss {
@@ -64,14 +64,14 @@ class CachableValueImpl<Value, Context: ExecutionContext> {
       nop()
     case .finished:
       if mustInvalidateOldValue {
-        self._mutableFinite = Promise()
+        self._mutableFinite = MutableFiniteValue()
         self._state = .initial
         if mustStartHandlingMiss {
           self._handleMiss()
         }
       }
     }
-    return self._mutableFinite
+    return self._mutableFinite as! MutableFiniteValue.ImmutableFinite
   }
   
   private func _handleMiss() {

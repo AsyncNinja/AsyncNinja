@@ -115,6 +115,10 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     }
   }
 
+  public func complete(with finite: ImmutableFinite) {
+    fatalError() // TODO
+  }
+
   func notifyDrain(_ block: @escaping () -> Void) {
     if self.isComplete {
       block()

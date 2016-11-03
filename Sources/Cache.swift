@@ -22,20 +22,20 @@
 
 import Dispatch
 
-public class Cache<Key: Hashable, Value, Context: ExecutionContext> {
-  typealias _CachableValue = CachableValueImpl<Value, Context>
+public class Cache<Key : Hashable, MutableFiniteValue : MutableFinite, Context : ExecutionContext> {
+  typealias _CachableValue = CachableValueImpl<MutableFiniteValue, Context>
   
   private var _locking = makeLocking()
   public let _context: Context
-  private let _missHandler: (Context) -> Future<Value>
+  private let _missHandler: (Context) -> MutableFiniteValue.ImmutableFinite
   private var _cachedValuesByKey = [Key:_CachableValue]()
   
-  public init(context context_: Context, missHandler: @escaping (Context) -> Future<Value>) {
-    _context = context_
+  public init(context: Context, missHandler: @escaping (Context) -> MutableFiniteValue.ImmutableFinite) {
+    _context = context
     _missHandler = missHandler
   }
 
-  public func value(key: Key, mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> Future<Value> {
+  public func value(key: Key, mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> MutableFiniteValue.ImmutableFinite {
     _locking.lock()
     defer { _locking.unlock() }
     func makeCachableValue(key: Key) -> _CachableValue {
@@ -49,4 +49,21 @@ public class Cache<Key: Hashable, Value, Context: ExecutionContext> {
   public func invalidate(valueForKey key: Key) {
     let _ = self.value(key: key, mustStartHandlingMiss: false, mustInvalidateOldValue: true)
   }
+}
+
+public typealias SimpleCache<Key : Hashable, Value, Context : ExecutionContext> = Cache<Key, Promise<Value>, Context>
+public typealias ReportingCache<Key : Hashable, PeriodicValue, FinalValue, Context : ExecutionContext> = Cache<Key, Producer<PeriodicValue, FinalValue>, Context>
+
+public func makeCache<Key: Hashable, Value, Context: ExecutionContext>(
+  context: Context,
+  missHandler: @escaping (Context) -> Future<Value>
+  ) -> SimpleCache<Key, Value, Context> {
+  return Cache(context: context, missHandler: missHandler)
+}
+
+public func makeCache<Key: Hashable, PeriodicValue, FinalValue, Context: ExecutionContext>(
+  context: Context,
+  missHandler: @escaping (Context) -> Channel<PeriodicValue, FinalValue>
+  ) -> ReportingCache<Key, PeriodicValue, FinalValue, Context> {
+  return Cache(context: context, missHandler: missHandler)
 }

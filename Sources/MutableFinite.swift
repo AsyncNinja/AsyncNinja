@@ -31,6 +31,7 @@ public protocol MutableFinite : Finite {
   /// Returns false if promise was completed before.
   @discardableResult
   func tryComplete(with final: Fallible<FinalValue>) -> Bool
+  func complete(with finite: ImmutableFinite)
 
   func insertToReleasePool(_ releasable: Releasable)
 }
@@ -38,7 +39,6 @@ public protocol MutableFinite : Finite {
 public extension MutableFinite {
   /// Completes promise when specified future completes.
   /// `self` will retain specified future until it`s completion
-  @discardableResult
   func complete(with future: Future<FinalValue>) {
     let handler = future.makeFinalHandler(executor: .immediate) { [weak self] in
       self?.complete(with: $0)
@@ -47,7 +47,7 @@ public extension MutableFinite {
       self.insertToReleasePool(handler)
     }
   }
-
+  
   func complete(with final: Fallible<FinalValue>) {
     self.tryComplete(with: final)
   }
