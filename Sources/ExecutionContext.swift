@@ -41,3 +41,19 @@ public extension ExecutionContext where Self : ReleasePoolOwner {
     self.releasePool.notifyDrain(block)
   }
 }
+
+protocol ExecutionContextProxy : ExecutionContext {
+    var context: ExecutionContext { get }
+}
+
+extension ExecutionContextProxy {
+    public var executor: Executor { return self.context.executor }
+    
+    public func releaseOnDeinit(_ object: AnyObject) {
+        self.releaseOnDeinit(object)
+    }
+
+    public func notifyDeinit(_ block: @escaping () -> Void) {
+        self.notifyDeinit(block)
+    }
+}
