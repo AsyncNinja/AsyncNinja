@@ -44,13 +44,13 @@ public class CachableValue<MutableFiniteValue : MutableFinite, Context: Executio
 }
 
 class CachableValueImpl<MutableFiniteValue : MutableFinite, Context: ExecutionContext> {
-  private let _context: Context
+  private weak var _context: Context?
   private let _missHandler: (Context) -> MutableFiniteValue.ImmutableFinite
   private var _mutableFinite = MutableFiniteValue()
   private var _state: CachableValueState = .initial
   
-  init(context context_: Context, missHandler: @escaping (Context) -> MutableFiniteValue.ImmutableFinite) {
-    _context = context_
+  init(context: Context, missHandler: @escaping (Context) -> MutableFiniteValue.ImmutableFinite) {
+    _context = context
     _missHandler = missHandler
   }
   
@@ -77,8 +77,17 @@ class CachableValueImpl<MutableFiniteValue : MutableFinite, Context: ExecutionCo
   private func _handleMiss() {
     _state = .handling
     let mutableFinite = _mutableFinite
-    _context.executor.execute {
-      mutableFinite.complete(with: self._missHandler(self._context))
+    if let context = _context {
+      context.executor.execute { [weak context, weak mutableFinite] in
+        guard let mutableFinite = mutableFinite else { return }
+        if let context = context {
+          mutableFinite.complete(with: self._missHandler(context))
+        } else {
+          mutableFinite.fail(with: AsyncNinjaError.contextDeallocated)
+        }
+      }
+    } else {
+      mutableFinite.fail(with: AsyncNinjaError.contextDeallocated)
     }
   }
   

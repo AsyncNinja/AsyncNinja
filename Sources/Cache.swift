@@ -26,7 +26,7 @@ public class Cache<Key : Hashable, MutableFiniteValue : MutableFinite, Context :
   typealias _CachableValue = CachableValueImpl<MutableFiniteValue, Context>
   
   private var _locking = makeLocking()
-  public let _context: Context
+  private weak var _context: Context?
   private let _missHandler: (Context) -> MutableFiniteValue.ImmutableFinite
   private var _cachedValuesByKey = [Key:_CachableValue]()
   
@@ -36,10 +36,16 @@ public class Cache<Key : Hashable, MutableFiniteValue : MutableFinite, Context :
   }
 
   public func value(key: Key, mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> MutableFiniteValue.ImmutableFinite {
+    guard let context = _context else {
+      let mutableFinite = MutableFiniteValue()
+      mutableFinite.fail(with: AsyncNinjaError.contextDeallocated)
+      return mutableFinite as! MutableFiniteValue.ImmutableFinite
+    }
+    
     _locking.lock()
     defer { _locking.unlock() }
     func makeCachableValue(key: Key) -> _CachableValue {
-      return _CachableValue(context: self._context, missHandler: self._missHandler)
+      return _CachableValue(context: context, missHandler: self._missHandler)
     }
     return self._cachedValuesByKey
       .value(forKey: key, orMake: makeCachableValue)
