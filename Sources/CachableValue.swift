@@ -26,7 +26,7 @@ public class CachableValue<MutableFiniteValue : MutableFinite, Context: Executio
   private var _locking = makeLocking()
   private let _impl: CachableValueImpl<MutableFiniteValue, Context>
   
-  public init(context: Context, missHandler: @escaping (Context) -> MutableFiniteValue.ImmutableFinite) {
+  public init(context: Context, missHandler: @escaping (Context) throws -> MutableFiniteValue.ImmutableFinite) {
     _impl = CachableValueImpl(context: context, missHandler: missHandler)
   }
   
@@ -45,11 +45,11 @@ public class CachableValue<MutableFiniteValue : MutableFinite, Context: Executio
 
 class CachableValueImpl<MutableFiniteValue : MutableFinite, Context: ExecutionContext> {
   private weak var _context: Context?
-  private let _missHandler: (Context) -> MutableFiniteValue.ImmutableFinite
+  private let _missHandler: (Context) throws -> MutableFiniteValue.ImmutableFinite
   private var _mutableFinite = MutableFiniteValue()
   private var _state: CachableValueState = .initial
   
-  init(context: Context, missHandler: @escaping (Context) -> MutableFiniteValue.ImmutableFinite) {
+  init(context: Context, missHandler: @escaping (Context) throws -> MutableFiniteValue.ImmutableFinite) {
     _context = context
     _missHandler = missHandler
   }
@@ -78,12 +78,32 @@ class CachableValueImpl<MutableFiniteValue : MutableFinite, Context: ExecutionCo
     _state = .handling
     let mutableFinite = _mutableFinite
     if let context = _context {
-      context.executor.execute { [weak context, weak mutableFinite] in
-        guard let mutableFinite = mutableFinite else { return }
-        if let context = context {
-          mutableFinite.complete(with: self._missHandler(context))
-        } else {
+      context.executor.execute { [weak self] in
+        guard let self_ = self else { return }
+        let mutableFinite = self_._mutableFinite
+        guard let context = self_._context else {
           mutableFinite.fail(with: AsyncNinjaError.contextDeallocated)
+          return
+        }
+
+        assert(mutableFinite === self?._mutableFinite)
+
+        do {
+          let finite = try self_._missHandler(context)
+          finite.onComplete(context: context) { [weak self_] (context, fallible) in
+            guard let self__ = self_ else { return }
+            self__._state = .finished
+            do {
+              let success = try fallible.liftSuccess()
+              self__._mutableFinite.succeed(with: success as! MutableFiniteValue.FinalValue)
+            } catch {
+              self__._mutableFinite.fail(with: error)
+            }
+          }
+          mutableFinite.complete(with: finite)
+        } catch {
+          self_._state = .finished
+          mutableFinite.fail(with: error)
         }
       }
     } else {

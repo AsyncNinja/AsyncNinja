@@ -27,10 +27,10 @@ public class Cache<Key : Hashable, MutableFiniteValue : MutableFinite, Context :
   
   private var _locking = makeLocking()
   private weak var _context: Context?
-  private let _missHandler: (Context) -> MutableFiniteValue.ImmutableFinite
+  private let _missHandler: (Context) throws -> MutableFiniteValue.ImmutableFinite
   private var _cachedValuesByKey = [Key:_CachableValue]()
   
-  public init(context: Context, missHandler: @escaping (Context) -> MutableFiniteValue.ImmutableFinite) {
+  public init(context: Context, missHandler: @escaping (Context) throws -> MutableFiniteValue.ImmutableFinite) {
     _context = context
     _missHandler = missHandler
   }

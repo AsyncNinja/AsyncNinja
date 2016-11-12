@@ -30,27 +30,88 @@ import Dispatch
 class CachableValueTests : XCTestCase {
   
   static let allTests = [
-    ("testA", testA),
+    ("testSingleShotSuccess", testSingleShotSuccess),
+    ("testSingleShotFailure", testSingleShotFailure),
+    ("testMultiUseSuccess", testMultiUseSuccess),
+    ("testMultiUseFailure", testMultiUseFailure),
     ]
-  
-  func testA() {
-    
-    class CachedValueHolder : ExecutionContext, ReleasePoolOwner {
-      private(set) var cachableValue: SimpleCachableValue<Int, CachedValueHolder>!
-      let executor = Executor.queue(DispatchQueue(label: "cached-value-holder-queue"))
-      let releasePool = ReleasePool()
-      
-      init() {
-        self.cachableValue = SimpleCachableValue(context: self, missHandler: { $0.provideValue() })
-      }
-      
-      private func provideValue() -> Future<Int> {
-        return future(after: 1.0) { 3 }
-      }
-      
+
+  func testSingleShotSuccess() {
+    let value = pickInt()
+    let holder = CachedValueHolder<Int>() { _ in
+      sleep(1)
+      return future(success: value)
     }
-    
-    let holder = CachedValueHolder()
-    XCTAssertEqual(holder.cachableValue.value().wait().success, 3)
+    let futureA = holder.cachableValue.value()
+    XCTAssertEqual(futureA.wait().success, value)
+    let futureB = holder.cachableValue.value()
+    XCTAssertTrue(futureA === futureB)
   }
+
+  func testSingleShotFailure() {
+    let holder = CachedValueHolder<Int>() { _ -> Future<Int> in
+      sleep(1)
+      throw TestError.testCode
+    }
+    let futureA = holder.cachableValue.value()
+    XCTAssertEqual(futureA.wait().failure as? TestError, TestError.testCode)
+    let futureB = holder.cachableValue.value()
+    XCTAssertTrue(futureA === futureB)
+  }
+
+  func testMultiUseSuccess() {
+    let firstValue = pickInt()
+    var value = firstValue
+    let holder = CachedValueHolder<Int>() { _ in
+      sleep(1)
+      return future(success: value)
+    }
+
+    let futureA = holder.cachableValue.value()
+    XCTAssertEqual(futureA.wait().success, firstValue)
+
+    let secondValue = pickInt()
+    value = secondValue
+    holder.cachableValue.invalidate()
+
+    let futureB = holder.cachableValue.value()
+    XCTAssertFalse(futureA === futureB)
+    XCTAssertEqual(futureB.wait().success, secondValue)
+  }
+
+  func testMultiUseFailure() {
+    let firstError = TestError.testCode
+    var error: Error
+    error = firstError
+    let holder = CachedValueHolder<Int>() { _ in
+      sleep(1)
+      throw error
+    }
+
+    let futureA = holder.cachableValue.value()
+    XCTAssertEqual(futureA.wait().failure as? TestError, firstError)
+
+    let secondError = TestError.otherCode
+    error = secondError
+    holder.cachableValue.invalidate()
+
+    let futureB = holder.cachableValue.value()
+    XCTAssertFalse(futureA === futureB)
+    XCTAssertEqual(futureB.wait().failure as? TestError, secondError)
+  }
+}
+
+fileprivate class CachedValueHolder<T> : ExecutionContext, ReleasePoolOwner {
+  private(set) var cachableValue: SimpleCachableValue<T, CachedValueHolder>!
+  let executor = Executor.queue(DispatchQueue(label: "cached-value-holder-queue"))
+  let releasePool = ReleasePool()
+
+  init(missHandler: @escaping (CachedValueHolder<T>) throws -> Future<T>) {
+    self.cachableValue = SimpleCachableValue(context: self, missHandler: missHandler)
+  }
+
+  private func provideValue() -> Future<Int> {
+    return future(after: 1.0) { 3 }
+  }
+
 }
