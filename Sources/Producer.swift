@@ -182,8 +182,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
       _locking.lock()
       defer { _locking.unlock() }
     }
-
-    let channelIteratorImpl = ChannelIteratorImpl<PeriodicValue, FinalValue>(channel: self, bufferedPeriodics: _bufferedPeriodics.clone())
+    let channelIteratorImpl = ProducerIteratorImpl<PeriodicValue, FinalValue>(channel: self, bufferedPeriodics: _bufferedPeriodics.clone())
     return ChannelIterator(impl: channelIteratorImpl)
   }
 }
@@ -224,5 +223,58 @@ public enum DerivedChannelBufferSize {
     case .inherited: return parentChannel.maxBufferSize
     case let .specific(value): return value
     }
+  }
+}
+
+class ProducerIteratorImpl<PeriodicValue, FinalValue> : ChannelIteratorImpl<PeriodicValue, FinalValue> {
+  let _sema: DispatchSemaphore
+  var _locking = makeLocking()
+  let _bufferedPeriodics: QueueImpl<PeriodicValue>
+  let _channel: Channel<PeriodicValue, FinalValue>
+  var _handler: ChannelHandler<PeriodicValue, FinalValue>?
+  override var finalValue: Fallible<FinalValue>? {
+    _locking.lock()
+    defer { _locking.unlock() }
+    return _finalValue
+  }
+  var _finalValue: Fallible<FinalValue>?
+
+  override init(channel: Channel<PeriodicValue, FinalValue>, bufferedPeriodics: QueueImpl<PeriodicValue>) {
+    _channel = channel
+    _bufferedPeriodics = bufferedPeriodics
+    _sema = DispatchSemaphore(value: bufferedPeriodics.count)
+    super.init(channel: channel, bufferedPeriodics: bufferedPeriodics)
+    _handler = channel.makeHandler(executor: .immediate) { [weak self] (value) in
+      self?.handle(value)
+    }
+  }
+
+  override public func next() -> PeriodicValue? {
+    _sema.wait()
+
+    _locking.lock()
+    defer { _locking.unlock() }
+
+    return _bufferedPeriodics.pop()
+  }
+
+  override func clone() -> ChannelIteratorImpl<PeriodicValue, FinalValue> {
+    return ChannelIteratorImpl(channel: _channel, bufferedPeriodics: _bufferedPeriodics.clone())
+  }
+
+  func handle(_ value: ChannelValue<PeriodicValue, FinalValue>) {
+    _locking.lock()
+    defer { _locking.unlock() }
+
+    if let _ = _finalValue { return }
+
+    switch value {
+    case let .periodic(periodic):
+      _bufferedPeriodics.push(periodic)
+    case let .final(final):
+      _finalValue = final
+    }
+
+    _sema.signal()
   }
 }

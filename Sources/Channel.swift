@@ -111,54 +111,22 @@ public struct ChannelIterator<PeriodicValue, FinalValue> : IteratorProtocol  {
 
 class ChannelIteratorImpl<PeriodicValue, FinalValue>  {
   public typealias Element = PeriodicValue
-  let _sema: DispatchSemaphore
-  var _locking = makeLocking()
-  let _bufferedPeriodics: QueueImpl<PeriodicValue>
-  let _channel: Channel<PeriodicValue, FinalValue>
-  var _handler: ChannelHandler<PeriodicValue, FinalValue>?
   var finalValue: Fallible<FinalValue>? {
-    _locking.lock()
-    defer { _locking.unlock() }
-    return _finalValue
+    /* abstract */
+    fatalError()
   }
-  var _finalValue: Fallible<FinalValue>?
 
   init(channel: Channel<PeriodicValue, FinalValue>, bufferedPeriodics: QueueImpl<PeriodicValue>) {
-    _channel = channel
-    _bufferedPeriodics = bufferedPeriodics
-    _sema = DispatchSemaphore(value: bufferedPeriodics.count)
-    _handler = channel.makeHandler(executor: .immediate) { [weak self] (value) in
-      self?.handle(value)
-    }
   }
 
   public func next() -> PeriodicValue? {
-    _sema.wait()
-
-    _locking.lock()
-    defer { _locking.unlock() }
-
-    return _bufferedPeriodics.pop()
+    /* abstract */
+    fatalError()
   }
 
   func clone() -> ChannelIteratorImpl<PeriodicValue, FinalValue> {
-    return ChannelIteratorImpl(channel: _channel, bufferedPeriodics: _bufferedPeriodics.clone())
-  }
-
-  func handle(_ value: ChannelValue<PeriodicValue, FinalValue>) {
-    _locking.lock()
-    defer { _locking.unlock() }
-
-    if let _ = _finalValue { return }
-
-    switch value {
-    case let .periodic(periodic):
-      _bufferedPeriodics.push(periodic)
-    case let .final(final):
-      _finalValue = final
-    }
-
-    _sema.signal()
+    /* abstract */
+    fatalError()
   }
 }
 
