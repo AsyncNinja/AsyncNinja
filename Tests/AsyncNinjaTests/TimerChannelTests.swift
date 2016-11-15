@@ -34,44 +34,45 @@ class TimerChannelTests : XCTestCase {
     ]
 
   func testLifetime() {
-//    let interval = 0.2
-//    let initialTime = DispatchTime.now()
-//
-//    weak var weakTimer: Channel<Void, Void>? = nil
-//    weak var weakMappedTimer: Channel<DispatchTime, Void>? = nil
-//    weak var weakTimesBuffer: Channel<[DispatchTime], Void>? = nil
-//
-//    let times: [DispatchTime] = eval {
-//      let timer = makeTimer(interval: interval)
-//      weakTimer = timer
-//      XCTAssertNotNil(weakTimer)
-//
-//      let mappedTimer = timer.mapPeriodic(executor: .utility) { _ -> DispatchTime in
-//        assert(qos: .utility)
-//        return DispatchTime.now()
-//      }
-//      weakMappedTimer = mappedTimer
-//      XCTAssertNotNil(weakMappedTimer)
-//
-//      let timesBuffer = mappedTimer.buffered(capacity: 5)
-//      weakTimesBuffer = timesBuffer
-//      XCTAssertNotNil(weakTimesBuffer)
-//
-//      return timesBuffer.next()
-//    }
-//
-//    sleep(1) // lets
-//    XCTAssertEqual(5, times.count)
-//    XCTAssertNil(weakTimer)
-//    XCTAssertNil(weakMappedTimer)
-//    XCTAssertNil(weakTimesBuffer)
-//
-//    for (index, time) in times.enumerated() {
-//      let minTime = initialTime + Double(index + 1) * interval
-//      let maxTime = initialTime + Double(index + 3) * interval
-//      XCTAssertLessThanOrEqual(minTime, time)
-//      XCTAssertLessThanOrEqual(time, maxTime)
-//    }
+    let interval = 0.2
+    let initialTime = DispatchTime.now()
+
+    weak var weakTimer: Channel<Void, Void>? = nil
+    weak var weakMappedTimer: Channel<DispatchTime, Void>? = nil
+    weak var weakTimesBuffer: Channel<[DispatchTime], Void>? = nil
+
+    let times: [DispatchTime] = eval {
+      let timer = makeTimer(interval: interval)
+      weakTimer = timer
+      XCTAssertNotNil(weakTimer)
+
+      let mappedTimer = timer.mapPeriodic(executor: .utility) { _ -> DispatchTime in
+        assert(qos: .utility)
+        return DispatchTime.now()
+      }
+      weakMappedTimer = mappedTimer
+      XCTAssertNotNil(weakMappedTimer)
+
+      let timesBuffer = mappedTimer.buffered(capacity: 5)
+      weakTimesBuffer = timesBuffer
+      XCTAssertNotNil(weakTimesBuffer)
+
+      var iterator = timesBuffer.makeIterator()
+      return iterator.next()!
+    }
+
+    sleep(1) // lets
+    XCTAssertEqual(5, times.count)
+    XCTAssertNil(weakTimer)
+    XCTAssertNil(weakMappedTimer)
+    XCTAssertNil(weakTimesBuffer)
+
+    for (index, time) in times.enumerated() {
+      let minTime = initialTime + Double(index + 1) * interval
+      let maxTime = initialTime + Double(index + 3) * interval
+      XCTAssertLessThanOrEqual(minTime, time)
+      XCTAssertLessThanOrEqual(time, maxTime)
+    }
   }
 }
 

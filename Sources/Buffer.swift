@@ -44,7 +44,7 @@ struct Buffer<Value> {
   private mutating func _push(_ value: Value) {
     _container.push(value)
     if self.size > self.maxSize {
-      _container.pop()
+      let _ = _container.pop()
     }
   }
 

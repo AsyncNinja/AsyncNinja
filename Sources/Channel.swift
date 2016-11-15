@@ -27,6 +27,7 @@ public class Channel<PeriodicValue, FinalValue> : Finite {
   public typealias Handler = ChannelHandler<PeriodicValue, FinalValue>
   public typealias PeriodicHandler = Handler
   public typealias FinalHandler = Handler
+  public typealias Iterator = ChannelIterator<PeriodicValue>
 
   public var finalValue: Fallible<FinalValue>? {
     /* abstact */
@@ -64,7 +65,18 @@ public class Channel<PeriodicValue, FinalValue> : Finite {
     if let handler = handler {
       context.releaseOnDeinit(handler)
     }
-  }  
+  }
+
+  public func makeIterator() -> Iterator {
+    fatalError()
+  }
+}
+
+public struct ChannelIterator<PeriodicValue> : IteratorProtocol  {
+  public typealias Element = PeriodicValue
+  public mutating func next() -> PeriodicValue? {
+    fatalError()
+  }
 }
 
 public enum ChannelValue<T, U> {
