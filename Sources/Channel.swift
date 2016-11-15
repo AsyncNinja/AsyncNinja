@@ -75,7 +75,7 @@ public class Channel<PeriodicValue, FinalValue> : Finite {
     }
   }
 
-  func onPeriodic<U: ExecutionContext>(context: U, executor: Executor? = nil,
+  public func onPeriodic<U: ExecutionContext>(context: U, executor: Executor? = nil,
                   block: @escaping (U, PeriodicValue) -> Void) {
     self.onValue(context: context) { (context, value) in
       switch value {
