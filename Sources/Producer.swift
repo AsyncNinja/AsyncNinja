@@ -49,6 +49,11 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   /// **internal use only**
   override public func makeHandler(executor: Executor,
                                    block: @escaping (Value) -> Void) -> Handler? {
+    return self._makeHandler(executor: executor, avoidLocking: false, block: block)
+  }
+
+  fileprivate func _makeHandler(executor: Executor, avoidLocking: Bool,
+                    block: @escaping (Value) -> Void) -> Handler? {
     let handler = Handler(executor: executor, block: block)
     _container.updateHead {
       switch $0 {
@@ -65,12 +70,17 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     }
 
     executor.execute {
-      self._locking.lock()
+      if !avoidLocking {
+        self._locking.lock()
+      }
+
       var iterator = self._bufferedPeriodics.makeIterator()
       while let periodic_ = iterator.next() {
         block(.periodic(periodic_))
       }
-      self._locking.unlock()
+      if !avoidLocking {
+        self._locking.unlock()
+      }
     }
 
     return handler
@@ -178,10 +188,8 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   }
 
   override public func makeIterator() -> Iterator {
-    if self.maxBufferSize > 0 {
-      _locking.lock()
-      defer { _locking.unlock() }
-    }
+    _locking.lock()
+    defer { _locking.unlock() }
     let channelIteratorImpl = ProducerIteratorImpl<PeriodicValue, FinalValue>(channel: self, bufferedPeriodics: _bufferedPeriodics.clone())
     return ChannelIterator(impl: channelIteratorImpl)
   }
@@ -230,7 +238,7 @@ class ProducerIteratorImpl<PeriodicValue, FinalValue> : ChannelIteratorImpl<Peri
   let _sema: DispatchSemaphore
   var _locking = makeLocking()
   let _bufferedPeriodics: QueueImpl<PeriodicValue>
-  let _channel: Channel<PeriodicValue, FinalValue>
+  let _producer: Producer<PeriodicValue, FinalValue>
   var _handler: ChannelHandler<PeriodicValue, FinalValue>?
   override var finalValue: Fallible<FinalValue>? {
     _locking.lock()
@@ -239,12 +247,15 @@ class ProducerIteratorImpl<PeriodicValue, FinalValue> : ChannelIteratorImpl<Peri
   }
   var _finalValue: Fallible<FinalValue>?
 
-  init(channel: Channel<PeriodicValue, FinalValue>, bufferedPeriodics: QueueImpl<PeriodicValue>) {
-    _channel = channel
+  init(channel: Producer<PeriodicValue, FinalValue>, bufferedPeriodics: QueueImpl<PeriodicValue>) {
+    _producer = channel
     _bufferedPeriodics = bufferedPeriodics
-    _sema = DispatchSemaphore(value: bufferedPeriodics.count)
+    _sema = DispatchSemaphore(value: 0)
+    for _ in 0..<_bufferedPeriodics.count {
+      _sema.signal()
+    }
     super.init()
-    _handler = channel.makeHandler(executor: .immediate) { [weak self] (value) in
+    _handler = channel._makeHandler(executor: .immediate, avoidLocking: true) { [weak self] (value) in
       self?.handle(value)
     }
   }
@@ -255,11 +266,16 @@ class ProducerIteratorImpl<PeriodicValue, FinalValue> : ChannelIteratorImpl<Peri
     _locking.lock()
     defer { _locking.unlock() }
 
-    return _bufferedPeriodics.pop()
+    if let periodic = _bufferedPeriodics.pop() {
+      return periodic
+    } else {
+      _sema.signal()
+      return nil
+    }
   }
 
   override func clone() -> ChannelIteratorImpl<PeriodicValue, FinalValue> {
-    return ProducerIteratorImpl(channel: _channel, bufferedPeriodics: _bufferedPeriodics.clone())
+    return ProducerIteratorImpl(channel: _producer, bufferedPeriodics: _bufferedPeriodics.clone())
   }
 
   func handle(_ value: ChannelValue<PeriodicValue, FinalValue>) {
