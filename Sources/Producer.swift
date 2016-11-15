@@ -27,11 +27,14 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
 
   typealias RegularState = RegularProducerState<PeriodicValue, FinalValue>
   typealias FinalState = FinalProducerState<PeriodicValue, FinalValue>
-  private let releasePool = ReleasePool()
+  private let _releasePool = ReleasePool()
   private var _container = makeThreadSafeContainer()
-  private var _buffer: Buffer<PeriodicValue>
-  override public var bufferSize: Int { return _buffer.size }
-  override public var maxBufferSize: Int { return _buffer.maxSize }
+  private let _maxBufferSize: Int
+  private let _bufferedPeriodics = QueueImpl<PeriodicValue>()
+  private var _locking = makeLocking()
+
+  override public var bufferSize: Int { return Int(_bufferedPeriodics.count) }
+  override public var maxBufferSize: Int { return _maxBufferSize }
 
   override public var finalValue: Fallible<FinalValue>? { return (_container.head as? FinalState)?.final }
 
@@ -40,7 +43,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   }
   
   public init(bufferSize: Int) {
-    _buffer = Buffer(size: bufferSize)
+    _maxBufferSize = bufferSize
   }
 
   /// **internal use only**
@@ -61,7 +64,14 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
       }
     }
 
-    _buffer.apply { block(.periodic($0)) }
+    executor.execute {
+      self._locking.lock()
+      var iterator = self._bufferedPeriodics.makeIterator()
+      while let periodic_ = iterator.next() {
+        block(.periodic(periodic_))
+      }
+      self._locking.unlock()
+    }
 
     return handler
   }
@@ -87,14 +97,35 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     }
   }
 
+  private func _pushPeriodicToBuffer(_ periodic: PeriodicValue) {
+    _bufferedPeriodics.push(periodic)
+    if self.bufferSize > self.maxBufferSize {
+      let _ = _bufferedPeriodics.pop()
+    }
+  }
+
   public func send(_ periodic: PeriodicValue) {
-    _buffer.push(periodic)
+
+    if self.maxBufferSize > 0 {
+      _locking.lock()
+      _pushPeriodicToBuffer(periodic)
+      _locking.unlock()
+    }
+
     self.notify(.periodic(periodic), head: _container.head as! ProducerState<PeriodicValue, FinalValue>?)
   }
 
   public func send<S : Sequence>(_ periodics: S)
     where S.Iterator.Element == PeriodicValue {
-      _buffer.push(periodics)
+
+      if self.maxBufferSize > 0 {
+        _locking.lock()
+        for periodic in periodics.suffix(self.maxBufferSize) {
+          _pushPeriodicToBuffer(periodic)
+        }
+        _locking.unlock()
+      }
+
       let localHead = _container.head
       for periodic in periodics {
         self.notify(.periodic(periodic), head: localHead as! ProducerState<PeriodicValue, FinalValue>?)
@@ -124,7 +155,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   public func insertToReleasePool(_ releasable: Releasable) {
     assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     if !self.isComplete {
-      self.releasePool.insert(releasable)
+      self._releasePool.insert(releasable)
     }
   }
 
@@ -142,8 +173,18 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     if self.isComplete {
       block()
     } else {
-      self.releasePool.notifyDrain(block)
+      self._releasePool.notifyDrain(block)
     }
+  }
+
+  override public func makeIterator() -> Iterator {
+    if self.maxBufferSize > 0 {
+      _locking.lock()
+      defer { _locking.unlock() }
+    }
+
+    let channelIteratorImpl = ChannelIteratorImpl<PeriodicValue, FinalValue>(channel: self, bufferedPeriodics: _bufferedPeriodics.clone())
+    return ChannelIterator(impl: channelIteratorImpl)
   }
 }
 
@@ -169,5 +210,19 @@ final class FinalProducerState<T, U> : ProducerState<T, U> {
   
   init(final: Fallible<U>) {
     self.final = final
+  }
+}
+
+public enum DerivedChannelBufferSize {
+  case `default`
+  case inherited
+  case specific(Int)
+
+  func bufferSize<T, U>(for parentChannel: Channel<T, U>) -> Int {
+    switch self {
+    case .default: return 0
+    case .inherited: return parentChannel.maxBufferSize
+    case let .specific(value): return value
+    }
   }
 }

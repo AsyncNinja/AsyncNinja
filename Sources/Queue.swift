@@ -63,6 +63,15 @@ class QueueImpl<T> {
     _first = nil
     _last = nil
   }
+
+  func clone() -> QueueImpl<T> {
+    let result = QueueImpl<T>()
+    var iterator = self.makeIterator()
+    while let value = iterator.next() {
+      result.push(value)
+    }
+    return result
+  }
 }
 
 class QueueElementWrapper<T> {

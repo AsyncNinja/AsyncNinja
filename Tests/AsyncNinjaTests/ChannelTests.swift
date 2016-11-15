@@ -27,28 +27,35 @@ import Dispatch
   import Glibc
 #endif
 
-class ChannelTests : XCTestCase {
-  
-  static let allTests = [
-    ("testConstant", testConstant),
-]
-  
-  func testConstant() {
-    let numberOfPeriodics = 5
-    let periodics = (0..<numberOfPeriodics).map { _ in pickInt() }
-    let success = "final value"
-    
-    let channelA = channel(periodics: periodics, success: success)
-    var periodicsIterator = periodics.makeIterator()
-    var channelIterator = channelA.makeIterator()
-
-    while true {
-      guard let channelValue = channelIterator.next(), let periodicValue = periodicsIterator.next()
-        else { break }
-
-      XCTAssertEqual(channelValue, periodicValue)
-    }
-
-    XCTAssertEqual(channelA.finalValue!.success!, success)
-  }
-}
+//class ChannelTests : XCTestCase {
+//  
+//  static let allTests = [
+//    ("testConstant", testConstant),
+//]
+//  
+//  func testConstant() {
+//    let numberOfPeriodics = 5
+//    let periodics = (0..<numberOfPeriodics).map { _ in pickInt() }
+//    let success = "final value"
+//    
+//    let channelA = channel(periodics: periodics, success: success)
+//    var periodicsIterator = periodics.makeIterator()
+//    var channelIterator = channelA.makeIterator()
+//
+//    while true {
+//      guard let channelValue = channelIterator.next(), let periodicValue = periodicsIterator.next()
+//        else { break }
+//
+//      XCTAssertEqual(channelValue, periodicValue)
+//    }
+//
+//    XCTAssertEqual(channelA.finalValue!.success!, success)
+//  }
+//
+//  func testA() {
+//    let producer = Producer<Int, String>(bufferSize: 5)
+//    var iteratorA = producer.makeIterator()
+//    producer.send(0...10)
+//    let iterator = producer.mapPeriodic { $0 * 2 }
+//  }
+//}
