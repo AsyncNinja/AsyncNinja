@@ -45,8 +45,10 @@ public extension Finite {
   ///
   /// This method is suitable for **pure**ish transformations (not changing shared state).
   /// Use method mapCompletion(context:executor:transform:) for state changing transformations.
-  func mapCompletion<TransformedValue>(executor: Executor = .primary,
-                     transform: @escaping (Fallible<FinalValue>) throws -> TransformedValue) -> Future<TransformedValue> {
+  func mapCompletion<TransformedValue>(
+    executor: Executor = .primary,
+    transform: @escaping (Fallible<FinalValue>) throws -> TransformedValue
+    ) -> Future<TransformedValue> {
     let promise = Promise<TransformedValue>()
     let handler = self.makeFinalHandler(executor: executor) {
       [weak promise] (value) -> Void in
@@ -60,11 +62,20 @@ public extension Finite {
     return promise
   }
 
+  func flatMapCompletion<TransformedValue>(
+    executor: Executor = .primary,
+    transform: @escaping (Fallible<FinalValue>) throws -> Future<TransformedValue>
+    ) -> Future<TransformedValue> {
+    return self.mapCompletion(executor: executor, transform: transform).flatten()
+  }
+
   /// Transforms Finite<TypeA> => Future<TypeB>
   ///
   /// This is the same as mapCompletion(executor:transform:) but does not perform transformation if this future fails.
-  func mapSuccess<TransformedValue>(executor: Executor = .primary,
-                         transform: @escaping (FinalValue) throws -> TransformedValue) -> Future<TransformedValue> {
+  func mapSuccess<TransformedValue>(
+    executor: Executor = .primary,
+    transform: @escaping (FinalValue) throws -> TransformedValue
+    ) -> Future<TransformedValue> {
     return self.mapCompletion(executor: executor) {
       (value) -> TransformedValue in
       let transformedValue = try value.liftSuccess()
@@ -72,15 +83,47 @@ public extension Finite {
     }
   }
 
+  func flatMapSuccess<TransformedValue>(
+    executor: Executor = .primary,
+    transform: @escaping (FinalValue) throws -> Future<TransformedValue>
+    ) -> Future<TransformedValue> {
+    return self.mapSuccess(executor: executor, transform: transform).flatten()
+  }
+
   /// Recovers failure of this future if there is one.
-  func recover(executor: Executor = .primary,
-               transform: @escaping (Swift.Error) throws -> FinalValue) -> Future<FinalValue> {
+  func recover(
+    executor: Executor = .primary,
+    transform: @escaping (Swift.Error) throws -> FinalValue
+    ) -> Future<FinalValue> {
     return self.mapCompletion(executor: executor) {
       (value) -> FinalValue in
       if let failure = value.failure { return try transform(failure) }
       if let success = value.success { return success }
       fatalError()
     }
+  }
+
+  func flatRecover(
+    executor: Executor = .primary,
+    transform: @escaping (Swift.Error) throws -> Future<FinalValue>
+    ) -> Future<FinalValue> {
+    let promise = Promise<FinalValue>()
+    let handler = self.makeFinalHandler(executor: executor) {
+      [weak promise] (value) -> Void in
+      guard nil != promise else { return }
+
+      switch value {
+      case let .success(success):
+        promise?.succeed(with: success)
+      case let .failure(failure):
+        do { promise?.complete(with: try transform(failure)) }
+        catch { promise?.fail(with: error) }
+      }
+    }
+    if let handler = handler {
+      promise.insertToReleasePool(handler)
+    }
+    return promise
   }
 }
 
@@ -89,13 +132,24 @@ public extension Finite {
   ///
   /// This method is suitable for impure transformations (changing state of context).
   /// Use method mapCompletion(context:transform:) for pure -ish transformations.
-  func mapCompletion<TransformedValue, U: ExecutionContext>(context: U, executor: Executor? = nil,
-                     transform: @escaping (U, Fallible<FinalValue>) throws -> TransformedValue) -> Future<TransformedValue> {
+  func mapCompletion<TransformedValue, U: ExecutionContext>(
+    context: U,
+    executor: Executor? = nil,
+                     transform: @escaping (U, Fallible<FinalValue>) throws -> TransformedValue
+    ) -> Future<TransformedValue> {
     return self.mapCompletion(executor: executor ?? context.executor) {
       [weak context] (value) -> TransformedValue in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, value)
     }
+  }
+
+  func flatMapCompletion<TransformedValue, U: ExecutionContext>(
+    context: U,
+    executor: Executor? = nil,
+    transform: @escaping (U, Fallible<FinalValue>) throws -> Future<TransformedValue>
+    ) -> Future<TransformedValue> {
+    return self.mapCompletion(context: context, executor: executor, transform: transform).flatten()
   }
 
   /// Transforms Finite<TypeA> => Future<TypeB>
@@ -110,14 +164,37 @@ public extension Finite {
     }
   }
 
+  func flatMapSuccess<TransformedValue, U: ExecutionContext>(
+    context: U,
+    executor: Executor? = nil,
+    transform: @escaping (U, FinalValue) throws -> Future<TransformedValue>
+    ) -> Future<TransformedValue> {
+    return self.mapSuccess(context: context, executor: executor, transform: transform).flatten()
+  }
+
   /// Recovers failure of this future if there is one with contextual transformer.
-  func recover<U: ExecutionContext>(context: U, executor: Executor? = nil,
-               transform: @escaping (U, Swift.Error) throws -> FinalValue) -> Future<FinalValue> {
+  func recover<U: ExecutionContext>(
+    context: U,
+    executor: Executor? = nil,
+    transform: @escaping (U, Swift.Error) throws -> FinalValue
+    ) -> Future<FinalValue> {
     return self.mapCompletion(context: context, executor: executor) {
       (context, value) -> FinalValue in
       if let failure = value.failure { return try transform(context, failure) }
       if let success = value.success { return success }
       fatalError()
+    }
+  }
+
+  func flatRecover<U: ExecutionContext>(
+    context: U,
+    executor: Executor? = nil,
+    transform: @escaping (U, Swift.Error) throws -> Future<FinalValue>
+    ) -> Future<FinalValue> {
+    return self.flatRecover(executor: executor ?? context.executor) {
+      [weak context] (failure) -> Future<FinalValue> in
+      guard let context = context else { throw AsyncNinjaError.contextDeallocated }
+      return try transform(context, failure)
     }
   }
 }

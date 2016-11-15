@@ -55,6 +55,11 @@ public extension Future {
     return self.mapSuccess(executor: executor, transform: transform)
   }
 
+  final func flatMap<T>(executor: Executor = .primary,
+                 transform: @escaping (FinalValue) throws -> Future<T>) -> Future<T> {
+    return self.flatMapSuccess(executor: executor, transform: transform)
+  }
+
   final func map<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
                  transform: @escaping (U, FinalValue) throws -> T) -> Future<T> {
     // Test: FutureTests.testMapContextual_Success_ContextAlive
@@ -62,6 +67,11 @@ public extension Future {
     // Test: FutureTests.testMapContextual_Failure_ContextAlive
     // Test: FutureTests.testMapContextual_Failure_ContextDead
     return self.mapSuccess(context: context, executor: executor, transform: transform)
+  }
+
+  final func flatMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
+                 transform: @escaping (U, FinalValue) throws -> Future<T>) -> Future<T> {
+    return self.flatMapSuccess(context: context, executor: executor, transform: transform)
   }
 
   func delayed(timeout: Double) -> Future<FinalValue> {

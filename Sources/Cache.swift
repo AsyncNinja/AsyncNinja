@@ -27,10 +27,10 @@ public class Cache<Key : Hashable, MutableFiniteValue : MutableFinite, Context :
   
   private var _locking = makeLocking()
   private weak var _context: Context?
-  private let _missHandler: (Context) throws -> MutableFiniteValue.ImmutableFinite
+  private let _missHandler: (Context, Key) throws -> MutableFiniteValue.ImmutableFinite
   private var _cachedValuesByKey = [Key:_CachableValue]()
   
-  public init(context: Context, missHandler: @escaping (Context) throws -> MutableFiniteValue.ImmutableFinite) {
+  public init(context: Context, missHandler: @escaping (Context, Key) throws -> MutableFiniteValue.ImmutableFinite) {
     _context = context
     _missHandler = missHandler
   }
@@ -45,7 +45,10 @@ public class Cache<Key : Hashable, MutableFiniteValue : MutableFinite, Context :
     _locking.lock()
     defer { _locking.unlock() }
     func makeCachableValue(key: Key) -> _CachableValue {
-      return _CachableValue(context: context, missHandler: self._missHandler)
+      let missHandler = self._missHandler
+      return _CachableValue(context: context) {
+        try missHandler($0, key)
+      }
     }
     return self._cachedValuesByKey
       .value(forKey: key, orMake: makeCachableValue)
@@ -62,14 +65,14 @@ public typealias ReportingCache<Key : Hashable, PeriodicValue, FinalValue, Conte
 
 public func makeCache<Key: Hashable, Value, Context: ExecutionContext>(
   context: Context,
-  missHandler: @escaping (Context) -> Future<Value>
+  missHandler: @escaping (Context, Key) -> Future<Value>
   ) -> SimpleCache<Key, Value, Context> {
   return Cache(context: context, missHandler: missHandler)
 }
 
 public func makeCache<Key: Hashable, PeriodicValue, FinalValue, Context: ExecutionContext>(
   context: Context,
-  missHandler: @escaping (Context) -> Channel<PeriodicValue, FinalValue>
+  missHandler: @escaping (Context, Key) -> Channel<PeriodicValue, FinalValue>
   ) -> ReportingCache<Key, PeriodicValue, FinalValue, Context> {
   return Cache(context: context, missHandler: missHandler)
 }
