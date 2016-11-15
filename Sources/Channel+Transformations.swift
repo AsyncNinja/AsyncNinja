@@ -320,7 +320,7 @@ public extension Channel {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<(Int, PeriodicValue), FinalValue> {
-    var locking = Locking()
+    var locking = makeLocking()
     var index = 0
     return self.mapPeriodic(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
       locking.lock()
