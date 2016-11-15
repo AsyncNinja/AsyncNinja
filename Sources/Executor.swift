@@ -80,7 +80,7 @@ public extension Executor {
 
   // Test: ExecutorTests.testImmediate
   /// executes block immediately. Not suitable for long running calculations
-  static let immediate = Executor(handler: { $0() })
+  static let immediate = Executor(impl: ImmediateExecutorImpl())
 
   /// initializes executor based on specified queue
   // Test: ExecutorTests.testCustomQueue
@@ -114,6 +114,23 @@ extension DispatchQueue : ExecutorImpl {
 
   func fc_makeDerivedSerialExecutor() -> ExecutorImpl {
     return DispatchQueue(label: "derived", qos: .default, attributes: [], target: self)
+  }
+}
+
+fileprivate class ImmediateExecutorImpl : ExecutorImpl {
+  func fc_execute(_ block: @escaping (Void) -> Void) {
+    block()
+  }
+
+  func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
+    let deadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000_000_000))
+    DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
+      block()
+    }
+  }
+
+  func fc_makeDerivedSerialExecutor() -> ExecutorImpl {
+    return DerivedHandlerBasedExecutorImpl(handler: { $0() })
   }
 }
 
