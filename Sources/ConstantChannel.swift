@@ -26,15 +26,16 @@ final class ConstantChannel<S: Collection, U> : Channel<S.Iterator.Element, U>
 where S.IndexDistance == Int {
   private let _periodics: [S.Iterator.Element]
   private let _finalValue: Fallible<U>
-  public var bufferSize: Int { return _periodics.count }
-  public let maxBufferSize: Int
+  private let _maxBufferSize: Int
+  override public var bufferSize: Int { return _periodics.count }
+  override public var maxBufferSize: Int { return _maxBufferSize }
 
   override public var finalValue: Fallible<U>? { return _finalValue }
 
   init(periodics: S, finalValue: Fallible<U>) {
     _periodics = Array(periodics)
     _finalValue = finalValue
-    self.maxBufferSize = _periodics.count
+    _maxBufferSize = _periodics.count
   }
   
   override func makeHandler(executor: Executor,

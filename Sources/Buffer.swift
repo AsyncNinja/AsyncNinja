@@ -85,3 +85,17 @@ struct Buffer<Value> {
     _container.removeAll()
   }
 }
+
+public enum DerivedChannelBufferSize {
+  case `default`
+  case inherited
+  case specific(Int)
+
+  func bufferSize<T, U>(for parentChannel: Channel<T, U>) -> Int {
+    switch self {
+    case .default: return 0
+    case .inherited: return parentChannel.maxBufferSize
+    case let .specific(value): return value
+    }
+  }
+}

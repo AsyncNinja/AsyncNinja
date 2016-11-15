@@ -30,8 +30,8 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   private let releasePool = ReleasePool()
   private var _container = makeThreadSafeContainer()
   private var _buffer: Buffer<PeriodicValue>
-  public var bufferSize: Int { return _buffer.size }
-  public var maxBufferSize: Int { return _buffer.maxSize }
+  override public var bufferSize: Int { return _buffer.size }
+  override public var maxBufferSize: Int { return _buffer.maxSize }
 
   override public var finalValue: Fallible<FinalValue>? { return (_container.head as? FinalState)?.final }
 
