@@ -22,7 +22,7 @@
 
 import Dispatch
 
-final class ConstantChannel<S: Collection, U> : Channel<S.Iterator.Element, U>, BufferingPeriodic
+final class ConstantChannel<S: Collection, U> : Channel<S.Iterator.Element, U>
 where S.IndexDistance == Int {
   private let _periodics: [S.Iterator.Element]
   private let _finalValue: Fallible<U>

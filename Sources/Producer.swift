@@ -22,7 +22,9 @@
 
 import Dispatch
 
-final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, FinalValue>, MutableFinite, MutablePeriodic, BufferingPeriodic {
+final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, FinalValue>, MutableFinite {
+  public typealias ImmutableFinite = Channel<PeriodicValue, FinalValue>
+
   typealias RegularState = RegularProducerState<PeriodicValue, FinalValue>
   typealias FinalState = FinalProducerState<PeriodicValue, FinalValue>
   private let releasePool = ReleasePool()
@@ -123,6 +125,16 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     if !self.isComplete {
       self.releasePool.insert(releasable)
+    }
+  }
+
+  public func complete(with finite: ImmutableFinite) {
+    let handler = finite.makeHandler(executor: .immediate) { [weak self] in
+      self?.apply($0)
+    }
+    
+    if let handler = handler {
+      self.insertToReleasePool(handler)
     }
   }
 

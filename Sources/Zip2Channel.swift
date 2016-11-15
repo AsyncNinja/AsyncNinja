@@ -22,46 +22,46 @@
 
 import Dispatch
 
-public func zip<T, U>(_ leftChannel: InfiniteChannel<T>, _ rightChannel: InfiniteChannel<U>) -> InfiniteChannel<(T, U)> {
-  let resultChannel = InfiniteProducer<(T, U)>()
-  let leftQueue = QueueImpl<T>()
-  let rightQueue = QueueImpl<U>()
-  var locking = makeLocking()
-
-  func makeElement(_ leftQueue: QueueImpl<T>, _ rightQueue: QueueImpl<U>) -> (T, U)? {
-    if leftQueue.isEmpty || rightQueue.isEmpty {
-      return nil
-    } else {
-      return (leftQueue.pop()!, rightQueue.pop()!)
-    }
-  }
-
-  let leftHandler = leftChannel.makePeriodicHandler(executor: .immediate) { [weak resultChannel] leftValue in
-    guard let resultChannel = resultChannel else { return }
-    locking.lock()
-    defer { locking.unlock() }
-    leftQueue.push(leftValue)
-    if let element = makeElement(leftQueue, rightQueue) {
-      resultChannel.send(element)
-    }
-  }
-  if let leftHandler = leftHandler {
-    resultChannel.insertToReleasePool(leftHandler)
-  }
-
-  let rightHandler = rightChannel.makePeriodicHandler(executor: .immediate) { [weak resultChannel] rightValue in
-    guard let resultChannel = resultChannel else { return }
-    locking.lock()
-    defer { locking.unlock() }
-    rightQueue.push(rightValue)
-    if let element = makeElement(leftQueue, rightQueue) {
-      resultChannel.send(element)
-    }
-  }
-
-  if let rightHandler = rightHandler {
-    resultChannel.insertToReleasePool(rightHandler)
-  }
-
-  return resultChannel
-}
+//public func zip<T, U>(_ leftChannel: Channel<T>, _ rightChannel: Channel<U>) -> Channel<(T, U)> {
+//  let resultChannel = Producer<(T, U)>()
+//  let leftQueue = QueueImpl<T>()
+//  let rightQueue = QueueImpl<U>()
+//  var locking = makeLocking()
+//
+//  func makeElement(_ leftQueue: QueueImpl<T>, _ rightQueue: QueueImpl<U>) -> (T, U)? {
+//    if leftQueue.isEmpty || rightQueue.isEmpty {
+//      return nil
+//    } else {
+//      return (leftQueue.pop()!, rightQueue.pop()!)
+//    }
+//  }
+//
+//  let leftHandler = leftChannel.makePeriodicHandler(executor: .immediate) { [weak resultChannel] leftValue in
+//    guard let resultChannel = resultChannel else { return }
+//    locking.lock()
+//    defer { locking.unlock() }
+//    leftQueue.push(leftValue)
+//    if let element = makeElement(leftQueue, rightQueue) {
+//      resultChannel.send(element)
+//    }
+//  }
+//  if let leftHandler = leftHandler {
+//    resultChannel.insertToReleasePool(leftHandler)
+//  }
+//
+//  let rightHandler = rightChannel.makePeriodicHandler(executor: .immediate) { [weak resultChannel] rightValue in
+//    guard let resultChannel = resultChannel else { return }
+//    locking.lock()
+//    defer { locking.unlock() }
+//    rightQueue.push(rightValue)
+//    if let element = makeElement(leftQueue, rightQueue) {
+//      resultChannel.send(element)
+//    }
+//  }
+//
+//  if let rightHandler = rightHandler {
+//    resultChannel.insertToReleasePool(rightHandler)
+//  }
+//
+//  return resultChannel
+//}

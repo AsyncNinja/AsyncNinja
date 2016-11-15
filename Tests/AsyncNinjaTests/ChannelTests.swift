@@ -34,15 +34,15 @@ class ChannelTests : XCTestCase {
 ]
   
   func testConstant() {
-    let numberOfPeriodics = 5
-    let periodics = (0..<numberOfPeriodics).map { _ in pickInt() }
-    let success = "final value"
-    
-    let channelA = channel(periodics: periodics, success: success)
-
-    for periodic in periodics {
-      XCTAssertEqual(channelA.next(), periodic)
-    }
-    XCTAssertEqual(channelA.wait().success!, success)
+//    let numberOfPeriodics = 5
+//    let periodics = (0..<numberOfPeriodics).map { _ in pickInt() }
+//    let success = "final value"
+//    
+//    let channelA = channel(periodics: periodics, success: success)
+//
+//    for periodic in periodics {
+//      XCTAssertEqual(channelA.next(), periodic)
+//    }
+//    XCTAssertEqual(channelA.wait().success!, success)
   }
 }

@@ -24,6 +24,8 @@ import Dispatch
 
 /// Promise that may be manually completed by owner.
 final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
+  public typealias ImmutableFinite = Future<FinalValue>
+
   private var _container = makeThreadSafeContainer()
   private let releasePool = ReleasePool()
   override public var finalValue: Fallible<FinalValue>? { return (_container.head as? CompletedPromiseState)?.value }
@@ -73,7 +75,6 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
     return true
   }
 
-  
   public func insertToReleasePool(_ releasable: Releasable) {
     assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     assert((releasable as? Handler)?.owner !== self)

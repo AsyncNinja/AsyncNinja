@@ -22,7 +22,7 @@
 
 import Dispatch
 
-public class Channel<PeriodicValue, FinalValue> : Periodic, Finite {
+public class Channel<PeriodicValue, FinalValue> : Finite {
   public typealias Value = ChannelValue<PeriodicValue, FinalValue>
   public typealias Handler = ChannelHandler<PeriodicValue, FinalValue>
   public typealias PeriodicHandler = Handler
@@ -40,10 +40,6 @@ public class Channel<PeriodicValue, FinalValue> : Periodic, Finite {
     return self.makeHandler(executor: executor) {
       if case .final(let value) = $0 { block(value) }
     }
-  }
-
-  public func next() -> PeriodicValue {
-    fatalError()
   }
 
   final public func makePeriodicHandler(executor: Executor,
@@ -99,7 +95,6 @@ final public class ChannelHandler<T, U> {
   }
 }
 
-// this code duplication from InfiniteChannel is a thing because parametrized associatedtype is not yet a thing.
 extension Channel {
   func makeProducer<TransformedPeriodicValue, TransformedFinalValue>(
     executor: Executor, cancellationToken: CancellationToken?,
@@ -285,3 +280,207 @@ public extension Channel {
     }
   }
 }
+
+public extension Channel {
+  internal func makeProducer<T, U>(executor: Executor,
+                             onValue: @escaping (Value, Producer<T, U>) -> Void) -> Producer<T, U> {
+    let producer = Producer<T, U>()
+    let handler = self.makeHandler(executor: executor) { [weak producer] (value) in
+      guard let producer = producer else { return }
+      onValue(value, producer)
+    }
+
+    if let handler = handler {
+      producer.insertToReleasePool(handler)
+    }
+    return producer
+  }
+
+  internal func makeChannel<T, U>(executor: Executor,
+                            onValue: @escaping (Value, (ChannelValue<T, U>) -> Void) -> Void) -> Channel<T, U> {
+    return self.makeProducer(executor: executor) { (value: Value, producer: Producer<T, U>) -> Void in
+      onValue(value, producer.apply)
+    }
+  }
+
+  func flatMapPeriodic<T>(executor: Executor = .primary,
+                         transform: @escaping (PeriodicValue) -> T?) -> Channel<T, FinalValue> {
+    return self.makeChannel(executor: executor) { (value, send) in
+      switch value {
+      case let .periodic(periodic):
+        if let transformedValue = transform(periodic) {
+          send(.periodic(transformedValue))
+        }
+      case let .final(final):
+        send(.final(final))
+      }
+    }
+  }
+
+  func flatMapPeriodic<S: Sequence>(executor: Executor = .primary,
+                         transform: @escaping (PeriodicValue) -> S) -> Channel<S.Iterator.Element, FinalValue> {
+    return self.makeChannel(executor: executor) { (value, send) in
+      switch value {
+      case let .periodic(periodic):
+        for transformedValue in transform(periodic) {
+          send(.periodic(transformedValue))
+        }
+      case let .final(final):
+        send(.final(final))
+      }
+    }
+  }
+
+  func filterPeriodic(executor: Executor = .immediate,
+                        predicate: @escaping (PeriodicValue) -> Bool) -> Channel<PeriodicValue, FinalValue> {
+    return self.makeChannel(executor: executor) { (value, send) in
+      switch value {
+      case let .periodic(periodic):
+        if predicate(periodic) {
+          send(.periodic(periodic))
+        }
+      case let .final(final):
+        send(.final(final))
+      }
+    }
+  }
+
+  func changes() -> Channel<(PeriodicValue, PeriodicValue), FinalValue> {
+    var locking = makeLocking()
+    var previousPeriodic: PeriodicValue? = nil
+
+    return self.makeChannel(executor: .immediate) { (value, send) in
+      switch value {
+      case let .periodic(periodic):
+        locking.lock()
+        let _previousPeriodic = previousPeriodic
+        previousPeriodic = periodic
+        locking.unlock()
+
+        if let previousPeriodic = _previousPeriodic {
+          let change = (previousPeriodic, periodic)
+          send(.periodic(change))
+        }
+      case let .final(final):
+        send(.final(final))
+      }
+    }
+  }
+
+  #if os(Linux)
+  func enumerated() -> Channel<(Int, PeriodicValue), FinalValue> {
+    let sema = DispatchSemaphore(value: 1)
+    var index = 0
+    return self.mapPeriodic(executor: .immediate) {
+      sema.wait()
+      defer { sema.signal() }
+      let localIndex = index
+      index += 1
+      return (localIndex, $0)
+    }
+  }
+  #else
+  func enumerated() -> Channel<(Int, PeriodicValue), FinalValue> {
+    var index: OSAtomic_int64_aligned64_t = -1
+    return self.mapPeriodic(executor: .immediate) {
+      let localIndex = Int(OSAtomicIncrement64(&index))
+      return (localIndex, $0)
+    }
+  }
+  #endif
+
+  func bufferedPairs() -> Channel<(PeriodicValue, PeriodicValue), FinalValue> {
+    return self.buffered(capacity: 2).map(executor: .immediate) {
+      switch $0 {
+      case let .periodic(periodic):
+        return .periodic((periodic[0], periodic[1]))
+      case let .final(final):
+        return .final(final)
+      }
+    }
+  }
+
+  func buffered(capacity: Int) -> Channel<[PeriodicValue], FinalValue> {
+    var buffer = [PeriodicValue]()
+    buffer.reserveCapacity(capacity)
+    var locking = makeLocking()
+
+    return self.makeChannel(executor: .immediate) { (value, send) in
+      locking.lock()
+
+      switch value {
+      case let .periodic(periodic):
+        buffer.append(periodic)
+        if capacity == buffer.count {
+          let localBuffer = buffer
+          buffer.removeAll(keepingCapacity: true)
+          locking.unlock()
+          send(.periodic(localBuffer))
+        } else {
+          locking.unlock()
+        }
+      case let .final(final):
+        let localBuffer = buffer
+        buffer.removeAll(keepingCapacity: false)
+        locking.unlock()
+
+        if !localBuffer.isEmpty {
+          send(.periodic(localBuffer))
+        }
+        send(.final(final))
+      }
+    }
+  }
+}
+
+public extension Channel {
+  func delayedPeriodic(timeout: Double) -> Channel<PeriodicValue, FinalValue> {
+    return self.makeProducer(executor: .immediate) { (value: Value, producer: Producer<PeriodicValue, FinalValue>) -> Void in
+      Executor.primary.execute(after: timeout) { [weak producer] in
+        guard let producer = producer else { return }
+        producer.apply(value)
+      }
+    }
+  }
+}
+
+public extension Channel {
+  func mapPeriodic<U: ExecutionContext, V>(context: U, executor: Executor? = nil,
+                   transform: @escaping (U, PeriodicValue) -> V) -> Channel<V, FinalValue> {
+    return self.makeChannel(executor: executor ?? context.executor) { [weak context] (value, send) in
+      guard let context = context else { return }
+      switch value {
+      case let .periodic(periodic):
+        send(.periodic(transform(context, periodic)))
+      case let .final(final):
+        send(.final(final))
+      }
+    }
+  }
+
+  func onPeriodic<U: ExecutionContext>(context: U, executor: Executor? = nil,
+                  block: @escaping (U, PeriodicValue) -> Void) {
+    let handler = self.makePeriodicHandler(executor: executor ?? context.executor) { [weak context] (value) in
+      guard let context = context else { return }
+      block(context, value)
+    }
+
+    if let handler = handler {
+      context.releaseOnDeinit(handler)
+    }
+  }
+}
+
+//public extension Channel where PeriodicValue : Finite {
+//  final func flatten(isOrdered: Bool = false) -> Channel<Fallible<PeriodicValue.FinalValue>> {
+//    return self.makeProducer(executor: .immediate) { (periodicValue, producer) in
+//      let handler = periodicValue.makeFinalHandler(executor: .immediate) { [weak producer] (finalValue) in
+//        guard let producer = producer else { return }
+//        producer.send(finalValue)
+//      }
+//      if let handler = handler {
+//        producer.insertToReleasePool(handler)
+//      }
+//    }
+//  }
+//}

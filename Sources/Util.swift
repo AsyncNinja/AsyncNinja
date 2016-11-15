@@ -20,9 +20,18 @@
 //  IN THE SOFTWARE.
 //
 
-import Dispatch
+extension Dictionary {
+  mutating func value(forKey key: Key, orMake makeValue: (Key) throws -> Value) rethrows -> Value {
+    if let existingValue = self[key] {
+      return existingValue
+    } else {
+      let newValue = try makeValue(key)
+      self[key] = newValue
+      return newValue
+    }
+  }
+}
 
-public protocol BufferingPeriodic : Periodic {
-  var bufferSize: Int { get }
-  var maxBufferSize: Int { get }
+func nop() {
+  // no operation
 }

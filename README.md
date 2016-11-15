@@ -13,31 +13,22 @@ Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
 ##    Basics
 This framework is an implementation of following principles:
 
-*    provide abstraction that makes
-    *    doing right things easier
-    *    doing wrong things harder
-*    use abstraction is based on monads
-    *    [`Future`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Future.md) is a proxy of value that will be available at some point in the future. See example for advances of using futures.
-    *    [`InfiniteChannel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/InfiniteChannel.md) (renamed from Stream because of some odd naming conflict with standard library) is the same as future but the value will appear multiple times.
-    *    [`Channel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Channel.md) is a combination of `Future` and `InfiniteChannel`.
-    *    [`Executor`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Executor.md) is object made to execute escaped block `(Void) -> Void`. Its propose is to encapsulate a way of an execution.
-    *    [`ExecutionContext`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md) is a protocol concurrency-aware objects must conform to. It basically make them actors or components of actor.
-    *    [`Fallible`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md) is validation monad. Is an object that represents either success value of failure value (Error).
-
-###Primitives
-|               |`Finite`|`Periodic`|
-|---------------|:------:|:--------:|
-|`Future`       | ✓      | ✕        |
-|`InfiniteChannel`      | ✕      | ✓        |
-|`Channel`| ✓      | ✓        |
-
+* provide abstraction that makes
+	* doing right things easier
+	* doing wrong things harder
+* use abstraction is based on monads
+    * [`Future`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Future.md) is a proxy of value that will be available at some point in the future. See example for advances of using futures.
+    * [`Channel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Channel.md) is like a `Future` that may provide `Periodic` values before final one.
+    * [`Executor`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Executor.md) is object made to execute escaped block `(Void) -> Void`. Its propose is to encapsulate a way of an execution.
+    * [`ExecutionContext`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/ExecutionContext.md) is a protocol concurrency-aware objects must conform to. It basically make them actors or components of actor.
+    * [`Fallible`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Fallible.md) is validation monad. Is an object that represents either success value of failure value (Error).
+	* `Cache` is a primitive that lets you coalesce requests and cache responses
 
 ##    Documentation
-*    [`Future`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Future.md)
-*    [`InfiniteChannel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/InfiniteChannel.md)
-*    [`Channel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Channel.md)
-*    [`Executor`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Executor.md)
-*    [`ExecutionContext`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md)
-*    [`Fallible`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md)
-*    [Actor Model](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ActorModel.md)
-*    [Memory Management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/MemoryManagement.md)
+* [`Future`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Future.md)
+* [`Channel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Channel.md)
+* [`Executor`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Executor.md)
+* [`ExecutionContext`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/ExecutionContext.md)
+* [`Fallible`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Fallible.md)
+* [Actor Model](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/ActorModel.md)
+* [Memory Management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/MemoryManagement.md)
