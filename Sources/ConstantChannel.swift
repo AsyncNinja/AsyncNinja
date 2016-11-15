@@ -49,7 +49,11 @@ where S.IndexDistance == Int {
     }
     return nil
   }
-  
+
+  override public func makeIterator() -> Iterator {
+    let impl = ConstantChannelIteratorImp(periodicsIterator: _periodics.makeIterator(), finalValue: _finalValue)
+    return ChannelIterator(impl: impl)
+  }
 }
 
 public func channel<S: Collection, U>(periodics: S, success: U) -> Channel<S.Iterator.Element, U>
@@ -60,4 +64,23 @@ public func channel<S: Collection, U>(periodics: S, success: U) -> Channel<S.Ite
 public func channel<S: Collection, U>(periodics: S, failure: Swift.Error) -> Channel<S.Iterator.Element, U>
   where S.IndexDistance == Int {
     return ConstantChannel(periodics: periodics, finalValue: Fallible(failure: failure))
+}
+
+class ConstantChannelIteratorImp<PeriodicValue, FinalValue> : ChannelIteratorImpl<PeriodicValue, FinalValue> {
+  private var _periodicsIterator: Array<PeriodicValue>.Iterator
+  private let _finalValue: Fallible<FinalValue>
+  override var finalValue: Fallible<FinalValue>? { return _finalValue }
+
+  init(periodicsIterator: Array<PeriodicValue>.Iterator, finalValue: Fallible<FinalValue>) {
+    _periodicsIterator = periodicsIterator
+    _finalValue = finalValue
+  }
+
+  override func next() -> PeriodicValue? {
+    return _periodicsIterator.next()
+  }
+
+  override func clone() -> ChannelIteratorImpl<PeriodicValue, FinalValue> {
+    return ConstantChannelIteratorImp(periodicsIterator: _periodicsIterator, finalValue: _finalValue)
+  }
 }

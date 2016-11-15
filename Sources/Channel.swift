@@ -116,7 +116,7 @@ class ChannelIteratorImpl<PeriodicValue, FinalValue>  {
     fatalError()
   }
 
-  init(channel: Channel<PeriodicValue, FinalValue>, bufferedPeriodics: QueueImpl<PeriodicValue>) {
+  init() {
   }
 
   public func next() -> PeriodicValue? {

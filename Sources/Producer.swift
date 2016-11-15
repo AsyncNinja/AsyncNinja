@@ -239,11 +239,11 @@ class ProducerIteratorImpl<PeriodicValue, FinalValue> : ChannelIteratorImpl<Peri
   }
   var _finalValue: Fallible<FinalValue>?
 
-  override init(channel: Channel<PeriodicValue, FinalValue>, bufferedPeriodics: QueueImpl<PeriodicValue>) {
+  init(channel: Channel<PeriodicValue, FinalValue>, bufferedPeriodics: QueueImpl<PeriodicValue>) {
     _channel = channel
     _bufferedPeriodics = bufferedPeriodics
     _sema = DispatchSemaphore(value: bufferedPeriodics.count)
-    super.init(channel: channel, bufferedPeriodics: bufferedPeriodics)
+    super.init()
     _handler = channel.makeHandler(executor: .immediate) { [weak self] (value) in
       self?.handle(value)
     }
@@ -259,7 +259,7 @@ class ProducerIteratorImpl<PeriodicValue, FinalValue> : ChannelIteratorImpl<Peri
   }
 
   override func clone() -> ChannelIteratorImpl<PeriodicValue, FinalValue> {
-    return ChannelIteratorImpl(channel: _channel, bufferedPeriodics: _bufferedPeriodics.clone())
+    return ProducerIteratorImpl(channel: _channel, bufferedPeriodics: _bufferedPeriodics.clone())
   }
 
   func handle(_ value: ChannelValue<PeriodicValue, FinalValue>) {
