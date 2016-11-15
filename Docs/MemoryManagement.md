@@ -1,10 +1,10 @@
 #Memory Management
 
-This topic recommends rules that help to avoid retain cycles between AsyncNinja abstractions (futures and InfiniteChannels) and their host objects (actors and actor compoents).
+This topic recommends rules that help to avoid retain cycles between AsyncNinja abstractions (futures and Channels) and their host objects (actors and actor compoents).
 
 ##Rules
 * use [Actor Model](ActorModel.md)
-* use futures and InfiniteChannels manipulation methods that has `context: ExecutionContext` argument
+* use futures and Channels manipulation methods that has `context: ExecutionContext` argument
 
 ##How does it work?
-Futures and InfiniteChannels will be automaticaly deallocated as soon a you loose last reference to them or there are no subscribers to their values. Unless their completion is bound to context with methods `onComplete(context:block:)`, `onPeriodic(context:block:)`, `onSuccess(context:block:)`, `onFailure(context:block:)`. Futures and InfiniteChannels bound in such way will live as long as owning context lives.
+Futures and Channels will be automaticaly deallocated as soon a you loose last reference to them or there are no subscribers to their values. Unless their completion is bound to context with methods `onComplete(context:block:)`, `onPeriodic(context:block:)`, `onSuccess(context:block:)`, `onFailure(context:block:)`. Futures and Channels bound in such way will live as long as owning context lives.

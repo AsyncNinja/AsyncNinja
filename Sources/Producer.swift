@@ -22,7 +22,7 @@
 
 import Dispatch
 
-final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, FinalValue>, MutableFinite, MutablePeriodic {
+final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, FinalValue>, MutableFinite {
   public typealias ImmutableFinite = Channel<PeriodicValue, FinalValue>
 
   typealias RegularState = RegularProducerState<PeriodicValue, FinalValue>
