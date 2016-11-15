@@ -18,8 +18,7 @@ This framework is an implementation of following principles:
     *    doing wrong things harder
 *    use abstraction is based on monads
     *    [`Future`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Future.md) is a proxy of value that will be available at some point in the future. See example for advances of using futures.
-    *    [`InfiniteChannel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/InfiniteChannel.md) (renamed from Stream because of some odd naming conflict with standard library) is the same as future but the value will appear multiple times.
-    *    [`Channel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Channel.md) is a combination of `Future` and `InfiniteChannel`.
+    *    [`Channel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Channel.md) is like a `Future` that may provide `Periodic` values before final one.
     *    [`Executor`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Executor.md) is object made to execute escaped block `(Void) -> Void`. Its propose is to encapsulate a way of an execution.
     *    [`ExecutionContext`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md) is a protocol concurrency-aware objects must conform to. It basically make them actors or components of actor.
     *    [`Fallible`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Fallible.md) is validation monad. Is an object that represents either success value of failure value (Error).
@@ -28,13 +27,11 @@ This framework is an implementation of following principles:
 |               |`Finite`|`Periodic`|
 |---------------|:------:|:--------:|
 |`Future`       | ✓      | ✕        |
-|`InfiniteChannel`      | ✕      | ✓        |
 |`Channel`| ✓      | ✓        |
 
 
 ##    Documentation
 *    [`Future`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Future.md)
-*    [`InfiniteChannel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/InfiniteChannel.md)
 *    [`Channel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Channel.md)
 *    [`Executor`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Executor.md)
 *    [`ExecutionContext`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md)
