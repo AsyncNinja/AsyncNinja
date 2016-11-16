@@ -31,7 +31,8 @@ class ChannelTests : XCTestCase {
   
   static let allTests = [
     ("testIterators", testIterators),
-    ("testMap", testMap),
+    ("testMapPeriodic", testMapPeriodic),
+    ("testFilterPeriodic", testFilterPeriodic),
     ]
   
   func testIterators() {
@@ -52,21 +53,36 @@ class ChannelTests : XCTestCase {
     XCTAssertEqual(iteratorB.finalValue?.success, "finished")
   }
 
-  func testMap() {
-    let producer = Producer<Int, String>()
-    let range = 0..<5
+  func makeChannel<S: Sequence, T>(periodics: S, success: T) -> Channel<S.Iterator.Element, T> {
+    let producer = Producer<S.Iterator.Element, T>()
 
     DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
-      producer.send(range)
-      producer.succeed(with: "bye")
+      producer.send(periodics)
+      producer.succeed(with: success)
     }
 
-    let (periodics, finalValue) = producer
+    return producer
+  }
+
+  func testMapPeriodic() {
+    let range = 0..<5
+    let final = "bye"
+    let (periodics, finalValue) = makeChannel(periodics: range, success: final)
       .mapPeriodic { $0 * 2 }
       .waitForAll()
 
     XCTAssertEqual(Set(range.map { $0 * 2 }), Set(periodics))
-    XCTAssertEqual("bye", finalValue.success)
+    XCTAssertEqual(final, finalValue.success)
   }
 
+  func testFilterPeriodic() {
+    let range = 0..<5
+    let final = "bye"
+    let (periodics, finalValue) = makeChannel(periodics: range, success: final)
+      .filterPeriodic { 0 == $0 % 2 }
+      .waitForAll()
+
+    XCTAssertEqual(Set(range.filter { 0 == $0 % 2 }), Set(periodics))
+    XCTAssertEqual(final, finalValue.success)
+  }
 }
