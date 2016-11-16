@@ -289,32 +289,6 @@ public extension Channel {
     }
   }
 
-  func changes(
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<(PeriodicValue, PeriodicValue), FinalValue> {
-    var locking = makeLocking()
-    var previousPeriodic: PeriodicValue? = nil
-
-    return self.makeProducer(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
-      (value, producer) in
-      switch value {
-      case let .periodic(periodic):
-        locking.lock()
-        let _previousPeriodic = previousPeriodic
-        previousPeriodic = periodic
-        locking.unlock()
-
-        if let previousPeriodic = _previousPeriodic {
-          let change = (previousPeriodic, periodic)
-          producer.send(change)
-        }
-      case let .final(final):
-        producer.complete(with: final)
-      }
-    }
-  }
-
   #if os(Linux)
   func enumerated(
     cancellationToken: CancellationToken? = nil,
@@ -347,12 +321,24 @@ public extension Channel {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<(PeriodicValue, PeriodicValue), FinalValue> {
-    return self.buffered(capacity: 2, cancellationToken: cancellationToken, bufferSize: bufferSize).map(executor: .immediate) {
-      switch $0 {
+    var locking = makeLocking()
+    var previousPeriodic: PeriodicValue? = nil
+
+    return self.makeProducer(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      (value, producer) in
+      switch value {
       case let .periodic(periodic):
-        return .periodic((periodic[0], periodic[1]))
+        locking.lock()
+        let _previousPeriodic = previousPeriodic
+        previousPeriodic = periodic
+        locking.unlock()
+
+        if let previousPeriodic = _previousPeriodic {
+          let change = (previousPeriodic, periodic)
+          producer.send(change)
+        }
       case let .final(final):
-        return .final(final)
+        producer.complete(with: final)
       }
     }
   }
@@ -404,6 +390,35 @@ public extension Channel {
       Executor.primary.execute(after: timeout) { [weak producer] in
         guard let producer = producer else { return }
         producer.apply(value)
+      }
+    }
+  }
+}
+
+extension Channel where PeriodicValue : Equatable {
+  func distinct(
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<(PeriodicValue, PeriodicValue), FinalValue> {
+    var locking = makeLocking()
+    var previousPeriodic: PeriodicValue? = nil
+
+    return self.makeProducer(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      (value, producer) in
+      switch value {
+      case let .periodic(periodic):
+        locking.lock()
+        let _previousPeriodic = previousPeriodic
+        previousPeriodic = periodic
+        locking.unlock()
+
+        if let previousPeriodic = _previousPeriodic,
+          previousPeriodic != periodic {
+          let change = (previousPeriodic, periodic)
+          producer.send(change)
+        }
+      case let .final(final):
+        producer.complete(with: final)
       }
     }
   }

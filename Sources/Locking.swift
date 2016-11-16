@@ -27,11 +27,13 @@ protocol Locking {
   mutating func unlock()
 }
 
-func makeLocking() -> Locking {
+func makeLocking(isFair: Bool = false) -> Locking {
   #if os(Linux)
     return DispatchSemaphoreLocking()
   #else
-    if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
+    if isFair {
+      return DispatchSemaphoreLocking()
+    } else if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
       return UnfairLockLocking()
     } else {
       return SpinLockLocking()

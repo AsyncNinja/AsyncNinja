@@ -52,6 +52,7 @@ class QueueImpl<T> {
     if let next = first.next {
       _first = next
     } else {
+      _first = nil
       _last = nil
     }
 

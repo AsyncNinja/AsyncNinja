@@ -236,7 +236,7 @@ public enum DerivedChannelBufferSize {
 
 class ProducerIteratorImpl<PeriodicValue, FinalValue> : ChannelIteratorImpl<PeriodicValue, FinalValue> {
   let _sema: DispatchSemaphore
-  var _locking = makeLocking()
+  var _locking = makeLocking(isFair: true)
   let _bufferedPeriodics: QueueImpl<PeriodicValue>
   let _producer: Producer<PeriodicValue, FinalValue>
   var _handler: ChannelHandler<PeriodicValue, FinalValue>?

@@ -32,6 +32,7 @@ class ChannelTests : XCTestCase {
   static let allTests = [
     ("testConstant", testConstant),
     ("testIterators", testIterators),
+    ("testMap", testMap),
 ]
   
   func testConstant() {
@@ -70,4 +71,22 @@ class ChannelTests : XCTestCase {
     }
     XCTAssertEqual(iteratorB.finalValue?.success, "finished")
   }
+
+  func testMap() {
+    let producer = Producer<Int, String>()
+    let range = 0..<5
+
+    DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
+      producer.send(range)
+      producer.succeed(with: "bye")
+    }
+
+    let (periodics, finalValue) = producer
+      .mapPeriodic { $0 * 2 }
+      .waitForAll()
+
+    XCTAssertEqual(range.map { $0 * 2 }, periodics)
+    XCTAssertEqual("bye", finalValue.success)
+  }
+
 }

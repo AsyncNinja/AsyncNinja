@@ -63,20 +63,31 @@ public class Channel<PeriodicValue, FinalValue> : Finite {
     fatalError()
   }
   
-  public func onValue<U: ExecutionContext>(context: U, executor: Executor? = nil,
-                      block: @escaping (U, Value) -> Void) {
+  public func makeIterator() -> Iterator {
+    /* abstract */
+    fatalError()
+  }
+}
+
+public extension Channel {
+  func onValue<U: ExecutionContext>(
+    context: U,
+    executor: Executor? = nil,
+    block: @escaping (U, Value) -> Void) {
     let handler = self.makeHandler(executor: executor ?? context.executor) { [weak context] (value) in
       guard let context = context else { return }
       block(context, value)
     }
-    
+
     if let handler = handler {
       context.releaseOnDeinit(handler)
     }
   }
 
-  public func onPeriodic<U: ExecutionContext>(context: U, executor: Executor? = nil,
-                  block: @escaping (U, PeriodicValue) -> Void) {
+  func onPeriodic<U: ExecutionContext>(
+    context: U,
+    executor: Executor? = nil,
+    block: @escaping (U, PeriodicValue) -> Void) {
     self.onValue(context: context, executor: executor) { (context, value) in
       switch value {
       case let .periodic(periodic):
@@ -86,26 +97,60 @@ public class Channel<PeriodicValue, FinalValue> : Finite {
     }
   }
 
-  public func makeIterator() -> Iterator {
-    /* abstract */
-    fatalError()
+  func extractAll<U: ExecutionContext>(
+    context: U,
+    executor: Executor? = nil,
+    block: @escaping (U, [PeriodicValue], Fallible<FinalValue>) -> Void) {
+    var locking = makeLocking()
+    var periodics = [PeriodicValue]()
+    let handler = self.makeHandler(executor: executor ?? context.executor) { [weak context] (value) in
+      guard let context = context else { return }
+      switch value {
+      case let .periodic(periodic):
+        locking.lock()
+        defer { locking.unlock() }
+        periodics.append(periodic)
+      case let .final(final):
+        block(context, periodics, final)
+      }
+    }
+
+    if let handler = handler {
+      context.releaseOnDeinit(handler)
+    }
+  }
+
+  func waitForAll() -> (periodics: [PeriodicValue], final: Fallible<FinalValue>) {
+    var periodics = [PeriodicValue]()
+    var iterator = self.makeIterator()
+    while let periodic = iterator.next() {
+      periodics.append(periodic)
+    }
+    return (periodics, iterator.finalValue!)
   }
 }
 
 public struct ChannelIterator<PeriodicValue, FinalValue> : IteratorProtocol  {
   public typealias Element = PeriodicValue
-  var _impl: ChannelIteratorImpl<PeriodicValue, FinalValue>
-  public var finalValue: Fallible<FinalValue>? { return _impl.finalValue }
+  private var _implBox: Box<ChannelIteratorImpl<PeriodicValue, FinalValue>> // want to have reference to reference, because impl may actually be retained by some handler
+  public var finalValue: Fallible<FinalValue>? { return _implBox.value.finalValue }
 
   init(impl: ChannelIteratorImpl<PeriodicValue, FinalValue>) {
-    _impl = impl
+    _implBox = Box(impl)
   }
 
   public mutating func next() -> PeriodicValue? {
-    if !isKnownUniquelyReferenced(&_impl) {
-      _impl = _impl.clone()
+    if !isKnownUniquelyReferenced(&_implBox) {
+      _implBox = Box(_implBox.value.clone())
     }
-    return _impl.next()
+    return _implBox.value.next()
+  }
+}
+
+private class Box<T> {
+  let value: T
+  init(_ value: T) {
+    self.value = value
   }
 }
 
