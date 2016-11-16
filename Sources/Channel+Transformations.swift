@@ -102,35 +102,6 @@ public extension Channel {
       producer.apply(transformedValue)
     }
   }
-
-  func flatMap<TransformedPeriodicValue, TransformedFinalValue, U: ExecutionContext>(
-    context: U,
-    executor: Executor? = nil,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    transform: @escaping (U, Value) throws -> ChannelValue<TransformedPeriodicValue, TransformedFinalValue>?
-    ) -> Channel<TransformedPeriodicValue, TransformedFinalValue> {
-    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
-      (context, value, producer) in
-      if let transformedValue = try transform(context, value) {
-        producer.apply(transformedValue)
-      }
-    }
-  }
-
-  func flatMap<TransformedPeriodicValue, TransformedFinalValue>(
-    executor: Executor = .primary,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    transform: @escaping (Value) throws -> ChannelValue<TransformedPeriodicValue, TransformedFinalValue>?
-    ) -> Channel<TransformedPeriodicValue, TransformedFinalValue> {
-    return self.makeProducer(executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
-      (value, producer) in
-      if let transformedValue = try transform(value) {
-        producer.apply(transformedValue)
-      }
-    }
-  }
 }
 
 // MARK: - periodics only transformations
