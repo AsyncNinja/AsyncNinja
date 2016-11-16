@@ -246,6 +246,55 @@ public extension Channel {
     }
   }
 
+  func flatMapPeriodic<T, U: ExecutionContext>(
+    context: U,
+    executor: Executor? = nil,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    transform: @escaping (U, PeriodicValue) throws -> Future<T>
+    ) -> Channel<Fallible<T>, FinalValue> {
+    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      (context, value, producer) in
+      switch value {
+      case .periodic(let periodic):
+        let handler = (try transform(context, periodic))
+          .makeFinalHandler(executor: .immediate) { [weak producer] (periodic) -> Void in
+            producer?.send(periodic)
+
+        }
+        if let handler = handler {
+          producer.insertToReleasePool(handler)
+        }
+      case .final(let final):
+        producer.complete(with: final)
+      }
+    }
+  }
+
+  func flatMapPeriodic<T>(
+    executor: Executor = .primary,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    transform: @escaping (PeriodicValue) throws -> Future<T>
+    ) -> Channel<Fallible<T>, FinalValue> {
+    return self.makeProducer(executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      (value, producer) in
+      switch value {
+      case .periodic(let periodic):
+        let handler = (try transform(periodic))
+          .makeFinalHandler(executor: .immediate) { [weak producer] (periodic) -> Void in
+            producer?.send(periodic)
+
+        }
+        if let handler = handler {
+          producer.insertToReleasePool(handler)
+        }
+      case .final(let final):
+        producer.complete(with: final)
+      }
+    }
+  }
+
   func filterPeriodic<U: ExecutionContext>(
     context: U,
     executor: Executor? = nil,
