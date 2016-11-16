@@ -130,9 +130,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
 
       if self.maxBufferSize > 0 {
         _locking.lock()
-        for periodic in periodics.suffix(self.maxBufferSize) {
-          _pushPeriodicToBuffer(periodic)
-        }
+        periodics.suffix(self.maxBufferSize).forEach(_pushPeriodicToBuffer)
         _locking.unlock()
       }
 

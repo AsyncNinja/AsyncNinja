@@ -22,6 +22,7 @@
 
 import Dispatch
 
+#if false // ConstantChannel is disabled because it does not meet requirements. Let's review it after taking care pf laziness
 final class ConstantChannel<S: Collection, U> : Channel<S.Iterator.Element, U>
 where S.IndexDistance == Int {
   private let _periodics: [S.Iterator.Element]
@@ -84,3 +85,5 @@ class ConstantChannelIteratorImp<PeriodicValue, FinalValue> : ChannelIteratorImp
     return ConstantChannelIteratorImp(periodicsIterator: _periodicsIterator, finalValue: _finalValue)
   }
 }
+
+#endif
