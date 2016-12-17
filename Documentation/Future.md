@@ -15,7 +15,7 @@ This document describes concept and use of `Future`.
 [As Wikipedia says](https://en.wikipedia.org/wiki/Futures_and_promises) `Future` is an object that acts as a proxy for a result that is initially unknown, usually because the computation of its value is yet incomplete. 
 
 Straightforward solution will be using callback closure.
-```
+```swift
 func perform(request: Request, callback: @escaping (Response) -> Void)
 ```
 
@@ -41,107 +41,108 @@ Solutions based on `Future`
 #### Example
 
 ##### Solution based on callbacks
+```swift
+protocol MaterialsProvider {
+  func provideRubber(_ callback: (Rubber) -> Void)
+  func provideMetal(_ callback: (Metal) -> Void)
+}
 
-    protocol MaterialsProvider {
-      func provideRubber(_ callback: (Rubber) -> Void)
-      func provideMetal(_ callback: (Metal) -> Void)
-    }
+protocol CarFactory {
+  var materialsProvider: MaterialsProvider { get }
+  func makeWheel(_ callback: @escaping (Car.Wheel) -> Void)
+  func makeBody(_ callback: @escaping (Car.Body) -> Void)
+  func makeCar(_ callback: @escaping (Car) -> Void)
+}
 
-    protocol CarFactory {
-      var materialsProvider: MaterialsProvider { get }
-      func makeWheel(_ callback: @escaping (Car.Wheel) -> Void)
-      func makeBody(_ callback: @escaping (Car.Body) -> Void)
-      func makeCar(_ callback: @escaping (Car) -> Void)
-    }
+extension CarFactory {
+  func makeWheel(_ callback: @escaping (Car.Wheel) -> Void) {
+	self.materialsProvider.provideRubber { rubber in
+	  // use rubber to make wheel
+	  callback(wheel)
+	}
+  }
 
-    extension CarFactory {
-      func makeWheel(_ callback: @escaping (Car.Wheel) -> Void) {
-        self.materialsProvider.provideRubber { rubber in
-          // use rubber to make wheel
-          callback(wheel)
-        }
-      }
+  func makeBody(_ callback: @escaping (Car.Body) -> Void) {
+	self.materialsProvider.provideMetal { metal in
+	  // use metal to make body
+	  callback(body)
+	}
+  }
 
-      func makeBody(_ callback: @escaping (Car.Body) -> Void) {
-        self.materialsProvider.provideMetal { metal in
-          // use metal to make body
-          callback(body)
-        }
-      }
+  func makeCar(_ callback: @escaping (Car) -> Void) {
+	let group = DispatchGroup()
 
-      func makeCar(_ callback: @escaping (Car) -> Void) {
-        let group = DispatchGroup()
+	var body: Car.Body? = nil
+	group.enter()
+	makeBody {
+	  body = $0
+	  group.leave()
+	}
 
-        var body: Car.Body? = nil
-        group.enter()
-        makeBody {
-          body = $0
-          group.leave()
-        }
+	let sema = DispatchSemaphore(value: 1)
+	let numberOfWheels = 4
+	var wheels = Array<Car.Wheel?>(repeating: nil, count: numberOfWheels)
+	for index in 0..<numberOfWheels {
+	  group.enter()
+	  makeWheel {
+		sema.wait()
+		wheels[index] = $0
+		sema.signal()
+		group.leave()
+	  }
+	}
 
-        let sema = DispatchSemaphore(value: 1)
-        let numberOfWheels = 4
-        var wheels = Array<Car.Wheel?>(repeating: nil, count: numberOfWheels)
-        for index in 0..<numberOfWheels {
-          group.enter()
-          makeWheel {
-            sema.wait()
-            wheels[index] = $0
-            sema.signal()
-            group.leave()
-          }
-        }
-
-        DispatchQueue.global(qos: .utility).async(group: group) {
-          // use body and wheels to make car
-          callback(car)
-        }
-      }
-    }
-
+	DispatchQueue.global(qos: .utility).async(group: group) {
+	  // use body and wheels to make car
+	  callback(car)
+	}
+  }
+}
+```
 ##### Solution based on futures
+```swift
+protocol MaterialsProvider {
+  func provideRubber() -> Future<Rubber>
+  func provideMetal() -> Future<Metal>
+}
 
-    protocol MaterialsProvider {
-      func provideRubber() -> Future<Rubber>
-      func provideMetal() -> Future<Metal>
-    }
+protocol CarFactory {
+  var materialsProvider: MaterialsProvider { get }
+  func makeWheel() -> Future<Car.Wheel>
+  func makeBody() -> Future<Car.Body>
+  func makeCar() -> Future<Car>
+}
 
-    protocol CarFactory {
-      var materialsProvider: MaterialsProvider { get }
-      func makeWheel() -> Future<Car.Wheel>
-      func makeBody() -> Future<Car.Body>
-      func makeCar() -> Future<Car>
-    }
+extension CarFactory {
+  func makeWheel() -> Future<Car.Wheel> {
+	return self.materialsProvider
+	  .provideRubber()
+	  .map { rubber -> Car.Wheel in
+		// use rubber to make wheel
+		return wheel
+	}
+  }
 
-    extension CarFactory {
-      func makeWheel() -> Future<Car.Wheel> {
-        return self.materialsProvider
-          .provideRubber()
-          .map { rubber -> Car.Wheel in
-            // use rubber to make wheel
-            return wheel
-        }
-      }
+  func makeBody() -> Future<Car.Body> {
+	return self.materialsProvider
+	  .provideMetal()
+	  .map { metal -> Car.Body in
+		// use metal to make body
+		return body
+	}
+  }
 
-      func makeBody() -> Future<Car.Body> {
-        return self.materialsProvider
-          .provideMetal()
-          .map { metal -> Car.Body in
-            // use metal to make body
-            return body
-        }
-      }
-
-      func makeCar() -> Future<Car> {
-        let futureBody = self.makeBody()
-        let futureWheels = (0..<4).map { _ in self.makeWheel() }
-        return zip(futureBody, futureWheels)
-          .map { (body, wheels) in
-            // use body and wheels to make car
-            return car
-        }
-      }
-    }
+  func makeCar() -> Future<Car> {
+	let futureBody = self.makeBody()
+	let futureWheels = (0..<4).map { _ in self.makeWheel() }
+	return zip(futureBody, futureWheels)
+	  .map { (body, wheels) in
+		// use body and wheels to make car
+		return car
+	}
+  }
+}
+```
 
 ## Reference
 ### Creating `Future`
@@ -171,14 +172,14 @@ In some cases, it is convenient to make future with a predefined value.
 #### `Promise`
 `Promise` is a specific subclass of `Future` that can be instantiated with public initializer and can be manually completed with `func complete(with final: Value) -> Bool` and `func complete(with future: Future<Value>)`. `Promise` is useful when you have to manage completion manually. Bridging from API based on callbacks is a very common case of using `Promise`:
 
-```
-    func perform(request: Request) -> Future<Response> {
-        let promise = Promise<Response>
-        _oldAPI.perform(request: request) { [weak promise] in
-            promise?.succeed(with: $0)
-        }
-        return promise
-    }
+```swift
+func perform(request: Request) -> Future<Response> {
+	let promise = Promise<Response>
+	_oldAPI.perform(request: request) { [weak promise] in
+		promise?.succeed(with: $0)
+	}
+	return promise
+}
 ```
 
 There is a specific kind of promise called `Promise` is promise with `Fallible` value type. It can be canceled manually.

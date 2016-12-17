@@ -10,7 +10,7 @@
 
 ## Concept
 Propose of `Executor` is to encapsulate a way of an execution.
-```
+```swift
 struct Executor {
     func execute(_ block: @escaping (Void) -> Void)
     func execute(after timeout: Double, _ block: @escaping (Void) -> Void)

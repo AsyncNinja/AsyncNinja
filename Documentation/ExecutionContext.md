@@ -11,7 +11,7 @@
 ## Concept
 Memory Management in asynchronous execution may be hard.
 
-```
+```swift
 class WebService {
     let urlSession: URLSession
     let internalQueue: DispatchQueue // queue to modify internal state on
@@ -25,7 +25,7 @@ class WebService {
 
 Okay, this code is already clunky. Let's use to `Future`s.
 
-```
+```swift
 class WebService {
     let urlSession: URLSession
     let internalQueue: DispatchQueue // queue to modify internal state on
@@ -44,7 +44,7 @@ class WebService {
 ```
 This is a place where hidden memory issues may appear. Closure passed to `map` retains `self` that may lead to retain cycle. Adding bunch of `weak`s will help but it will increase complexity of code. Let's conform `WebService` to `ExecutionContext` and see what happens.
 
-```
+```swift
 class WebService: ExecutionContext, ReleasePoolOwner {
     let urlSession: URLSession
     let internalQueue: DispatchQueue // queue to modify internal state on
@@ -86,7 +86,7 @@ As you might see these methods do not return any value. That means that they are
 Most of well-architecturally-designed apps on Apple platforms have strong segregation of UI and Core. UI-related calculations are executed on main queue all of the time. Core-related calculations are *mostly* in a background (using utility and background queues). Passing values between UI and Core involves a lot of dispatches to specific queues. It is also very easy to forget about those dispatches. Using `ExecutionContext` helps a lot.
 
 ##### Example
-```
+```swift
 class NiceViewController : UIViewController {
     let webService: WebService
     var user: User?

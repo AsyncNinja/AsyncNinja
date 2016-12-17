@@ -12,10 +12,12 @@ Actor Model is a simple abstraction for concurrent computation. It provides a re
 *	import AsyncNinja
 *	introduce a class with it's own internal queue and conform it to `ExecutionContext`
 *	implement public methods that look like:
-``` public makeSomething(arg1: Arg1, arg2: Arg2) -> Future<Something>```
+```swift
+public makeSomething(arg1: Arg1, arg2: Arg2) -> Future<Something>
+```
 
 #### Example
-```
+```swift
 import AsyncNinja
 
 public class MyActor {
@@ -41,7 +43,7 @@ UI-related objects (windows, views, view controllers and etc) are mostly bound t
 
 #### Example
 
-```
+```swift
 import AsyncNinja
 
 class MyViewController : UIViewController {
