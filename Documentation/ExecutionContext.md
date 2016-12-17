@@ -1,6 +1,6 @@
 # `ExecutionContext`
 
-`ExecutionContext` is a type that provides `Executor` and can retain objects while alive itself. `ExecutionContext` is a major part of [Memory Management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/MemoryManagement.md).
+`ExecutionContext` is a type that provides `Executor` and can retain objects while alive itself. `ExecutionContext` is a major part of [Memory Management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/MemoryManagement.md).
 
 ##### Contents
 * [Concept](#concept)

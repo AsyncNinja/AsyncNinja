@@ -1,6 +1,6 @@
 # Executor
 
-[`Executor`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/Executor.md) is an object that provides methods to execute an escaped block.
+[`Executor`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Executor.md) is an object that provides methods to execute an escaped block.
 
 ##### Contents
 * [Concept](#concept)

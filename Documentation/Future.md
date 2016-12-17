@@ -27,7 +27,7 @@ But this solution has multiple disadvantages:
 * be very attentive to memory management within callback closure
 
 Function declaration that incorporates `Future` will look like this:
-```
+```swift
 func perform(request: Request) -> Future<Response>
 ```
 
@@ -36,7 +36,7 @@ Solutions based on `Future`
 * are shorter
 * you are getting something as returned value
 * are designed to be highly combinable
-* AsyncNinja's [memory management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/MemoryManagement.md) helps to avoid majority of memory issues
+* AsyncNinja's [memory management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/MemoryManagement.md) helps to avoid majority of memory issues
 
 #### Example
 
@@ -153,13 +153,13 @@ In most cases, initial future is a result of the asynchronous operation.
 ###### Simple
 * regular
 	* `func future<T>(executor: Executor, block: @escaping () throws -> T) -> Future<T>`
-* [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md)
+* [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/ExecutionContext.md)
     * `func future<T, U : ExecutionContext>(context: U, executor: AsyncNinja.Executor?, block: @escaping (U) throws -> T) -> Future<T>`
 
 ###### Delayed
 *    regular
     *  `func future<T>(executor: Executor, after timeout: Double, block: @escaping () throws -> T) -> Future<T>`
-*  [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md)
+*  [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/ExecutionContext.md)
     *  `func future<T, U : ExecutionContext>(context: U, executor: AsyncNinja.Executor?, after timeout: Double, block: @escaping (U) throws -> T) -> Future<T>`
 
 #### `Future` with predefined value
@@ -191,7 +191,7 @@ Transform value when in becomes available into another value.
 	* `func Future<Value>.mapCompletion<T>(executor: Executor, transform: @escaping (Fallible<SuccessValue>) throws -> T) -> Future<T>`
 	* `func Future<Value>.map<T>(executor: Executor, transform: @escaping (SuccessValue) throws -> T) -> Future<T>`
 	* `func Future<Value>.recover(executor: Executor, transform: @escaping (Swift.Error) throws -> SuccessValue) -> Future<SuccessValue> `
-* [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/ExecutionContext.md)
+* [contextual](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/ExecutionContext.md)
 	* `func Future<Value>.mapCompletion<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
 transform: @escaping (U, Fallible<SuccessValue>) throws -> T) -> Future<T>`
 	* `func Future<Value>.map<T, U: ExecutionContext>(context: U, executor: Executor? = nil, transform: @escaping (U, SuccessValue) throws -> T) -> Future<T>`
@@ -215,7 +215,7 @@ Sometimes there is a possibility to perform multiple independent operations and 
               
 
 ### Changing Mutable State with `Future`
-After creation, transformations and combination of futures comes time to store results somewhere. In oppose to previous operations this operation is 100% impure. All of following operations are contextual because of [memory management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Docs/MemoryManagement.md) considerations.
+After creation, transformations and combination of futures comes time to store results somewhere. In oppose to previous operations this operation is 100% impure. All of following operations are contextual because of [memory management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/MemoryManagement.md) considerations.
 
 *    `func Future<Success>.onComplete<U: ExecutionContext>(context: U, block: @escaping (U, Fallible<Success>) -> Void)`
 *    `func Future<Success>.onSuccess<U: ExecutionContext>(context: U, block: @escaping (U, SuccessValue) -> Void)`
