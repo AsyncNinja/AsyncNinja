@@ -27,7 +27,8 @@ import Dispatch
   import Glibc
 #endif
 
-func assert(on queue: DispatchQueue) {
+func assert(on queue: DispatchQueue, file: StaticString = #file, line: UInt = #line) {
+  // TODO: use file and line
   if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
     dispatchPrecondition(condition: .onQueue(queue))
   } else {
@@ -35,7 +36,8 @@ func assert(on queue: DispatchQueue) {
   }
 }
 
-func assert(qos: DispatchQoS.QoSClass) {
+func assert(qos: DispatchQoS.QoSClass, file: StaticString = #file, line: UInt = #line) {
+  // TODO: use file and line
   if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
     dispatchPrecondition(condition: .onQueue(DispatchQueue.global(qos: qos)))
   } else {
@@ -43,7 +45,8 @@ func assert(qos: DispatchQoS.QoSClass) {
   }
 }
 
-func assert(actor: TestActor) {
+func assert(actor: TestActor, file: StaticString = #file, line: UInt = #line) {
+  // TODO: use file and line
   if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
     dispatchPrecondition(condition: .onQueue(actor.internalQueue))
   } else {
