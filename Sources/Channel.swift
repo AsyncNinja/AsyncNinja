@@ -67,9 +67,23 @@ public class Channel<PeriodicValue, FinalValue> : Finite {
     /* abstract */
     fatalError()
   }
+  
+  /// **Internal use only**.
+  public func insertToReleasePool(_ releasable: Releasable) {
+    /* abstract */
+    fatalError()
+  }
 }
 
 public extension Channel {
+  func onValue(executor: Executor = .primary, block: @escaping (Value) -> Void) {
+    let handler = self.makeHandler(executor: executor, block: block)
+    
+    if let handler = handler {
+      self.insertToReleasePool(handler)
+    }
+  }
+
   func onValue<U: ExecutionContext>(
     context: U,
     executor: Executor? = nil,
@@ -81,6 +95,16 @@ public extension Channel {
 
     if let handler = handler {
       context.releaseOnDeinit(handler)
+    }
+  }
+  
+  func onPeriodic(executor: Executor = .primary, block: @escaping (PeriodicValue) -> Void) {
+    self.onValue(executor: executor) { (value) in
+      switch value {
+      case let .periodic(periodic):
+        block(periodic)
+      case .final: nop()
+      }
     }
   }
 

@@ -45,6 +45,12 @@ public class Future<FinalValue> : Finite {
     /* abstract */
     fatalError()
   }
+  
+  /// **Internal use only**.
+  public func insertToReleasePool(_ releasable: Releasable) {
+    /* abstract */
+    fatalError()
+  }
 }
 
 public extension Future {

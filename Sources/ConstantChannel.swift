@@ -22,7 +22,7 @@
 
 import Dispatch
 
-#if false // ConstantChannel is disabled because it does not meet requirements. Let's review it after taking care pf laziness
+#if false // ConstantChannel is disabled because it does not meet requirements. Let's review it after taking care of laziness (not mine, of mappings)
 final class ConstantChannel<S: Collection, U> : Channel<S.Iterator.Element, U>
 where S.IndexDistance == Int {
   private let _periodics: [S.Iterator.Element]
@@ -54,6 +54,10 @@ where S.IndexDistance == Int {
   override public func makeIterator() -> Iterator {
     let impl = ConstantChannelIteratorImp(periodicsIterator: _periodics.makeIterator(), finalValue: _finalValue)
     return ChannelIterator(impl: impl)
+  }
+  
+  override public func insertToReleasePool(_ releasable: Releasable) {
+    /* do nothing because channel was created as complete */
   }
 }
 

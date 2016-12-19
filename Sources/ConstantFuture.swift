@@ -25,6 +25,7 @@ import Dispatch
 final class ConstantFuture<FinalValue> : Future<FinalValue> {
   private var _value: Value
   override public var finalValue: Value? { return _value }
+  let releasePool = ReleasePool()
 
   init(value: Value) {
     _value = value
@@ -34,6 +35,10 @@ final class ConstantFuture<FinalValue> : Future<FinalValue> {
                                         block: @escaping (Fallible<FinalValue>) -> Void) -> FinalHandler? {
     executor.execute { block(self._value) }
     return nil
+  }
+  
+  override func insertToReleasePool(_ releasable: Releasable) {
+    /* do nothing because future was created as complete */
   }
 }
 

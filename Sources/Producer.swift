@@ -160,7 +160,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     return self.notify(.final(final), head: oldHead as! ProducerState<PeriodicValue, FinalValue>?)
   }
 
-  public func insertToReleasePool(_ releasable: Releasable) {
+  override public func insertToReleasePool(_ releasable: Releasable) {
     // assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     if !self.isComplete {
       self._releasePool.insert(releasable)

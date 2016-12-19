@@ -32,6 +32,9 @@ public protocol Finite : class {
   /// **internal use only**
   func makeFinalHandler(executor: Executor,
                         block: @escaping (Fallible<FinalValue>) -> Void) -> FinalHandler?
+
+  /// **internal use only**
+  func insertToReleasePool(_ releasable: Releasable)
 }
 
 public extension Finite {
@@ -196,6 +199,30 @@ public extension Finite {
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, failure)
     }
+  }
+}
+
+public extension Finite {
+  /// Performs block when final value or failure becomes available.
+  ///
+  /// This method is method is less preferable then onComplete(context: ...).
+  func onComplete(executor: Executor = .primary, block: @escaping (Fallible<FinalValue>) -> Void) {
+    let handler = self.makeFinalHandler(executor: executor) {
+      block($0)
+    }
+    if let handler = handler {
+      self.insertToReleasePool(handler)
+    }
+  }
+
+  /// Performs block when final value becomes available.
+  func onSuccess(executor: Executor = .primary, block: @escaping (FinalValue) -> Void) {
+    self.onComplete(executor: executor) { $0.onSuccess(block) }
+  }
+  
+  /// Performs block when failure becomes available.
+  func onFailure(executor: Executor = .primary, block: @escaping (Swift.Error) -> Void) {
+    self.onComplete(executor: executor) { $0.onFailure(block) }
   }
 }
 

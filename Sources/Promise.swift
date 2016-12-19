@@ -75,7 +75,7 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
     return true
   }
 
-  public func insertToReleasePool(_ releasable: Releasable) {
+  override public func insertToReleasePool(_ releasable: Releasable) {
     // assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     assert((releasable as? Handler)?.owner !== self)
     if !self.isComplete {
