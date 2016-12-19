@@ -4,7 +4,9 @@ xcode_project: AsyncNinja.xcodeproj
 xcode_scheme: AsyncNinja
 xcode_sdk: macosx10.12
 before_install:
-  - brew update
-  - brew outdated xctool || brew upgrade xctool
+  - sudo gem install xcpretty
+  - sudo gem install xcpretty-travis-formatter
 before_script:
   - swift package generate-xcodeproj
+script:
+  - set -o pipefail && xcodebuild build test -project AsyncNinja.xcodeproj -scheme AsyncNinja -sdk macosx10.12 | xcpretty -f `xcpretty-travis-formatter`
