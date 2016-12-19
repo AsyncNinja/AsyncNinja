@@ -67,22 +67,30 @@ class ChannelTests : XCTestCase {
   func testMapPeriodic() {
     let range = 0..<5
     let final = "bye"
+    let queue = DispatchQueue(label: "test", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
     let (periodics, finalValue) = makeChannel(periodics: range, success: final)
-      .mapPeriodic { $0 * 2 }
+      .mapPeriodic(executor: .queue(queue)) { value -> Int in
+        assert(on: queue)
+        return value * 2
+      }
       .waitForAll()
 
-    XCTAssertEqual(Set(range.map { $0 * 2 }), Set(periodics))
+    XCTAssertEqual(range.map { $0 * 2 }, periodics)
     XCTAssertEqual(final, finalValue.success)
   }
 
   func testFilterPeriodic() {
     let range = 0..<5
     let final = "bye"
+    let queue = DispatchQueue(label: "test", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
     let (periodics, finalValue) = makeChannel(periodics: range, success: final)
-      .filterPeriodic { 0 == $0 % 2 }
+      .filterPeriodic(executor: .queue(queue)) { value -> Bool in
+        assert(on: queue)
+        return 0 == value % 2
+      }
       .waitForAll()
 
-    XCTAssertEqual(Set(range.filter { 0 == $0 % 2 }), Set(periodics))
+    XCTAssertEqual(range.filter { 0 == $0 % 2 }, periodics)
     XCTAssertEqual(final, finalValue.success)
   }
 }
