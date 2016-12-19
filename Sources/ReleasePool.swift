@@ -53,7 +53,7 @@ final public class ReleasePool {
 }
   
   public func insert(_ releasable: Releasable) {
-    assert(releasable as? AnyObject !== self)
+    // assert(releasable as? AnyObject !== self)
     self.updateHead { ReleasableItem(object: releasable, next: $0 as! Item?) }
   }
 
