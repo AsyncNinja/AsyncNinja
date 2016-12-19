@@ -122,22 +122,33 @@ public func future<T>(executor: Executor = .primary, block: @escaping () throws 
   return promise
 }
 
-private func promise<T>(executor: Executor, after timeout: Double,
-                   block: @escaping () throws -> T) -> Promise<T> {
+private func promise<T>(executor: Executor, after timeout: Double, cancellationToken: CancellationToken?,
+                     block: @escaping () throws -> T) -> Promise<T> {
   let promise = Promise<T>()
+  
+  cancellationToken?.notifyCancellation { [weak promise] in
+    promise?.cancel()
+  }
+  
   executor.execute(after: timeout) { [weak promise] in
     guard let promise = promise else { return }
-    promise.complete(with: fallible(block: block))
+    
+    if cancellationToken?.isCancelled ?? false {
+      promise.cancel()
+    } else {
+      let completion = fallible(block: block)
+      promise.complete(with: completion)
+    }
   }
   return promise
 }
 
 /// Asynchrounously executes block after timeout on executor and wraps returned value into future
-public func future<T>(executor: Executor = .primary, after timeout: Double,
+public func future<T>(executor: Executor = .primary, after timeout: Double, cancellationToken: CancellationToken? = nil,
                    block: @escaping () throws -> T) -> Future<T> {
   // Test: FutureTests.testMakeFutureOfDelayedFallibleBlock_Success
   // Test: FutureTests.testMakeFutureOfDelayedFallibleBlock_Failure
-  return promise(executor: executor, after: timeout, block: block)
+  return promise(executor: executor, after: timeout, cancellationToken: cancellationToken, block: block)
 }
 
 public func future<T, U : ExecutionContext>(context: U, executor: Executor? = nil,
@@ -154,7 +165,8 @@ public func future<T, U : ExecutionContext>(context: U, executor: Executor? = ni
   }
 }
 
-public func future<T, U : ExecutionContext>(context: U, executor: Executor? = nil, after timeout: Double,
+public func future<T, U : ExecutionContext>(context: U, executor: Executor? = nil,
+                   after timeout: Double, cancellationToken: CancellationToken? = nil,
                    block: @escaping (U) throws -> T) -> Future<T> {
   // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive
   // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextDead
@@ -162,7 +174,7 @@ public func future<T, U : ExecutionContext>(context: U, executor: Executor? = ni
   // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextAlive
   // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextDead
   // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead
-  let promiseValue = promise(executor: executor ?? context.executor, after: timeout) { [weak context] () -> T in
+  let promiseValue = promise(executor: executor ?? context.executor, after: timeout, cancellationToken: cancellationToken) { [weak context] () -> T in
     guard let context = context
       else { throw AsyncNinjaError.contextDeallocated }
 

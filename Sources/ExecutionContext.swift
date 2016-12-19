@@ -28,6 +28,17 @@ public protocol ExecutionContext : class {
   func notifyDeinit(_ block: @escaping () -> Void)
 }
 
+public extension ExecutionContext {
+  func after(_ timeout: Double, cancellationToken: CancellationToken? = nil,
+             block: @escaping (Self) -> Void) {
+    self.executor.execute(after: timeout) { [weak self] in
+      if cancellationToken?.isCancelled ?? false { return }
+      guard let strongSelf = self else { return }
+      block(strongSelf)
+    }
+  }
+}
+
 public protocol ReleasePoolOwner {
   var releasePool: ReleasePool { get }
 }
@@ -43,17 +54,17 @@ public extension ExecutionContext where Self : ReleasePoolOwner {
 }
 
 protocol ExecutionContextProxy : ExecutionContext {
-    var context: ExecutionContext { get }
+  var context: ExecutionContext { get }
 }
 
 extension ExecutionContextProxy {
-    public var executor: Executor { return self.context.executor }
-    
-    public func releaseOnDeinit(_ object: AnyObject) {
-        self.releaseOnDeinit(object)
-    }
-
-    public func notifyDeinit(_ block: @escaping () -> Void) {
-        self.notifyDeinit(block)
-    }
+  public var executor: Executor { return self.context.executor }
+  
+  public func releaseOnDeinit(_ object: AnyObject) {
+    self.releaseOnDeinit(object)
+  }
+  
+  public func notifyDeinit(_ block: @escaping () -> Void) {
+    self.notifyDeinit(block)
+  }
 }
