@@ -1,0 +1,10 @@
+language: objective-c
+osx_image: xcode8.2
+xcode_project: AsyncNinja.xcodeproj
+xcode_scheme: AsyncNinja
+xcode_sdk: macosx10.12
+before_install:
+  - brew update
+  - brew outdated xctool || brew upgrade xctool
+before_script:
+  - swift package generate-xcodeproj
