@@ -1,4 +1,4 @@
-#    AsyncNinja is a concurrency library for Swift
+# AsyncNinja is a concurrency library for Swift
 
 Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
 
@@ -7,11 +7,10 @@ Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
 ![Swift](https://img.shields.io/badge/Swift-3.0-orange.svg)
 ![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)
 
-[Found issue? Have a feature request? Have question?](https://github.com/AsyncNinja/AsyncNinja/issues)
+* [**Integration**](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Integration.md)
+* [Found issue? Have a feature request? Have question?](https://github.com/AsyncNinja/AsyncNinja/issues)
 
-[Current Progress](https://github.com/AsyncNinja/AsyncNinja/projects/1)
-
-##    Basics
+## Basics
 This framework is an implementation of following principles:
 
 * provide abstraction that makes
@@ -25,7 +24,7 @@ This framework is an implementation of following principles:
     * [`Fallible`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Fallible.md) is validation monad. Is an object that represents either success value of failure value (Error).
 	* `Cache` is a primitive that lets you coalesce requests and cache responses
 
-##    Documentation
+## Documentation
 * [`Future`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Future.md)
 * [`Channel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Channel.md)
 * [`Executor`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Executor.md)
@@ -33,3 +32,7 @@ This framework is an implementation of following principles:
 * [`Fallible`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Fallible.md)
 * [Actor Model](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/ActorModel.md)
 * [Memory Management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/MemoryManagement.md)
+* [Integration](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Integration.md)
+
+## Related Articles
+* [Steps Towards Nice Asynchronous Code](https://github.com/AsyncNinja/post-steps-towards-async/blob/master/ARTICLE.md)
