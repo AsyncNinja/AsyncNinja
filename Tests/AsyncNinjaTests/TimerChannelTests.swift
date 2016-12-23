@@ -68,9 +68,10 @@ class TimerChannelTests : XCTestCase {
     XCTAssertNil(weakTimesBuffer)
 
     for (index, time) in times.enumerated() {
-      let minTime = initialTime + Double(index + 1) * interval
-      let maxTime = initialTime + Double(index + 3) * interval
+      let minTime = initialTime + Double(index + 0) * interval
       XCTAssertLessThanOrEqual(minTime, time)
+
+      let maxTime = initialTime + Double(index + 3) * interval
       XCTAssertLessThanOrEqual(time, maxTime)
     }
   }
