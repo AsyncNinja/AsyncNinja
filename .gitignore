@@ -1,2 +1,2 @@
-*.xcodeproj
 .build
+xcuserdata
