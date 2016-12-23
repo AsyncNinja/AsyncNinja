@@ -35,4 +35,4 @@ This framework is an implementation of following principles:
 * [Integration](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Integration.md)
 
 ## Related Articles
-* [Steps Towards Nice Asynchronous Code](https://github.com/AsyncNinja/post-steps-towards-async/blob/master/ARTICLE.md)
+* [Moving to nice asynchronous Swift code](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md)
