@@ -150,7 +150,7 @@ class FallibleTests : XCTestCase {
     let value = Fallible(success: 2)
     var numberOfCalls = 0
 
-    let nextValue = value.recover { _ in
+    let nextValue = value.tryRecover { _ in
       try procedureThatCanThrow()
       numberOfCalls += 1
       return 3
@@ -164,7 +164,7 @@ class FallibleTests : XCTestCase {
     let value = Fallible<Int>(failure: TestError.testCode)
     var numberOfCalls = 0
 
-    let nextValue = value.recover { _ in
+    let nextValue = value.tryRecover { _ in
       try procedureThatCanThrow()
       numberOfCalls += 1
       return 3
@@ -178,7 +178,7 @@ class FallibleTests : XCTestCase {
     let value = Fallible<Int>(failure: TestError.testCode)
     var numberOfCalls = 0
 
-    let nextValue = value.recover { _ in
+    let nextValue = value.tryRecover { _ in
       numberOfCalls += 1
       throw TestError.otherCode
     }

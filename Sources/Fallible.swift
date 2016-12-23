@@ -67,10 +67,10 @@ public extension Fallible {
   }
 
   func map<T>(transform: (Success) throws -> T) -> Fallible<T> {
-    return self.map { .success(try transform($0)) }
+    return self.flatMap { .success(try transform($0)) }
   }
 
-  func map<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T> {
+  func flatMap<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T> {
     switch self {
     case let .success(success):
       return fallible { try transform(success) }
@@ -79,7 +79,7 @@ public extension Fallible {
     }
   }
 
-  func recover(transform: (Swift.Error) throws -> Success) -> Fallible<Success> {
+  func tryRecover(transform: (Swift.Error) throws -> Success) -> Fallible<Success> {
     switch self {
     case let .success(success):
       return .success(success)
@@ -143,10 +143,10 @@ public protocol _Fallible { // hacking type system once
   func map<T>(transform: (Success) throws -> T) -> Fallible<T>
 
   // (success or failure) * (try transform success to (success or failure)) -> (success or failure)
-  func map<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>
+  func flatMap<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>
 
   // (success or failure) * (try transform failure to success) -> (success or failure)
-  func recover(transform: (Swift.Error) throws -> Success) -> Fallible<Success>
+  func tryRecover(transform: (Swift.Error) throws -> Success) -> Fallible<Success>
 
   // (success or failure) * (transform failure to success) -> success
   func recover(transform: (Swift.Error) -> Success) -> Success
