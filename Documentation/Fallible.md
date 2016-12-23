@@ -58,7 +58,7 @@ func perform(request: Request) throws -> Response { ... }
 *    you cannot asynchronously throw *(yet ?)*
 
 ```swift
-    /* You just cannot */
+  /* You just cannot */
 ```
 
 
@@ -102,7 +102,7 @@ Fallible<Success>.init(failure: Swift.Error)
 
 #### from function with `throws`
 ```swift
-func fallible<Success>(block: () throws -> T) -> Fallible<Success>
+func fallible<Success>(block: () throws -> Success) -> Fallible<Success>
 ```
 
 ### Transforming `Fallible`
