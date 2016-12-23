@@ -124,6 +124,7 @@ extension Fallible {
 extension Fallible {
   var success: Success? { get }
   var .failure: Swift.Error? { get }
+}
 ```
 
 #### using closures
@@ -138,7 +139,8 @@ extension Fallible {
 
 ```swift
 extension Fallible {
-  func Fallible<Success>.liftSuccess() throws -> Success
+  func liftSuccess() throws -> Success
+}
 ```
 
 ## Asynchronous Operations with Error Handling
