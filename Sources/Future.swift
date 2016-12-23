@@ -28,10 +28,10 @@ public class Future<FinalValue> : Finite {
   public typealias Handler = FutureHandler<FinalValue>
   public typealias FinalHandler = Handler
 
-  public var finalValue: Fallible<FinalValue>? {
-    /* abstract */
-    fatalError()
-  }
+  /// Returns either final value if future is complete or nil
+  public var finalValue: Fallible<FinalValue>? { assertAbstract() }
+
+  /// Returns either final value if future is complete or nil
   public var value: Value? { return self.finalValue }
 
   /// Base future is **abstract**.
@@ -42,32 +42,55 @@ public class Future<FinalValue> : Finite {
   /// **Internal use only**.
   public func makeFinalHandler(executor: Executor,
                                block: @escaping (Fallible<FinalValue>) -> Void) -> FinalHandler? {
-    /* abstract */
-    fatalError()
+    assertAbstract()
   }
-  
+
   /// **Internal use only**.
   public func insertToReleasePool(_ releasable: Releasable) {
-    /* abstract */
-    fatalError()
+    assertAbstract()
   }
 }
 
 public extension Future {
-  final func map<T>(executor: Executor = .primary,
-                 transform: @escaping (FinalValue) throws -> T) -> Future<T> {
+  /// Applies the transformation to the future
+  ///
+  /// - Parameters:
+  ///   - executor: is `Executor` to execute transform on
+  ///   - transform: is block to execute on successful completion of original future. Return from transformation block will cause returned future to complete successfuly. Throw from transformation block will returned future to complete with failure
+  ///   - finalValue: is a success value of original future
+  ///
+  /// - Returns: transformed future
+  func map<T>(executor: Executor = .primary,
+           transform: @escaping (_ finalValue: FinalValue) throws -> T) -> Future<T> {
     // Test: FutureTests.testMap_Success
     // Test: FutureTests.testMap_Failure
     return self.mapSuccess(executor: executor, transform: transform)
   }
 
-  final func flatMap<T>(executor: Executor = .primary,
-                 transform: @escaping (FinalValue) throws -> Future<T>) -> Future<T> {
+  /// Applies the transformation to the future and flattens future returned by transformation
+  ///
+  /// - Parameters:
+  ///   - executor: is `Executor` to execute transform on
+  ///   - transform: is block to execute on successful completion of original future. Return from transformation block will cause returned future to complete with future. Throw from transformation block will returned future to complete with failure
+  ///   - finalValue: is a success value of original future
+  ///
+  /// - Returns: transformed future
+  func flatMap<T>(executor: Executor = .primary,
+               transform: @escaping (_ finalValue: FinalValue) throws -> Future<T>) -> Future<T> {
     return self.flatMapSuccess(executor: executor, transform: transform)
   }
 
-  final func map<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-                 transform: @escaping (U, FinalValue) throws -> T) -> Future<T> {
+  /// Applies the transformation to the future
+  ///
+  /// - Parameters:
+  ///   - context: is `ExecutionContext` to perform transform on. Instance of context will be passed as the first argument to the transformation. Transformation will not be executed if executor was deallocated before execution, returned future will fail with `AsyncNinjaError.contextDeallocated` error
+  ///   - executor: is `Executor` to override executor provided by context
+  ///   - transform: is block to execute on successful completion of original future. Return from transformation block will cause returned future to complete successfuly. Throw from transformation block will returned future to complete with failure
+  ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
+  ///   - finalValue: is a success value of original future
+  /// - Returns: transformed future
+  func map<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
+           transform: @escaping (_ strongContext: U, _ finalValue: FinalValue) throws -> T) -> Future<T> {
     // Test: FutureTests.testMapContextual_Success_ContextAlive
     // Test: FutureTests.testMapContextual_Success_ContextDead
     // Test: FutureTests.testMapContextual_Failure_ContextAlive
@@ -75,19 +98,34 @@ public extension Future {
     return self.mapSuccess(context: context, executor: executor, transform: transform)
   }
 
-  final func flatMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-                 transform: @escaping (U, FinalValue) throws -> Future<T>) -> Future<T> {
+  /// Applies the transformation to the future and flattens future returned by transformation
+  ///
+  /// - Parameters:
+  ///   - context: is `ExecutionContext` to perform transform on. Instance of context will be passed as the first argument to the transformation. Transformation will not be executed if executor was deallocated before execution, returned future will fail with `AsyncNinjaError.contextDeallocated` error
+  ///   - executor: is `Executor` to override executor provided by context
+  ///   - transform: is block to execute on successful completion of original future. Return from transformation block will cause returned future to complete with future. Throw from transformation block will returned future to complete with failure
+  ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
+  ///   - finalValue: is a success value of original future
+  /// - Returns: transformed future
+  func flatMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
+               transform: @escaping (_ strongContext: U, _ finalValue: FinalValue) throws -> Future<T>) -> Future<T> {
     return self.flatMapSuccess(context: context, executor: executor, transform: transform)
   }
 
+  /// Makes future with delayed completion
+  ///
+  /// - Parameter timeout: is `Double` (seconds) to delay competion of original future with.
+  /// - Returns: delayed future
   func delayed(timeout: Double) -> Future<FinalValue> {
     return self.delayedFinal(timeout: timeout)
   }
 }
 
 public extension Future where FinalValue : Finite {
-  /// flattens combination of two nested unfaillable futures to a signle unfallible one
-  final func flatten() -> Future<FinalValue.FinalValue> {
+  /// Flattens two nested futures
+  ///
+  /// - Returns: flattened future
+  func flatten() -> Future<FinalValue.FinalValue> {
     // Test: FutureTests.testFlatten
     // Test: FutureTests.testFlatten_OuterFailure
     // Test: FutureTests.testFlatten_InnerFailure
@@ -107,96 +145,21 @@ public extension Future where FinalValue : Finite {
         promise.fail(with: error)
       }
     }
-    
+
     if let handler = handler {
       promise.insertToReleasePool(handler)
     }
-    
+
     return promise
   }
 }
 
-/// Asynchrounously executes block on executor and wraps returned value into future
-public func future<T>(executor: Executor = .primary, block: @escaping () throws -> T) -> Future<T> {
-  // Test: FutureTests.testMakeFutureOfBlock_Success
-  // Test: FutureTests.testMakeFutureOfBlock_Failure
-  let promise = Promise<T>()
-  executor.execute { [weak promise] in
-    guard let promise = promise else { return }
-    promise.complete(with: fallible(block: block))
-  }
-  return promise
-}
-
-private func promise<T>(executor: Executor, after timeout: Double, cancellationToken: CancellationToken?,
-                     block: @escaping () throws -> T) -> Promise<T> {
-  let promise = Promise<T>()
-  
-  cancellationToken?.notifyCancellation { [weak promise] in
-    promise?.cancel()
-  }
-  
-  executor.execute(after: timeout) { [weak promise] in
-    guard let promise = promise else { return }
-    
-    if cancellationToken?.isCancelled ?? false {
-      promise.cancel()
-    } else {
-      let completion = fallible(block: block)
-      promise.complete(with: completion)
-    }
-  }
-  return promise
-}
-
-/// Asynchrounously executes block after timeout on executor and wraps returned value into future
-public func future<T>(executor: Executor = .primary, after timeout: Double, cancellationToken: CancellationToken? = nil,
-                   block: @escaping () throws -> T) -> Future<T> {
-  // Test: FutureTests.testMakeFutureOfDelayedFallibleBlock_Success
-  // Test: FutureTests.testMakeFutureOfDelayedFallibleBlock_Failure
-  return promise(executor: executor, after: timeout, cancellationToken: cancellationToken, block: block)
-}
-
-public func future<T, U : ExecutionContext>(context: U, executor: Executor? = nil,
-                   block: @escaping (U) throws -> T) -> Future<T> {
-  // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Success_ContextAlive
-  // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Success_ContextDead
-  // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive
-  // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Failure_ContextDead
-  return future(executor: executor ?? context.executor) { [weak context] () -> T in
-    guard let context = context
-      else { throw AsyncNinjaError.contextDeallocated }
-
-    return try block(context)
-  }
-}
-
-public func future<T, U : ExecutionContext>(context: U, executor: Executor? = nil,
-                   after timeout: Double, cancellationToken: CancellationToken? = nil,
-                   block: @escaping (U) throws -> T) -> Future<T> {
-  // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive
-  // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextDead
-  // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Success_EarlyContextDead
-  // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextAlive
-  // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextDead
-  // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead
-  let promiseValue = promise(executor: executor ?? context.executor, after: timeout, cancellationToken: cancellationToken) { [weak context] () -> T in
-    guard let context = context
-      else { throw AsyncNinjaError.contextDeallocated }
-
-    return try block(context)
-  }
-
-  context.notifyDeinit { [weak promiseValue] in promiseValue?.cancelBecauseOfDeallicatedContext() }
-
-  return promiseValue
-}
-
 public extension DispatchGroup {
-  // Test: FutureTests.testGroupCompletionFuture
+  /// Makes future ouy of `DispatchGroups`'s notify after balancing all enters and leaves
   var completionFuture: Future<Void> {
+    // Test: FutureTests.testGroupCompletionFuture
     let promise = Promise<Void>()
-    self.notify(queue: DispatchQueue.global(qos: .default)) { [weak promise] in
+    self.notify(queue: DispatchQueue.global()) { [weak promise] in
       promise?.succeed(with: Void())
     }
     return promise
@@ -207,7 +170,7 @@ public extension DispatchGroup {
 ///
 /// Each subscription to a future value will be expressed in such handler.
 /// Future will accumulate handlers until completion or deallocacion.
-final public class FutureHandler<T> {
+public class FutureHandler<T> {
   let executor: Executor
   let block: (Fallible<T>) -> Void
   let owner: Future<T>

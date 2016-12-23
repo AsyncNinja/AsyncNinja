@@ -35,3 +35,7 @@ extension Dictionary {
 func nop() {
   // no operation
 }
+
+func assertAbstract(file: StaticString = #file, line: UInt = #line) -> Never {
+  fatalError("This methods is abstract. May not reach here", file: file, line: line)
+}

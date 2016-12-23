@@ -22,14 +22,15 @@
 
 import Dispatch
 
-/// Promise that may be manually completed by owner.
+/// Promise is a future that may be manually completed by owner
 final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
   public typealias ImmutableFinite = Future<FinalValue>
 
   private var _container = makeThreadSafeContainer()
-  private let releasePool = ReleasePool()
+  private let _releasePool = ReleasePool()
   override public var finalValue: Fallible<FinalValue>? { return (_container.head as? CompletedPromiseState)?.value }
 
+  /// Designated initializer of promise
   override public init() { }
 
   /// **internal use only**
@@ -52,9 +53,12 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
     return handler
   }
 
+  @discardableResult
   /// Completes promise with value and returns true.
   /// Returns false if promise was completed before.
-  @discardableResult
+  ///
+  /// - Parameter final: value to complete future with
+  /// - Returns: true if `Promise` was completed with specified value
   final public func tryComplete(with final: Value) -> Bool {
     let completedItem = CompletedPromiseState(value: final)
     let (oldHead, newHead) = _container.updateHead {
@@ -70,31 +74,33 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
       currentItem.handler?.handle(final)
       nextItem = currentItem.next
     }
-    self.releasePool.drain()
+    _releasePool.drain()
     
     return true
   }
 
+  /// **internal use only**
   override public func insertToReleasePool(_ releasable: Releasable) {
     // assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     assert((releasable as? Handler)?.owner !== self)
     if !self.isComplete {
-      self.releasePool.insert(releasable)
+      _releasePool.insert(releasable)
     }
   }
   
+  /// **internal use only**
   func notifyDrain(_ block: @escaping () -> Void) {
     if self.isComplete {
       block()
     } else {
-      self.releasePool.notifyDrain(block)
+      _releasePool.notifyDrain(block)
     }
   }
 }
 
 /// **internal use only**
 class AbstractPromiseState<T> {
-  var isIncomplete: Bool { fatalError() /* abstract */ }
+  var isIncomplete: Bool { assertAbstract() }
 }
 
 /// **internal use only**

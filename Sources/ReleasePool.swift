@@ -24,7 +24,8 @@ import Dispatch
 
 public typealias Releasable = Any
 
-final public class ReleasePool {
+/// ReleasePool is an object that retains another objects
+public class ReleasePool {
   private var _tier1Container = makeThreadSafeContainer()
   private var _tier2Container = makeThreadSafeContainer()
   private var _tier3Container = makeThreadSafeContainer()
@@ -32,7 +33,7 @@ final public class ReleasePool {
   static let numberOfItemsForTier3 = (1 << 24) - 1
 
   public init() { }
-  
+
   deinit {
     _tier1Container.updateHead { _ in return nil }
     _tier2Container.updateHead { _ in return nil }
@@ -42,7 +43,7 @@ final public class ReleasePool {
   private func updateHead(_ block: (AnyObject?) -> AnyObject?) {
     guard let item = _tier1Container.updateHead(block).newHead as? Item
       else { return }
-    
+
     if (item.index & ReleasePool.numberOfItemsForTier2) == ReleasePool.numberOfItemsForTier2 {
       _tier2Container.updateHead { NextTierItem(item: item, next: $0 as! NextTierItem?) }
     }
@@ -50,24 +51,29 @@ final public class ReleasePool {
     if (item.index & ReleasePool.numberOfItemsForTier3) == ReleasePool.numberOfItemsForTier3 {
       _tier3Container.updateHead { NextTierItem(item: item, next: $0 as! NextTierItem?) }
     }
-}
+  }
   
+  /// Inserts object to retain
   public func insert(_ releasable: Releasable) {
     // assert(releasable as? AnyObject !== self)
     self.updateHead { ReleasableItem(object: releasable, next: $0 as! Item?) }
   }
 
+  /// Adds block to call on draining ReleasePool
+  ///
+  /// - Parameter block: to call
   public func notifyDrain(_ block: @escaping () -> Void) {
     self.updateHead { NotifyItem(notifyBlock: block, next: $0 as! Item?) }
   }
 
+  /// Causes release of all retained objects
   public func drain() {
     _tier1Container.updateHead { _ in return nil }
     _tier2Container.updateHead { _ in return nil }
     _tier3Container.updateHead { _ in return nil }
   }
 
-  class Item {
+  private class Item {
     let next: Item?
     let index: Int
 
@@ -77,7 +83,7 @@ final public class ReleasePool {
     }
   }
 
-  final class NotifyItem : Item {
+  private class NotifyItem : Item {
     let notifyBlock: () -> Void
 
     init (notifyBlock: @escaping () -> Void, next: Item?) {
@@ -90,7 +96,7 @@ final public class ReleasePool {
     }
   }
 
-  final class ReleasableItem : Item {
+  private class ReleasableItem : Item {
     let object: Releasable
 
     init(object: Releasable, next: Item?) {
@@ -99,7 +105,7 @@ final public class ReleasePool {
     }
   }
   
-  final class NextTierItem {
+  private class NextTierItem {
     let item: Item
     let next: NextTierItem?
     init(item: Item, next: NextTierItem?) {

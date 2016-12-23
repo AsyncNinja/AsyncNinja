@@ -59,19 +59,16 @@ public class Channel<PeriodicValue, FinalValue> : Finite {
   }
   public func makeHandler(executor: Executor,
                           block: @escaping (Value) -> Void) -> Handler? {
-    /* abstract */
-    fatalError()
+    assertAbstract()
   }
   
   public func makeIterator() -> Iterator {
-    /* abstract */
-    fatalError()
+    assertAbstract()
   }
   
   /// **Internal use only**.
   public func insertToReleasePool(_ releasable: Releasable) {
-    /* abstract */
-    fatalError()
+    assertAbstract()
   }
 }
 
@@ -180,22 +177,16 @@ private class Box<T> {
 
 class ChannelIteratorImpl<PeriodicValue, FinalValue>  {
   public typealias Element = PeriodicValue
-  var finalValue: Fallible<FinalValue>? {
-    /* abstract */
-    fatalError()
-  }
+  var finalValue: Fallible<FinalValue>? { assertAbstract() }
 
-  init() {
-  }
+  init() { }
 
   public func next() -> PeriodicValue? {
-    /* abstract */
-    fatalError()
+    assertAbstract()
   }
 
   func clone() -> ChannelIteratorImpl<PeriodicValue, FinalValue> {
-    /* abstract */
-    fatalError()
+    assertAbstract()
   }
 }
 
