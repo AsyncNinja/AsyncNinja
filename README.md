@@ -5,9 +5,11 @@ Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
 ![License:MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
 ![Platform:macOS|iOS|tvOS|watchOS|Linux](https://img.shields.io/badge/platform-macOS%7CiOS%7CtvOS%7CwatchOS%7CLinux-orange.svg)
 ![Swift](https://img.shields.io/badge/Swift-3.0-orange.svg)
+![Swift Package Manager Supported](https://img.shields.io/badge/Swift%20Package%20Manager-Supported-orange.svg)
+![CocoaPods](https://img.shields.io/cocoapods/v/AsyncNinja.svg)
 ![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)
 
-* [**Integration**](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Integration.md)
+* [**Integration**](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Integration.md): [SPM](https://github.com/apple/swift-package-manager), [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/)
 * [Found issue? Have a feature request? Have question?](https://github.com/AsyncNinja/AsyncNinja/issues)
 
 ## Basics
@@ -36,5 +38,5 @@ This framework is an implementation of following principles:
 
 ## Related Articles
 * Moving to nice asynchronous Swift code
-  * [GitHub](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md)
-  * [Medium](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
+	* [GitHub](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md)
+	* [Medium](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
