@@ -22,6 +22,7 @@
 
 import Dispatch
 
+@available(*, deprecated: 0.3.4, message: "Use Channel. It has makeIterator() method that does the same or even more")
 public class Pipe<Periodic, Final> : _PipeInput {
   private let _inputSema = DispatchSemaphore(value: 1)
   private let _outputSema = DispatchSemaphore(value: 0)
@@ -72,11 +73,13 @@ public class Pipe<Periodic, Final> : _PipeInput {
   }
 }
 
+@available(*, deprecated: 0.3.4, message: "Deprecated along with Pipe. Use Channel. It has makeIterator() method that does the same or even more")
 public enum PipeValue<Periodic, Final> {
   case periodic(Periodic)
   case final(Final)
 }
 
+@available(*, deprecated: 0.3.4, message: "Deprecated along with Pipe. Use Channel. It has makeIterator() method that does the same or even more")
 public class PipeInput<Periodic, Final> : _PipeInput {
   weak var pipe: Pipe<Periodic, Final>?
   
@@ -91,12 +94,14 @@ public class PipeInput<Periodic, Final> : _PipeInput {
   }
 }
 
+@available(*, deprecated: 0.3.4, message: "Deprecated along with Pipe. Use Channel. It has makeIterator() method that does the same or even more")
 public protocol _PipeInput {
   associatedtype Periodic
   associatedtype Final
   func push(_ value: PipeValue<Periodic, Final>) -> Bool
 }
 
+@available(*, deprecated: 0.3.4, message: "Deprecated along with Pipe. Use Channel. It has makeIterator() method that does the same or even more")
 public extension _PipeInput {
   @discardableResult
   public func push(periodic: Periodic) -> Bool {
@@ -109,6 +114,7 @@ public extension _PipeInput {
   }
 }
 
+@available(*, deprecated: 0.3.4, message: "Deprecated along with Pipe. Use Channel. It has makeIterator() method that does the same or even more")
 public extension _PipeInput where Final : _Fallible {
   @discardableResult
   public func push(success: Final.Success) -> Bool {
