@@ -27,6 +27,7 @@ public protocol Finite : class {
   associatedtype FinalValue
   associatedtype FinalHandler : AnyObject
 
+  /// Returns either final value for complete `Finite` or nil otherwise
   var finalValue: Fallible<FinalValue>? { get }
 
   /// **internal use only**
@@ -38,8 +39,14 @@ public protocol Finite : class {
 }
 
 public extension Finite {
+
+  /// Shorthand property that returns true if `Finite` is complete
   var isComplete: Bool { return nil != self.finalValue }
+
+  /// Shorthand property that returns success value if `Finite` completed with success or nil otherwise
   var success: FinalValue? { return self.finalValue?.success }
+
+  /// Shorthand property that returns failure value if `Finite` completed with failure or nil otherwise
   var failure: Swift.Error? { return self.finalValue?.failure }
 }
 
@@ -270,7 +277,7 @@ public extension Finite {
 /// Using this method is **strongly** discouraged. Calling it on the same serial queue
 /// as any code performed on the same queue this future depends on will cause deadlock.
 public extension Finite {
-  func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Fallible<FinalValue>? {
+  private func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Fallible<FinalValue>? {
     if let finalValue = self.finalValue {
       return finalValue
     }
@@ -289,16 +296,41 @@ public extension Finite {
     }
   }
 
+  /// Waits for future to complete and returns completion value. Waits forever
   func wait() -> Fallible<FinalValue> {
     return self.wait(waitingBlock: { $0.wait(); return .success })!
   }
 
+  /// Waits for future to complete and returns completion value
+  ///
+  /// - Parameter timeout: `DispatchTime` to wait completion for
+  /// - Returns: completion value or nil if `Future` did not complete in specified timeout
   func wait(timeout: DispatchTime) -> Fallible<FinalValue>? {
     return self.wait(waitingBlock: { $0.wait(timeout: timeout) })
   }
 
+  /// Waits for future to complete and returns completion value
+  ///
+  /// - Parameter wallTimeout: `DispatchWallTime` to wait completion for
+  /// - Returns: completion value or nil if `Future` did not complete in specified timeout
   func wait(wallTimeout: DispatchWallTime) -> Fallible<FinalValue>? {
     return self.wait(waitingBlock: { $0.wait(wallTimeout: wallTimeout) })
+  }
+
+  /// Waits for future to complete and returns completion value
+  ///
+  /// - Parameter nanoseconds: to wait completion for
+  /// - Returns: completion value or nil if `Future` did not complete in specified timeout
+  func wait(nanoseconds: Int) -> Fallible<FinalValue>? {
+    return self.wait(timeout: DispatchTime.now() + .nanoseconds(nanoseconds))
+  }
+
+  /// Waits for future to complete and returns completion value
+  ///
+  /// - Parameter seconds: to wait completion for
+  /// - Returns: completion value or nil if `Future` did not complete in specified timeout
+  func wait(seconds: Double) -> Fallible<FinalValue>? {
+    return self.wait(nanoseconds: Int(seconds * 1_000_000_000))
   }
 }
 

@@ -28,7 +28,7 @@ public class Future<FinalValue> : Finite {
   public typealias Handler = FutureHandler<FinalValue>
   public typealias FinalHandler = Handler
 
-  /// Returns either final value if future is complete or nil
+  /// Returns either final value for complete `Future` or nil otherwise
   public var finalValue: Fallible<FinalValue>? { assertAbstract() }
 
   /// Returns either final value if future is complete or nil
