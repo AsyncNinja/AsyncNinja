@@ -1,6 +1,8 @@
 # `ExecutionContext`
+This document describes concept and use of `ExecutionContext`.
 
-`ExecutionContext` is a type that provides `Executor` and can retain objects while alive itself. `ExecutionContext` is a major part of [Memory Management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/MemoryManagement.md).
+**For class reference visit [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/0.3.4/Protocols/ExecutionContext.html).**
+**For more detailed explanation [visit](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md)**
 
 ##### Contents
 * [Concept](#concept)
@@ -9,6 +11,8 @@
 * [List of predefined `ExecutionContext`s](#list-of-predefined-executioncontexts)
 
 ## Concept
+`ExecutionContext` is a type that provides `Executor` and can retain objects while alive itself. `ExecutionContext` is a major part of [Memory Management](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/MemoryManagement.md).
+
 Memory Management in asynchronous execution may be hard.
 
 ```swift

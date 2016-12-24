@@ -1,18 +1,16 @@
 # `Fallible`
+This document describes concept and use of `Fallible`.
 
-`Fallible` is a box that contains either success or failure.
+**For class reference visit [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/0.3.4/Enums/Fallible.html).** 
 
 ##### Contents
 *    [Concept](#concept)
     *    [`throws` vs. `Fallible`](#throws-vs-fallible)
     *     [Summary](#summary)
-*    [Reference](#reference)
-    *    [Creating `Fallible`](#creating-fallible)
-    *     [Transforming `Fallible`](#transforming-fallible)
-    *  [Unwrapping `Fallible`](#unwrapping-fallible)
 *    [Asynchronous Operations with Error Handling](#asynchronous-operations-with-error-handling)
 
 ## Concept
+`Fallible` is a stuct that contains either success or failure.
 
 ###### Simplified implementation
 ```swift
@@ -90,58 +88,6 @@ Both approaches have their advantages and disadvantages. After consideration and
 |Synchrounous Execution|`throws`|
 |Asynchrouhous Execution|`Fallible`|
 
-## Reference
-
-### Creating `Fallible`
-
-#### with `init`
-```swift
-Fallible<Success>.init(success: Success)
-Fallible<Success>.init(failure: Swift.Error)
-```
-
-#### from function with `throws`
-```swift
-func fallible<Success>(block: () throws -> Success) -> Fallible<Success>
-```
-
-### Transforming `Fallible`
-
-```swift
-extension Fallible {
-  func map<T>(transform: (Success) throws -> T) -> Fallible<T>
-  func flatMap<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>
-  func recover(transform: (Swift.Error) throws -> Success) -> Fallible<Success>
-
-  /* failure recovery */
-  func recover(transform: (Swift.Error) -> Success) -> Success
-```
-    
-### Unwrapping `Fallible`    
-
-#### using properties
-```swift
-extension Fallible {
-  var success: Success? { get }
-  var .failure: Swift.Error? { get }
-}
-```
-
-#### using closures
-```swift
-extension Fallible {
-  func onSuccess(_ handler: (Success) throws -> Void) rethrows
-  func onFailure(_ handler: (Swift.Error) throws -> Void) rethrows
-}
-```
-
-#### using function that `throws`
-
-```swift
-extension Fallible {
-  func liftSuccess() throws -> Success
-}
-```
 
 ## Asynchronous Operations with Error Handling
 `Fallible` is most useful in asynchronous execution (see [Cheat Sheet](#cheat-sheet)). The first asynchronous primitive of AsyncNinja is `Future`. `Future` completion value is `Fallible`. It means that every `Future` can either succeed or fail.

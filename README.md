@@ -27,6 +27,9 @@ This framework is an implementation of following principles:
 	* `Cache` is a primitive that lets you coalesce requests and cache responses
 
 ## Documentation
+
+**Visit [CocoaPods website](http://cocoadocs.org/docsets/AsyncNinja/) for reference**
+
 * [`Future`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Future.md)
 * [`Channel`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Channel.md)
 * [`Executor`](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Executor.md)

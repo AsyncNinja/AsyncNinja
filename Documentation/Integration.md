@@ -4,8 +4,8 @@ This topic describes options of integration.
 
 ##### Contents
 * [Using Swift Package Manager](#using-swift-package-manager)
-* [Using git submodule](#using-git-submodule)
 * [CocoaPods](#cocoapods)
+* [Using git submodule](#using-git-submodule)
 
 ## Using [Swift Package Manager](https://github.com/apple/swift-package-manager)
 This is the easiest and the most reliable way. Add AsyncNinja dependency to your package.
@@ -31,17 +31,6 @@ let package = Package(
 )
 ``` 
 
-## Using git submodule
-
-```bash
-git submodule add https://github.com/AsyncNinja/AsyncNinja.git AsyncNinja
-git commit -m "AsyncNinja submodule added"
-```
-
-Now you can import files from AsyncNinja/Sources to your project. Having 3rd party framework next to your sources
-might sound and looks strange, but it might actually improve performance. Swift can optimize code that uses AsyncNinja
-primitives by generics specification [see official documentation](https://github.com/apple/swift/blob/master/docs/OptimizationTips.rst#generics).
-
 ## CocoaPods
 
 Add to your Podfile:
@@ -52,3 +41,14 @@ target 'MyWonderfulApp' do
   pod 'AsyncNinja', :git => 'https://github.com/AsyncNinja/AsyncNinja.git'
 end
 ```
+
+## Using git submodule
+
+```bash
+git submodule add https://github.com/AsyncNinja/AsyncNinja.git AsyncNinja
+git commit -m "AsyncNinja submodule added"
+```
+
+Now you can import files from AsyncNinja/Sources to your project. Having 3rd party framework next to your sources
+might sound and looks strange, but it might actually improve performance. Swift can optimize code that uses AsyncNinja
+primitives by generics specification [see official documentation](https://github.com/apple/swift/blob/master/docs/OptimizationTips.rst#generics).
