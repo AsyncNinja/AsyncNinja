@@ -498,8 +498,8 @@ class FutureTests : XCTestCase {
     if let failable = future2D.wait(timeout: timeout) {
       XCTAssertEqual(failable.failure! as? AsyncNinjaError, AsyncNinjaError.cancelled)
       let finishTime = DispatchTime.now()
-      XCTAssert(startTime + 0.4 < finishTime)
-      XCTAssert(startTime + 0.6 > finishTime)
+      XCTAssert(startTime + 0.3 < finishTime)
+      XCTAssert(startTime + 0.7 > finishTime)
     } else {
       XCTFail("timeout")
     }
