@@ -24,58 +24,77 @@ import Dispatch
 
 /// Executor encapsulates asynchrounous way of execution escaped block.
 public struct Executor {
+  /// Handler that encapsulates asynchrounous way of execution escaped block
   public typealias Handler = (@escaping (Void) -> Void) -> Void
   private let _impl: ExecutorImpl
 
-  init(impl: ExecutorImpl) {
+  /// Initializes executor with specified implementation
+  ///
+  /// - Parameter impl: implementation of executor
+  fileprivate init(impl: ExecutorImpl) {
     _impl = impl
   }
 
-  // Test: ExecutorTests.testCustomHandler
   /// Initialiaes executor with custom handler
+  ///
+  /// - Parameters:
+  ///   - isSerial: specifies if blocks submitted to the handler will be executed serialy. Keep default value otherwise.
+  ///   - handler: encapsulates asynchrounous way of execution escaped block
   public init(isSerial: Bool = false, handler: @escaping Handler) {
+    // Test: ExecutorTests.testCustomHandler
     _impl = HandlerBasedExecutorImpl(handler: handler, isSerial: isSerial)
   }
 
+  /// Schedules specified block for execution
+  ///
+  /// - Parameter block: to execute
   func execute(_ block: @escaping (Void) -> Void) {
     _impl.fc_execute(block)
   }
 
+  /// Schedules specified block for execution after timeout
+  ///
+  /// - Parameters:
+  ///   - timeout: to schedule execution of the block after
+  ///   - block: to execute
   func execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
     _impl.fc_execute(after: timeout, block)
   }
 
+  /// Makes serial executor. Retured executor will serially perform blocks on current executor
   func makeDerivedSerialExecutor() -> Executor {
     return Executor(impl: _impl.fc_makeDerivedSerialExecutor())
   }
 }
+
+// MARK: - known executors
 
 public extension Executor {
   // Test: ExecutorTests.testPrimary
   /// primary executor is primary because it will be used as default value when executor argument is ommited
   static let primary = Executor.default
 
-  /// shortcut to main queue executor
+  /// shortcut to the main queue executor
   static let main = Executor.queue(DispatchQueue.main)
 
   // Test: ExecutorTests.testUserInteractive
-  /// shortcut to global concurrent user interactive queue executor
+  /// shortcut to the global concurrent user interactive queue executor
   static let userInteractive = Executor.queue(.userInteractive)
 
   // Test: ExecutorTests.testUserInitiated
-  /// shortcut to global concurrent user initiated queue executor
+  /// shortcut to the global concurrent user initiated queue executor
   static let userInitiated = Executor.queue(.userInitiated)
 
   // Test: ExecutorTests.testDefault
-  /// shortcut to global concurrent default queue executor
+  /// shortcut to the global concurrent default queue executor
   static let `default` = Executor.queue(.default)
 
   // Test: ExecutorTests.testUtility
-  /// shortcut to global concurrent utility queue executor
+  /// shortcut to the global concurrent utility queue executor
   static let utility = Executor.queue(.utility)
 
   // Test: ExecutorTests.testBackground
-  /// shortcut to global concurrent background queue executor
+  /// shortcut to the  global concurrent background queue executor
   static let background = Executor.queue(.background)
 
   // Test: ExecutorTests.testImmediate
@@ -83,36 +102,44 @@ public extension Executor {
   static let immediate = Executor(impl: ImmediateExecutorImpl())
 
   /// initializes executor based on specified queue
-  // Test: ExecutorTests.testCustomQueue
+  ///
+  /// - Parameter queue: to execute submitted blocks on
+  /// - Returns: executor
   static func queue(_ queue: DispatchQueue) -> Executor {
+    // Test: ExecutorTests.testCustomQueue
     return Executor(impl: queue)
   }
 
-  /// initializes executor based on global queue with specified QoS class
   // Test: ExecutorTests.testCustomQoS
+  /// initializes executor based on global queue with specified QoS class
+  ///
+  /// - Parameter qos: quality of service for submitted blocks
+  /// - Returns: executor
   static func queue(_ qos: DispatchQoS.QoSClass) -> Executor {
     return Executor.queue(DispatchQueue.global(qos: qos))
   }
 }
 
+// MARK: implementations
+
 /// **internal use only**
-protocol ExecutorImpl {
+fileprivate protocol ExecutorImpl {
   func fc_execute(_ block: @escaping (Void) -> Void)
   func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void)
   func fc_makeDerivedSerialExecutor() -> ExecutorImpl
 }
 
 extension DispatchQueue : ExecutorImpl {
-  func fc_execute(_ block: @escaping (Void) -> Void) {
+  fileprivate func fc_execute(_ block: @escaping (Void) -> Void) {
     self.async(execute: block)
   }
 
-  func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
+  fileprivate func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
     let wallDeadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000_000_000))
     self.asyncAfter(wallDeadline: wallDeadline, execute: block)
   }
 
-  func fc_makeDerivedSerialExecutor() -> ExecutorImpl {
+  fileprivate func fc_makeDerivedSerialExecutor() -> ExecutorImpl {
     return DispatchQueue(label: "derived", qos: .default, attributes: [], target: self)
   }
 }
