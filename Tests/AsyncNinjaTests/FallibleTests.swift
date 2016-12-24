@@ -33,6 +33,9 @@ class FallibleTests : XCTestCase {
     ("testFailure", testFailure),
     ("testOnSuccess", testOnSuccess),
     ("testOnFailure", testOnFailure),
+    ("testFlattenSuccessSuccess", testFlattenSuccessSuccess),
+    ("testFlattenSuccessFailure", testFlattenSuccessFailure),
+    ("testFlattenFailure", testFlattenFailure),
     ("testMapSuccessForSuccess", testMapSuccessForSuccess),
     ("testMapSuccessForFailure", testMapSuccessForFailure),
     ("testMapSuccessForThrow", testMapSuccessForThrow),
@@ -79,6 +82,28 @@ class FallibleTests : XCTestCase {
     }
 
     XCTAssertEqual(1, numberOfCalls)
+  }
+
+  func testFlattenSuccessSuccess() {
+    let intValue = pickInt()
+    let fallible2dInt: Fallible<Fallible<Int>> = Fallible(success: Fallible(success: intValue))
+    let fallible1dInt: Fallible<Int> = fallible2dInt.flatten()
+
+    XCTAssertEqual(fallible1dInt.success, intValue)
+  }
+
+  func testFlattenSuccessFailure() {
+    let fallible2dInt: Fallible<Fallible<Int>> = Fallible(success: Fallible(failure: TestError.testCode))
+    let fallible1dInt: Fallible<Int> = fallible2dInt.flatten()
+
+    XCTAssertEqual(fallible1dInt.failure as? TestError, TestError.testCode)
+  }
+
+  func testFlattenFailure() {
+    let fallible2dInt: Fallible<Fallible<Int>> = Fallible(failure: TestError.testCode)
+    let fallible1dInt: Fallible<Int> = fallible2dInt.flatten()
+
+    XCTAssertEqual(fallible1dInt.failure as? TestError, TestError.testCode)
   }
 
   func testMapSuccessForSuccess() {

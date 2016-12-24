@@ -155,7 +155,7 @@ public extension Future where FinalValue : Finite {
 }
 
 public extension DispatchGroup {
-  /// Makes future ouy of `DispatchGroups`'s notify after balancing all enters and leaves
+  /// Makes future from of `DispatchGroups`'s notify after balancing all enters and leaves
   var completionFuture: Future<Void> {
     // Test: FutureTests.testGroupCompletionFuture
     let promise = Promise<Void>()
