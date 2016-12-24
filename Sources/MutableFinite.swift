@@ -27,12 +27,17 @@ public protocol MutableFinite : Finite {
   
   init()
 
-  /// Completes promise with value and returns true.
+  /// Completes `MutableFinite` with value and returns true.
   /// Returns false if promise was completed before.
+  ///
+  /// - Parameter final: value to compete `MutableFinite` with
+  /// - Returns: true if this call completed future
   @discardableResult
   func tryComplete(with final: Fallible<FinalValue>) -> Bool
+
   func complete(with finite: ImmutableFinite)
 
+  /// **internal use only**
   func insertToReleasePool(_ releasable: Releasable)
 }
 

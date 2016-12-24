@@ -28,15 +28,21 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
 
   private var _container = makeThreadSafeContainer()
   private let _releasePool = ReleasePool()
-  override public var finalValue: Fallible<FinalValue>? { return (_container.head as? CompletedPromiseState)?.value }
+
+  /// Returns either final value for complete `Future` or nil otherwise
+  override public var finalValue: Fallible<FinalValue>? {
+    return (_container.head as? CompletedPromiseState)?.value
+  }
 
   /// Designated initializer of promise
   override public init() { }
 
   /// **internal use only**
   override public func makeFinalHandler(executor: Executor,
-                                        block: @escaping (Fallible<FinalValue>) -> Void) -> FinalHandler? {
+                                        block: @escaping (Fallible<FinalValue>) -> Void
+    ) -> FinalHandler? {
     let handler = Handler(executor: executor, block: block, owner: self)
+
     _container.updateHead {
       switch $0 {
       case let completedState as CompletedPromiseState<FinalValue>:
@@ -50,10 +56,10 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
         fatalError()
       }
     }
+
     return handler
   }
 
-  @discardableResult
   /// Completes promise with value and returns true.
   /// Returns false if promise was completed before.
   ///
@@ -99,12 +105,12 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
 }
 
 /// **internal use only**
-class AbstractPromiseState<T> {
+fileprivate class AbstractPromiseState<T> {
   var isIncomplete: Bool { assertAbstract() }
 }
 
 /// **internal use only**
-final class SubscribedPromiseState<T> : AbstractPromiseState<T> {
+fileprivate  class SubscribedPromiseState<T> : AbstractPromiseState<T> {
   typealias Value = Fallible<T>
   typealias Handler = FutureHandler<T>
   
@@ -119,7 +125,7 @@ final class SubscribedPromiseState<T> : AbstractPromiseState<T> {
 }
 
 /// **internal use only**
-final class CompletedPromiseState<T> : AbstractPromiseState<T> {
+fileprivate  class CompletedPromiseState<T> : AbstractPromiseState<T> {
   let value: Fallible<T>
   override var isIncomplete: Bool { return false }
   
