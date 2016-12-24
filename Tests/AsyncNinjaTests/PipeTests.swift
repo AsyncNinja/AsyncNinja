@@ -27,6 +27,7 @@ import Dispatch
   import Glibc
 #endif
 
+@available(*, deprecated: 0.3.4, message: "Deprecated along with Pipe. Use Channel. It has makeIterator() method that does the same or even more")
 class PipeTests : XCTestCase {
   static let allTests = [
     ("testSimple", testSimple),
