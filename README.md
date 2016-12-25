@@ -12,7 +12,166 @@ Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
 * [**Integration**](https://github.com/AsyncNinja/AsyncNinja/blob/master/Documentation/Integration.md): [SPM](https://github.com/apple/swift-package-manager), [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/)
 * [Found issue? Have a feature request? Have question?](https://github.com/AsyncNinja/AsyncNinja/issues)
 
-## Basics
+## Overview
+
+### Futures
+
+Let's assume that we have function that finds all prime numbers lesser then n
+
+```swift
+func primeNumbers(to n: Int) -> [Int] { /* ... */ }
+```
+
+#### Making future
+
+```swift
+let futurePrimeNumbers: Future<[Int]> = future { primeNumbers(to: 10_000_000) }
+```
+
+#### Applying transformation
+
+```swift
+let futureSquaredPrimeNumbers = futurePrimeNumbers
+  .map { $0.map { $0 * $0 } }
+```
+
+#### Synchronously waiting for completion
+
+```swift
+if let numberOfPrimes = futurePrimeNumbers.wait(seconds: 1.0) {
+  print("Number of prime numbers is \(numberOfPrimes.success?.count)")
+} else {
+  print("Did not calculate prime numbers yet")
+}
+```
+
+#### Subscribing for completion
+
+```swift
+futurePrimeNumbers.onComplete {
+  print("Number of prime numbers is \($0.success?.count)")
+}
+```
+
+#### Combining futures
+
+```swift
+let futureA: Future<A> = /* ... */
+let futureB: Future<B> = /* ... */
+let futureC: Future<C> = /* ... */
+let futureABC: Future<(A, B, C)> = zip(futureA, futureB, futureC)
+```
+
+#### Transition from callbacks-based flow to futures-based flow:
+
+```swift
+class MyService {
+  /* implementation */
+  
+  func fetchPerson(withID personID: Person.Identifier) -> Future<Person> {
+    let promise = Promise<Person>()
+    self.fetchPerson(withID: personID, callback: promise.complete)
+    return promise
+  }
+}
+```
+
+#### Transition from futures-based flow to callbacks-based flow
+
+```swift
+class MyService {
+  /* implementation */
+  
+  func fetchPerson(withID personID: Person.Identifier,
+                   callback: @escaping (Fallible<Person>) -> Void) {
+    self.fetchPerson(withID: personID)
+      .onComplete(block: callback)
+  }
+}
+```
+
+### Channels
+Let's assume we have function that returns channel of prime numbers: sends prime numbers as finds them and sends number of found numbers as completion
+
+```swift
+func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> { /* ... */ }
+```
+
+#### Applying transformation
+
+```swift
+let channelOfSquaredPrimeNumbers = channelOfPrimeNumbers
+  .mapPeriodic { $0 * $0 }
+```
+
+#### Synchronously iterating over periodic values.
+
+```swift
+var primeNumbersIterator = channelOfPrimeNumbers.makeIterator()
+while let number = primeNumbersIterator.next() {
+  print(number)
+}
+```
+*I would love to find out how to use for-loop, but I'm stuck with this.*
+
+#### Synchronously waiting for completion
+
+```swift
+if let numberOfPrimes = channelOfPrimeNumbers.wait(seconds: 1.0) {
+  print("Number of prime numbers is \(numberOfPrimes.success)")
+} else {
+  print("Did not calculate prime numbers yet")
+}
+```
+
+#### Synchronously waiting for completion #2
+
+```swift
+let (primeNumbers, numberOfPrimeNumbers) = channelOfPrimeNumbers.waitForAll()
+```
+
+#### Subscribing for periodic
+
+```swift
+channelOfPrimeNumbers.onPeriodic { print("Periodic: \($0)") }
+```
+
+#### Subscribing for completion
+
+```swift
+channelOfPrimeNumbers.onComplete { print("Completed: \($0)") }
+```
+
+#### Making `Channel` *(finally)*
+
+```swift
+func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> {
+  let producer = Producer<Int, Int>(bufferSize: 1)
+
+  DispatchQueue.global().async {
+    var numberOfPrimeNumbers = 0
+    var isPrime = Array(repeating: true, count: n)
+    
+    for number in 2..<n where isPrime[number] {
+      numberOfPrimeNumbers += 1
+      producer.send(number)
+
+      // updating seive
+      var seiveNumber = number + number
+      while seiveNumber < n {
+        isPrime[seiveNumber] = false
+        seiveNumber += number
+      }
+    }
+
+    producer.succeed(with: numberOfPrimeNumbers)
+  }
+
+  return producer
+}
+```
+
+## Primitives
 This framework is an implementation of following principles:
 
 * provide abstraction that makes
