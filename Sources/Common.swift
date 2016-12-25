@@ -22,10 +22,12 @@
 
 import Dispatch
 
-public struct AsyncNinjaConstants {
+struct AsyncNinjaConstants {
   #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
   static let isLockFreeUseAllowed = true
   #endif
+
+  static let defaultChannelBufferSize = 1
 }
 
 public enum AsyncNinjaError : Swift.Error, Equatable {

@@ -93,4 +93,26 @@ class ChannelTests : XCTestCase {
     XCTAssertEqual(range.filter { 0 == $0 % 2 }, periodics)
     XCTAssertEqual(final, finalValue.success)
   }
+
+  func testMakeChannel() {
+    let numbers = Array(0..<100)
+
+    let channelA: Channel<Int, String> = channel { (sendPeriodic) -> String in
+      for i in numbers {
+        sendPeriodic(i)
+      }
+      return "done"
+    }
+
+    var resultNumbers = [Int]()
+    let serialQueue = DispatchQueue(label: "test-queue")
+
+    channelA.onPeriodic(executor: .queue(serialQueue)) {
+      resultNumbers.append($0)
+    }
+
+    sleep(2)
+
+    XCTAssertEqual(resultNumbers, Array(numbers.suffix(resultNumbers.count)))
+  }
 }

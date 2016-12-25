@@ -25,8 +25,8 @@ import Dispatch
 final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, FinalValue>, MutableFinite {
   public typealias ImmutableFinite = Channel<PeriodicValue, FinalValue>
 
-  typealias RegularState = RegularProducerState<PeriodicValue, FinalValue>
-  typealias FinalState = FinalProducerState<PeriodicValue, FinalValue>
+  fileprivate typealias RegularState = RegularProducerState<PeriodicValue, FinalValue>
+  fileprivate typealias FinalState = FinalProducerState<PeriodicValue, FinalValue>
   private let _releasePool = ReleasePool()
   private var _container = makeThreadSafeContainer()
   private let _maxBufferSize: Int
@@ -39,7 +39,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   override public var finalValue: Fallible<FinalValue>? { return (_container.head as? FinalState)?.final }
 
   override public convenience init() {
-    self.init(bufferSize: 1)
+    self.init(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
   }
   
   public init(bufferSize: Int) {
@@ -53,7 +53,18 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   }
 
   fileprivate func _makeHandler(executor: Executor, avoidLocking: Bool,
-                    block: @escaping (Value) -> Void) -> Handler? {
+                                block: @escaping (Value) -> Void) -> Handler? {
+    if !avoidLocking {
+      self._locking.lock()
+    }
+
+    var iterator = self._bufferedPeriodics.makeIterator()
+    while let periodic_ = iterator.next() {
+      executor.execute {
+        block(.periodic(periodic_))
+      }
+    }
+
     let handler = Handler(executor: executor, block: block)
     _container.updateHead {
       switch $0 {
@@ -69,18 +80,8 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
       }
     }
 
-    executor.execute {
-      if !avoidLocking {
-        self._locking.lock()
-      }
-
-      var iterator = self._bufferedPeriodics.makeIterator()
-      while let periodic_ = iterator.next() {
-        block(.periodic(periodic_))
-      }
-      if !avoidLocking {
-        self._locking.unlock()
-      }
+    if !avoidLocking {
+      self._locking.unlock()
     }
 
     return handler
@@ -193,14 +194,37 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   }
 }
 
-class ProducerState<T, U> {
+public func channel<PeriodicValue, FinalValue>(
+  executor: Executor = .primary,
+  cancellationToken: CancellationToken? = nil,
+  bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize,
+  block: @escaping (_ sendPeriodic: @escaping (PeriodicValue) -> Void) throws -> FinalValue
+  ) -> Channel<PeriodicValue, FinalValue> {
+
+  let producer = Producer<PeriodicValue, FinalValue>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
+
+  if let cancellationToken = cancellationToken {
+    cancellationToken.notifyCancellation { [weak producer] in
+      producer?.cancel()
+    }
+  }
+
+  executor.execute { [weak producer] in
+    let fallibleFinalValue = fallible { try block { producer?.send($0) } }
+    producer?.complete(with: fallibleFinalValue)
+  }
+
+  return producer
+}
+
+fileprivate class ProducerState<T, U> {
   typealias Value = ChannelValue<T, U>
   typealias Handler = ChannelHandler<T, U>
   
   init() { }
 }
 
-final class RegularProducerState<T, U> : ProducerState<T, U> {
+fileprivate class RegularProducerState<T, U> : ProducerState<T, U> {
   weak var handler: Handler?
   let next: RegularProducerState<T, U>?
   
@@ -210,9 +234,9 @@ final class RegularProducerState<T, U> : ProducerState<T, U> {
   }
 }
 
-final class FinalProducerState<T, U> : ProducerState<T, U> {
+fileprivate class FinalProducerState<T, U> : ProducerState<T, U> {
   let final: Fallible<U>
-  
+
   init(final: Fallible<U>) {
     self.final = final
   }
@@ -232,7 +256,7 @@ public enum DerivedChannelBufferSize {
   }
 }
 
-class ProducerIteratorImpl<PeriodicValue, FinalValue> : ChannelIteratorImpl<PeriodicValue, FinalValue> {
+fileprivate class ProducerIteratorImpl<PeriodicValue, FinalValue> : ChannelIteratorImpl<PeriodicValue, FinalValue> {
   let _sema: DispatchSemaphore
   var _locking = makeLocking(isFair: true)
   let _bufferedPeriodics: QueueImpl<PeriodicValue>
