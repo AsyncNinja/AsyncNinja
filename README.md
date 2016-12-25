@@ -32,14 +32,18 @@ let futurePrimeNumbers: Future<[Int]> = future { primeNumbers(to: 10_000_000) }
 
 ```swift
 let futureSquaredPrimeNumbers = futurePrimeNumbers
-  .map { $0.map { $0 * $0 } }
+  .map { (primeNumbers) -> [Int] in
+    return primeNumbers.map { (number) -> Int
+      return number * number
+    }
+  }
 ```
 
 #### Synchronously waiting for completion
 
 ```swift
-if let numberOfPrimes = futurePrimeNumbers.wait(seconds: 1.0) {
-  print("Number of prime numbers is \(numberOfPrimes.success?.count)")
+if let fallibleNumbers = futurePrimeNumbers.wait(seconds: 1.0) {
+  print("Number of prime numbers is \(fallibleNumbers.success?.count)")
 } else {
   print("Did not calculate prime numbers yet")
 }
@@ -48,8 +52,8 @@ if let numberOfPrimes = futurePrimeNumbers.wait(seconds: 1.0) {
 #### Subscribing for completion
 
 ```swift
-futurePrimeNumbers.onComplete {
-  print("Number of prime numbers is \($0.success?.count)")
+futurePrimeNumbers.onComplete { (falliblePrimeNumbers) in
+  print("Number of prime numbers is \(falliblePrimeNumbers.success?.count)")
 }
 ```
 
@@ -101,7 +105,9 @@ func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> { /* ... */ }
 
 ```swift
 let channelOfSquaredPrimeNumbers = channelOfPrimeNumbers
-  .mapPeriodic { $0 * $0 }
+  .mapPeriodic { (number) -> Int in
+      return number * number
+    }
 ```
 
 #### Synchronously iterating over periodic values.
@@ -117,8 +123,8 @@ while let number = primeNumbersIterator.next() {
 #### Synchronously waiting for completion
 
 ```swift
-if let numberOfPrimes = channelOfPrimeNumbers.wait(seconds: 1.0) {
-  print("Number of prime numbers is \(numberOfPrimes.success)")
+if let fallibleNumberOfPrimes = channelOfPrimeNumbers.wait(seconds: 1.0) {
+  print("Number of prime numbers is \(fallibleNumberOfPrimes.success)")
 } else {
   print("Did not calculate prime numbers yet")
 }
@@ -142,19 +148,17 @@ channelOfPrimeNumbers.onPeriodic { print("Periodic: \($0)") }
 channelOfPrimeNumbers.onComplete { print("Completed: \($0)") }
 ```
 
-#### Making `Channel` *(finally)*
+#### Making `Channel`
 
 ```swift
 func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> {
-  let producer = Producer<Int, Int>(bufferSize: 1)
-
-  DispatchQueue.global().async {
+  return channel { (sendPeriodic) -> Int in
     var numberOfPrimeNumbers = 0
     var isPrime = Array(repeating: true, count: n)
-    
+
     for number in 2..<n where isPrime[number] {
       numberOfPrimeNumbers += 1
-      producer.send(number)
+      sendPeriodic(number)
 
       // updating seive
       var seiveNumber = number + number
@@ -164,10 +168,8 @@ func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> {
       }
     }
 
-    producer.succeed(with: numberOfPrimeNumbers)
+    return numberOfPrimeNumbers
   }
-
-  return producer
 }
 ```
 
