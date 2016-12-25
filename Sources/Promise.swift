@@ -88,7 +88,7 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
   /// **internal use only**
   override public func insertToReleasePool(_ releasable: Releasable) {
     // assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
-    assert((releasable as? Handler)?.owner !== self)
+    // assert((releasable as? Handler)?.owner !== self) // This assertion is no longer valid because we have non-contextual on<Event>
     if !self.isComplete {
       _releasePool.insert(releasable)
     }
