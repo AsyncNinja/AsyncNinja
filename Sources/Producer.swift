@@ -39,7 +39,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   override public var finalValue: Fallible<FinalValue>? { return (_container.head as? FinalState)?.final }
 
   override public convenience init() {
-    self.init(bufferSize: 0)
+    self.init(bufferSize: 1)
   }
   
   public init(bufferSize: Int) {
