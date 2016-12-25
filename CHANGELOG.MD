@@ -1,3 +1,7 @@
+# 0.3.6
+* fix: `Channel` can callback on `onPeriodic` two times for first periodic
+* fix: non-contextual `on<Event>` assertion failure
+
 # 0.3.5
 * better readme and documentation
 * default buffer size of `Producer` changed to 1
