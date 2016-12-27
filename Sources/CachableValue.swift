@@ -22,20 +22,35 @@
 
 import Dispatch
 
-public class CachableValue<MutableFiniteValue : MutableFinite, Context: ExecutionContext> {
+/// Is a simple cache that can contain single value. Does not invalidate cached values automatically. Parametrised with MutableFiniteValue that can be either `Future` or `Channel` and Context. That gives an opportunity to make cache that can report of status of completion periodically (e.g. download persentage).
+public class CachableValue<MutableFiniteValue: MutableFinite, Context: ExecutionContext> {
   private var _locking = makeLocking()
   private let _impl: CachableValueImpl<MutableFiniteValue, Context>
-  
-  public init(context: Context, missHandler: @escaping (Context) throws -> MutableFiniteValue.ImmutableFinite) {
+
+
+  /// Designated initializer
+  ///
+  /// - Parameters:
+  ///   - context: context that owns CahableValue
+  ///   - missHandler: block that handles cache misses
+  ///   - stongContext: context restored from weak reference
+  public init(context: Context, missHandler: @escaping (_ strongContext: Context) throws -> MutableFiniteValue.ImmutableFinite) {
     _impl = CachableValueImpl(context: context, missHandler: missHandler)
   }
-  
+
+  /// Fetches value
+  ///
+  /// - Parameters:
+  ///   - mustStartHandlingMiss: `true` if handling miss is allowed. `false` is useful if you want to use value if there is one and do not want to handle miss.
+  ///   - mustInvalidateOldValue: `true` if previous value may not be used.
+  /// - Returns: `Future` of `Channel`
   public func value(mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> MutableFiniteValue.ImmutableFinite {
     _locking.lock()
     defer { _locking.unlock() }
     return _impl.value(mustStartHandlingMiss: mustStartHandlingMiss, mustInvalidateOldValue: mustInvalidateOldValue)
   }
-  
+
+  /// Invalidates cached value
   public func invalidate() {
     _locking.lock()
     defer { _locking.unlock() }
@@ -43,7 +58,8 @@ public class CachableValue<MutableFiniteValue : MutableFinite, Context: Executio
   }
 }
 
-class CachableValueImpl<MutableFiniteValue : MutableFinite, Context: ExecutionContext> {
+/// **Internal use only** Implementation of CachableValue.
+class CachableValueImpl<MutableFiniteValue: MutableFinite, Context: ExecutionContext> {
   private weak var _context: Context?
   private let _missHandler: (Context) throws -> MutableFiniteValue.ImmutableFinite
   private var _mutableFinite = MutableFiniteValue()
@@ -122,5 +138,10 @@ private enum CachableValueState {
   case finished
 }
 
-public typealias SimpleCachableValue<Value, Context: ExecutionContext> = CachableValue<Promise<Value>, Context>
-public typealias ReportingCachableValue<PeriodicValue, FinalValue, Context: ExecutionContext> = CachableValue<Producer<PeriodicValue, FinalValue>, Context>
+/// Convenience typealias for CachableValue based on `Future`
+public typealias SimpleCachableValue<Value, Context: ExecutionContext>
+  = CachableValue<Promise<Value>, Context>
+
+/// Convenience typealias for CachableValue based on `Channel`
+public typealias ReportingCachableValue<PeriodicValue, FinalValue, Context: ExecutionContext>
+  = CachableValue<Producer<PeriodicValue, FinalValue>, Context>

@@ -22,20 +22,36 @@
 
 import Dispatch
 
+/// Is a simple cache that can contain multiple values by unique hashable key. Does not invalidate cached values automatically. Parametrised with Key, MutableFiniteValue that can be either `Future` or `Channel` and Context. That gives an opportunity to make cache that can report of status of completion periodically (e.g. download persentage).
 public class Cache<Key : Hashable, MutableFiniteValue : MutableFinite, Context : ExecutionContext> {
   typealias _CachableValue = CachableValueImpl<MutableFiniteValue, Context>
+
+  /// Block that resolves miss
+  public typealias MissHandler = (_ strongContext: Context, _ key: Key) throws -> MutableFiniteValue.ImmutableFinite
   
   private var _locking = makeLocking()
   private weak var _context: Context?
   private let _missHandler: (Context, Key) throws -> MutableFiniteValue.ImmutableFinite
   private var _cachedValuesByKey = [Key:_CachableValue]()
   
-  public init(context: Context, missHandler: @escaping (Context, Key) throws -> MutableFiniteValue.ImmutableFinite) {
+  /// Designated initializer
+  ///
+  /// - Parameters:
+  ///   - context: context that owns CahableValue
+  ///   - missHandler: block that handles cache misses
+  public init(context: Context, missHandler: @escaping MissHandler) {
     _context = context
     _missHandler = missHandler
   }
 
-  public func value(key: Key, mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> MutableFiniteValue.ImmutableFinite {
+  /// Fetches value
+  ///
+  /// - Parameters:
+  ///   - key: to fetch value for
+  ///   - mustStartHandlingMiss: `true` if handling miss is allowed. `false` is useful if you want to use value if there is one and do not want to handle miss.
+  ///   - mustInvalidateOldValue: `true` if previous value may not be used.
+  /// - Returns: `Future` of `Channel`
+  public func value(forKey key: Key, mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> MutableFiniteValue.ImmutableFinite {
     guard let context = _context else {
       let mutableFinite = MutableFiniteValue()
       mutableFinite.fail(with: AsyncNinjaError.contextDeallocated)
@@ -55,14 +71,19 @@ public class Cache<Key : Hashable, MutableFiniteValue : MutableFinite, Context :
       .value(mustStartHandlingMiss: mustStartHandlingMiss, mustInvalidateOldValue: mustInvalidateOldValue)
   }
   
+  /// Invalidates cached value for specified key
   public func invalidate(valueForKey key: Key) {
-    let _ = self.value(key: key, mustStartHandlingMiss: false, mustInvalidateOldValue: true)
+    let _ = self.value(forKey: key, mustStartHandlingMiss: false, mustInvalidateOldValue: true)
   }
 }
 
+/// Convenience typealias for Cache based on `Future`
 public typealias SimpleCache<Key : Hashable, Value, Context : ExecutionContext> = Cache<Key, Promise<Value>, Context>
+
+/// Convenience typealias for Cache based on `Channel`
 public typealias ReportingCache<Key : Hashable, PeriodicValue, FinalValue, Context : ExecutionContext> = Cache<Key, Producer<PeriodicValue, FinalValue>, Context>
 
+/// Convenience function that makes `SimpleCache`
 public func makeCache<Key: Hashable, Value, Context: ExecutionContext>(
   context: Context,
   missHandler: @escaping (Context, Key) -> Future<Value>
@@ -70,6 +91,7 @@ public func makeCache<Key: Hashable, Value, Context: ExecutionContext>(
   return Cache(context: context, missHandler: missHandler)
 }
 
+/// Convenience function that makes `ReportingCache`
 public func makeCache<Key: Hashable, PeriodicValue, FinalValue, Context: ExecutionContext>(
   context: Context,
   missHandler: @escaping (Context, Key) -> Channel<PeriodicValue, FinalValue>
