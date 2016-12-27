@@ -84,8 +84,11 @@
       let promise = Promise<(Data?, URLResponse)>()
       let task = makeTask { [weak promise] (data, response, error) in
         guard let promise = promise else { return }
-        guard let error = error else { promise.succeed(with: (data, response!)); return }
-        if let error = error as? URLError, error.code == .cancelled {
+        guard let error = error else {
+          promise.succeed(with: (data, response!))
+          return
+        }
+        if let urlError = error as? URLError, urlError.errorCode == URLError.cancelled.rawValue {
           promise.fail(with: AsyncNinjaError.cancelled)
         } else {
           promise.fail(with: error)
