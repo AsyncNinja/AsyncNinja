@@ -1,3 +1,8 @@
+# 0.3.7
+* fix: cancellation check in convenience methods of `URLSession`
+* a bit of documentation about `Cache` added
+* more convincing readme
+
 # 0.3.6
 * fix: `Channel` can callback on `onPeriodic` two times for first periodic
 * fix: non-contextual `on<Event>` assertion failure
