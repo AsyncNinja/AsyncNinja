@@ -21,7 +21,7 @@ Contents
 * [Documentation](#documentation)
 * [Related Articles](#related-articles)
 
-![Ninja Cat](https://github.com/AsyncNinja/AsyncNinja/blob/master/NinjaCat.png)
+![Ninja Cat](https://github.com/AsyncNinja/AsyncNinja/raw/master/NinjaCat.png)
 
 ## Why AsyncNinja?
 
