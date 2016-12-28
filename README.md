@@ -12,9 +12,118 @@ Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
 * [**Integration**](Documentation/Integration.md): [SPM](https://github.com/apple/swift-package-manager), [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/)
 * [Found issue? Have a feature request? Have question?](https://github.com/AsyncNinja/AsyncNinja/issues)
 
-## Overview
+Contents
 
-### Futures
+* [Why AsyncNinja?](#why-asyncninja)
+* [Implemented Primitives](#implemented-primitives)
+* [Using Futures](#using-futures)
+* [Using Channels](#using-channels)
+* [Documentation](#documentation)
+* [Related Articles](#related-articles)
+
+## Why AsyncNinja?
+
+Let's assume that we have:
+
+* `Person` is an example of a struct that contains information about the person.
+* `MyService` is an example of a class that serves as an entry point to the model. Works in background.
+* `MyViewController` is an example of a class that manages UI-related instances. Works on the main queue.
+
+#### Code on callbacks
+
+```swift
+extension MyViewController {
+  func present(personWithID identifier: String) {
+    self.myService.person(identifier: identifier) {
+
+      /* do not forget the [weak self] */
+      [weak self] (person, error) in
+
+      /* do not forget to dispatch to the main queue */
+      DispatchQueue.main.async {
+
+        /* do not forget the [weak self] */
+        [weak self] in
+        guard let strongSelf = self else { return }
+
+        if let error = error {
+          strongSelf.present(error: error)
+        } else {
+          strongSelf.present(person: person)
+        }
+      }
+    }
+  }
+}
+```
+
+* "do not forget" comment **x3**
+
+#### Code with other libraries that provide futures
+
+```swift
+extension MyViewController {
+  func present(personWithID identifier: String) {
+    self.myService.person(identifier: identifier)
+
+      /* do not forget to dispatch to the main queue */
+      .onComplete(executor: .main) {
+
+        /* do not forget the [weak self] */
+        [weak self] (personOrError) in
+        guard let strongSelf = self else { return }
+
+        switch personOrError {
+        case .success(let person):
+          strongSelf.present(person: person)
+        case .failure(let error):
+          strongSelf.present(error: error)
+        }
+    }
+  }
+}
+```
+
+* "do not forget" comment **x2**
+
+#### Code with AsyncNinja
+
+```swift
+extension MyViewController {
+  func present(personWithID identifier: String) {
+    self.myService.person(identifier: identifier)
+      .onComplete(context: self) {
+        (self, personOrError) in
+
+        switch personOrError {
+        case .success(let person):
+          self.present(person: person)
+        case .failure(let error):
+          self.present(error: error)
+        }
+    }
+  }
+}
+```
+
+* "do not forget" comment **NONE**
+* [Want to see extended explanation?](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
+
+## Implemented Primitives
+This framework is an implementation of following principles:
+
+* provide abstraction that makes
+	* doing right things easier
+	* doing wrong things harder
+* use abstraction is based on monads
+    * [`Future`](Documentation/Future.md) is a proxy of value that will be available at some point in the future. See example for advances of using futures.
+    * [`Channel`](Documentation/Channel.md) is like a `Future` that may provide `Periodic` values before final one.
+    * [`Executor`](Documentation/Executor.md) is object made to execute escaped block `(Void) -> Void`. Its propose is to encapsulate a way of an execution.
+    * [`ExecutionContext`](Documentation/ExecutionContext.md) is a protocol concurrency-aware objects must conform to. It basically make them actors or components of actor.
+    * [`Fallible`](Documentation/Fallible.md) is validation monad. Is an object that represents either success value of failure value (Error).
+	* [`Cache`](Documentation/Cache.md) is a primitive that lets you coalesce requests and cache responses
+
+## Using Futures
 
 Let's assume that we have function that finds all prime numbers lesser then n
 
@@ -94,7 +203,7 @@ class MyService {
 }
 ```
 
-### Channels
+## Using Channels
 Let's assume we have function that returns channel of prime numbers: sends prime numbers as finds them and sends number of found numbers as completion
 
 ```swift
@@ -173,19 +282,7 @@ func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> {
 }
 ```
 
-## Primitives
-This framework is an implementation of following principles:
-
-* provide abstraction that makes
-	* doing right things easier
-	* doing wrong things harder
-* use abstraction is based on monads
-    * [`Future`](Documentation/Future.md) is a proxy of value that will be available at some point in the future. See example for advances of using futures.
-    * [`Channel`](Documentation/Channel.md) is like a `Future` that may provide `Periodic` values before final one.
-    * [`Executor`](Documentation/Executor.md) is object made to execute escaped block `(Void) -> Void`. Its propose is to encapsulate a way of an execution.
-    * [`ExecutionContext`](Documentation/ExecutionContext.md) is a protocol concurrency-aware objects must conform to. It basically make them actors or components of actor.
-    * [`Fallible`](Documentation/Fallible.md) is validation monad. Is an object that represents either success value of failure value (Error).
-	* [`Cache`](Documentation/Cache.md) is a primitive that lets you coalesce requests and cache responses
+---
 
 ## Documentation
 
