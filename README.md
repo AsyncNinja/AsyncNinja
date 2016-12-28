@@ -21,6 +21,8 @@ Contents
 * [Documentation](#documentation)
 * [Related Articles](#related-articles)
 
+![Ninja Cat](https://github.com/AsyncNinja/AsyncNinja/blob/master/NinjaCat.png)
+
 ## Why AsyncNinja?
 
 Let's assume that we have:
