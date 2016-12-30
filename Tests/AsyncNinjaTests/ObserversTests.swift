@@ -23,46 +23,38 @@
 import XCTest
 import Dispatch
 @testable import AsyncNinja
-#if os(Linux)
-  import Glibc
-#endif
 
-@available(*, deprecated: 0.3.4, message: "Deprecated along with Pipe. Use Channel. It has makeIterator() method that does the same or even more")
-class PipeTests : XCTestCase {
-  static let allTests = [
-    ("testSimple", testSimple),
-    ]
-  
-  func testSimple() {
-    let queueA = DispatchQueue(label: "queueA")
-    let queueB = DispatchQueue(label: "queueB")
-    
-    self.measure {
-      let pipe: AsyncNinja.Pipe<Int, String> = Pipe()
-      let pipeInput = PipeInput(pipe: pipe)
-      queueA.async {
-        pipeInput.push(periodic: 1)
-        pipeInput.push(periodic: 2)
-        pipeInput.push(periodic: 3)
-        pipeInput.push(periodic: 4)
-        pipeInput.push(final: "bye")
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+  class ObserversTests : XCTestCase {
+
+    static let allTests = [
+      ("testObserver", testObserver),
+      ]
+
+    func testObserver() {
+      class MyObject : NSObject, ObjCInjectedRetainer {
+        dynamic var myValue: Int = 0
+
+        deinit {
+          print("Hello!")
+        }
+      }
+
+      let myObject = MyObject()
+      let channelOfValues: Channel<Int?, Void> = myObject.changes(of: #keyPath(MyObject.myValue))
+      var detectedChanges = [Int]()
+      channelOfValues.onPeriodic(executor: .immediate) {
+        if let value = $0 {
+          detectedChanges.append(value)
+        }
+      }
+
+      let range = 1..<5
+      for index in range {
+        myObject.myValue = index
       }
       
-      let (ints, final) = future(executor: .queue(queueB)) { () -> ([Int], String) in
-        var ints = [Int]()
-        while true {
-          switch pipe.pop() {
-          case let .periodic(periodic):
-            ints.append(periodic)
-          case let .final(final):
-            return (ints, final)
-          }
-        }
-        }
-        .wait().success!
-      
-      XCTAssertEqual(ints, [1, 2, 3, 4])
-      XCTAssertEqual(final, "bye")
+      XCTAssertEqual(detectedChanges, [0, 1, 2, 3, 4])
     }
   }
-}
+#endif

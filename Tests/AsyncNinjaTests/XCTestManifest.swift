@@ -33,7 +33,6 @@ import XCTest
       testCase(FallibleTests.allTests),
       testCase(FutureTests.allTests),
       testCase(PerformanceTests.allTests),
-      testCase(PipeTests.allTests),
       testCase(ReleasePoolTests.allTests),
       testCase(TimerChannelTests.allTests),
       testCase(ZipFuturesTest.allTests),

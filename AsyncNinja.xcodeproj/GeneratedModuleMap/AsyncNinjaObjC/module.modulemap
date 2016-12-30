@@ -1,0 +1,5 @@
+module AsyncNinjaObjC {
+    umbrella "/Volumes/Workshop/RainyWednesday/Channels/AsyncNinja/Sources/AsyncNinjaObjC/include"
+    link "AsyncNinjaObjC"
+    export *
+}

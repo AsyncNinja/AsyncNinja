@@ -20,36 +20,6 @@
 //  IN THE SOFTWARE.
 //
 
-import PackageDescription
+#import <Foundation/Foundation.h>
 
-#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-
-let package = Package(
-  name: "AsyncNinja",
-  targets: [
-    Target(name: "AsyncNinjaObjC", dependencies: []),
-    Target(name: "AsyncNinja", dependencies: ["AsyncNinjaObjC"]),
-    ]
-)
-
-products.append(
-  Product(
-    name: "AsyncNinja",
-    type: .Library(.Dynamic),
-    modules: ["AsyncNinja", "AsyncNinjaObjC"]
-  )
-)
-
-#else
-
-let package = Package(
-  name: "AsyncNinja",
-  targets: [
-    Target(name: "AsyncNinja", dependencies: []),
-    ],
-  exclude: [
-    "Sources/AsyncNinjaObjC"
-  ]
-)
-
-#endif
+extern void asyncNinjaRemoveObserver(void *from, NSObject *observer, NSString *keyPath);
