@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "OBJ_67"
+               BlueprintIdentifier = "OBJ_65"
                BuildableName = "AsyncNinja.framework"
                BlueprintName = "AsyncNinja"
                ReferencedContainer = "container:AsyncNinja.xcodeproj">
@@ -28,7 +28,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "OBJ_106"
+               BlueprintIdentifier = "OBJ_103"
                BuildableName = "AsyncNinjaObjC.framework"
                BlueprintName = "AsyncNinjaObjC"
                ReferencedContainer = "container:AsyncNinja.xcodeproj">
@@ -40,14 +40,13 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES"
-      codeCoverageEnabled = "YES">
+      shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
          <TestableReference
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "OBJ_114"
+               BlueprintIdentifier = "OBJ_111"
                BuildableName = "AsyncNinjaTests.xctest"
                BlueprintName = "AsyncNinjaTests"
                ReferencedContainer = "container:AsyncNinja.xcodeproj">
@@ -70,7 +69,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "OBJ_67"
+            BlueprintIdentifier = "OBJ_65"
             BuildableName = "AsyncNinja.framework"
             BlueprintName = "AsyncNinja"
             ReferencedContainer = "container:AsyncNinja.xcodeproj">
