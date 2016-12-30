@@ -52,12 +52,4 @@ let package = Package(
   ]
 )
 
-products.append(
-  Product(
-    name: "AsyncNinja",
-    type: .Library(.Dynamic),
-    modules: ["AsyncNinja"]
-  )
-)
-
 #endif
