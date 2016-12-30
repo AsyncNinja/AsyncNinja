@@ -52,7 +52,7 @@
     }
   }
 
-  public protocol ObjCUIInjectedExecutionContext : ObjCInjectedRetainer { }
+  public protocol ObjCUIInjectedExecutionContext : ExecutionContext, ObjCInjectedRetainer { }
   public extension ObjCUIInjectedExecutionContext {
     var executor: Executor { return .main }
   }
