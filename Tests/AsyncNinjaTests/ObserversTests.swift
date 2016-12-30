@@ -20,41 +20,46 @@
 //  IN THE SOFTWARE.
 //
 
-import PackageDescription
-
-#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-
-let package = Package(
-  name: "AsyncNinja",
-  targets: [
-    Target(name: "AsyncNinjaObjC", dependencies: []),
-    Target(name: "AsyncNinja", dependencies: ["AsyncNinjaObjC"]),
-    ]
-)
-
-products.append(
-  Product(
-    name: "AsyncNinja",
-    type: .Library(.Dynamic),
-    modules: ["AsyncNinja", "AsyncNinjaObjC"]
-  )
-)
-
-#else
-
-let package = Package(
-  name: "AsyncNinja",
-  targets: [
-    Target(name: "AsyncNinja", dependencies: []),
-    ]
-)
-
-products.append(
-  Product(
-    name: "AsyncNinja",
-    type: .Library(.Dynamic),
-    modules: ["AsyncNinja"]
-  )
-)
-
+import XCTest
+import Dispatch
+@testable import AsyncNinja
+#if os(Linux)
+  import Glibc
 #endif
+
+class ObserversTests : XCTestCase {
+
+  #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+  static let allTests = [
+    ("testObserver", testObserver),
+    ]
+
+  func testObserver() {
+    class MyObject : NSObject, ObjCInjectedRetainer {
+      dynamic var myValue: Int = 0
+
+      deinit {
+        print("Hello!")
+      }
+    }
+
+    let myObject = MyObject()
+    let channelOfValues: Channel<Int, Void> = myObject.changes(of: #keyPath(MyObject.myValue))
+    var detectedChanges = [Int]()
+    channelOfValues.onPeriodic(executor: .immediate) {
+      detectedChanges.append($0)
+    }
+
+    let range = 1..<5
+    for index in range {
+      myObject.myValue = index
+    }
+
+    XCTAssertEqual(detectedChanges, [0, 1, 2, 3, 4])
+  }
+  #else
+  static let allTests = [
+  ("testObserver", testObserver),
+  ]
+  #endif
+}

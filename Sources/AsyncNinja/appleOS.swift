@@ -29,7 +29,7 @@
     }
   }
 
-  public protocol ObjCInjectedExecutionContext : ExecutionContext, NSObjectProtocol { }
+  public protocol ObjCInjectedRetainer : Retainer, NSObjectProtocol { }
 
   private class DeinitNotifier {
     let block: () -> Void
@@ -40,7 +40,7 @@
     deinit { self.block() }
   }
 
-  public extension ObjCInjectedExecutionContext {
+  public extension ObjCInjectedRetainer {
     func releaseOnDeinit(_ object: AnyObject) {
       Statics.withUniqueKey {
         objc_setAssociatedObject(self, $0, object, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
@@ -52,7 +52,7 @@
     }
   }
 
-  public protocol ObjCUIInjectedExecutionContext : ObjCInjectedExecutionContext { }
+  public protocol ObjCUIInjectedExecutionContext : ObjCInjectedRetainer { }
   public extension ObjCUIInjectedExecutionContext {
     var executor: Executor { return .main }
   }
@@ -71,11 +71,11 @@
 
   import CoreData
 
-  extension NSManagedObjectContext : ObjCInjectedExecutionContext {
+  extension NSManagedObjectContext : ExecutionContext, ObjCInjectedRetainer {
     public var executor: Executor { return Executor(isSerial: true) { [weak self] in self?.perform($0) } }
   }
 
-  extension NSPersistentStoreCoordinator : ObjCInjectedExecutionContext {
+  extension NSPersistentStoreCoordinator : ExecutionContext, ObjCInjectedRetainer {
     public var executor: Executor { return Executor(isSerial: true) { [weak self] in self?.perform($0) } }
   }
 

@@ -57,13 +57,11 @@ import Dispatch
 /// }
 /// ```
 /// Classes that conform to NSResponder/UIResponder are automatically conformed to exection context.
-public protocol ExecutionContext : class {
+public protocol ExecutionContext : Retainer {
 
   /// Executor to perform internal state-changing operations on.
   /// It is highly recommended to use serial executor
   var executor: Executor { get }
-  func releaseOnDeinit(_ object: AnyObject)
-  func notifyDeinit(_ block: @escaping () -> Void)
 }
 
 public extension ExecutionContext {
@@ -86,7 +84,7 @@ public extension ExecutionContext {
 
 /// Protocol for any instance that has `ReleasePool`.
 /// Made to proxy calls of `func releaseOnDeinit(_ object: AnyObject)` and `func notifyDeinit(_ block: @escaping () -> Void)` to `ReleasePool`
-public protocol ReleasePoolOwner {
+public protocol ReleasePoolOwner : Retainer {
 
   /// `ReleasePool` to proxy calls to. Perfect implementation looks like:
   /// ```swift
@@ -106,4 +104,9 @@ public extension ExecutionContext where Self : ReleasePoolOwner {
   func notifyDeinit(_ block: @escaping () -> Void) {
     self.releasePool.notifyDrain(block)
   }
+}
+
+public protocol Retainer : class {
+  func releaseOnDeinit(_ object: AnyObject)
+  func notifyDeinit(_ block: @escaping () -> Void)
 }
