@@ -1,4 +1,4 @@
-# 0.4
+# 0.4-beta1
 * AsyncNinja was split into multiple modules
 * previously deprecated `Pipe` was removed: use `Channel` with iterators instead
 * making key-value observing channel added
