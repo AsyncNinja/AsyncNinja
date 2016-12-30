@@ -10,5 +10,5 @@
 #include "include/ObjCProxy.h"
 
 void asyncNinjaRemoveObserver(void *from, NSObject *observer, NSString *keyPath) {
-  [(id)from removeObserver:observer forKeyPath:keyPath];
+  [(__bridge id)from removeObserver:observer forKeyPath:keyPath];
 }
