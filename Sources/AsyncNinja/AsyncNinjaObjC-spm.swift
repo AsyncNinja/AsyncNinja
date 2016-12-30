@@ -20,39 +20,11 @@
 //  IN THE SOFTWARE.
 //
 
-import PackageDescription
-
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+  import Foundation
+  import AsyncNinjaObjC
 
-let package = Package(
-  name: "AsyncNinja",
-  targets: [
-    Target(name: "AsyncNinjaObjC", dependencies: []),
-    Target(name: "AsyncNinja", dependencies: ["AsyncNinjaObjC"]),
-    ],
-  exclude: [
-    "Sources/AsyncNinja/AsyncNinjaObjC-cocoapods.swift",
-    ]
-)
-
-products.append(
-  Product(
-    name: "AsyncNinja",
-    type: .Library(.Dynamic),
-    modules: ["AsyncNinja", "AsyncNinjaObjC"]
-  )
-)
-
-#else
-
-let package = Package(
-  name: "AsyncNinja",
-  targets: [
-    Target(name: "AsyncNinja", dependencies: []),
-    ],
-  exclude: [
-    "Sources/AsyncNinjaObjC"
-  ]
-)
-
+  func _asyncNinjaRemove(observer: NSObject, object: UnsafeMutableRawPointer, keyPath: String) {
+    asyncNinjaRemoveObserver(object, observer, keyPath)
+  }
 #endif

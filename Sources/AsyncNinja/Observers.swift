@@ -22,7 +22,6 @@
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
   import Foundation
-  import AsyncNinjaObjC
 
   // MARK: - regular observation
   public extension Retainer where Self: NSObject {
@@ -38,7 +37,7 @@
       let pointerToSelf = Unmanaged.passUnretained(self).toOpaque()
       self.notifyDeinit { [weak producer] in
         producer?.cancelBecauseOfDeallicatedContext()
-        asyncNinjaRemoveObserver(pointerToSelf, observer, keyPath)
+        _asyncNinjaRemove(observer: observer, object: pointerToSelf, keyPath: keyPath)
       }
 
       return producer

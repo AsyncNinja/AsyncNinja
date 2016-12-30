@@ -16,8 +16,10 @@ Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3. Cont
   s.watchos.deployment_target = "2.0"
   s.tvos.deployment_target = "9.0"
 
+  s.source_files = 'Sources/**/*.{swift,h,m,c}'
+  s.exclude_files = 'Sources/**/*-spm*'
+
   s.source       = { :git => "https://github.com/AsyncNinja/AsyncNinja.git", :tag => s.version }
-  s.source_files  = "Sources", "Sources/*.swift"
   s.requires_arc = true
 
 end
