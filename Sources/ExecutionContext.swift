@@ -67,6 +67,20 @@ public protocol ExecutionContext : class {
 }
 
 public extension ExecutionContext {
+  /// Schedules execution of the block
+  ///
+  /// - Parameters:
+  ///   - cancellationToken: `CancellationToken` that can cancel execution
+  ///   - block: to schedule after timeout
+  ///   - strongSelf: is `ExecutionContext` restored from weak reference of self
+  func async(cancellationToken: CancellationToken? = nil,
+             block: @escaping (_ strongContext: Self) -> Void) {
+    self.executor.execute { [weak self] in
+      guard let strongSelf = self else { return }
+      block(strongSelf)
+    }
+  }
+
   /// Schedules execution of the block after specified timeout
   ///
   /// - Parameters:
