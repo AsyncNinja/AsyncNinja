@@ -41,10 +41,12 @@ import Dispatch
       }
 
       let myObject = MyObject()
-      let channelOfValues: Channel<Int, Void> = myObject.changes(of: #keyPath(MyObject.myValue))
+      let channelOfValues: Channel<Int?, Void> = myObject.changes(of: #keyPath(MyObject.myValue))
       var detectedChanges = [Int]()
       channelOfValues.onPeriodic(executor: .immediate) {
-        detectedChanges.append($0)
+        if let value = $0 {
+          detectedChanges.append(value)
+        }
       }
 
       let range = 1..<5
