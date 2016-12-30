@@ -23,43 +23,36 @@
 import XCTest
 import Dispatch
 @testable import AsyncNinja
-#if os(Linux)
-  import Glibc
-#endif
 
-class ObserversTests : XCTestCase {
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+  class ObserversTests : XCTestCase {
 
-  #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-  static let allTests = [
-    ("testObserver", testObserver),
-    ]
+    static let allTests = [
+      ("testObserver", testObserver),
+      ]
 
-  func testObserver() {
-    class MyObject : NSObject, ObjCInjectedRetainer {
-      dynamic var myValue: Int = 0
+    func testObserver() {
+      class MyObject : NSObject, ObjCInjectedRetainer {
+        dynamic var myValue: Int = 0
 
-      deinit {
-        print("Hello!")
+        deinit {
+          print("Hello!")
+        }
       }
-    }
 
-    let myObject = MyObject()
-    let channelOfValues: Channel<Int, Void> = myObject.changes(of: #keyPath(MyObject.myValue))
-    var detectedChanges = [Int]()
-    channelOfValues.onPeriodic(executor: .immediate) {
-      detectedChanges.append($0)
-    }
+      let myObject = MyObject()
+      let channelOfValues: Channel<Int, Void> = myObject.changes(of: #keyPath(MyObject.myValue))
+      var detectedChanges = [Int]()
+      channelOfValues.onPeriodic(executor: .immediate) {
+        detectedChanges.append($0)
+      }
 
-    let range = 1..<5
-    for index in range {
-      myObject.myValue = index
+      let range = 1..<5
+      for index in range {
+        myObject.myValue = index
+      }
+      
+      XCTAssertEqual(detectedChanges, [0, 1, 2, 3, 4])
     }
-
-    XCTAssertEqual(detectedChanges, [0, 1, 2, 3, 4])
   }
-  #else
-  static let allTests = [
-  ("testObserver", testObserver),
-  ]
-  #endif
-}
+#endif

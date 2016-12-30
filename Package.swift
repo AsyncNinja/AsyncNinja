@@ -46,7 +46,10 @@ let package = Package(
   name: "AsyncNinja",
   targets: [
     Target(name: "AsyncNinja", dependencies: []),
-    ]
+    ],
+  exclude: [
+    "Sources/AsyncNinjaObjC"
+  ]
 )
 
 products.append(
