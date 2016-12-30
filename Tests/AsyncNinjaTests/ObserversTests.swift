@@ -34,10 +34,6 @@ import Dispatch
     func testObserver() {
       class MyObject : NSObject, ObjCInjectedRetainer {
         dynamic var myValue: Int = 0
-
-        deinit {
-          print("Hello!")
-        }
       }
 
       let myObject = MyObject()

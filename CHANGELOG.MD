@@ -1,3 +1,6 @@
+# 0.4-beta2
+* AsyncNinja was turned back to a single module structure: no need for objc any more
+
 # 0.4-beta1
 * AsyncNinja was split into multiple modules
 * previously deprecated `Pipe` was removed: use `Channel` with iterators instead

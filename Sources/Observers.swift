@@ -34,10 +34,10 @@
       let observer = KeyPathObserver<T>(keyPath: keyPath, producer: producer)
       self.addObserver(observer, forKeyPath: keyPath, options: [.initial, .new], context: nil)
 
-      let pointerToSelf = Unmanaged.passUnretained(self).toOpaque()
+      let pointerToSelf = Unmanaged.passUnretained(self)
       self.notifyDeinit { [weak producer] in
         producer?.cancelBecauseOfDeallicatedContext()
-        _asyncNinjaRemove(observer: observer, object: pointerToSelf, keyPath: keyPath)
+        pointerToSelf.takeUnretainedValue().removeObserver(observer, forKeyPath: keyPath)
       }
 
       return producer
