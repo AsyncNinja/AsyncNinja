@@ -1,3 +1,8 @@
+# 0.4
+* AsyncNinja was split into multiple modules
+* previously deprecated `Pipe` was removed: use `Channel` with iterators instead
+* making key-value observing channel added
+
 # 0.3.7
 * fix: cancellation check in convenience methods of `URLSession`
 * a bit of documentation about `Cache` added
