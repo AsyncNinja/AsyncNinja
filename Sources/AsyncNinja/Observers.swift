@@ -30,8 +30,8 @@
     ///
     /// - Parameter keyPath: to observe
     /// - Returns: channel
-    func changes<T>(of keyPath: String) -> Channel<T, Void> {
-      let producer = Producer<T, Void>(bufferSize: 1)
+    func changes<T>(of keyPath: String) -> Channel<T?, Void> {
+      let producer = Producer<T?, Void>(bufferSize: 1)
       let observer = KeyPathObserver<T>(keyPath: keyPath, producer: producer)
       self.addObserver(observer, forKeyPath: keyPath, options: [.initial, .new], context: nil)
 
@@ -47,9 +47,9 @@
 
   private class KeyPathObserver<T> : NSObject {
     let keyPath: String
-    weak var producer: Producer<T, Void>?
+    weak var producer: Producer<T?, Void>?
 
-    init(keyPath: String, producer: Producer<T, Void>) {
+    init(keyPath: String, producer: Producer<T?, Void>) {
       self.keyPath = keyPath
       self.producer = producer
     }
@@ -63,7 +63,8 @@
         let producer = self.producer,
         let change = change
         else { return }
-      producer.send(change[.newKey] as! T)
+
+      producer.send(change[.newKey] as? T)
     }
   }
 #endif
