@@ -65,7 +65,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
       }
     }
 
-    let handler = Handler(executor: executor, block: block)
+    let handler = Handler(executor: executor, block: block, owner: self)
     _container.updateHead {
       switch $0 {
       case .none:

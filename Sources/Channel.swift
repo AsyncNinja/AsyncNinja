@@ -206,10 +206,12 @@ final public class ChannelHandler<T, U> {
 
   let executor: Executor
   let block: (Value) -> Void
+  let owner: Channel<T, U>
 
-  public init(executor: Executor, block: @escaping (Value) -> Void) {
+  public init(executor: Executor, block: @escaping (Value) -> Void, owner: Channel<T, U>) {
     self.executor = executor
     self.block = block
+    self.owner = owner
   }
 
   func handle(_ value: Value) {
