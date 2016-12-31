@@ -31,7 +31,6 @@ class FutureTests : XCTestCase {
 
   static let allTests = [
     ("testLifetime", testLifetime),
-    ("testPerformanceFuture", testPerformanceFuture),
     ("testMapLifetime", testMapLifetime),
     ("testMap_Success", testMap_Success),
     ("testMap_Failure", testMap_Failure),
@@ -83,34 +82,6 @@ class FutureTests : XCTestCase {
     XCTAssertEqual(result, 3)
     XCTAssertNil(weakFuture)
     XCTAssertNil(weakMappedFuture)
-  }
-
-  func testPerformanceFuture() {
-    self.measure {
-      
-      func makePerformer(globalQOS: DispatchQoS.QoSClass, multiplier: Int) -> (Int) -> Int {
-        return {
-          assert(qos: globalQOS)
-          return $0 * multiplier
-        }
-      }
-      
-      let result1 = future(success: 1)
-        .map(executor: .userInteractive, transform: makePerformer(globalQOS: .userInteractive, multiplier: 2))
-        .map(executor: .default, transform: makePerformer(globalQOS: .default, multiplier: 3))
-        .map(executor: .utility, transform: makePerformer(globalQOS: .utility, multiplier: 4))
-        .map(executor: .background, transform: makePerformer(globalQOS: .background, multiplier: 5))
-
-      let result2 = future(success: 2)
-        .map(executor: .background, transform: makePerformer(globalQOS: .background, multiplier: 5))
-        .map(executor: .utility, transform: makePerformer(globalQOS: .utility, multiplier: 4))
-        .map(executor: .default, transform: makePerformer(globalQOS: .default, multiplier: 3))
-        .map(executor: .userInteractive, transform: makePerformer(globalQOS: .userInteractive, multiplier: 2))
-      
-      let result = zip(result1, result2).map { $0 + $1 }.wait().success!
-
-      XCTAssertEqual(result, 360)
-    }
   }
 
   func testMapLifetime() {
