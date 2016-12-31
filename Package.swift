@@ -23,5 +23,6 @@
 import PackageDescription
 
 let package = Package(
-  name: "AsyncNinja"
+  name: "AsyncNinja",
+  exclude: ["Tests/AsyncNinjaTests/PerformanceTests.swift"] // these tests take too much time and do not give enough feedback
 )
