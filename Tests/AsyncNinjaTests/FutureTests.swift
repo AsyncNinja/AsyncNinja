@@ -158,7 +158,7 @@ class FutureTests : XCTestCase {
     let value = pickInt()
     let valueSquared = square(value)
 
-    let mappedFuture: Future<Int> = eval {
+    var mappedFuture: Future<Int>? = eval {
       let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       let mappedFuture = initialFuture
@@ -172,7 +172,8 @@ class FutureTests : XCTestCase {
     }
 
     self.waitForExpectations(timeout: 0.1)
-    let result = mappedFuture.wait()
+    let result = mappedFuture!.wait()
+    mappedFuture = nil
     XCTAssertNil(weakInitialFuture)
     XCTAssertNil(weakMappedFuture)
     XCTAssertEqual(result.success, valueSquared)

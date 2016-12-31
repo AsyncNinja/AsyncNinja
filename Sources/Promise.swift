@@ -68,9 +68,23 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
   final public func tryComplete(with final: Value) -> Bool {
     let completedItem = CompletedPromiseState(value: final)
     let (oldHead, newHead) = _container.updateHead {
-      (($0 as! AbstractPromiseState<FinalValue>?)?.isIncomplete ?? true)
-        ? completedItem
-        : $0
+      switch $0 {
+      case let subsribed as SubscribedPromiseState<FinalValue>:
+        var enumeratedSubcribed: SubscribedPromiseState<FinalValue>? = subsribed
+
+        while let subsribed = enumeratedSubcribed {
+          subsribed.releaseOwner()
+          enumeratedSubcribed = subsribed.next
+        }
+
+        return completedItem
+      case let oldCompletedItem as CompletedPromiseState<FinalValue>:
+        return oldCompletedItem
+      case .none:
+        return completedItem
+      default:
+        fatalError()
+      }
     }
     let didComplete = (completedItem === newHead)
     guard didComplete else { return false }
@@ -106,7 +120,6 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
 
 /// **internal use only**
 fileprivate class AbstractPromiseState<T> {
-  var isIncomplete: Bool { assertAbstract() }
 }
 
 /// **internal use only**
@@ -116,18 +129,20 @@ fileprivate  class SubscribedPromiseState<T> : AbstractPromiseState<T> {
   
   weak private(set) var handler: Handler?
   let next: SubscribedPromiseState<T>?
-  override var isIncomplete: Bool { return true }
-  
+
   init(handler: Handler, next: SubscribedPromiseState<T>?) {
     self.handler = handler
     self.next = next
+  }
+
+  func releaseOwner() {
+    self.handler?.releaseOwner()
   }
 }
 
 /// **internal use only**
 fileprivate  class CompletedPromiseState<T> : AbstractPromiseState<T> {
   let value: Fallible<T>
-  override var isIncomplete: Bool { return false }
   
   init(value: Fallible<T>) {
     self.value = value

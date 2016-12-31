@@ -173,7 +173,7 @@ public extension DispatchGroup {
 public class FutureHandler<T> {
   let executor: Executor
   let block: (Fallible<T>) -> Void
-  let owner: Future<T>
+  var owner: Future<T>?
 
   init(executor: Executor, block: @escaping (Fallible<T>) -> Void, owner: Future<T>) {
     self.executor = executor
@@ -183,5 +183,9 @@ public class FutureHandler<T> {
 
   func handle(_ value: Fallible<T>) {
     self.executor.execute { self.block(value) }
+  }
+
+  func releaseOwner() {
+    self.owner = nil
   }
 }

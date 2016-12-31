@@ -206,7 +206,7 @@ final public class ChannelHandler<T, U> {
 
   let executor: Executor
   let block: (Value) -> Void
-  let owner: Channel<T, U>
+  var owner: Channel<T, U>?
 
   public init(executor: Executor, block: @escaping (Value) -> Void, owner: Channel<T, U>) {
     self.executor = executor
@@ -217,5 +217,9 @@ final public class ChannelHandler<T, U> {
   func handle(_ value: Value) {
     let block = self.block
     self.executor.execute { block(value) }
+  }
+
+  func releaseOwner() {
+    self.owner = nil
   }
 }

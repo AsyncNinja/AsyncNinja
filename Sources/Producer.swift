@@ -147,7 +147,14 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
       switch $0 {
       case .none:
         return FinalState(final: final)
-      case is RegularState:
+      case let regularState as RegularState:
+        var enumeratedRegularState: RegularState? = regularState
+
+        while let regularState = enumeratedRegularState {
+          regularState.handler?.releaseOwner()
+          enumeratedRegularState = regularState.next
+        }
+
         return FinalState(final: final)
       case is FinalState:
         return $0
