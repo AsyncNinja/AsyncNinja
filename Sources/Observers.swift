@@ -67,3 +67,86 @@
     }
   }
 #endif
+
+#if os(macOS)
+  import AppKit
+
+  public extension NSControl {
+    typealias ActionChannelPeriodicValue = (sender: AnyObject?, objectValue: Any?)
+    typealias ActionChannel = Channel<ActionChannelPeriodicValue, Void>
+
+    /// Makes or returns cached channel. The chennel that will have periodic on each triggering of action
+    func actionChannel() -> ActionChannel {
+      let actionReceiver = (self.target as? ActionReceiver) ?? {
+        let actionReceiver = ActionReceiver(control: self)
+        self.target = actionReceiver
+        self.notifyDeinit {
+          actionReceiver.producer.cancelBecauseOfDeallicatedContext()
+        }
+        return actionReceiver
+        }()
+
+      self.action = #selector(ActionReceiver.asyncNinjaAction(sender:))
+      return actionReceiver.producer
+    }
+  }
+
+  private class ActionReceiver : NSObject {
+    weak var control: NSControl?
+    let producer = Producer<NSControl.ActionChannelPeriodicValue, Void>(bufferSize: 0)
+
+    init(control: NSControl) {
+      self.control = control
+    }
+
+    dynamic func asyncNinjaAction(sender: AnyObject?) {
+      let periodicValue: NSControl.ActionChannelPeriodicValue = (
+        sender: sender,
+        objectValue: self.control?.objectValue
+      )
+      self.producer.send(periodicValue)
+    }
+  }
+#endif
+
+#if os(iOS) || os(tvOS)
+  import UIKit
+
+  public extension UIControl {
+    typealias ActionChannelPeriodicValue = (sender: AnyObject?, event: UIEvent)
+    typealias ActionChannel = Channel<ActionChannelPeriodicValue, Void>
+
+    /// Makes channel that will have periodic value on each triggering of action
+    ///
+    /// - Parameter events: events that to listen for
+    /// - Returns: unbuffered channel
+    func actionChannel(forEvents events: UIControlEvents = UIControlEvents.allEvents) -> ActionChannel {
+      let actionReceiver = ActionReceiver(control: self)
+      self.addTarget(actionReceiver,
+                     action: #selector(ActionReceiver.asyncNinjaAction(sender:forEvent:)),
+                     for: events)
+      self.notifyDeinit {
+        actionReceiver.producer.cancelBecauseOfDeallicatedContext()
+      }
+
+      return actionReceiver.producer
+    }
+  }
+
+  private class ActionReceiver : NSObject {
+    weak var control: UIControl?
+    let producer = Producer<UIControl.ActionChannelPeriodicValue, Void>(bufferSize: 0)
+
+    init(control: UIControl) {
+      self.control = control
+    }
+
+    dynamic func asyncNinjaAction(sender: AnyObject?, forEvent event: UIEvent) {
+      let periodicValue: UIControl.ActionChannelPeriodicValue = (
+        sender: sender,
+        event: event
+      )
+      self.producer.send(periodicValue)
+    }
+  }
+#endif
