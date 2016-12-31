@@ -22,7 +22,8 @@
 
 import XCTest
 
-#if !os(macOS)
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+#else
   public func allTests() -> [XCTestCaseEntry] {
     return [
       testCase(BatchFutureTests.allTests),
@@ -32,7 +33,8 @@ import XCTest
       testCase(ExecutorTests.allTests),
       testCase(FallibleTests.allTests),
       testCase(FutureTests.allTests),
-      testCase(PerformanceTests.allTests),
+      // these tests take too much time and do not give enough feedback
+      // testCase(PerformanceTests.allTests),
       testCase(ReleasePoolTests.allTests),
       testCase(TimerChannelTests.allTests),
       testCase(ZipFuturesTest.allTests),
