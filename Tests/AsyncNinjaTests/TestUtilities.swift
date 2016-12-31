@@ -62,12 +62,17 @@ func pickQoS() -> DispatchQoS.QoSClass {
   return Constants.availableQosClassses[pickInt(max: Constants.availableQosClassses.count)]
 }
 
+func pickInts(count: Int = 5, max: Int = 100) -> [Int] {
+  return (0..<count).map { _ in pickInt(max: max) }
+}
+
 func pickInt(max: Int = 100) -> Int {
   #if os(Linux)
     return numericCast(random()) % max
   #elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
     return numericCast(arc4random()) % max
   #else
+    fatalError()
   #endif
 }
 
@@ -92,6 +97,10 @@ class TestActor : ExecutionContext, ReleasePoolOwner {
   let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
   var executor: Executor { return .queue(self.internalQueue) }
   let releasePool = ReleasePool()
+
+  deinit {
+    print("Hello!")
+  }
 }
 
 func eval<Result>(invoking body: () throws -> Result) rethrows -> Result {

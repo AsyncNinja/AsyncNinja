@@ -67,9 +67,7 @@ class FutureTests : XCTestCase {
     let result: Int = eval {
       let futureValue = future(success: 1)
       let mappedFutureValue = futureValue.map(executor: .utility) { (value) -> Int in
-        if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
-          assert(qos: .utility)
-        }
+        assert(qos: .utility)
         return value * 3
       }
       weakFuture = futureValue
@@ -156,23 +154,27 @@ class FutureTests : XCTestCase {
     let actor = TestActor()
     let transformExpectation = self.expectation(description: "transform called")
     weak var weakInitialFuture: Future<Int>?
+    weak var weakMappedFuture: Future<Int>?
     let value = pickInt()
     let valueSquared = square(value)
 
     let mappedFuture: Future<Int> = eval {
       let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
-      return initialFuture
-        .map(context: actor) { (actor, value) in
+      let mappedFuture = initialFuture
+        .map(context: actor) { (actor, value) -> Int in
           assert(actor: actor)
           transformExpectation.fulfill()
           return try square_success(value)
       }
+      weakMappedFuture = mappedFuture
+      return mappedFuture
     }
 
     self.waitForExpectations(timeout: 0.1)
     let result = mappedFuture.wait()
     XCTAssertNil(weakInitialFuture)
+    XCTAssertNil(weakMappedFuture)
     XCTAssertEqual(result.success, valueSquared)
   }
 

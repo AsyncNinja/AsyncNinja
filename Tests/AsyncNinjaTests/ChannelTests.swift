@@ -115,4 +115,44 @@ class ChannelTests : XCTestCase {
 
     XCTAssertEqual(resultNumbers, Array(numbers.suffix(resultNumbers.count)))
   }
+
+  func testOnValueContextual() {
+    let actor = TestActor()
+
+    var periodicValues = [Int]()
+    var successValue: String? = nil
+    weak var weakProducer: Producer<Int, String>? = nil
+
+    let periodicValuesFixture = pickInts()
+    let successValueFixture = "I am working correctly!"
+
+    let successExpectation = self.expectation(description: "success of promise")
+    DispatchQueue.global().async {
+      let producer = Producer<Int, String>()
+      weakProducer = producer
+      producer.onPeriodic(context: actor) { (actor, periodicValue) in
+        periodicValues.append(periodicValue)
+      }
+
+      producer.onSuccess(context: actor) { (actor, successValue_) in
+        successValue = successValue_
+        successExpectation.fulfill()
+      }
+
+      DispatchQueue.global().async {
+        guard let producer = weakProducer else {
+          XCTFail()
+          fatalError()
+        }
+        producer.send(periodicValuesFixture)
+        producer.succeed(with: successValueFixture)
+      }
+    }
+
+    self.waitForExpectations(timeout: 0.2, handler: nil)
+
+    XCTAssertNil(weakProducer)
+    XCTAssertEqual(periodicValues, periodicValuesFixture)
+    XCTAssertEqual(successValue, successValueFixture)
+  }
 }
