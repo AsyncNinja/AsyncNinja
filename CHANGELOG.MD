@@ -1,3 +1,8 @@
+# 0.4-beta3
+* ActionChannels to NSControl and UIControl that catch actions and treat them as periodic values
+* turning down performance tests
+* fixing critical issues of lifetime of `Future`s and `Channel`s
+
 # 0.4-beta2
 * AsyncNinja was turned back to a single module structure: no need for objc any more
 
