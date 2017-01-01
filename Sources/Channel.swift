@@ -151,15 +151,20 @@ public extension Channel {
   }
 }
 
+/// Synchronously iterates over each periodic value of channel
 public struct ChannelIterator<PeriodicValue, FinalValue> : IteratorProtocol  {
   public typealias Element = PeriodicValue
   private var _implBox: Box<ChannelIteratorImpl<PeriodicValue, FinalValue>> // want to have reference to reference, because impl may actually be retained by some handler
+
+  /// final value of the channel. Will be available as soon as the channel completes.
   public var finalValue: Fallible<FinalValue>? { return _implBox.value.finalValue }
 
+  /// **internal use only** Designated initializer
   init(impl: ChannelIteratorImpl<PeriodicValue, FinalValue>) {
     _implBox = Box(impl)
   }
 
+  /// fetches next value from the channel. Waits for the next value to appear. Returns nil when then channel completes
   public mutating func next() -> PeriodicValue? {
     if !isKnownUniquelyReferenced(&_implBox) {
       _implBox = Box(_implBox.value.clone())
@@ -190,15 +195,19 @@ class ChannelIteratorImpl<PeriodicValue, FinalValue>  {
   }
 }
 
+/// Value reveived by channel
 public enum ChannelValue<T, U> {
   public typealias PeriodicValue = T
   public typealias SuccessValue = U
 
+  /// A kind of value that can be received multiple times be for the final one
   case periodic(PeriodicValue)
+
+  /// A kind of value that can be received once and completes the channel
   case final(Fallible<SuccessValue>)
 }
 
-/// **internal use only**
+/// **internal use only** Wraps each block submitted to the channel to provide required memory management behavior
 final public class ChannelHandler<T, U> {
   public typealias PeriodicValue = T
   public typealias SuccessValue = U
@@ -208,6 +217,7 @@ final public class ChannelHandler<T, U> {
   let block: (Value) -> Void
   var owner: Channel<T, U>?
 
+  /// Designated initializer of ChannelHandler
   public init(executor: Executor, block: @escaping (Value) -> Void, owner: Channel<T, U>) {
     self.executor = executor
     self.block = block

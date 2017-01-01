@@ -32,6 +32,7 @@ public class ReleasePool {
   static let numberOfItemsForTier2 = (1 << 12) - 1
   static let numberOfItemsForTier3 = (1 << 24) - 1
 
+  /// Designated initializer of ReleasePool
   public init() { }
 
   deinit {
