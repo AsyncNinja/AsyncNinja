@@ -42,8 +42,9 @@ public func future<T>(executor: Executor = .primary, block: @escaping () throws 
   // Test: FutureTests.testMakeFutureOfBlock_Failure
   let promise = Promise<T>()
   executor.execute { [weak promise] in
-    guard let promise = promise else { return }
-    promise.complete(with: fallible(block: block))
+    guard nil != promise else { return }
+    let value = fallible(block: block)
+    promise?.complete(with: value)
   }
   return promise
 }
@@ -209,13 +210,11 @@ private func promise<T>(executor: Executor, after timeout: Double, cancellationT
   }
 
   executor.execute(after: timeout) { [weak promise] in
-    guard let promise = promise else { return }
-
     if cancellationToken?.isCancelled ?? false {
-      promise.cancel()
+      promise?.cancel()
     } else {
       let completion = fallible(block: block)
-      promise.complete(with: completion)
+      promise?.complete(with: completion)
     }
   }
   return promise
@@ -231,13 +230,17 @@ private func flatPromise<T>(executor: Executor, after timeout: Double, cancellat
   }
 
   executor.execute(after: timeout) { [weak promise] in
-    guard let promise = promise else { return }
-
+    guard nil != promise else { return }
     if cancellationToken?.isCancelled ?? false {
-      promise.cancel()
+      promise?.cancel()
     } else {
-      do { promise.complete(with: try block()) }
-      catch { promise.fail(with: error) }
+      do {
+        let futureResult = try block()
+        promise?.complete(with: futureResult)
+      }
+      catch {
+        promise?.fail(with: error)
+      }
     }
   }
   return promise
