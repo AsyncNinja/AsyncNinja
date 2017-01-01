@@ -46,6 +46,10 @@ class FallibleTests : XCTestCase {
     ("testMapFailure2OnThrow", testMapFailure2OnThrow),
     ("testMakeFallibleSuccess", testMakeFallibleSuccess),
     ("testMakeFallibleFailure", testMakeFallibleFailure),
+    ("testZip2_SuccessSuccess", testZip2_SuccessSuccess),
+    ("testZip2_SuccessFailure", testZip2_SuccessFailure),
+    ("testZip2_FailureSuccess", testZip2_FailureSuccess),
+    ("testZip2_FailureFailure", testZip2_FailureFailure),
     ]
 
   func testSuccess() {
@@ -220,6 +224,35 @@ class FallibleTests : XCTestCase {
   func testMakeFallibleFailure() {
     let value = fallible { throw TestError.testCode }
     XCTAssertEqual(value.failure as! TestError, TestError.testCode)
+  }
+
+  func testZip2_SuccessSuccess() {
+    let fallibleA = Fallible(success: 1)
+    let fallibleB = Fallible(success: "a")
+    let fallibleResult = zip(fallibleA, fallibleB)
+    XCTAssertEqual(1, fallibleResult.success!.0)
+    XCTAssertEqual("a", fallibleResult.success!.1)
+  }
+
+  func testZip2_SuccessFailure() {
+    let fallibleA = Fallible(success: 1)
+    let fallibleB = Fallible<String>(failure: TestError.otherCode)
+    let fallibleResult = zip(fallibleA, fallibleB)
+    XCTAssertEqual(TestError.otherCode, fallibleResult.failure as! TestError)
+  }
+
+  func testZip2_FailureSuccess() {
+    let fallibleA = Fallible<Int>(failure: TestError.testCode)
+    let fallibleB = Fallible(success: "a")
+    let fallibleResult = zip(fallibleA, fallibleB)
+    XCTAssertEqual(TestError.testCode, fallibleResult.failure as! TestError)
+  }
+
+  func testZip2_FailureFailure() {
+    let fallibleA = Fallible<Int>(failure: TestError.testCode)
+    let fallibleB = Fallible<String>(failure: TestError.otherCode)
+    let fallibleResult = zip(fallibleA, fallibleB)
+    XCTAssertEqual(TestError.testCode, fallibleResult.failure as! TestError)
   }
 }
 

@@ -1,3 +1,6 @@
+# 0.4.0-beta5
+* zip of fallibles added
+
 # 0.4.0-beta4
 * improving unit tests
 * fixing edge cases of memory management
