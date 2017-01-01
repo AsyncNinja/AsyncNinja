@@ -24,11 +24,14 @@
   import Foundation
 
   public extension Executor {
+
+    /// Convenience function that makes executor from `OperationQueue`
     static func operationQueue(_ queue: OperationQueue) -> Executor {
       return Executor(handler: queue.addOperation)
     }
   }
 
+  /// Is a protocol that automatically adds implementation of methods of `Retainer` for Objective-C runtime compatible objects
   public protocol ObjCInjectedRetainer : Retainer, NSObjectProtocol { }
 
   private class DeinitNotifier {
@@ -52,6 +55,7 @@
     }
   }
 
+  /// Is a protocol that automatically adds implementation of methods of `ExecutionContext` for Objective-C runtime compatible objects involved in UI manipulations
   public protocol ObjCUIInjectedExecutionContext : ExecutionContext, ObjCInjectedRetainer { }
   public extension ObjCUIInjectedExecutionContext {
     var executor: Executor { return .main }
