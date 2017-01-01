@@ -88,7 +88,8 @@
           promise.succeed(with: (data, response!))
           return
         }
-        if let urlError = error as? URLError, urlError.errorCode == URLError.cancelled.rawValue {
+
+        if (error as? CancellationRepresentableError)?.representsCancellation ?? false {
           promise.fail(with: AsyncNinjaError.cancelled)
         } else {
           promise.fail(with: error)

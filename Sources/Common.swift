@@ -22,19 +22,45 @@
 
 import Dispatch
 
+/// Constatns used my AsyncNinja
+/// Values of these constants were carefully considered
 struct AsyncNinjaConstants {
   #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+  /// Defines whether usage of lock-free structures is allowed
   static let isLockFreeUseAllowed = true
   #endif
 
+  /// Defines size of buffer for channels.
+  /// Buffer size is an amount of the latest values for channel to remember
+  ///
+  /// Example:
+  /// ```swift
+  /// let producer = Producer<Int, Void>(bufferSize: ...)
+  /// producer.send([0, 1, 2])
+  /// producer.onPeriodic { print($0) }
+  /// producer.send([3, 4, 5])
+  /// ```
+  /// Output will depend on buffer size:
+  /// - 0: `3 4 5`
+  /// - 1: `2 3 4 5`
+  /// - 2: `1 2 3 4 5`
+  ///
+  /// This kind of behavior is present in each way of interaction with `Channel`: transformation, sync enumeration and etc.
   static let defaultChannelBufferSize = 1
 }
 
+/// Errors produced by AsyncNinja
 public enum AsyncNinjaError : Swift.Error, Equatable {
+  /// An error of cancelled primitive. `Promises` and `Producers` can be cancecelled with method `cancel()`.
+  /// CancellationToken may be used in multiple other cases
   case cancelled
+
+  /// An error of deallocated context
+  /// Basically means that execution was bound to context, by context was deallocated before execution started
   case contextDeallocated
 }
 
+/// Convenience protocol for detection cancellation
 public protocol CancellationRepresentableError : Swift.Error {
   var representsCancellation: Bool { get }
 }
@@ -42,3 +68,13 @@ public protocol CancellationRepresentableError : Swift.Error {
 extension AsyncNinjaError : CancellationRepresentableError {
   public var representsCancellation : Bool { return .cancelled == self }
 }
+
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+  import Foundation
+
+  extension URLError : CancellationRepresentableError {
+    public var representsCancellation : Bool {
+      return self.errorCode == URLError.cancelled.rawValue
+    }
+  }
+#endif

@@ -81,12 +81,25 @@ public func future<T, U : ExecutionContext>(context: U, executor: Executor? = ni
   // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Success_ContextDead
   // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive
   // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Failure_ContextDead
-  return future(executor: executor ?? context.executor) { [weak context] () -> T in
-    guard let context = context
-      else { throw AsyncNinjaError.contextDeallocated }
 
-    return try block(context)
+  let promise = Promise<T>()
+  (executor ?? context.executor)
+    .execute { [weak promise, weak context] in
+      guard nil != promise else { return }
+
+      if let context = context {
+        let value = fallible { try block(context) }
+        promise?.complete(with: value)
+      } else {
+        promise?.cancelBecauseOfDeallicatedContext()
+      }
   }
+
+  context.notifyDeinit { [weak promise] in
+    promise?.cancelBecauseOfDeallicatedContext()
+  }
+
+  return promise
 }
 
 /// Makes future that will complete depending on block's return/throw
@@ -99,12 +112,28 @@ public func future<T, U : ExecutionContext>(context: U, executor: Executor? = ni
 /// - Returns: future
 public func flatFuture<T, U : ExecutionContext>(context: U, executor: Executor? = nil,
                        block: @escaping (_ strongContext: U) throws -> Future<T>) -> Future<T> {
-  return flatFuture(executor: executor ?? context.executor) { [weak context] () -> Future<T> in
-    guard let context = context
-      else { throw AsyncNinjaError.contextDeallocated }
+  let promise = Promise<T>()
+  (executor ?? context.executor)
+    .execute { [weak promise, weak context] in
+      guard nil != promise else { return }
 
-    return try block(context)
+      if let context = context {
+        do {
+          let futureResult = try block(context)
+          promise?.complete(with: futureResult)
+        } catch {
+          promise?.fail(with: error)
+        }
+      } else {
+        promise?.cancelBecauseOfDeallicatedContext()
+      }
   }
+
+  context.notifyDeinit { [weak promise] in
+    promise?.cancelBecauseOfDeallicatedContext()
+  }
+
+  return promise
 }
 
 // MARK: - future makers: non-contextual, delayed block scheduling
