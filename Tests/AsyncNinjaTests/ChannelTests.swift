@@ -33,6 +33,9 @@ class ChannelTests : XCTestCase {
     ("testIterators", testIterators),
     ("testMapPeriodic", testMapPeriodic),
     ("testFilterPeriodic", testFilterPeriodic),
+    ("testMakeChannel", testMakeChannel),
+    ("testOnValueContextual", testOnValueContextual),
+    ("testOnValue", testOnValue),
     ]
   
   func testIterators() {
@@ -141,6 +144,46 @@ class ChannelTests : XCTestCase {
       }
 
       producer.onSuccess(context: actor) { (actor, successValue_) in
+        successValue = successValue_
+        successExpectation.fulfill()
+      }
+
+      DispatchQueue.global().async {
+        guard let producer = weakProducer else {
+          XCTFail()
+          fatalError()
+        }
+        producer.send(periodicValuesFixture)
+        producer.succeed(with: successValueFixture)
+      }
+    }
+
+    self.waitForExpectations(timeout: 0.2, handler: nil)
+
+    XCTAssertNil(weakProducer)
+    XCTAssertEqual(periodicValues, periodicValuesFixture)
+    XCTAssertEqual(successValue, successValueFixture)
+  }
+
+  func testOnValue() {
+    var periodicValues = [Int]()
+    var successValue: String? = nil
+    weak var weakProducer: Producer<Int, String>? = nil
+
+    let periodicValuesFixture = pickInts()
+    let successValueFixture = "I am working correctly!"
+
+    let successExpectation = self.expectation(description: "success of promise")
+    let queue = DispatchQueue(label: "testing queue", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
+
+    DispatchQueue.global().async {
+      let producer = Producer<Int, String>()
+      weakProducer = producer
+      producer.onPeriodic(executor: .queue(queue)) { (periodicValue) in
+        periodicValues.append(periodicValue)
+      }
+
+      producer.onSuccess(executor: .queue(queue)) { (successValue_) in
         successValue = successValue_
         successExpectation.fulfill()
       }
