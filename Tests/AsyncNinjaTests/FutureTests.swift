@@ -512,16 +512,16 @@ class FutureTests : XCTestCase {
     let value = pickInt()
     let expectation = self.expectation(description: "block called")
 
-    let futureValue = future(context: actor, after: 0.2) { (actor) -> Int in
+    let futureValue = future(context: actor, after: 1.0) { (actor) -> Int in
       assert(actor: actor)
       expectation.fulfill()
       return try square_success(value)
     }
 
-    usleep(150_000)
+    usleep(500_000)
     XCTAssertNil(futureValue.value)
 
-    self.waitForExpectations(timeout: 0.3)
+    self.waitForExpectations(timeout: 2.0)
     XCTAssertEqual(futureValue.success, square(value))
   }
   
