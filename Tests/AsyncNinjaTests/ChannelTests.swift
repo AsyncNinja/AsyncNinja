@@ -36,6 +36,11 @@ class ChannelTests : XCTestCase {
     ("testMakeChannel", testMakeChannel),
     ("testOnValueContextual", testOnValueContextual),
     ("testOnValue", testOnValue),
+    ("testBuffering0", testBuffering0),
+    ("testBuffering1", testBuffering1),
+    ("testBuffering2", testBuffering2),
+    ("testBuffering3", testBuffering3),
+    ("testBuffering10", testBuffering10),
     ]
   
   func testIterators() {
@@ -203,5 +208,50 @@ class ChannelTests : XCTestCase {
     XCTAssertNil(weakProducer)
     XCTAssertEqual(periodicValues, periodicValuesFixture)
     XCTAssertEqual(successValue, successValueFixture)
+  }
+
+  func testBuffering0() {
+    _testBuffering(bufferSize: 0)
+  }
+
+  func testBuffering1() {
+    _testBuffering(bufferSize: 1)
+  }
+
+  func testBuffering2() {
+    _testBuffering(bufferSize: 2)
+  }
+
+  func testBuffering3() {
+    _testBuffering(bufferSize: 3)
+  }
+
+  func testBuffering10() {
+    _testBuffering(bufferSize: 10)
+  }
+
+  func _testBuffering(bufferSize: Int, file: StaticString = #file, line: UInt = #line) {
+    let fixture = pickInts(count: 100)
+    let queue = DispatchQueue(label: "testing queue", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
+    let producer = Producer<Int, Void>(bufferSize: bufferSize)
+
+    producer.send(pickInts())
+    producer.send(fixture.prefix(upTo: bufferSize))
+
+    var periodics = [Int]()
+    producer.onPeriodic(executor: .queue(queue)) {
+      periodics.append($0)
+    }
+    producer.send(fixture.suffix(from: bufferSize))
+    producer.succeed(with: ())
+
+    let expectation = self.expectation(description: "completion of producer")
+    producer.onSuccess(executor: .queue(queue)) {
+      expectation.fulfill()
+    }
+    
+    self.waitForExpectations(timeout: 1.0, handler: nil)
+    
+    XCTAssertEqual(periodics, fixture, file: file, line: line)
   }
 }
