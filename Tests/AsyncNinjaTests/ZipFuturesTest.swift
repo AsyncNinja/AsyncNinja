@@ -155,9 +155,9 @@ class ZipFuturesTest : XCTestCase {
   func test2Lifetime() {
     let valueA = pickInt()
     let valueB = pickInt()
-    var futureA: Future<Int>? = future(after: 0.2) { XCTFail(); return valueA }
+    var futureA: Future<Int>? = future(after: 2.0) { XCTFail(); return valueA }
     weak var weakFutureA = futureA
-    var futureB: Future<Int>? = future(after: 0.3) { XCTFail(); return valueB }
+    var futureB: Future<Int>? = future(after: 3.0) { XCTFail(); return valueB }
     weak var weakFutureB = futureB
     var futureAB: Future<(Int, Int)>? = zip(futureA!, futureB!)
     weak var weakFutureAB = futureAB
