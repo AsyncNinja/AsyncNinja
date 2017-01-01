@@ -106,12 +106,18 @@ class ChannelTests : XCTestCase {
 
     var resultNumbers = [Int]()
     let serialQueue = DispatchQueue(label: "test-queue")
+    let expectation = self.expectation(description: "channel to complete")
 
     channelA.onPeriodic(executor: .queue(serialQueue)) {
       resultNumbers.append($0)
     }
 
-    sleep(2)
+    channelA.onSuccess(executor: .queue(serialQueue)) {
+      XCTAssertEqual("done", $0)
+      expectation.fulfill()
+    }
+
+    self.waitForExpectations(timeout: 1.0, handler: nil)
 
     XCTAssertEqual(resultNumbers, Array(numbers.suffix(resultNumbers.count)))
   }

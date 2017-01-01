@@ -64,20 +64,25 @@ class FutureTests : XCTestCase {
     weak var weakFuture: Future<Int>?
     weak var weakMappedFuture: Future<Int>?
 
-    let result: Int = eval {
-      let futureValue = future(success: 1)
-      let mappedFutureValue = futureValue.map(executor: .utility) { (value) -> Int in
-        assert(qos: .utility)
+    let fixtureResult = pickInt()
+    var result: Int? = nil
+    let expectation = self.expectation(description: "waiting finished")
+
+    DispatchQueue.global().async {
+      let futureValue = future(success: fixtureResult)
+      let qos = pickQoS()
+      let mappedFutureValue = futureValue.map(executor: .queue(qos)) { (value) -> Int in
+        assert(qos: qos)
         return value * 3
       }
       weakFuture = futureValue
       weakMappedFuture = mappedFutureValue
-      return mappedFutureValue.wait().success!
+      result = mappedFutureValue.wait().success!
+      expectation.fulfill()
     }
 
-    sleep(1) // this test succeeds when utility queue has time to release futures
-
-    XCTAssertEqual(result, 3)
+    self.waitForExpectations(timeout: 1.0, handler: nil)
+    XCTAssertEqual(result, fixtureResult * 3)
     XCTAssertNil(weakFuture)
     XCTAssertNil(weakMappedFuture)
   }
@@ -277,22 +282,31 @@ class FutureTests : XCTestCase {
 
   func testOnCompleteContextual_ContextDead() {
     weak var weakInitialFuture: Future<Int>?
-    let value = pickInt()
+    weak var weakDelayedFuture: Future<Int>?
 
-    eval {
+    let expectation = self.expectation(description: "actor gone out of scope")
+
+    DispatchQueue.global().async {
+      let value = pickInt()
       let actor = TestActor()
+
       let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
-      initialFuture
-        .delayed(timeout: 0.1)
-        .onComplete(context: actor) { (actor, value_) in
-          XCTFail()
-          assert(actor: actor)
+
+      let delayedFuture = initialFuture.delayed(timeout: 0.1)
+      weakDelayedFuture = delayedFuture
+
+      delayedFuture.onComplete(context: actor) { (actor, value_) in
+        XCTFail()
+        assert(actor: actor)
       }
+
+      expectation.fulfill()
     }
 
-    sleep(1)
+    self.waitForExpectations(timeout: 1.0)
     XCTAssertNil(weakInitialFuture)
+    XCTAssertNil(weakDelayedFuture)
   }
 
   func testMakeFutureOfBlock_Success() {

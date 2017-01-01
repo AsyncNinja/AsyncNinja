@@ -339,7 +339,6 @@ public extension Finite {
     let promise = Promise<FinalValue>()
     let handler = self.makeFinalHandler(executor: .immediate) {
       [weak promise] (value) in
-      guard let promise = promise else { return }
       Executor.primary.execute(after: timeout) { [weak promise] in
         guard let promise = promise else { return }
         promise.complete(with: value)
