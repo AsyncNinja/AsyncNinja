@@ -1,4 +1,9 @@
-# 0.4-beta3
+# 0.4.0-beta4
+* improving unit tests
+* fixing edge cases of memory management
+* documentation improvements
+
+# 0.4.0-beta3
 * ActionChannels to NSControl and UIControl that catch actions and treat them as periodic values
 * turning down performance tests
 * fixing critical issues of lifetime of `Future`s and `Channel`s
