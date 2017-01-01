@@ -296,10 +296,21 @@ public enum DerivedChannelBufferSize {
   /// Buffer size is defined by specified value
   case specific(Int)
 
-  func bufferSize<T, U>(for parentChannel: Channel<T, U>) -> Int {
+  func bufferSize<T, U>(_ parentChannel: Channel<T, U>) -> Int {
     switch self {
     case .default: return AsyncNinjaConstants.defaultChannelBufferSize
     case .inherited: return parentChannel.maxBufferSize
+    case let .specific(value): return value
+    }
+  }
+
+  func bufferSize<PeriodicValueA, FinalValueA, PeriodicValueB, FinalValueB>(
+    _ parentChannelA: Channel<PeriodicValueA, FinalValueA>,
+    _ parentChannelB: Channel<PeriodicValueB, FinalValueB>
+    ) -> Int {
+    switch self {
+    case .default: return AsyncNinjaConstants.defaultChannelBufferSize
+    case .inherited: return max(parentChannelA.maxBufferSize, parentChannelB.maxBufferSize)
     case let .specific(value): return value
     }
   }

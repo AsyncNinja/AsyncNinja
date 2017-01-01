@@ -32,7 +32,7 @@ extension Channel {
     bufferSize: DerivedChannelBufferSize,
     onValue: @escaping (Value, Producer<TransformedPeriodicValue, TransformedFinalValue>) throws -> Void
     ) -> Producer<TransformedPeriodicValue, TransformedFinalValue> {
-    let bufferSize = bufferSize.bufferSize(for: self)
+    let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<TransformedPeriodicValue, TransformedFinalValue>(bufferSize: bufferSize)
     let handler = self.makeHandler(executor: executor) {
       [weak producer] (value) in

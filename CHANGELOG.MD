@@ -1,5 +1,6 @@
 # 0.4.0-beta5
 * zip of fallibles added
+* merging channels
 
 # 0.4.0-beta4
 * improving unit tests
