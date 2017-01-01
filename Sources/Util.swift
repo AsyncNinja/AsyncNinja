@@ -39,3 +39,9 @@ func nop() {
 func assertAbstract(file: StaticString = #file, line: UInt = #line) -> Never {
   fatalError("This methods is abstract. May not reach here", file: file, line: line)
 }
+
+/// Simple implementation of either
+public enum Either<Left, Right> {
+  case left(Left)
+  case right(Right)
+}
