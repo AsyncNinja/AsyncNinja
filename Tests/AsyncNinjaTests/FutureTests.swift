@@ -403,9 +403,13 @@ class FutureTests : XCTestCase {
   func testMakeFutureOfContextualFallibleBlock_Success_ContextDead() {
     let value = pickInt()
 
-    let futureValue: Future<Int> = eval {
+    var futureValue: Future<Int>? = nil
+    DispatchQueue.global().async {
       let actor = TestActor()
-      return future(context: actor) { (actor) -> Int in
+      actor.internalQueue.async {
+        sleep(1)
+      }
+      futureValue = future(context: actor) { (actor) -> Int in
         XCTFail()
         assert(actor: actor)
         return try square_success(value)
@@ -413,7 +417,7 @@ class FutureTests : XCTestCase {
     }
 
     usleep(100_000)
-    XCTAssertEqual(futureValue.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
+    XCTAssertEqual(futureValue?.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
   func testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive() {
