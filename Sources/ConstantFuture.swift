@@ -22,6 +22,7 @@
 
 import Dispatch
 
+/// A future that has been initialized as completed
 final class ConstantFuture<FinalValue> : Future<FinalValue> {
   private var _value: Value
   override public var finalValue: Value? { return _value }
@@ -42,18 +43,33 @@ final class ConstantFuture<FinalValue> : Future<FinalValue> {
   }
 }
 
+/// Makes completed future
+///
+/// - Parameter value: value to complete future with
+/// - Returns: completed future
 public func future<T>(value: Fallible<T>) -> Future<T> {
   return ConstantFuture(value: value)
 }
 
+/// Makes succeeded future
+///
+/// - Parameter success: success value to complete future with
+/// - Returns: succeeded future
 public func future<T>(success: T) -> Future<T> {
   return ConstantFuture(value: Fallible(success: success))
 }
 
+/// Makes failed future
+///
+/// - Parameter failure: failure value (Error) to complete future with
+/// - Returns: failed future
 public func future<T>(failure: Swift.Error) -> Future<T> {
   return ConstantFuture(value: Fallible(failure: failure))
 }
 
+/// Makes cancelled future (shorthand to `future(failure: AsyncNinjaError.cancelled)`)
+///
+/// - Returns: cancelled future
 public func cancelledFuture<T>() -> Future<T> {
     return future(failure: AsyncNinjaError.cancelled)
 }

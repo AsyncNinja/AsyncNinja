@@ -201,6 +201,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   }
 }
 
+/// Convenience factory of Channel. Encapsulates cancellation and producer creation.
 public func channel<PeriodicValue, FinalValue>(
   executor: Executor = .primary,
   cancellationToken: CancellationToken? = nil,
@@ -218,6 +219,40 @@ public func channel<PeriodicValue, FinalValue>(
 
   executor.execute { [weak producer] in
     let fallibleFinalValue = fallible { try block { producer?.send($0) } }
+    producer?.complete(with: fallibleFinalValue)
+  }
+
+  return producer
+}
+
+/// Convenience contextual factory of Channel. Encapsulates cancellation and producer creation.
+public func channel<U: ExecutionContext, PeriodicValue, FinalValue>(
+  context: U,
+  executor: Executor? = nil,
+  cancellationToken: CancellationToken? = nil,
+  bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize,
+  block: @escaping (_ strongContext: U, _ sendPeriodic: @escaping (PeriodicValue) -> Void) throws -> FinalValue
+  ) -> Channel<PeriodicValue, FinalValue> {
+
+  let producer = Producer<PeriodicValue, FinalValue>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
+
+  context.notifyDeinit { [weak producer] in
+    producer?.cancelBecauseOfDeallocatedContext()
+  }
+
+  if let cancellationToken = cancellationToken {
+    cancellationToken.notifyCancellation { [weak producer] in
+      producer?.cancel()
+    }
+  }
+
+  (executor ?? context.executor).execute { [weak context, weak producer] in
+    guard nil != producer else { return }
+    guard let context = context else {
+      producer?.cancelBecauseOfDeallocatedContext()
+      return
+    }
+    let fallibleFinalValue = fallible { try block(context) { producer?.send($0) } }
     producer?.complete(with: fallibleFinalValue)
   }
 
@@ -249,14 +284,21 @@ fileprivate class FinalProducerState<T, U> : ProducerState<T, U> {
   }
 }
 
+/// Specifies strategy of selecting buffer size of channel derived from another channel, e.g through transformations
 public enum DerivedChannelBufferSize {
+
+  /// Specifies strategy to use as default value for arguments of methods
   case `default`
+
+  /// Buffer size is defined by the buffer size of original channel
   case inherited
+
+  /// Buffer size is defined by specified value
   case specific(Int)
 
   func bufferSize<T, U>(for parentChannel: Channel<T, U>) -> Int {
     switch self {
-    case .default: return 0
+    case .default: return AsyncNinjaConstants.defaultChannelBufferSize
     case .inherited: return parentChannel.maxBufferSize
     case let .specific(value): return value
     }

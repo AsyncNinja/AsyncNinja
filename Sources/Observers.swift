@@ -36,7 +36,7 @@
 
       let pointerToSelf = Unmanaged.passUnretained(self)
       self.notifyDeinit { [weak producer] in
-        producer?.cancelBecauseOfDeallicatedContext()
+        producer?.cancelBecauseOfDeallocatedContext()
         pointerToSelf.takeUnretainedValue().removeObserver(observer, forKeyPath: keyPath)
       }
 
@@ -81,7 +81,7 @@
         let actionReceiver = ActionReceiver(control: self)
         self.target = actionReceiver
         self.notifyDeinit {
-          actionReceiver.producer.cancelBecauseOfDeallicatedContext()
+          actionReceiver.producer.cancelBecauseOfDeallocatedContext()
         }
         return actionReceiver
         }()
@@ -126,7 +126,7 @@
                      action: #selector(ActionReceiver.asyncNinjaAction(sender:forEvent:)),
                      for: events)
       self.notifyDeinit {
-        actionReceiver.producer.cancelBecauseOfDeallicatedContext()
+        actionReceiver.producer.cancelBecauseOfDeallocatedContext()
       }
 
       return actionReceiver.producer

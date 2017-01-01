@@ -79,7 +79,7 @@ public extension MutableFinite {
     self.fail(with: AsyncNinjaError.cancelled)
   }
 
-  func cancelBecauseOfDeallicatedContext() {
+  func cancelBecauseOfDeallocatedContext() {
     self.fail(with: AsyncNinjaError.contextDeallocated)
   }
 }

@@ -68,7 +68,7 @@ extension Channel {
     }
     context.notifyDeinit { [weak producer] (periodicValue) in
       guard let producer = producer else { return }
-      producer.cancelBecauseOfDeallicatedContext()
+      producer.cancelBecauseOfDeallocatedContext()
     }
     return producer
   }

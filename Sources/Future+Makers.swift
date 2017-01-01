@@ -91,12 +91,12 @@ public func future<T, U : ExecutionContext>(context: U, executor: Executor? = ni
         let value = fallible { try block(context) }
         promise?.complete(with: value)
       } else {
-        promise?.cancelBecauseOfDeallicatedContext()
+        promise?.cancelBecauseOfDeallocatedContext()
       }
   }
 
   context.notifyDeinit { [weak promise] in
-    promise?.cancelBecauseOfDeallicatedContext()
+    promise?.cancelBecauseOfDeallocatedContext()
   }
 
   return promise
@@ -125,12 +125,12 @@ public func flatFuture<T, U : ExecutionContext>(context: U, executor: Executor? 
           promise?.fail(with: error)
         }
       } else {
-        promise?.cancelBecauseOfDeallicatedContext()
+        promise?.cancelBecauseOfDeallocatedContext()
       }
   }
 
   context.notifyDeinit { [weak promise] in
-    promise?.cancelBecauseOfDeallicatedContext()
+    promise?.cancelBecauseOfDeallocatedContext()
   }
 
   return promise
@@ -197,7 +197,7 @@ public func future<T, U : ExecutionContext>(context: U, executor: Executor? = ni
     return try block(context)
   }
 
-  context.notifyDeinit { [weak promiseValue] in promiseValue?.cancelBecauseOfDeallicatedContext() }
+  context.notifyDeinit { [weak promiseValue] in promiseValue?.cancelBecauseOfDeallocatedContext() }
 
   return promiseValue
 }
@@ -222,7 +222,7 @@ public func flatFuture<T, U : ExecutionContext>(context: U, executor: Executor? 
     return try block(context)
   }
 
-  context.notifyDeinit { [weak promiseValue] in promiseValue?.cancelBecauseOfDeallicatedContext() }
+  context.notifyDeinit { [weak promiseValue] in promiseValue?.cancelBecauseOfDeallocatedContext() }
 
   return promiseValue
 }

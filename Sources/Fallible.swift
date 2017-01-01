@@ -163,18 +163,6 @@ public func fallible<T>(block: () throws -> T) -> Fallible<T> {
   catch { return Fallible(failure: error) }
 }
 
-/// **Deprecated. Use flatFallible(block:) instead.**
-///
-/// Executes specified block and returns returned Fallible or wraps a thrown error with Fallible.
-///
-/// - Parameter block: to execute. A returned value will returned from method. A thrown error will become failure value of returned Fallible
-/// - Returns: returned Fallible or a thrown error wrapped with Fallible
-@available(*, deprecated: 0.3.4, renamed: "flatFallible")
-public func fallible<T>(block: () throws -> Fallible<T>) -> Fallible<T> {
-  do { return try block() }
-  catch { return Fallible(failure: error) }
-}
-
 /// Executes specified block and returns returned Fallible or wraps a thrown error with Fallible
 ///
 /// - Parameter block: to execute. A returned value will returned from method. A thrown error will become failure value of returned Fallible
