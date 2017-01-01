@@ -600,11 +600,14 @@ class FutureTests : XCTestCase {
     group.enter()
     let completionFuture = group.completionFuture
 
-    usleep(100_000)
     XCTAssertNil(completionFuture.value)
     group.leave()
 
-    usleep(100_000)
-    XCTAssertNotNil(completionFuture.value)
+    let expectation = self.expectation(description: "completion of future")
+    completionFuture.onSuccess {
+      expectation.fulfill()
+    }
+
+    self.waitForExpectations(timeout: 0.2)
   }
 }
