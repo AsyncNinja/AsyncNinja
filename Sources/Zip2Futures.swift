@@ -22,6 +22,12 @@
 
 import Dispatch
 
+/// Combines two futures
+///
+/// - Parameters:
+///   - futureA: first
+///   - futureB: second
+/// - Returns: future of combined results. The future will complete right after completion of both futureA and futureB
 public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, B)> {
   // Test: ZipFuturesTest.test2Simple
   // Test: ZipFuturesTest.test2Delayed
@@ -71,6 +77,12 @@ public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, 
   return promise
 }
 
+/// Combines future and value
+///
+/// - Parameters:
+///   - futureA: first
+///   - valueB: second
+/// - Returns: future of combined results. The future will complete right after completion of futureA.
 public func zip<A, B>(_ futureA: Future<A>, _ valueB: B) -> Future<(A, B)> {
   // Test: ZipFuturesTest.test2Constant
   return futureA.map(executor: .immediate) { ($0, valueB) }

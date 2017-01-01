@@ -22,6 +22,13 @@
 
 import Dispatch
 
+/// Combines three futures
+///
+/// - Parameters:
+///   - futureA: first
+///   - futureB: second
+///   - futureC: third
+/// - Returns: future of combined results. The future will complete right after completion of futureA, futureB, futureC
 public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: Future<C>) -> Future<(A, B, C)> {
   // Test: ZipFuturesTest.test3Simple
   // Test: ZipFuturesTest.test3Delayed
@@ -90,12 +97,25 @@ public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: 
   return promise
 }
 
+/// Combines two futures and one value
+///
+/// - Parameters:
+///   - futureA: first
+///   - futureB: second
+///   - valueC: third
+/// - Returns: future of combined results. The future will complete right after completion of futureA and futureB.
 public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ valueC: C) -> Future<(A, B, C)> {
   // Test: ZipFuturesTest.test3Constant
   return zip(futureA, futureB).map(executor: .immediate) { ($0, $1, valueC) }
 }
 
-
+/// Combines one future and two value
+///
+/// - Parameters:
+///   - futureA: first
+///   - valueB: second
+///   - valueC: third
+/// - Returns: future of combined results. The future will complete right after completion of futureA.
 public func zip<A, B, C>(_ futureA: Future<A>, _ valueB: B, _ valueC: C) -> Future<(A, B, C)> {
   // Test: ZipFuturesTest.test3Constants
   return futureA.map(executor: .immediate) { ($0, valueB, valueC) }
