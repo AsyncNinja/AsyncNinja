@@ -22,6 +22,7 @@
 
 import Dispatch
 
+/// A protocol for objects that can eventually finish with value
 public protocol Finite : class {
   associatedtype Value
   associatedtype FinalValue
@@ -72,6 +73,10 @@ public extension Finite {
     return promise
   }
 
+  /// Transforms Finite<TypeA> => Future<TypeB>. Flattens future returned by the transform
+  ///
+  /// This method is suitable for **pure**ish transformations (not changing shared state).
+  /// Use method flatMapCompletion(context:executor:transform:) for state changing transformations.
   func flatMapCompletion<TransformedValue>(
     executor: Executor = .primary,
     transform: @escaping (Fallible<FinalValue>) throws -> Future<TransformedValue>
@@ -93,6 +98,9 @@ public extension Finite {
     }
   }
 
+  /// Transforms Finite<TypeA> => Future<TypeB>. Flattens future returned by the transform
+  ///
+  /// This is the same as flatMapCompletion(executor:transform:) but does not perform transformation if this future fails.
   func flatMapSuccess<TransformedValue>(
     executor: Executor = .primary,
     transform: @escaping (FinalValue) throws -> Future<TransformedValue>
@@ -113,6 +121,7 @@ public extension Finite {
     }
   }
 
+  /// Recovers failure of this future if there is one. Flattens future returned by the transform
   func flatRecover(
     executor: Executor = .primary,
     transform: @escaping (Swift.Error) throws -> Future<FinalValue>
@@ -154,6 +163,10 @@ public extension Finite {
     }
   }
 
+  /// Transforms Finite<TypeA> => Future<TypeB>. Flattens future returned by the transform
+  ///
+  /// This method is suitable for impure transformations (changing state of context).
+  /// Use method flatMapCompletion(context:transform:) for pure -ish transformations.
   func flatMapCompletion<TransformedValue, U: ExecutionContext>(
     context: U,
     executor: Executor? = nil,
@@ -174,6 +187,9 @@ public extension Finite {
     }
   }
 
+  /// Transforms Finite<TypeA> => Future<TypeB>. Flattens future returned by the transform
+  ///
+  /// This is the same as flatMapCompletion(context:executor:transform:) but does not perform transformation if this future fails.
   func flatMapSuccess<TransformedValue, U: ExecutionContext>(
     context: U,
     executor: Executor? = nil,
@@ -196,6 +212,7 @@ public extension Finite {
     }
   }
 
+  /// Recovers failure of this future if there is one with contextual transformer. Flattens future returned by the transform
   func flatRecover<U: ExecutionContext>(
     context: U,
     executor: Executor? = nil,
@@ -335,6 +352,8 @@ public extension Finite {
 }
 
 public extension Finite {
+
+  /// Returns future that completes after a timeout after completion of self
   func delayedFinal(timeout: Double) -> Future<FinalValue> {
     let promise = Promise<FinalValue>()
     let handler = self.makeFinalHandler(executor: .immediate) {

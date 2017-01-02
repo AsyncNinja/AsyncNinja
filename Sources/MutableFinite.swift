@@ -22,9 +22,11 @@
 
 import Dispatch
 
+/// A protocol for objects that can be manually finish with value
 public protocol MutableFinite : Finite {
   associatedtype ImmutableFinite : Finite
-  
+
+  /// Required initializer
   init()
 
   /// Completes `MutableFinite` with value and returns true.
@@ -35,6 +37,7 @@ public protocol MutableFinite : Finite {
   @discardableResult
   func tryComplete(with final: Fallible<FinalValue>) -> Bool
 
+  /// Shorthand to tryComplete that does not return value
   func complete(with finite: ImmutableFinite)
 
   /// **internal use only**
@@ -52,33 +55,40 @@ public extension MutableFinite {
       self.insertToReleasePool(handler)
     }
   }
-  
+
+  /// Shorthand to tryComplete(with:) that does not return value
   func complete(with final: Fallible<FinalValue>) {
     self.tryComplete(with: final)
   }
 
+  /// Tries to complete self with success vlue
   @discardableResult
   func trySucceed(with success: FinalValue) -> Bool {
     return self.tryComplete(with: Fallible(success: success))
   }
 
+  /// Shorthand to trySucceed(with:) that does not return value
   func succeed(with success: FinalValue) {
     self.complete(with: Fallible(success: success))
   }
 
+  /// Tries to complete self with failure vlue
   @discardableResult
   public func tryFail(with failure: Swift.Error) -> Bool {
     return self.tryComplete(with: Fallible(failure: failure))
   }
 
+  /// Shorthand to tryFail(with:) that does not return value
   public func fail(with failure: Swift.Error) {
     self.complete(with: Fallible(failure: failure))
   }
 
+  /// Completes with cancellation (AsyncNinjaError.cancelled)
   public func cancel() {
     self.fail(with: AsyncNinjaError.cancelled)
   }
 
+  /// Completes with error of deallocated context (AsyncNinjaError.contextDeallocated)
   func cancelBecauseOfDeallocatedContext() {
     self.fail(with: AsyncNinjaError.contextDeallocated)
   }

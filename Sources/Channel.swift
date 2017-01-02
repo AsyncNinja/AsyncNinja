@@ -22,6 +22,7 @@
 
 import Dispatch
 
+/// represents values that periodically arrive followed by failure of final value that completes Channel. Channel oftenly represents result of long running task that is not yet arrived and flow of some intermediate results.
 public class Channel<PeriodicValue, FinalValue>: Finite {
   public typealias Value = ChannelValue<PeriodicValue, FinalValue>
   public typealias Handler = ChannelHandler<PeriodicValue, FinalValue>

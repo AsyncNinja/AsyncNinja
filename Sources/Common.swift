@@ -62,10 +62,15 @@ public enum AsyncNinjaError : Swift.Error, Equatable {
 
 /// Convenience protocol for detection cancellation
 public protocol CancellationRepresentableError : Swift.Error {
+
+  /// returns true if the error is actually a cancellation
   var representsCancellation: Bool { get }
 }
 
-extension AsyncNinjaError : CancellationRepresentableError {
+/// Conformance of AsyncNinjaError to CancellationRepresentableError
+extension AsyncNinjaError: CancellationRepresentableError {
+
+  /// returns true if the error is actually a cancellation
   public var representsCancellation : Bool { return .cancelled == self }
 }
 

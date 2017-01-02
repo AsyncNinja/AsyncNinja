@@ -73,7 +73,10 @@
 
   /// NSControl improved with AsyncNinja
   public extension NSControl {
+    /// PeriodicValue of ActionChannel
     typealias ActionChannelPeriodicValue = (sender: AnyObject?, objectValue: Any?)
+
+    /// Channel that contains actions sent by the control
     typealias ActionChannel = Channel<ActionChannelPeriodicValue, Void>
 
     /// Makes or returns cached channel. The chennel that will have periodic on each triggering of action
@@ -115,7 +118,10 @@
 
   /// UIControl improved with AsyncNinja
   public extension UIControl {
+    /// PeriodicValue of ActionChannel
     typealias ActionChannelPeriodicValue = (sender: AnyObject?, event: UIEvent)
+
+    /// Channel that contains actions sent by the control
     typealias ActionChannel = Channel<ActionChannelPeriodicValue, Void>
 
     /// Makes channel that will have periodic value on each triggering of action

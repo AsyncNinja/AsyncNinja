@@ -58,6 +58,8 @@
   /// Is a protocol that automatically adds implementation of methods of `ExecutionContext` for Objective-C runtime compatible objects involved in UI manipulations
   public protocol ObjCUIInjectedExecutionContext : ExecutionContext, ObjCInjectedRetainer { }
   public extension ObjCUIInjectedExecutionContext {
+
+    /// executor for ui objects. The main queue
     var executor: Executor { return .main }
   }
 
