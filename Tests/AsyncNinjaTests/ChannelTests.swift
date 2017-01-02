@@ -41,6 +41,8 @@ class ChannelTests : XCTestCase {
     ("testBuffering2", testBuffering2),
     ("testBuffering3", testBuffering3),
     ("testBuffering10", testBuffering10),
+    ("testMergeInts", testMergeInts),
+    ("testMergeIntsAndStrings", testMergeIntsAndStrings),
     ]
   
   func testIterators() {
@@ -253,5 +255,60 @@ class ChannelTests : XCTestCase {
     self.waitForExpectations(timeout: 1.0, handler: nil)
     
     XCTAssertEqual(periodics, fixture, file: file, line: line)
+  }
+
+  func testMergeInts() {
+    let producerOfOdds = Producer<Int, String>()
+    let producerOfEvents = Producer<Int, String>()
+
+    let channelOfNumbers = merge(producerOfOdds, producerOfEvents)
+
+    DispatchQueue.global().async {
+      producerOfOdds.send(1)
+      producerOfOdds.send(3)
+      producerOfEvents.send(2)
+      producerOfEvents.send(4)
+      producerOfOdds.send(5)
+      producerOfEvents.send(6)
+      producerOfOdds.send(7)
+      producerOfOdds.succeed(with: "Hello")
+      producerOfEvents.send(8)
+      producerOfEvents.succeed(with: "World")
+    }
+
+    let (numbers, stringsOfError) = channelOfNumbers.waitForAll()
+
+    XCTAssertEqual(numbers, [1, 3, 2, 4, 5, 6, 7, 8])
+    XCTAssertEqual(stringsOfError.success!.0, "Hello")
+    XCTAssertEqual(stringsOfError.success!.1, "World")
+  }
+
+  func testMergeIntsAndStrings() {
+    let producerOfOdds = Producer<Int, String>()
+    let producerOfEvents = Producer<String, String>()
+
+    let channelOfNumbers = merge(producerOfOdds, producerOfEvents)
+
+    DispatchQueue.global().async {
+      producerOfOdds.send(1)
+      producerOfOdds.send(3)
+      producerOfEvents.send("two")
+      producerOfEvents.send("four")
+      producerOfOdds.send(5)
+      producerOfEvents.send("six")
+      producerOfOdds.send(7)
+      producerOfOdds.succeed(with: "Hello")
+      producerOfEvents.send("eight")
+      producerOfEvents.succeed(with: "World")
+    }
+
+    let (numbers, stringsOfError) = channelOfNumbers.waitForAll()
+
+    let fixtureNumbers: [Either<Int, String>] = [.left(1), .left(3), .right("two"), .right("four"), .left(5), .right("six"), .left(7), .right("eight")]
+    for (number, fixture) in zip(numbers, fixtureNumbers) {
+      XCTAssert(number == fixture)
+    }
+    XCTAssertEqual(stringsOfError.success!.0, "Hello")
+    XCTAssertEqual(stringsOfError.success!.1, "World")
   }
 }

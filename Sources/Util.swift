@@ -45,3 +45,16 @@ public enum Either<Left, Right> {
   case left(Left)
   case right(Right)
 }
+
+extension Either where Left: Equatable, Right: Equatable {
+  public static func ==(lhs: Either, rhs: Either) -> Bool {
+    switch (lhs, rhs) {
+    case let (.left(valueA), .left(valueB)):
+      return valueA == valueB
+    case let (.right(valueA), .right(valueB)):
+      return valueA == valueB
+    default:
+      return false
+    }
+  }
+}
