@@ -69,21 +69,19 @@ class FutureTests : XCTestCase {
     let expectation = self.expectation(description: "waiting finished")
 
     DispatchQueue.global().async {
-      result = eval {
-        let futureValue = future(success: fixtureResult)
-        let qos = pickQoS()
-        let mappedFutureValue = futureValue
-          .map(executor: .queue(qos)) { (value) -> Int in
-            assert(qos: qos)
-            return value * 3
-        }
-        weakFuture = futureValue
-        weakMappedFuture = mappedFutureValue
-        return mappedFutureValue.wait().success!
+      let futureValue = future(success: fixtureResult)
+      let qos = pickQoS()
+      var mappedFutureValue: Future<Int>? = futureValue
+        .map(executor: .queue(qos)) { (value) -> Int in
+          assert(qos: qos)
+          return value * 3
       }
-      DispatchQueue.global().async {
-        expectation.fulfill()
-      }
+      weakFuture = futureValue
+      weakMappedFuture = mappedFutureValue
+      result = mappedFutureValue!.wait().success!
+      mappedFutureValue = nil
+
+      expectation.fulfill()
     }
 
     self.waitForExpectations(timeout: 1.0, handler: nil)
