@@ -44,6 +44,7 @@ class ChannelTests : XCTestCase {
     ("testMergeInts", testMergeInts),
     ("testMergeIntsAndStrings", testMergeIntsAndStrings),
     ("testSample", testSample),
+    ("testDebounce", testDebounce)
     ]
   
   func testIterators() {
@@ -326,7 +327,7 @@ class ChannelTests : XCTestCase {
       ]
 
       XCTAssertEqual(pairs.count, fixturePairs.count)
-      for (resultPair, fixturePair) in zip(pairs, fixturePairs) {
+      for (resultPair, fixturePair) in zip(pairs.sorted { $0.0 < $1.0 }, fixturePairs) {
         XCTAssertEqual(resultPair.0, fixturePair.0)
         XCTAssertEqual(resultPair.1, fixturePair.1)
       }
@@ -337,6 +338,7 @@ class ChannelTests : XCTestCase {
     }
 
     DispatchQueue.global().async {
+      usleep(100_000)
       producerOfOdds.send(1)
       producerOfOdds.send(3)
       producerOfEvents.send(2)
@@ -350,5 +352,39 @@ class ChannelTests : XCTestCase {
     }
 
     self.waitForExpectations(timeout: 1.0, handler: nil)
+  }
+
+  func testDebounce() {
+    let initalProducer = Producer<Int, String>()
+    let derivedProducer = initalProducer.debounce(interval: 0.5)
+    let expectation = self.expectation(description: "completion of derived producer")
+
+    derivedProducer.extractAll { (numbers, stringOrError) in
+      XCTAssertEqual([1, 6, 9, 12], numbers)
+      XCTAssertEqual("Finished!", stringOrError.success!)
+      expectation.fulfill()
+    }
+
+    DispatchQueue.global().async {
+      usleep(100_000)
+      initalProducer.send(1)
+      initalProducer.send(2)
+      initalProducer.send(3)
+      usleep(250_000)
+      initalProducer.send(4)
+      initalProducer.send(5)
+      initalProducer.send(6)
+      usleep(250_000)
+      initalProducer.send(7)
+      initalProducer.send(8)
+      initalProducer.send(9)
+      usleep(1_000_000)
+      initalProducer.send(10)
+      initalProducer.send(11)
+      initalProducer.send(12)
+      initalProducer.succeed(with: "Finished!")
+    }
+
+    self.waitForExpectations(timeout: 5.0)
   }
 }

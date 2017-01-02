@@ -148,10 +148,9 @@ public extension Channel {
   ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
   /// - Returns: delayed channel
-  func delayedPeriodic(
-    timeout: Double,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default
+  func delayedPeriodic(timeout: Double,
+                       cancellationToken: CancellationToken? = nil,
+                       bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<PeriodicValue, FinalValue> {
     return self.makeProducer(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
       (value: Value, producer: Producer<PeriodicValue, FinalValue>) -> Void in
@@ -160,6 +159,85 @@ public extension Channel {
         producer.apply(value)
       }
     }
+  }
+
+  /// Picks latest periodic value of the channel every interval and sends it
+  ///
+  /// - Parameters:
+  ///   - deadline: to start picking peridic values after
+  ///   - interval: interfal for picking latest periodic values
+  ///   - leeway: leeway for timer
+  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need
+  /// - Returns: channel
+  func debounce(deadline: DispatchTime = DispatchTime.now(),
+                interval: Double,
+                leeway: DispatchTimeInterval? = nil,
+                cancellationToken: CancellationToken? = nil,
+                bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<PeriodicValue, FinalValue> {
+
+    let bufferSize_ = bufferSize.bufferSize(self)
+    let producer = Producer<PeriodicValue, FinalValue>(bufferSize: bufferSize_)
+    var locking = makeLocking()
+    var latestPeriodicValue: PeriodicValue? = nil
+    var didSendFirstPeriodicValue = false
+
+    let timer = DispatchSource.makeTimerSource()
+    if let leeway = leeway {
+      timer.scheduleRepeating(deadline: DispatchTime.now(), interval: interval, leeway: leeway)
+    } else {
+      timer.scheduleRepeating(deadline: DispatchTime.now(), interval: interval)
+    }
+
+    timer.setEventHandler { [weak producer] in
+      locking.lock()
+      if let periodicValue = latestPeriodicValue {
+        latestPeriodicValue = nil
+        locking.unlock()
+        producer?.send(periodicValue)
+      } else {
+        locking.unlock()
+      }
+    }
+
+    timer.resume()
+    producer.insertToReleasePool(timer)
+
+    let handler = self.makeHandler(executor: .immediate) {
+      [weak producer] (value) in
+
+      locking.lock()
+      defer { locking.unlock() }
+
+      switch value {
+      case let .final(finalValue):
+        if let periodicValue = latestPeriodicValue {
+          producer?.send(periodicValue)
+          latestPeriodicValue = nil
+        }
+        producer?.complete(with: finalValue)
+      case let .periodic(periodicValue):
+        if didSendFirstPeriodicValue {
+          latestPeriodicValue = periodicValue
+        } else {
+          didSendFirstPeriodicValue = true
+          producer?.send(periodicValue)
+        }
+      }
+    }
+
+    if let handler = handler {
+      self.insertToReleasePool(handler)
+    }
+
+    if let cancellationToken = cancellationToken {
+      cancellationToken.notifyCancellation { [weak producer] in
+        producer?.cancel()
+      }
+    }
+    
+    return producer
   }
 }
 
