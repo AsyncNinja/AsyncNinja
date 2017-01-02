@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -43,6 +43,7 @@ class ChannelTests : XCTestCase {
     ("testBuffering10", testBuffering10),
     ("testMergeInts", testMergeInts),
     ("testMergeIntsAndStrings", testMergeIntsAndStrings),
+    ("testSample", testSample),
     ]
   
   func testIterators() {
@@ -260,7 +261,6 @@ class ChannelTests : XCTestCase {
   func testMergeInts() {
     let producerOfOdds = Producer<Int, String>()
     let producerOfEvents = Producer<Int, String>()
-
     let channelOfNumbers = merge(producerOfOdds, producerOfEvents)
 
     DispatchQueue.global().async {
@@ -286,7 +286,6 @@ class ChannelTests : XCTestCase {
   func testMergeIntsAndStrings() {
     let producerOfOdds = Producer<Int, String>()
     let producerOfEvents = Producer<String, String>()
-
     let channelOfNumbers = merge(producerOfOdds, producerOfEvents)
 
     DispatchQueue.global().async {
@@ -305,9 +304,46 @@ class ChannelTests : XCTestCase {
     let (numbers, stringsOfError) = channelOfNumbers.waitForAll()
 
     let fixtureNumbers: [Either<Int, String>] = [.left(1), .left(3), .right("two"), .right("four"), .left(5), .right("six"), .left(7), .right("eight")]
+    XCTAssertEqual(numbers.count, fixtureNumbers.count)
     for (number, fixture) in zip(numbers, fixtureNumbers) {
       XCTAssert(number == fixture)
     }
+    XCTAssertEqual(stringsOfError.success!.0, "Hello")
+    XCTAssertEqual(stringsOfError.success!.1, "World")
+  }
+
+  func testSample() {
+    let producerOfOdds = Producer<Int, String>()
+    let producerOfEvents = Producer<Int, String>()
+    let channelOfNumbers = producerOfOdds.sample(with: producerOfEvents)
+
+    DispatchQueue.global().async {
+      producerOfOdds.send(1)
+      producerOfOdds.send(3)
+      producerOfEvents.send(2)
+      producerOfEvents.send(4)
+      producerOfOdds.send(5)
+      producerOfEvents.send(6)
+      producerOfOdds.send(7)
+      producerOfOdds.succeed(with: "Hello")
+      producerOfEvents.send(8)
+      producerOfEvents.succeed(with: "World")
+    }
+
+    let (pairs, stringsOfError) = channelOfNumbers.waitForAll()
+
+    let fixturePairs = [
+      (3, 2),
+      (5, 6),
+      (7, 8)
+    ]
+
+    XCTAssertEqual(pairs.count, fixturePairs.count)
+    for (resultPair, fixturePair) in zip(pairs, fixturePairs) {
+      XCTAssertEqual(resultPair.0, fixturePair.0)
+      XCTAssertEqual(resultPair.1, fixturePair.1)
+    }
+
     XCTAssertEqual(stringsOfError.success!.0, "Hello")
     XCTAssertEqual(stringsOfError.success!.1, "World")
   }
