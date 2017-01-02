@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -22,6 +22,7 @@
 
 import Dispatch
 
+/// Collection improved with AsyncNinja
 /// Single failure fails them all
 public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : Finite {
   fileprivate typealias FinalValue = Self.Iterator.Element.FinalValue
@@ -80,6 +81,7 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
 
 }
 
+/// Collection improved with AsyncNinja
 public extension Collection where Self.IndexDistance == Int {
   /// transforms each element of collection on executor and provides future array of transformed values
   public func asyncMap<T>(executor: Executor = .primary,
@@ -140,6 +142,7 @@ public extension Collection where Self.IndexDistance == Int {
     return promise
   }
 
+  /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
   public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
                        transform: @escaping (U, Self.Iterator.Element) throws -> T) -> Future<[T]> {
     return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> T in
@@ -148,6 +151,7 @@ public extension Collection where Self.IndexDistance == Int {
     }
   }
   
+  /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
   public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
                        transform: @escaping (U, Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
     return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> Future<T> in

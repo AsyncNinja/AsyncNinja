@@ -72,7 +72,10 @@ extension AsyncNinjaError : CancellationRepresentableError {
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
   import Foundation
 
+  /// Conformance to CancellationRepresentableError
   extension URLError : CancellationRepresentableError {
+
+    /// tells if this error is actually a cancellation
     public var representsCancellation : Bool {
       return self.errorCode == URLError.cancelled.rawValue
     }

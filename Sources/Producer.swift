@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -22,7 +22,9 @@
 
 import Dispatch
 
-final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, FinalValue>, MutableFinite {
+/// Mutable subclass of channel
+/// You can send periodics and complete producer manually
+final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, FinalValue>, MutableFinite {
   public typealias ImmutableFinite = Channel<PeriodicValue, FinalValue>
 
   fileprivate typealias RegularState = RegularProducerState<PeriodicValue, FinalValue>
@@ -33,15 +35,20 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
   private let _bufferedPeriodics = QueueImpl<PeriodicValue>()
   private var _locking = makeLocking()
 
+  /// amount of currently stored periodics
   override public var bufferSize: Int { return Int(_bufferedPeriodics.count) }
+  /// maximal amount of periodics store
   override public var maxBufferSize: Int { return _maxBufferSize }
 
+  /// final falue of channel. Returns nil if channel is not complete yet
   override public var finalValue: Fallible<FinalValue>? { return (_container.head as? FinalState)?.final }
 
+  /// designated initializer of Producer. Initializes Producer with default buffer size
   override public convenience init() {
     self.init(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
   }
   
+  /// designated initializer of Producer. Initializes Producer with specified buffer size
   public init(bufferSize: Int) {
     _maxBufferSize = bufferSize
   }
@@ -99,6 +106,8 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     return true
   }
 
+  /// Applies specified ChannelValue to the Producer
+  /// Value will not be applied for completed Producer
   public func apply(_ value: Value) {
     switch value {
     case let .periodic(periodic):
@@ -115,6 +124,8 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     }
   }
 
+  /// Sends specified PeriodicValue to the Producer
+  /// Value will not be sent for completed Producer
   public func send(_ periodic: PeriodicValue) {
 
     if self.maxBufferSize > 0 {
@@ -126,6 +137,8 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     self.notify(.periodic(periodic), head: _container.head as! ProducerState<PeriodicValue, FinalValue>?)
   }
 
+  /// Sends specified sequence of PeriodicValue to the Producer
+  /// Values will not be sent for completed Producer
   public func send<S : Sequence>(_ periodics: S)
     where S.Iterator.Element == PeriodicValue {
 
@@ -141,6 +154,10 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
       }
   }
   
+  /// Tries to complete the Producer
+  ///
+  /// - Parameter final: value to complete Producer with
+  /// - Returns: true if Producer was completed with this call, false if it was completed before
   @discardableResult
   public func tryComplete(with final: Fallible<FinalValue>) -> Bool {
     let (oldHead, newHead) = _container.updateHead {
@@ -168,6 +185,18 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     return self.notify(.final(final), head: oldHead as! ProducerState<PeriodicValue, FinalValue>?)
   }
 
+  /// Completes the channel with a competion of specified Future or Channel
+  public func complete(with finite: ImmutableFinite) {
+    let handler = finite.makeHandler(executor: .immediate) { [weak self] in
+      self?.apply($0)
+    }
+
+    if let handler = handler {
+      self.insertToReleasePool(handler)
+    }
+  }
+
+  /// **internal use only** Inserts releasable to an internal release pool that will be drained on completion
   override public func insertToReleasePool(_ releasable: Releasable) {
     // assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     if !self.isComplete {
@@ -175,16 +204,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     }
   }
 
-  public func complete(with finite: ImmutableFinite) {
-    let handler = finite.makeHandler(executor: .immediate) { [weak self] in
-      self?.apply($0)
-    }
-    
-    if let handler = handler {
-      self.insertToReleasePool(handler)
-    }
-  }
-
+  /// **internal use only**
   func notifyDrain(_ block: @escaping () -> Void) {
     if self.isComplete {
       block()
@@ -193,6 +213,7 @@ final public class Producer<PeriodicValue, FinalValue> : Channel<PeriodicValue, 
     }
   }
 
+  /// Makes an iterator that allows synchronous iteration over periodic values of the channel
   override public func makeIterator() -> Iterator {
     _locking.lock()
     defer { _locking.unlock() }
@@ -296,6 +317,7 @@ public enum DerivedChannelBufferSize {
   /// Buffer size is defined by specified value
   case specific(Int)
 
+  /// **internal use only**
   func bufferSize<T, U>(_ parentChannel: Channel<T, U>) -> Int {
     switch self {
     case .default: return AsyncNinjaConstants.defaultChannelBufferSize
@@ -304,6 +326,7 @@ public enum DerivedChannelBufferSize {
     }
   }
 
+  /// **internal use only**
   func bufferSize<PeriodicValueA, FinalValueA, PeriodicValueB, FinalValueB>(
     _ parentChannelA: Channel<PeriodicValueA, FinalValueA>,
     _ parentChannelB: Channel<PeriodicValueB, FinalValueB>

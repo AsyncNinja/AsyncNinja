@@ -71,6 +71,7 @@
 #if os(macOS)
   import AppKit
 
+  /// NSControl improved with AsyncNinja
   public extension NSControl {
     typealias ActionChannelPeriodicValue = (sender: AnyObject?, objectValue: Any?)
     typealias ActionChannel = Channel<ActionChannelPeriodicValue, Void>
@@ -112,6 +113,7 @@
 #if os(iOS) || os(tvOS)
   import UIKit
 
+  /// UIControl improved with AsyncNinja
   public extension UIControl {
     typealias ActionChannelPeriodicValue = (sender: AnyObject?, event: UIEvent)
     typealias ActionChannel = Channel<ActionChannelPeriodicValue, Void>

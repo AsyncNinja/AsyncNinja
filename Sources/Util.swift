@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -40,13 +40,19 @@ func assertAbstract(file: StaticString = #file, line: UInt = #line) -> Never {
   fatalError("This methods is abstract. May not reach here", file: file, line: line)
 }
 
-/// Simple implementation of either
+/// Simple implementation of either monad
 public enum Either<Left, Right> {
+
+  /// left case
   case left(Left)
+
+  /// right case
   case right(Right)
 }
 
 extension Either where Left: Equatable, Right: Equatable {
+
+  /// implementation of an "equals" operatior
   public static func ==(lhs: Either, rhs: Either) -> Bool {
     switch (lhs, rhs) {
     case let (.left(valueA), .left(valueB)):

@@ -154,6 +154,7 @@ public extension Future where FinalValue : Finite {
   }
 }
 
+/// DispatchGroup improved with AsyncNinja
 public extension DispatchGroup {
   /// Makes future from of `DispatchGroups`'s notify after balancing all enters and leaves
   var completionFuture: Future<Void> {

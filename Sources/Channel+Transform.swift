@@ -23,7 +23,6 @@
 import Dispatch
 
 public extension Channel {
-  #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 
   /// Adds indexes to periodic values of the channel
   ///
@@ -31,39 +30,32 @@ public extension Channel {
   ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
   /// - Returns: channel with tuple (index, periodicValue) as periodic value
-  func enumerated(
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default
+  func enumerated(cancellationToken: CancellationToken? = nil,
+                  bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<(Int, PeriodicValue), FinalValue> {
-    var index: OSAtomic_int64_aligned64_t = -1
-    return self.mapPeriodic(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
-      let localIndex = Int(OSAtomicIncrement64(&index))
-      return (localIndex, $0)
-    }
-  }
-  #else
 
-  /// Adds indexes to periodic values of the channel
-  ///
-  /// - Parameters:
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
-  /// - Returns: channel with tuple (index, periodicValue) as periodic value
-  func enumerated(
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<(Int, PeriodicValue), FinalValue> {
-    var locking = makeLocking()
-    var index = 0
-    return self.mapPeriodic(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
-      locking.lock()
-      defer { locking.unlock() }
-      let localIndex = index
-      index += 1
-      return (localIndex, $0)
-    }
+    #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+
+      var index: OSAtomic_int64_aligned64_t = -1
+      return self.mapPeriodic(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+        let localIndex = Int(OSAtomicIncrement64(&index))
+        return (localIndex, $0)
+      }
+
+    #else
+
+      var locking = makeLocking()
+      var index = 0
+      return self.mapPeriodic(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+        locking.lock()
+        defer { locking.unlock() }
+        let localIndex = index
+        index += 1
+        return (localIndex, $0)
+      }
+
+    #endif
   }
-  #endif
 
   /// Makes channel of pairs of periodic values
   ///

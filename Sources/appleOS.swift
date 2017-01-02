@@ -75,14 +75,21 @@
 
   import CoreData
 
+  /// NSManagedObjectContext improved with AsyncNinja
   extension NSManagedObjectContext : ExecutionContext, ObjCInjectedRetainer {
+
+    /// returns an executor that executes block on private queue of NSManagedObjectContext
     public var executor: Executor { return Executor(isSerial: true) { [weak self] in self?.perform($0) } }
   }
 
+  /// NSPersistentStoreCoordinator improved with AsyncNinja
   extension NSPersistentStoreCoordinator : ExecutionContext, ObjCInjectedRetainer {
+
+    /// returns an executor that executes block on private queue of NSPersistentStoreCoordinator
     public var executor: Executor { return Executor(isSerial: true) { [weak self] in self?.perform($0) } }
   }
 
+  /// URLSession improved with AsyncNinja
   public extension URLSession {
     private func dataFuture(context: ExecutionContext?, cancellationToken: CancellationToken?, makeTask: (@escaping (Data?, URLResponse?, Swift.Error?) -> Void) -> URLSessionDataTask) -> Future<(Data?, URLResponse)> {
       let promise = Promise<(Data?, URLResponse)>()
@@ -115,24 +122,28 @@
       return promise
     }
 
+    /// Makes data task and returns Future of response
     func data(at url: URL, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> Future<(Data?, URLResponse)> {
       return self.dataFuture(context: context, cancellationToken: cancellationToken) {
         self.dataTask(with: url, completionHandler: $0)
       }
     }
 
+    /// Makes data task and returns Future of response
     func data(with request: URLRequest, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> Future<(Data?, URLResponse)> {
       return self.dataFuture(context: context, cancellationToken: cancellationToken) {
         self.dataTask(with: request, completionHandler: $0)
       }
     }
 
+    /// Makes upload task and returns Future of response
     func upload(with request: URLRequest, fromFile fileURL: URL, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> Future<(Data?, URLResponse)> {
       return self.dataFuture(context: context, cancellationToken: cancellationToken) {
         self.uploadTask(with: request, fromFile: fileURL, completionHandler: $0)
       }
     }
 
+    /// Makes upload task and returns Future of response
     func upload(with request: URLRequest, from bodyData: Data?, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> Future<(Data?, URLResponse)> {
       return self.dataFuture(context: context, cancellationToken: cancellationToken) {
         self.uploadTask(with: request, from: bodyData, completionHandler: $0)
@@ -144,18 +155,23 @@
 #if os(macOS)
   import AppKit
 
-  extension NSResponder : ObjCUIInjectedExecutionContext {}
+  /// Conforms NSResponer to ObjCUIInjectedExecutionContext that allows using each NSResponder as ExecutionContext
+  extension NSResponder: ObjCUIInjectedExecutionContext {}
 #endif
 
 #if os(iOS) || os(tvOS)
   import UIKit
 
-  extension UIResponder : ObjCUIInjectedExecutionContext {}
+  /// Conforms UIResponder to ObjCUIInjectedExecutionContext that allows using each UIResponder as ExecutionContext
+  extension UIResponder: ObjCUIInjectedExecutionContext {}
 #endif
 
 #if os(watchOS)
   import WatchKit
 
-  extension WKInterfaceController : ObjCUIInjectedExecutionContext {}
-  extension WKInterfaceObject : ObjCUIInjectedExecutionContext {}
+  /// Conforms WKInterfaceController to ObjCUIInjectedExecutionContext that allows using each WKInterfaceController as ExecutionContext
+  extension WKInterfaceController: ObjCUIInjectedExecutionContext {}
+
+  /// Conforms WKInterfaceObject to ObjCUIInjectedExecutionContext that allows using each WKInterfaceObject as ExecutionContext
+  extension WKInterfaceObject: ObjCUIInjectedExecutionContext {}
 #endif

@@ -382,6 +382,7 @@ class ChannelTests : XCTestCase {
       initalProducer.send(10)
       initalProducer.send(11)
       initalProducer.send(12)
+      usleep(100_000)
       initalProducer.succeed(with: "Finished!")
     }
 

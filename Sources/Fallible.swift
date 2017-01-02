@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -24,7 +24,11 @@ import Dispatch
 
 /// Fallible is an implementation of validation monad. May contain either success value or failure in form of `Error`.
 public enum Fallible<Success> : _Fallible {
+
+  /// success case of Fallible. Contains success value
   case success(Success)
+
+  /// failure case of Fallible. Contains failure value (Error)
   case failure(Swift.Error)
 
   /// Initializes Fallible with success value
@@ -182,7 +186,7 @@ extension Fallible where Success : _Fallible {
   /// ```
   ///
   /// - Returns: flattened Fallible
-public func flatten() -> Fallible<Success.Success> {
+  public func flatten() -> Fallible<Success.Success> {
     switch self {
     case let .success(success):
       return success as! Fallible<Success.Success>
@@ -197,28 +201,37 @@ public func flatten() -> Fallible<Success.Success> {
 public protocol _Fallible {
   associatedtype Success
 
+  /// returns success value if _Fallible contains one
   var success: Success? { get }
+
+  /// returns failure value if _Fallible contains one
   var failure: Swift.Error? { get }
 
+  /// initializes fallible with success value
   init(success: Success)
+
+  /// initializes fallible with failure value
   init(failure: Swift.Error)
 
+  /// executes handler if the fallible containse success value
   func onSuccess(_ handler: (Success) throws -> Void) rethrows
+
+  /// executes handler if the fallible containse failure value
   func onFailure(_ handler: (Swift.Error) throws -> Void) rethrows
 
-  // (success or failure) * (try transform success to success) -> (success or failure)
+  /// (success or failure) * (try transform success to success) -> (success or failure)
   func map<T>(transform: (Success) throws -> T) -> Fallible<T>
 
-  // (success or failure) * (try transform success to (success or failure)) -> (success or failure)
+  /// (success or failure) * (try transform success to (success or failure)) -> (success or failure)
   func flatMap<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>
 
-  // (success or failure) * (try transform failure to success) -> (success or failure)
+  /// (success or failure) * (try transform failure to success) -> (success or failure)
   func tryRecover(transform: (Swift.Error) throws -> Success) -> Fallible<Success>
 
-  // (success or failure) * (transform failure to success) -> success
+  /// (success or failure) * (transform failure to success) -> success
   func recover(transform: (Swift.Error) -> Success) -> Success
 
-  // returns success or throws failure
+  /// returns success or throws failure
   func liftSuccess() throws -> Success
 }
 

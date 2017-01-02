@@ -22,7 +22,7 @@
 
 import Dispatch
 
-public class Channel<PeriodicValue, FinalValue> : Finite {
+public class Channel<PeriodicValue, FinalValue>: Finite {
   public typealias Value = ChannelValue<PeriodicValue, FinalValue>
   public typealias Handler = ChannelHandler<PeriodicValue, FinalValue>
   public typealias PeriodicHandler = Handler
@@ -71,7 +71,7 @@ public class Channel<PeriodicValue, FinalValue> : Finite {
     assertAbstract()
   }
 
-  /// Makes an iterator that allows synchonus iteration over periodic values of the channel
+  /// Makes an iterator that allows synchronous iteration over periodic values of the channel
   public func makeIterator() -> Iterator {
     assertAbstract()
   }

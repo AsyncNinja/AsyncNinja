@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -22,12 +22,18 @@
 
 import Dispatch
 
+/// An object that allows to implement and control cancellation
 public class CancellationToken {
   private var _container = makeThreadSafeContainer()
+
+  /// Returns state of the object
   public var isCancelled: Bool { return _container.head is CancelledItem }
 
+  /// Designated initializer. Initializes uncancelled token
   public init() { }
 
+  /// Adds block to notify when state changes to cancelled
+  /// Specified block will never be called if the token will never be cancelled
   public func notifyCancellation(_ block: @escaping () -> Void) {
     _container.updateHead {
       if let notifyItem = $0 as? NotifyItem {
@@ -38,11 +44,11 @@ public class CancellationToken {
     }
   }
 
-  class Item {
+  private class Item {
     init() { }
   }
 
-  final class NotifyItem : Item {
+  private class NotifyItem : Item {
     let block: () -> Void
     let next: NotifyItem?
 
@@ -56,6 +62,5 @@ public class CancellationToken {
     }
   }
 
-  final class CancelledItem : Item { }
-  
+  private class CancelledItem : Item { }
 }
