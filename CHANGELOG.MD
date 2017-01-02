@@ -1,3 +1,7 @@
+# 0.4.1
+* putting back xcodeproj
+* fixing documentation references
+
 # 0.4.0
 * documentation improved
 * zip of fallibles added
