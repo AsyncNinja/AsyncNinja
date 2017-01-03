@@ -317,7 +317,21 @@ class ChannelTests : XCTestCase {
   func testZip() {
     let producerOfOdds = Producer<Int, String>()
     let producerOfEvents = Producer<Int, String>()
-    let channelOfNumbers = zip(producerOfOdds, producerOfEvents)
+    let expectation = self.expectation(description: "channel to finish")
+
+    zip(producerOfOdds, producerOfEvents)
+      .extractAll { (pairs, stringsOfError) in
+        let fixturePairs = [(1, 2), (3, 4), (5, 6), (7, 8)]
+        XCTAssertEqual(fixturePairs.count, pairs.count)
+        for (pair, fixturePair) in zip(pairs, fixturePairs) {
+          XCTAssertEqual(pair.0, fixturePair.0)
+          XCTAssertEqual(pair.1, fixturePair.1)
+        }
+
+        XCTAssertEqual(stringsOfError.success!.0, "Hello")
+        XCTAssertEqual(stringsOfError.success!.1, "World")
+        expectation.fulfill()
+    }
 
     DispatchQueue.global().async {
       producerOfOdds.send(1)
@@ -333,17 +347,7 @@ class ChannelTests : XCTestCase {
       producerOfEvents.succeed(with: "World")
     }
 
-    let (pairs, stringsOfError) = channelOfNumbers.waitForAll()
-
-    let fixturePairs = [(1, 2), (3, 4), (5, 6), (7, 8)]
-    XCTAssertEqual(fixturePairs.count, pairs.count)
-    for (pair, fixturePair) in zip(pairs, fixturePairs) {
-      XCTAssertEqual(pair.0, fixturePair.0)
-      XCTAssertEqual(pair.1, fixturePair.1)
-    }
-
-    XCTAssertEqual(stringsOfError.success!.0, "Hello")
-    XCTAssertEqual(stringsOfError.success!.1, "World")
+    self.waitForExpectations(timeout: 1.0)
   }
 
   func testSample() {
