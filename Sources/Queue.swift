@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -25,9 +25,10 @@ import Dispatch
 class QueueImpl<T> {
   typealias Iterator = QueueIterator<T>
 
-  var _first: Iterator.Wrapper? = nil
-  var _last: Iterator.Wrapper? = nil
+  private var _first: Iterator.Wrapper? = nil
+  private var _last: Iterator.Wrapper? = nil
   private(set) var count = 0
+  var first: T? { return _first?.element }
   var isEmpty: Bool { return nil == _first }
 
   init() { }

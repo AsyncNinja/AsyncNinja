@@ -48,6 +48,18 @@ public enum Either<Left, Right> {
 
   /// right case
   case right(Right)
+
+  /// returns left value if there is one
+  public var left: Left? {
+    if case let .left(value) = self { return value }
+    else { return nil }
+  }
+
+  /// returns right value if there is one
+  public var right: Right? {
+    if case let .right(value) = self { return value }
+    else { return nil }
+  }
 }
 
 extension Either where Left: Equatable, Right: Equatable {

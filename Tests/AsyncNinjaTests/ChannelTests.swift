@@ -43,6 +43,7 @@ class ChannelTests : XCTestCase {
     ("testBuffering10", testBuffering10),
     ("testMergeInts", testMergeInts),
     ("testMergeIntsAndStrings", testMergeIntsAndStrings),
+    ("testZip", testZip),
     ("testSample", testSample),
     ("testDebounce", testDebounce)
     ]
@@ -309,6 +310,38 @@ class ChannelTests : XCTestCase {
     for (number, fixture) in zip(numbers, fixtureNumbers) {
       XCTAssert(number == fixture)
     }
+    XCTAssertEqual(stringsOfError.success!.0, "Hello")
+    XCTAssertEqual(stringsOfError.success!.1, "World")
+  }
+
+  func testZip() {
+    let producerOfOdds = Producer<Int, String>()
+    let producerOfEvents = Producer<Int, String>()
+    let channelOfNumbers = zip(producerOfOdds, producerOfEvents)
+
+    DispatchQueue.global().async {
+      producerOfOdds.send(1)
+      producerOfOdds.send(3)
+      producerOfEvents.send(2)
+      producerOfEvents.send(4)
+      producerOfOdds.send(5)
+      producerOfEvents.send(6)
+      producerOfOdds.send(7)
+      producerOfOdds.succeed(with: "Hello")
+      producerOfEvents.send(8)
+      producerOfEvents.send(10)
+      producerOfEvents.succeed(with: "World")
+    }
+
+    let (pairs, stringsOfError) = channelOfNumbers.waitForAll()
+
+    let fixturePairs = [(1, 2), (3, 4), (5, 6), (7, 8)]
+    XCTAssertEqual(fixturePairs.count, pairs.count)
+    for (pair, fixturePair) in zip(pairs, fixturePairs) {
+      XCTAssertEqual(pair.0, fixturePair.0)
+      XCTAssertEqual(pair.1, fixturePair.1)
+    }
+
     XCTAssertEqual(stringsOfError.success!.0, "Hello")
     XCTAssertEqual(stringsOfError.success!.1, "World")
   }
