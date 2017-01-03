@@ -41,13 +41,20 @@ class ChannelTests : XCTestCase {
     ("testBuffering2", testBuffering2),
     ("testBuffering3", testBuffering3),
     ("testBuffering10", testBuffering10),
+    ("testFirstSuccessIncomplete", testFirstSuccessIncomplete),
+    ("testFirstNotFound", testFirstNotFound),
+    ("testFirstFailure", testFirstFailure),
+    ("testFirstSuccessIncompleteContextual", testFirstSuccessIncompleteContextual),
+    ("testFirstNotFoundContextual", testFirstNotFoundContextual),
+    ("testFirstFailureContextual", testFirstFailureContextual),
+    ("testFirstDeadContextual", testFirstDeadContextual),
     ("testMergeInts", testMergeInts),
     ("testMergeIntsAndStrings", testMergeIntsAndStrings),
     ("testZip", testZip),
     ("testSample", testSample),
     ("testDebounce", testDebounce)
-    ]
-  
+  ]
+
   func testIterators() {
     let producer = Producer<Int, String>(bufferSize: 5)
     var iteratorA = producer.makeIterator()
@@ -260,6 +267,185 @@ class ChannelTests : XCTestCase {
     XCTAssertEqual(periodics, fixture, file: file, line: line)
   }
 
+  func testFirstSuccessIncomplete() {
+    let producer = Producer<Int, Void>()
+    let expectation = self.expectation(description: "future to finish")
+    let qos = pickQoS()
+
+    producer.first(executor: .queue(qos)) {
+      assert(qos: qos)
+      return 0 == $0 % 2
+      }
+      .onSuccess(executor: .queue(qos)) {
+        assert(qos: qos)
+        XCTAssertEqual(8, $0)
+        expectation.fulfill()
+    }
+
+    producer.send(1)
+    producer.send(3)
+    producer.send(5)
+    producer.send(7)
+    producer.send(8)
+    producer.send(9)
+    producer.send(10)
+
+    self.waitForExpectations(timeout: 1.0)
+  }
+  
+  func testFirstNotFound() {
+    let producer = Producer<Int, Void>()
+    let expectation = self.expectation(description: "future to finish")
+    let qos = pickQoS()
+
+    producer.first(executor: .queue(qos)) {
+      assert(qos: qos)
+      return 0 == $0 % 2
+      }
+      .onSuccess(executor: .queue(qos)) {
+        assert(qos: qos)
+        XCTAssertNil($0)
+        expectation.fulfill()
+    }
+
+    producer.send(1)
+    producer.send(3)
+    producer.send(5)
+    producer.send(7)
+    producer.send(9)
+    producer.succeed(with: ())
+
+    self.waitForExpectations(timeout: 1.0)
+  }
+
+  func testFirstFailure() {
+    let producer = Producer<Int, Void>()
+    let expectation = self.expectation(description: "future to finish")
+    let qos = pickQoS()
+
+    producer.first(executor: .queue(qos)) {
+      assert(qos: qos)
+      return 0 == $0 % 2
+      }
+      .onFailure(executor: .queue(qos)) {
+        assert(qos: qos)
+        XCTAssertEqual($0 as! TestError, TestError.testCode)
+        expectation.fulfill()
+    }
+
+    producer.send(1)
+    producer.send(3)
+    producer.send(5)
+    producer.send(7)
+    producer.send(9)
+    producer.fail(with: TestError.testCode)
+
+    self.waitForExpectations(timeout: 1.0)
+  }
+
+  func testFirstSuccessIncompleteContextual() {
+    let actor = TestActor()
+    let producer = Producer<Int, Void>()
+    let expectation = self.expectation(description: "future to finish")
+
+    producer.first(context: actor) { (actor, value) in
+      assert(actor: actor)
+      return 0 == value % 2
+      }
+      .onSuccess(context: actor) { (actor, value) in
+        assert(actor: actor)
+        XCTAssertEqual(8, value)
+        expectation.fulfill()
+    }
+
+    producer.send(1)
+    producer.send(3)
+    producer.send(5)
+    producer.send(7)
+    producer.send(8)
+    producer.send(9)
+    producer.send(10)
+
+    self.waitForExpectations(timeout: 1.0)
+  }
+
+
+  func testFirstNotFoundContextual() {
+    let actor = TestActor()
+    let producer = Producer<Int, Void>()
+    let expectation = self.expectation(description: "future to finish")
+
+    producer.first(context: actor) { (actor, value) in
+      assert(actor: actor)
+      return 0 == value % 2
+      }
+      .onSuccess(context: actor) { (actor, value) in
+        assert(actor: actor)
+        XCTAssertNil(value)
+        expectation.fulfill()
+    }
+
+    producer.send(1)
+    producer.send(3)
+    producer.send(5)
+    producer.send(7)
+    producer.send(9)
+    producer.succeed(with: ())
+
+    self.waitForExpectations(timeout: 1.0)
+  }
+
+  func testFirstFailureContextual() {
+    let actor = TestActor()
+    let producer = Producer<Int, Void>()
+    let expectation = self.expectation(description: "future to finish")
+
+    producer.first(context: actor) { (actor, value) in
+      assert(actor: actor)
+      return 0 == value % 2
+      }
+      .onFailure(context: actor) { (actor, failure) in
+        assert(actor: actor)
+        XCTAssertEqual(failure as! TestError, TestError.testCode)
+        expectation.fulfill()
+    }
+
+    producer.send(1)
+    producer.send(3)
+    producer.send(5)
+    producer.send(7)
+    producer.send(9)
+    producer.fail(with: TestError.testCode)
+
+    self.waitForExpectations(timeout: 1.0)
+  }
+
+  func testFirstDeadContextual() {
+    var actor: TestActor? = TestActor()
+    let producer = Producer<Int, Void>()
+    let expectation = self.expectation(description: "future to finish")
+
+    let future = producer.first(context: actor!) { (actor, value) in
+      assert(actor: actor)
+      return 0 == value % 2
+    }
+    future.onFailure { (failure) in
+      XCTAssertEqual(failure as! AsyncNinjaError, AsyncNinjaError.contextDeallocated)
+      expectation.fulfill()
+    }
+
+    producer.send(1)
+    producer.send(3)
+    actor = nil
+    producer.send(5)
+    producer.send(8)
+    producer.send(7)
+    producer.send(9)
+    producer.fail(with: TestError.testCode)
+
+    self.waitForExpectations(timeout: 1.0)
+  }
+
   func testMergeInts() {
     let producerOfOdds = Producer<Int, String>()
     let producerOfEvents = Producer<Int, String>()
@@ -419,7 +605,7 @@ class ChannelTests : XCTestCase {
       initalProducer.send(10)
       initalProducer.send(11)
       initalProducer.send(12)
-      usleep(100_000)
+      usleep(200_000)
       initalProducer.succeed(with: "Finished!")
     }
 
