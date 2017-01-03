@@ -164,14 +164,7 @@ final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, F
       switch $0 {
       case .none:
         return FinalState(final: final)
-      case let regularState as RegularState:
-        var enumeratedRegularState: RegularState? = regularState
-
-        while let regularState = enumeratedRegularState {
-          regularState.handler?.releaseOwner()
-          enumeratedRegularState = regularState.next
-        }
-
+      case is RegularState:
         return FinalState(final: final)
       case is FinalState:
         return $0
@@ -179,9 +172,17 @@ final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, F
         fatalError()
       }
     }
-    
+
+    if let regularState = oldHead as? RegularState {
+      var enumeratedRegularState: RegularState? = regularState
+
+      while let regularState = enumeratedRegularState {
+        regularState.handler?.releaseOwner()
+        enumeratedRegularState = regularState.next
+      }
+    }
+
     guard nil != newHead else { return false }
-    
     return self.notify(.final(final), head: oldHead as! ProducerState<PeriodicValue, FinalValue>?)
   }
 

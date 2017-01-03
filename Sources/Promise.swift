@@ -69,14 +69,7 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
     let completedItem = CompletedPromiseState(value: final)
     let (oldHead, newHead) = _container.updateHead {
       switch $0 {
-      case let subsribed as SubscribedPromiseState<FinalValue>:
-        var enumeratedSubcribed: SubscribedPromiseState<FinalValue>? = subsribed
-
-        while let subsribed = enumeratedSubcribed {
-          subsribed.releaseOwner()
-          enumeratedSubcribed = subsribed.next
-        }
-
+      case is SubscribedPromiseState<FinalValue>:
         return completedItem
       case let oldCompletedItem as CompletedPromiseState<FinalValue>:
         return oldCompletedItem
@@ -92,6 +85,7 @@ final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
     var nextItem = oldHead
     while let currentItem = nextItem as? SubscribedPromiseState<FinalValue> {
       currentItem.handler?.handle(final)
+      currentItem.releaseOwner()
       nextItem = currentItem.next
     }
     _releasePool.drain()
