@@ -7,60 +7,61 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		OBJ_103 /* BatchFutureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_43 /* BatchFutureTests.swift */; };
-		OBJ_104 /* CachableValueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_44 /* CachableValueTests.swift */; };
-		OBJ_105 /* ChannelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_45 /* ChannelTests.swift */; };
-		OBJ_106 /* ExecutionContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_46 /* ExecutionContextTests.swift */; };
-		OBJ_107 /* ExecutorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_47 /* ExecutorTests.swift */; };
-		OBJ_108 /* FallibleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_48 /* FallibleTests.swift */; };
-		OBJ_109 /* FutureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_49 /* FutureTests.swift */; };
-		OBJ_110 /* ObserversTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_50 /* ObserversTests.swift */; };
-		OBJ_111 /* ReleasePoolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_51 /* ReleasePoolTests.swift */; };
-		OBJ_112 /* TestUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_52 /* TestUtilities.swift */; };
-		OBJ_113 /* TimerChannelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_53 /* TimerChannelTests.swift */; };
-		OBJ_114 /* XCTestManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_54 /* XCTestManifest.swift */; };
-		OBJ_115 /* ZipFuturesTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_55 /* ZipFuturesTest.swift */; };
-		OBJ_117 /* AsyncNinja.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = OBJ_58 /* AsyncNinja.framework */; };
-		OBJ_65 /* appleOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_9 /* appleOS.swift */; };
-		OBJ_66 /* CachableValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* CachableValue.swift */; };
-		OBJ_67 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* Cache.swift */; };
-		OBJ_68 /* CancellationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_12 /* CancellationToken.swift */; };
-		OBJ_69 /* Channel+Combine.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* Channel+Combine.swift */; };
-		OBJ_70 /* Channel+Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* Channel+Map.swift */; };
-		OBJ_71 /* Channel+Merge2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* Channel+Merge2.swift */; };
-		OBJ_72 /* Channel+Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_16 /* Channel+Transform.swift */; };
-		OBJ_73 /* Channel+Zip2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_17 /* Channel+Zip2.swift */; };
-		OBJ_74 /* Channel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_18 /* Channel.swift */; };
-		OBJ_75 /* Collection+Futures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_19 /* Collection+Futures.swift */; };
-		OBJ_76 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_20 /* Common.swift */; };
-		OBJ_77 /* ConstantFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_21 /* ConstantFuture.swift */; };
-		OBJ_78 /* ExecutionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_22 /* ExecutionContext.swift */; };
-		OBJ_79 /* Executor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_23 /* Executor.swift */; };
-		OBJ_80 /* Fallible.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_24 /* Fallible.swift */; };
-		OBJ_81 /* Finite.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_25 /* Finite.swift */; };
-		OBJ_82 /* Future+Makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_26 /* Future+Makers.swift */; };
-		OBJ_83 /* Future.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_27 /* Future.swift */; };
-		OBJ_84 /* LockFreeThreadSafeContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_28 /* LockFreeThreadSafeContainer.swift */; };
-		OBJ_85 /* Locking.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_29 /* Locking.swift */; };
-		OBJ_86 /* MutableFinite.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* MutableFinite.swift */; };
-		OBJ_87 /* Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_31 /* Observers.swift */; };
-		OBJ_88 /* Producer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_32 /* Producer.swift */; };
-		OBJ_89 /* Promise.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_33 /* Promise.swift */; };
-		OBJ_90 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* Queue.swift */; };
-		OBJ_91 /* ReleasePool.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_35 /* ReleasePool.swift */; };
-		OBJ_92 /* ThreadSafety.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_36 /* ThreadSafety.swift */; };
-		OBJ_93 /* TimerChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_37 /* TimerChannel.swift */; };
-		OBJ_94 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_38 /* Util.swift */; };
-		OBJ_95 /* Zip2Futures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_39 /* Zip2Futures.swift */; };
-		OBJ_96 /* Zip3Futures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_40 /* Zip3Futures.swift */; };
+		OBJ_105 /* BatchFutureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_44 /* BatchFutureTests.swift */; };
+		OBJ_106 /* CachableValueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_45 /* CachableValueTests.swift */; };
+		OBJ_107 /* ChannelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_46 /* ChannelTests.swift */; };
+		OBJ_108 /* ExecutionContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_47 /* ExecutionContextTests.swift */; };
+		OBJ_109 /* ExecutorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_48 /* ExecutorTests.swift */; };
+		OBJ_110 /* FallibleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_49 /* FallibleTests.swift */; };
+		OBJ_111 /* FutureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_50 /* FutureTests.swift */; };
+		OBJ_112 /* ObserversTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_51 /* ObserversTests.swift */; };
+		OBJ_113 /* ReleasePoolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_52 /* ReleasePoolTests.swift */; };
+		OBJ_114 /* TestUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_53 /* TestUtilities.swift */; };
+		OBJ_115 /* TimerChannelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_54 /* TimerChannelTests.swift */; };
+		OBJ_116 /* XCTestManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_55 /* XCTestManifest.swift */; };
+		OBJ_117 /* ZipFuturesTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_56 /* ZipFuturesTest.swift */; };
+		OBJ_119 /* AsyncNinja.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = OBJ_59 /* AsyncNinja.framework */; };
+		OBJ_66 /* appleOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_9 /* appleOS.swift */; };
+		OBJ_67 /* CachableValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* CachableValue.swift */; };
+		OBJ_68 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* Cache.swift */; };
+		OBJ_69 /* CancellationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_12 /* CancellationToken.swift */; };
+		OBJ_70 /* Channel+Combine.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* Channel+Combine.swift */; };
+		OBJ_71 /* Channel+Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* Channel+Map.swift */; };
+		OBJ_72 /* Channel+Merge2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* Channel+Merge2.swift */; };
+		OBJ_73 /* Channel+ToFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_16 /* Channel+ToFuture.swift */; };
+		OBJ_74 /* Channel+Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_17 /* Channel+Transform.swift */; };
+		OBJ_75 /* Channel+Zip2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_18 /* Channel+Zip2.swift */; };
+		OBJ_76 /* Channel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_19 /* Channel.swift */; };
+		OBJ_77 /* Collection+Futures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_20 /* Collection+Futures.swift */; };
+		OBJ_78 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_21 /* Common.swift */; };
+		OBJ_79 /* ConstantFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_22 /* ConstantFuture.swift */; };
+		OBJ_80 /* ExecutionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_23 /* ExecutionContext.swift */; };
+		OBJ_81 /* Executor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_24 /* Executor.swift */; };
+		OBJ_82 /* Fallible.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_25 /* Fallible.swift */; };
+		OBJ_83 /* Finite.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_26 /* Finite.swift */; };
+		OBJ_84 /* Future+Makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_27 /* Future+Makers.swift */; };
+		OBJ_85 /* Future.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_28 /* Future.swift */; };
+		OBJ_86 /* LockFreeThreadSafeContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_29 /* LockFreeThreadSafeContainer.swift */; };
+		OBJ_87 /* Locking.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* Locking.swift */; };
+		OBJ_88 /* MutableFinite.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_31 /* MutableFinite.swift */; };
+		OBJ_89 /* Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_32 /* Observers.swift */; };
+		OBJ_90 /* Producer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_33 /* Producer.swift */; };
+		OBJ_91 /* Promise.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* Promise.swift */; };
+		OBJ_92 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_35 /* Queue.swift */; };
+		OBJ_93 /* ReleasePool.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_36 /* ReleasePool.swift */; };
+		OBJ_94 /* ThreadSafety.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_37 /* ThreadSafety.swift */; };
+		OBJ_95 /* TimerChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_38 /* TimerChannel.swift */; };
+		OBJ_96 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_39 /* Util.swift */; };
+		OBJ_97 /* Zip2Futures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_40 /* Zip2Futures.swift */; };
+		OBJ_98 /* Zip3Futures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_41 /* Zip3Futures.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		F829091E1E1C58EB002EE77A /* PBXContainerItemProxy */ = {
+		F82909211E1C6ECF002EE77A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = OBJ_1 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = OBJ_60;
+			remoteGlobalIDString = OBJ_61;
 			remoteInfo = AsyncNinja;
 		};
 /* End PBXContainerItemProxy section */
@@ -72,61 +73,62 @@
 		OBJ_13 /* Channel+Combine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Combine.swift"; sourceTree = "<group>"; };
 		OBJ_14 /* Channel+Map.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Map.swift"; sourceTree = "<group>"; };
 		OBJ_15 /* Channel+Merge2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Merge2.swift"; sourceTree = "<group>"; };
-		OBJ_16 /* Channel+Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Transform.swift"; sourceTree = "<group>"; };
-		OBJ_17 /* Channel+Zip2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Zip2.swift"; sourceTree = "<group>"; };
-		OBJ_18 /* Channel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Channel.swift; sourceTree = "<group>"; };
-		OBJ_19 /* Collection+Futures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+Futures.swift"; sourceTree = "<group>"; };
-		OBJ_20 /* Common.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Common.swift; sourceTree = "<group>"; };
-		OBJ_21 /* ConstantFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstantFuture.swift; sourceTree = "<group>"; };
-		OBJ_22 /* ExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutionContext.swift; sourceTree = "<group>"; };
-		OBJ_23 /* Executor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Executor.swift; sourceTree = "<group>"; };
-		OBJ_24 /* Fallible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fallible.swift; sourceTree = "<group>"; };
-		OBJ_25 /* Finite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Finite.swift; sourceTree = "<group>"; };
-		OBJ_26 /* Future+Makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Future+Makers.swift"; sourceTree = "<group>"; };
-		OBJ_27 /* Future.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Future.swift; sourceTree = "<group>"; };
-		OBJ_28 /* LockFreeThreadSafeContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockFreeThreadSafeContainer.swift; sourceTree = "<group>"; };
-		OBJ_29 /* Locking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Locking.swift; sourceTree = "<group>"; };
-		OBJ_30 /* MutableFinite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MutableFinite.swift; sourceTree = "<group>"; };
-		OBJ_31 /* Observers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Observers.swift; sourceTree = "<group>"; };
-		OBJ_32 /* Producer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Producer.swift; sourceTree = "<group>"; };
-		OBJ_33 /* Promise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Promise.swift; sourceTree = "<group>"; };
-		OBJ_34 /* Queue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
-		OBJ_35 /* ReleasePool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleasePool.swift; sourceTree = "<group>"; };
-		OBJ_36 /* ThreadSafety.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadSafety.swift; sourceTree = "<group>"; };
-		OBJ_37 /* TimerChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerChannel.swift; sourceTree = "<group>"; };
-		OBJ_38 /* Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Util.swift; sourceTree = "<group>"; };
-		OBJ_39 /* Zip2Futures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Zip2Futures.swift; sourceTree = "<group>"; };
-		OBJ_40 /* Zip3Futures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Zip3Futures.swift; sourceTree = "<group>"; };
-		OBJ_43 /* BatchFutureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchFutureTests.swift; sourceTree = "<group>"; };
-		OBJ_44 /* CachableValueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachableValueTests.swift; sourceTree = "<group>"; };
-		OBJ_45 /* ChannelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelTests.swift; sourceTree = "<group>"; };
-		OBJ_46 /* ExecutionContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutionContextTests.swift; sourceTree = "<group>"; };
-		OBJ_47 /* ExecutorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutorTests.swift; sourceTree = "<group>"; };
-		OBJ_48 /* FallibleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallibleTests.swift; sourceTree = "<group>"; };
-		OBJ_49 /* FutureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FutureTests.swift; sourceTree = "<group>"; };
-		OBJ_50 /* ObserversTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObserversTests.swift; sourceTree = "<group>"; };
-		OBJ_51 /* ReleasePoolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleasePoolTests.swift; sourceTree = "<group>"; };
-		OBJ_52 /* TestUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtilities.swift; sourceTree = "<group>"; };
-		OBJ_53 /* TimerChannelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerChannelTests.swift; sourceTree = "<group>"; };
-		OBJ_54 /* XCTestManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XCTestManifest.swift; sourceTree = "<group>"; };
-		OBJ_55 /* ZipFuturesTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipFuturesTest.swift; sourceTree = "<group>"; };
-		OBJ_56 /* Documentation */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Documentation; sourceTree = SOURCE_ROOT; };
-		OBJ_58 /* AsyncNinja.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AsyncNinja.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		OBJ_59 /* AsyncNinjaTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = AsyncNinjaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		OBJ_16 /* Channel+ToFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+ToFuture.swift"; sourceTree = "<group>"; };
+		OBJ_17 /* Channel+Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Transform.swift"; sourceTree = "<group>"; };
+		OBJ_18 /* Channel+Zip2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Zip2.swift"; sourceTree = "<group>"; };
+		OBJ_19 /* Channel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Channel.swift; sourceTree = "<group>"; };
+		OBJ_20 /* Collection+Futures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+Futures.swift"; sourceTree = "<group>"; };
+		OBJ_21 /* Common.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Common.swift; sourceTree = "<group>"; };
+		OBJ_22 /* ConstantFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstantFuture.swift; sourceTree = "<group>"; };
+		OBJ_23 /* ExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutionContext.swift; sourceTree = "<group>"; };
+		OBJ_24 /* Executor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Executor.swift; sourceTree = "<group>"; };
+		OBJ_25 /* Fallible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fallible.swift; sourceTree = "<group>"; };
+		OBJ_26 /* Finite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Finite.swift; sourceTree = "<group>"; };
+		OBJ_27 /* Future+Makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Future+Makers.swift"; sourceTree = "<group>"; };
+		OBJ_28 /* Future.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Future.swift; sourceTree = "<group>"; };
+		OBJ_29 /* LockFreeThreadSafeContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockFreeThreadSafeContainer.swift; sourceTree = "<group>"; };
+		OBJ_30 /* Locking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Locking.swift; sourceTree = "<group>"; };
+		OBJ_31 /* MutableFinite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MutableFinite.swift; sourceTree = "<group>"; };
+		OBJ_32 /* Observers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Observers.swift; sourceTree = "<group>"; };
+		OBJ_33 /* Producer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Producer.swift; sourceTree = "<group>"; };
+		OBJ_34 /* Promise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Promise.swift; sourceTree = "<group>"; };
+		OBJ_35 /* Queue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
+		OBJ_36 /* ReleasePool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleasePool.swift; sourceTree = "<group>"; };
+		OBJ_37 /* ThreadSafety.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadSafety.swift; sourceTree = "<group>"; };
+		OBJ_38 /* TimerChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerChannel.swift; sourceTree = "<group>"; };
+		OBJ_39 /* Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Util.swift; sourceTree = "<group>"; };
+		OBJ_40 /* Zip2Futures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Zip2Futures.swift; sourceTree = "<group>"; };
+		OBJ_41 /* Zip3Futures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Zip3Futures.swift; sourceTree = "<group>"; };
+		OBJ_44 /* BatchFutureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchFutureTests.swift; sourceTree = "<group>"; };
+		OBJ_45 /* CachableValueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachableValueTests.swift; sourceTree = "<group>"; };
+		OBJ_46 /* ChannelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelTests.swift; sourceTree = "<group>"; };
+		OBJ_47 /* ExecutionContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutionContextTests.swift; sourceTree = "<group>"; };
+		OBJ_48 /* ExecutorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutorTests.swift; sourceTree = "<group>"; };
+		OBJ_49 /* FallibleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallibleTests.swift; sourceTree = "<group>"; };
+		OBJ_50 /* FutureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FutureTests.swift; sourceTree = "<group>"; };
+		OBJ_51 /* ObserversTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObserversTests.swift; sourceTree = "<group>"; };
+		OBJ_52 /* ReleasePoolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleasePoolTests.swift; sourceTree = "<group>"; };
+		OBJ_53 /* TestUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtilities.swift; sourceTree = "<group>"; };
+		OBJ_54 /* TimerChannelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerChannelTests.swift; sourceTree = "<group>"; };
+		OBJ_55 /* XCTestManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XCTestManifest.swift; sourceTree = "<group>"; };
+		OBJ_56 /* ZipFuturesTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipFuturesTest.swift; sourceTree = "<group>"; };
+		OBJ_57 /* Documentation */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Documentation; sourceTree = SOURCE_ROOT; };
+		OBJ_59 /* AsyncNinja.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AsyncNinja.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_6 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
+		OBJ_60 /* AsyncNinjaTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = AsyncNinjaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_9 /* appleOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		OBJ_116 /* Frameworks */ = {
+		OBJ_118 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				OBJ_117 /* AsyncNinja.framework in Frameworks */,
+				OBJ_119 /* AsyncNinja.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		OBJ_97 /* Frameworks */ = {
+		OBJ_99 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
@@ -136,30 +138,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		OBJ_41 /* Tests */ = {
+		OBJ_42 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				OBJ_42 /* AsyncNinjaTests */,
+				OBJ_43 /* AsyncNinjaTests */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
 		};
-		OBJ_42 /* AsyncNinjaTests */ = {
+		OBJ_43 /* AsyncNinjaTests */ = {
 			isa = PBXGroup;
 			children = (
-				OBJ_43 /* BatchFutureTests.swift */,
-				OBJ_44 /* CachableValueTests.swift */,
-				OBJ_45 /* ChannelTests.swift */,
-				OBJ_46 /* ExecutionContextTests.swift */,
-				OBJ_47 /* ExecutorTests.swift */,
-				OBJ_48 /* FallibleTests.swift */,
-				OBJ_49 /* FutureTests.swift */,
-				OBJ_50 /* ObserversTests.swift */,
-				OBJ_51 /* ReleasePoolTests.swift */,
-				OBJ_52 /* TestUtilities.swift */,
-				OBJ_53 /* TimerChannelTests.swift */,
-				OBJ_54 /* XCTestManifest.swift */,
-				OBJ_55 /* ZipFuturesTest.swift */,
+				OBJ_44 /* BatchFutureTests.swift */,
+				OBJ_45 /* CachableValueTests.swift */,
+				OBJ_46 /* ChannelTests.swift */,
+				OBJ_47 /* ExecutionContextTests.swift */,
+				OBJ_48 /* ExecutorTests.swift */,
+				OBJ_49 /* FallibleTests.swift */,
+				OBJ_50 /* FutureTests.swift */,
+				OBJ_51 /* ObserversTests.swift */,
+				OBJ_52 /* ReleasePoolTests.swift */,
+				OBJ_53 /* TestUtilities.swift */,
+				OBJ_54 /* TimerChannelTests.swift */,
+				OBJ_55 /* XCTestManifest.swift */,
+				OBJ_56 /* ZipFuturesTest.swift */,
 			);
 			name = AsyncNinjaTests;
 			path = Tests/AsyncNinjaTests;
@@ -170,18 +172,18 @@
 			children = (
 				OBJ_6 /* Package.swift */,
 				OBJ_7 /* Sources */,
-				OBJ_41 /* Tests */,
-				OBJ_56 /* Documentation */,
-				OBJ_57 /* Products */,
+				OBJ_42 /* Tests */,
+				OBJ_57 /* Documentation */,
+				OBJ_58 /* Products */,
 			);
 			name = "";
 			sourceTree = "<group>";
 		};
-		OBJ_57 /* Products */ = {
+		OBJ_58 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				OBJ_58 /* AsyncNinja.framework */,
-				OBJ_59 /* AsyncNinjaTests.xctest */,
+				OBJ_59 /* AsyncNinja.framework */,
+				OBJ_60 /* AsyncNinjaTests.xctest */,
 			);
 			name = Products;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -204,31 +206,32 @@
 				OBJ_13 /* Channel+Combine.swift */,
 				OBJ_14 /* Channel+Map.swift */,
 				OBJ_15 /* Channel+Merge2.swift */,
-				OBJ_16 /* Channel+Transform.swift */,
-				OBJ_17 /* Channel+Zip2.swift */,
-				OBJ_18 /* Channel.swift */,
-				OBJ_19 /* Collection+Futures.swift */,
-				OBJ_20 /* Common.swift */,
-				OBJ_21 /* ConstantFuture.swift */,
-				OBJ_22 /* ExecutionContext.swift */,
-				OBJ_23 /* Executor.swift */,
-				OBJ_24 /* Fallible.swift */,
-				OBJ_25 /* Finite.swift */,
-				OBJ_26 /* Future+Makers.swift */,
-				OBJ_27 /* Future.swift */,
-				OBJ_28 /* LockFreeThreadSafeContainer.swift */,
-				OBJ_29 /* Locking.swift */,
-				OBJ_30 /* MutableFinite.swift */,
-				OBJ_31 /* Observers.swift */,
-				OBJ_32 /* Producer.swift */,
-				OBJ_33 /* Promise.swift */,
-				OBJ_34 /* Queue.swift */,
-				OBJ_35 /* ReleasePool.swift */,
-				OBJ_36 /* ThreadSafety.swift */,
-				OBJ_37 /* TimerChannel.swift */,
-				OBJ_38 /* Util.swift */,
-				OBJ_39 /* Zip2Futures.swift */,
-				OBJ_40 /* Zip3Futures.swift */,
+				OBJ_16 /* Channel+ToFuture.swift */,
+				OBJ_17 /* Channel+Transform.swift */,
+				OBJ_18 /* Channel+Zip2.swift */,
+				OBJ_19 /* Channel.swift */,
+				OBJ_20 /* Collection+Futures.swift */,
+				OBJ_21 /* Common.swift */,
+				OBJ_22 /* ConstantFuture.swift */,
+				OBJ_23 /* ExecutionContext.swift */,
+				OBJ_24 /* Executor.swift */,
+				OBJ_25 /* Fallible.swift */,
+				OBJ_26 /* Finite.swift */,
+				OBJ_27 /* Future+Makers.swift */,
+				OBJ_28 /* Future.swift */,
+				OBJ_29 /* LockFreeThreadSafeContainer.swift */,
+				OBJ_30 /* Locking.swift */,
+				OBJ_31 /* MutableFinite.swift */,
+				OBJ_32 /* Observers.swift */,
+				OBJ_33 /* Producer.swift */,
+				OBJ_34 /* Promise.swift */,
+				OBJ_35 /* Queue.swift */,
+				OBJ_36 /* ReleasePool.swift */,
+				OBJ_37 /* ThreadSafety.swift */,
+				OBJ_38 /* TimerChannel.swift */,
+				OBJ_39 /* Util.swift */,
+				OBJ_40 /* Zip2Futures.swift */,
+				OBJ_41 /* Zip3Futures.swift */,
 			);
 			name = AsyncNinja;
 			path = Sources;
@@ -237,12 +240,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		OBJ_60 /* AsyncNinja */ = {
+		OBJ_100 /* AsyncNinjaTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = OBJ_61 /* Build configuration list for PBXNativeTarget "AsyncNinja" */;
+			buildConfigurationList = OBJ_101 /* Build configuration list for PBXNativeTarget "AsyncNinjaTests" */;
 			buildPhases = (
-				OBJ_64 /* Sources */,
-				OBJ_97 /* Frameworks */,
+				OBJ_104 /* Sources */,
+				OBJ_118 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				OBJ_120 /* PBXTargetDependency */,
+			);
+			name = AsyncNinjaTests;
+			productName = AsyncNinjaTests;
+			productReference = OBJ_60 /* AsyncNinjaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		OBJ_61 /* AsyncNinja */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = OBJ_62 /* Build configuration list for PBXNativeTarget "AsyncNinja" */;
+			buildPhases = (
+				OBJ_65 /* Sources */,
+				OBJ_99 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -250,25 +270,8 @@
 			);
 			name = AsyncNinja;
 			productName = AsyncNinja;
-			productReference = OBJ_58 /* AsyncNinja.framework */;
+			productReference = OBJ_59 /* AsyncNinja.framework */;
 			productType = "com.apple.product-type.framework";
-		};
-		OBJ_98 /* AsyncNinjaTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = OBJ_99 /* Build configuration list for PBXNativeTarget "AsyncNinjaTests" */;
-			buildPhases = (
-				OBJ_102 /* Sources */,
-				OBJ_116 /* Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				OBJ_118 /* PBXTargetDependency */,
-			);
-			name = AsyncNinjaTests;
-			productName = AsyncNinjaTests;
-			productReference = OBJ_59 /* AsyncNinjaTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -286,88 +289,89 @@
 				en,
 			);
 			mainGroup = OBJ_5 /*  */;
-			productRefGroup = OBJ_57 /* Products */;
+			productRefGroup = OBJ_58 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				OBJ_60 /* AsyncNinja */,
-				OBJ_98 /* AsyncNinjaTests */,
+				OBJ_61 /* AsyncNinja */,
+				OBJ_100 /* AsyncNinjaTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		OBJ_102 /* Sources */ = {
+		OBJ_104 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				OBJ_103 /* BatchFutureTests.swift in Sources */,
-				OBJ_104 /* CachableValueTests.swift in Sources */,
-				OBJ_105 /* ChannelTests.swift in Sources */,
-				OBJ_106 /* ExecutionContextTests.swift in Sources */,
-				OBJ_107 /* ExecutorTests.swift in Sources */,
-				OBJ_108 /* FallibleTests.swift in Sources */,
-				OBJ_109 /* FutureTests.swift in Sources */,
-				OBJ_110 /* ObserversTests.swift in Sources */,
-				OBJ_111 /* ReleasePoolTests.swift in Sources */,
-				OBJ_112 /* TestUtilities.swift in Sources */,
-				OBJ_113 /* TimerChannelTests.swift in Sources */,
-				OBJ_114 /* XCTestManifest.swift in Sources */,
-				OBJ_115 /* ZipFuturesTest.swift in Sources */,
+				OBJ_105 /* BatchFutureTests.swift in Sources */,
+				OBJ_106 /* CachableValueTests.swift in Sources */,
+				OBJ_107 /* ChannelTests.swift in Sources */,
+				OBJ_108 /* ExecutionContextTests.swift in Sources */,
+				OBJ_109 /* ExecutorTests.swift in Sources */,
+				OBJ_110 /* FallibleTests.swift in Sources */,
+				OBJ_111 /* FutureTests.swift in Sources */,
+				OBJ_112 /* ObserversTests.swift in Sources */,
+				OBJ_113 /* ReleasePoolTests.swift in Sources */,
+				OBJ_114 /* TestUtilities.swift in Sources */,
+				OBJ_115 /* TimerChannelTests.swift in Sources */,
+				OBJ_116 /* XCTestManifest.swift in Sources */,
+				OBJ_117 /* ZipFuturesTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		OBJ_64 /* Sources */ = {
+		OBJ_65 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				OBJ_65 /* appleOS.swift in Sources */,
-				OBJ_66 /* CachableValue.swift in Sources */,
-				OBJ_67 /* Cache.swift in Sources */,
-				OBJ_68 /* CancellationToken.swift in Sources */,
-				OBJ_69 /* Channel+Combine.swift in Sources */,
-				OBJ_70 /* Channel+Map.swift in Sources */,
-				OBJ_71 /* Channel+Merge2.swift in Sources */,
-				OBJ_72 /* Channel+Transform.swift in Sources */,
-				OBJ_73 /* Channel+Zip2.swift in Sources */,
-				OBJ_74 /* Channel.swift in Sources */,
-				OBJ_75 /* Collection+Futures.swift in Sources */,
-				OBJ_76 /* Common.swift in Sources */,
-				OBJ_77 /* ConstantFuture.swift in Sources */,
-				OBJ_78 /* ExecutionContext.swift in Sources */,
-				OBJ_79 /* Executor.swift in Sources */,
-				OBJ_80 /* Fallible.swift in Sources */,
-				OBJ_81 /* Finite.swift in Sources */,
-				OBJ_82 /* Future+Makers.swift in Sources */,
-				OBJ_83 /* Future.swift in Sources */,
-				OBJ_84 /* LockFreeThreadSafeContainer.swift in Sources */,
-				OBJ_85 /* Locking.swift in Sources */,
-				OBJ_86 /* MutableFinite.swift in Sources */,
-				OBJ_87 /* Observers.swift in Sources */,
-				OBJ_88 /* Producer.swift in Sources */,
-				OBJ_89 /* Promise.swift in Sources */,
-				OBJ_90 /* Queue.swift in Sources */,
-				OBJ_91 /* ReleasePool.swift in Sources */,
-				OBJ_92 /* ThreadSafety.swift in Sources */,
-				OBJ_93 /* TimerChannel.swift in Sources */,
-				OBJ_94 /* Util.swift in Sources */,
-				OBJ_95 /* Zip2Futures.swift in Sources */,
-				OBJ_96 /* Zip3Futures.swift in Sources */,
+				OBJ_66 /* appleOS.swift in Sources */,
+				OBJ_67 /* CachableValue.swift in Sources */,
+				OBJ_68 /* Cache.swift in Sources */,
+				OBJ_69 /* CancellationToken.swift in Sources */,
+				OBJ_70 /* Channel+Combine.swift in Sources */,
+				OBJ_71 /* Channel+Map.swift in Sources */,
+				OBJ_72 /* Channel+Merge2.swift in Sources */,
+				OBJ_73 /* Channel+ToFuture.swift in Sources */,
+				OBJ_74 /* Channel+Transform.swift in Sources */,
+				OBJ_75 /* Channel+Zip2.swift in Sources */,
+				OBJ_76 /* Channel.swift in Sources */,
+				OBJ_77 /* Collection+Futures.swift in Sources */,
+				OBJ_78 /* Common.swift in Sources */,
+				OBJ_79 /* ConstantFuture.swift in Sources */,
+				OBJ_80 /* ExecutionContext.swift in Sources */,
+				OBJ_81 /* Executor.swift in Sources */,
+				OBJ_82 /* Fallible.swift in Sources */,
+				OBJ_83 /* Finite.swift in Sources */,
+				OBJ_84 /* Future+Makers.swift in Sources */,
+				OBJ_85 /* Future.swift in Sources */,
+				OBJ_86 /* LockFreeThreadSafeContainer.swift in Sources */,
+				OBJ_87 /* Locking.swift in Sources */,
+				OBJ_88 /* MutableFinite.swift in Sources */,
+				OBJ_89 /* Observers.swift in Sources */,
+				OBJ_90 /* Producer.swift in Sources */,
+				OBJ_91 /* Promise.swift in Sources */,
+				OBJ_92 /* Queue.swift in Sources */,
+				OBJ_93 /* ReleasePool.swift in Sources */,
+				OBJ_94 /* ThreadSafety.swift in Sources */,
+				OBJ_95 /* TimerChannel.swift in Sources */,
+				OBJ_96 /* Util.swift in Sources */,
+				OBJ_97 /* Zip2Futures.swift in Sources */,
+				OBJ_98 /* Zip3Futures.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		OBJ_118 /* PBXTargetDependency */ = {
+		OBJ_120 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = OBJ_60 /* AsyncNinja */;
-			targetProxy = F829091E1E1C58EB002EE77A /* PBXContainerItemProxy */;
+			target = OBJ_61 /* AsyncNinja */;
+			targetProxy = F82909211E1C6ECF002EE77A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		OBJ_100 /* Debug */ = {
+		OBJ_102 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
@@ -384,7 +388,7 @@
 			};
 			name = Debug;
 		};
-		OBJ_101 /* Release */ = {
+		OBJ_103 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
@@ -443,7 +447,7 @@
 			};
 			name = Release;
 		};
-		OBJ_62 /* Debug */ = {
+		OBJ_63 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ENABLE_TESTABILITY = YES;
@@ -463,7 +467,7 @@
 			};
 			name = Debug;
 		};
-		OBJ_63 /* Release */ = {
+		OBJ_64 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ENABLE_TESTABILITY = YES;
@@ -486,6 +490,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		OBJ_101 /* Build configuration list for PBXNativeTarget "AsyncNinjaTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				OBJ_102 /* Debug */,
+				OBJ_103 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		OBJ_2 /* Build configuration list for PBXProject "AsyncNinja" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -495,20 +508,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		OBJ_61 /* Build configuration list for PBXNativeTarget "AsyncNinja" */ = {
+		OBJ_62 /* Build configuration list for PBXNativeTarget "AsyncNinja" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				OBJ_62 /* Debug */,
-				OBJ_63 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
-		OBJ_99 /* Build configuration list for PBXNativeTarget "AsyncNinjaTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				OBJ_100 /* Debug */,
-				OBJ_101 /* Release */,
+				OBJ_63 /* Debug */,
+				OBJ_64 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
