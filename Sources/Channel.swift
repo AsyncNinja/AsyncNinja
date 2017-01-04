@@ -165,11 +165,8 @@ public extension Channel {
   func extractAll(
     executor: Executor = .primary,
     block: @escaping (_ periodicValues: [PeriodicValue], _ finalValue: Fallible<FinalValue>) -> Void) {
-    var locking = makeLocking()
     var periodics = [PeriodicValue]()
-    let handler = self.makeHandler(executor: executor) { (value) in
-      locking.lock()
-      defer { locking.unlock() }
+    let handler = self.makeHandler(executor: executor.makeDerivedSerialExecutor()) { (value) in
       switch value {
       case let .periodic(periodic):
         periodics.append(periodic)
@@ -195,11 +192,9 @@ public extension Channel {
   func extractAll<U: ExecutionContext>(context: U,
                   executor: Executor? = nil,
                   block: @escaping (_ strongContext: U, _ periodicValues: [PeriodicValue], _ finalValue: Fallible<FinalValue>) -> Void) {
-    var locking = makeLocking()
     var periodics = [PeriodicValue]()
-    let handler = self.makeHandler(executor: executor ?? context.executor) { [weak context] (value) in
-      locking.lock()
-      defer { locking.unlock() }
+    let handler = self.makeHandler(executor: (executor ?? context.executor).makeDerivedSerialExecutor()) {
+      [weak context] (value) in
       switch value {
       case let .periodic(periodic):
         periodics.append(periodic)

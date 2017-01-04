@@ -100,8 +100,9 @@ public extension Collection where Self.IndexDistance == Int {
     var subvalues = [T?](repeating: nil, count: count)
     var unknownSubvaluesCount = count
 
+    let executor_ = executor.makeDerivedSerialExecutor()
     for (index, value) in self.enumerated() {
-      executor.execute { [weak promise] in
+      executor_.execute { [weak promise] in
         guard let promise = promise else { return }
         guard canContinue else { return }
 
