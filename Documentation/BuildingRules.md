@@ -1,4 +1,4 @@
-# AsyncNinja Building Rules
+# AsyncNinja Design Guidelines
 
 ## API Design Guidelines
 
@@ -24,7 +24,7 @@ The current version is prerelease `0.x.x`. This means that backward compatibilit
 
 ## Documentation
 
-At least 90% of public interfaces
+* At least 90% of public interfaces
 
 ## Test
 
