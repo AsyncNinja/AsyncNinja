@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -25,14 +25,14 @@ import Dispatch
 @testable import AsyncNinja
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-  class ObserversTests : XCTestCase {
+  class ObserversTests: XCTestCase {
 
     static let allTests = [
       ("testObserver", testObserver),
       ]
 
     func testObserver() {
-      class MyObject : NSObject, ObjCInjectedRetainer {
+      class MyObject: NSObject, ObjCInjectedRetainer {
         dynamic var myValue: Int = 0
       }
 

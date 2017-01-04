@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -21,6 +21,7 @@
 //
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+
   import Foundation
 
   public extension Executor {
@@ -31,34 +32,41 @@
     }
   }
 
-  /// Is a protocol that automatically adds implementation of methods of `Retainer` for Objective-C runtime compatible objects
-  public protocol ObjCInjectedRetainer : Retainer, NSObjectProtocol { }
+  /// A protocol that automatically adds implementation of methods
+  /// of `Retainer` for Objective-C runtime compatible objects
+  public protocol ObjCInjectedRetainer: Retainer, NSObjectProtocol {
+  }
 
   private class DeinitNotifier {
-    let block: () -> Void
+    let _block: () -> Void
+
     init(block: @escaping () -> Void) {
-      self.block = block
+      _block = block
     }
 
-    deinit { self.block() }
+    deinit { _block() }
   }
 
   public extension ObjCInjectedRetainer {
     func releaseOnDeinit(_ object: AnyObject) {
       Statics.withUniqueKey {
-        objc_setAssociatedObject(self, $0, object, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        objc_setAssociatedObject(self, $0, object,
+                                 .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
       }
     }
 
     func notifyDeinit(_ block: @escaping () -> Void) {
-      self.releaseOnDeinit(DeinitNotifier(block: block))
+      releaseOnDeinit(DeinitNotifier(block: block))
     }
   }
 
-  /// Is a protocol that automatically adds implementation of methods of `ExecutionContext` for Objective-C runtime compatible objects involved in UI manipulations
-  public protocol ObjCUIInjectedExecutionContext : ExecutionContext, ObjCInjectedRetainer { }
-  public extension ObjCUIInjectedExecutionContext {
+  /// Is a protocol that automatically adds implementation of methods
+  /// of `ExecutionContext` for Objective-C runtime compatible objects
+  /// involved in UI manipulations
+  public protocol ObjCUIInjectedExecutionContext: ExecutionContext, ObjCInjectedRetainer {
+  }
 
+  public extension ObjCUIInjectedExecutionContext {
     /// executor for ui objects. The main queue
     var executor: Executor { return .main }
   }
@@ -78,22 +86,41 @@
   import CoreData
 
   /// NSManagedObjectContext improved with AsyncNinja
-  extension NSManagedObjectContext : ExecutionContext, ObjCInjectedRetainer {
+  extension NSManagedObjectContext: ExecutionContext, ObjCInjectedRetainer {
 
     /// returns an executor that executes block on private queue of NSManagedObjectContext
-    public var executor: Executor { return Executor(isSerial: true) { [weak self] in self?.perform($0) } }
+    public var executor: Executor {
+      return Executor(isSerial: true) {
+        [weak self] in
+        self?.perform($0) }
+    }
   }
 
   /// NSPersistentStoreCoordinator improved with AsyncNinja
-  extension NSPersistentStoreCoordinator : ExecutionContext, ObjCInjectedRetainer {
+  extension NSPersistentStoreCoordinator: ExecutionContext, ObjCInjectedRetainer {
 
     /// returns an executor that executes block on private queue of NSPersistentStoreCoordinator
-    public var executor: Executor { return Executor(isSerial: true) { [weak self] in self?.perform($0) } }
+    public var executor: Executor {
+      return Executor(isSerial: true) {
+        [weak self] in
+        self?.perform($0)
+      }
+    }
+  }
+
+  /// Conformance URLSessionTask to Cancellable
+  extension URLSessionTask: Cancellable {
+
   }
 
   /// URLSession improved with AsyncNinja
   public extension URLSession {
-    private func dataFuture(context: ExecutionContext?, cancellationToken: CancellationToken?, makeTask: (@escaping (Data?, URLResponse?, Swift.Error?) -> Void) -> URLSessionDataTask) -> Future<(Data?, URLResponse)> {
+
+    private typealias URLSessionCallback = (Data?, URLResponse?, Swift.Error?) -> Void
+    private typealias MakeURLTask = (@escaping URLSessionCallback) -> URLSessionDataTask
+    private func dataFuture(context: ExecutionContext?,
+                            cancellationToken: CancellationToken?,
+                            makeTask: MakeURLTask) -> Future<(Data?, URLResponse)> {
       let promise = Promise<(Data?, URLResponse)>()
       let task = makeTask { [weak promise] (data, response, error) in
         guard let promise = promise else { return }
@@ -102,78 +129,103 @@
           return
         }
 
-        if (error as? CancellationRepresentableError)?.representsCancellation ?? false {
+        if let cancellationRepresentable = error as? CancellationRepresentableError,
+          cancellationRepresentable.representsCancellation {
           promise.fail(with: AsyncNinjaError.cancelled)
         } else {
           promise.fail(with: error)
         }
       }
+
       promise.notifyDrain { [weak task] in task?.cancel() }
-      cancellationToken?.notifyCancellation {
-        [weak task, weak promise] in
-        task?.cancel()
-        promise?.cancel()
-      }
-      context?.notifyDeinit {
-        [weak task, weak promise] in
-        task?.cancel()
-        promise?.cancelBecauseOfDeallocatedContext()
-      }
+      cancellationToken?.add(cancellable: task)
+      cancellationToken?.add(cancellable: promise)
+      context?.addDependent(cancellable: task)
+      context?.addDependent(finite: promise)
 
       task.resume()
       return promise
     }
 
     /// Makes data task and returns Future of response
-    func data(at url: URL, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> Future<(Data?, URLResponse)> {
-      return self.dataFuture(context: context, cancellationToken: cancellationToken) {
-        self.dataTask(with: url, completionHandler: $0)
+    func data(at url: URL,
+              context: ExecutionContext? = nil,
+              cancellationToken: CancellationToken? = nil
+      ) -> Future<(Data?, URLResponse)> {
+      return dataFuture(context: context, cancellationToken: cancellationToken) {
+        dataTask(with: url, completionHandler: $0)
       }
     }
 
     /// Makes data task and returns Future of response
-    func data(with request: URLRequest, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> Future<(Data?, URLResponse)> {
-      return self.dataFuture(context: context, cancellationToken: cancellationToken) {
-        self.dataTask(with: request, completionHandler: $0)
+    func data(with request: URLRequest,
+              context: ExecutionContext? = nil,
+              cancellationToken: CancellationToken? = nil
+      ) -> Future<(Data?, URLResponse)> {
+      return dataFuture(context: context, cancellationToken: cancellationToken) {
+        dataTask(with: request, completionHandler: $0)
       }
     }
 
     /// Makes upload task and returns Future of response
-    func upload(with request: URLRequest, fromFile fileURL: URL, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> Future<(Data?, URLResponse)> {
-      return self.dataFuture(context: context, cancellationToken: cancellationToken) {
-        self.uploadTask(with: request, fromFile: fileURL, completionHandler: $0)
+    func upload(with request: URLRequest,
+                fromFile fileURL: URL,
+                context: ExecutionContext? = nil,
+                cancellationToken: CancellationToken? = nil
+      ) -> Future<(Data?, URLResponse)> {
+      return dataFuture(context: context, cancellationToken: cancellationToken) {
+        uploadTask(with: request, fromFile: fileURL, completionHandler: $0)
       }
     }
 
     /// Makes upload task and returns Future of response
-    func upload(with request: URLRequest, from bodyData: Data?, context: ExecutionContext? = nil, cancellationToken: CancellationToken? = nil) -> Future<(Data?, URLResponse)> {
-      return self.dataFuture(context: context, cancellationToken: cancellationToken) {
-        self.uploadTask(with: request, from: bodyData, completionHandler: $0)
+    func upload(with request: URLRequest,
+                from bodyData: Data?,
+                context: ExecutionContext? = nil,
+                cancellationToken: CancellationToken? = nil
+      ) -> Future<(Data?, URLResponse)> {
+      return dataFuture(context: context, cancellationToken: cancellationToken) {
+        uploadTask(with: request, from: bodyData, completionHandler: $0)
       }
     }
   }
+
 #endif
 
 #if os(macOS)
+
   import AppKit
 
-  /// Conforms NSResponer to ObjCUIInjectedExecutionContext that allows using each NSResponder as ExecutionContext
-  extension NSResponder: ObjCUIInjectedExecutionContext {}
+  /// Conforms NSResponer to ObjCUIInjectedExecutionContext that allows
+  /// using each NSResponder as ExecutionContext
+  extension NSResponder: ObjCUIInjectedExecutionContext {
+  }
+
 #endif
 
 #if os(iOS) || os(tvOS)
+
   import UIKit
 
-  /// Conforms UIResponder to ObjCUIInjectedExecutionContext that allows using each UIResponder as ExecutionContext
-  extension UIResponder: ObjCUIInjectedExecutionContext {}
+  /// Conforms UIResponder to ObjCUIInjectedExecutionContext that allows
+  /// using each UIResponder as ExecutionContext
+  extension UIResponder: ObjCUIInjectedExecutionContext {
+  }
+
 #endif
 
 #if os(watchOS)
+
   import WatchKit
 
-  /// Conforms WKInterfaceController to ObjCUIInjectedExecutionContext that allows using each WKInterfaceController as ExecutionContext
-  extension WKInterfaceController: ObjCUIInjectedExecutionContext {}
+  /// Conforms WKInterfaceController to ObjCUIInjectedExecutionContext
+  /// that allows using each WKInterfaceController as ExecutionContext
+  extension WKInterfaceController: ObjCUIInjectedExecutionContext {
+  }
 
-  /// Conforms WKInterfaceObject to ObjCUIInjectedExecutionContext that allows using each WKInterfaceObject as ExecutionContext
-  extension WKInterfaceObject: ObjCUIInjectedExecutionContext {}
+  /// Conforms WKInterfaceObject to ObjCUIInjectedExecutionContext
+  /// that allows using each WKInterfaceObject as ExecutionContext
+  extension WKInterfaceObject: ObjCUIInjectedExecutionContext {
+  }
+  
 #endif

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -27,7 +27,7 @@ import Dispatch
   import Glibc
 #endif
 
-class FutureTests : XCTestCase {
+class FutureTests: XCTestCase {
 
   static let allTests = [
     ("testLifetime", testLifetime),

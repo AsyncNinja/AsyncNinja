@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -81,7 +81,7 @@ func pickInt(max: Int = 100) -> Int {
   #endif
 }
 
-enum TestError : Error {
+enum TestError: Error {
   case testCode
   case otherCode
 }
@@ -98,7 +98,7 @@ func square_failure(_ value: Int) throws -> Int {
   throw TestError.testCode
 }
 
-class TestActor : ExecutionContext, ReleasePoolOwner {
+class TestActor: ExecutionContext, ReleasePoolOwner {
   let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
   var executor: Executor { return .queue(self.internalQueue) }
   let releasePool = ReleasePool()

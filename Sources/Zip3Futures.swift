@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -28,8 +28,11 @@ import Dispatch
 ///   - futureA: first
 ///   - futureB: second
 ///   - futureC: third
-/// - Returns: future of combined results. The future will complete right after completion of futureA, futureB, futureC
-public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: Future<C>) -> Future<(A, B, C)> {
+/// - Returns: future of combined results.
+///   The future will complete right after completion of futureA, futureB, futureC
+public func zip<A, B, C>(_ futureA: Future<A>,
+                _ futureB: Future<B>,
+                _ futureC: Future<C>) -> Future<(A, B, C)> {
   // Test: ZipFuturesTest.test3Simple
   // Test: ZipFuturesTest.test3Delayed
   // Test: ZipFuturesTest.test3Failure
@@ -40,7 +43,8 @@ public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: 
   var subvalueB: B? = nil
   var subvalueC: C? = nil
   
-  let handlerA = futureA.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueA) in
+  let handlerA = futureA.makeFinalHandler(executor: .immediate) {
+    [weak promise] (localSubvalueA) in
     guard let promise = promise else { return }
     locking.lock()
     defer { locking.unlock() }
@@ -54,11 +58,10 @@ public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: 
     }
   }
 
-  if let handlerA = handlerA {
-    promise.insertToReleasePool(handlerA)
-  }
+  promise.insertHandlerToReleasePool(handlerA)
 
-  let handlerB = futureB.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueB) in
+  let handlerB = futureB.makeFinalHandler(executor: .immediate) {
+    [weak promise] (localSubvalueB) in
     guard let promise = promise else { return }
     locking.lock()
     defer { locking.unlock() }
@@ -72,11 +75,10 @@ public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: 
     }
   }
 
-  if let handlerB = handlerB {
-    promise.insertToReleasePool(handlerB)
-  }
+  promise.insertHandlerToReleasePool(handlerB)
 
-  let handlerC = futureC.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueC) in
+  let handlerC = futureC.makeFinalHandler(executor: .immediate) {
+    [weak promise] (localSubvalueC) in
     guard let promise = promise else { return }
     locking.lock()
     defer { locking.unlock() }
@@ -90,9 +92,7 @@ public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: 
     }
   }
   
-  if let handlerC = handlerC {
-    promise.insertToReleasePool(handlerC)
-  }
+  promise.insertHandlerToReleasePool(handlerC)
 
   return promise
 }
@@ -103,8 +103,11 @@ public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ futureC: 
 ///   - futureA: first
 ///   - futureB: second
 ///   - valueC: third
-/// - Returns: future of combined results. The future will complete right after completion of futureA and futureB.
-public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ valueC: C) -> Future<(A, B, C)> {
+/// - Returns: future of combined results.
+///   The future will complete right after completion of futureA and futureB.
+public func zip<A, B, C>(_ futureA: Future<A>,
+                _ futureB: Future<B>,
+                _ valueC: C) -> Future<(A, B, C)> {
   // Test: ZipFuturesTest.test3Constant
   return zip(futureA, futureB).map(executor: .immediate) { ($0, $1, valueC) }
 }
@@ -115,8 +118,11 @@ public func zip<A, B, C>(_ futureA: Future<A>, _ futureB: Future<B>, _ valueC: C
 ///   - futureA: first
 ///   - valueB: second
 ///   - valueC: third
-/// - Returns: future of combined results. The future will complete right after completion of futureA.
-public func zip<A, B, C>(_ futureA: Future<A>, _ valueB: B, _ valueC: C) -> Future<(A, B, C)> {
+/// - Returns: future of combined results. 
+///   The future will complete right after completion of futureA.
+public func zip<A, B, C>(_ futureA: Future<A>,
+                _ valueB: B,
+                _ valueC: C) -> Future<(A, B, C)> {
   // Test: ZipFuturesTest.test3Constants
   return futureA.map(executor: .immediate) { ($0, valueB, valueC) }
 }

@@ -26,14 +26,13 @@ import Dispatch
 extension Channel {
 
   /// **internal use only**
-  func makeProducer<TransformedPeriodicValue, TransformedFinalValue>(
-    executor: Executor,
-    cancellationToken: CancellationToken?,
-    bufferSize: DerivedChannelBufferSize,
-    onValue: @escaping (Value, Producer<TransformedPeriodicValue, TransformedFinalValue>) throws -> Void
-    ) -> Producer<TransformedPeriodicValue, TransformedFinalValue> {
+  func makeProducer<P, S>(executor: Executor,
+                    cancellationToken: CancellationToken?,
+                    bufferSize: DerivedChannelBufferSize,
+                    onValue: @escaping (Value, Producer<P, S>) throws -> Void
+    ) -> Producer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
-    let producer = Producer<TransformedPeriodicValue, TransformedFinalValue>(bufferSize: bufferSize)
+    let producer = Producer<P, S>(bufferSize: bufferSize)
     let handler = self.makeHandler(executor: executor) {
       [weak producer] (value) in
       guard let producer = producer else { return }
@@ -41,38 +40,31 @@ extension Channel {
       catch { producer.fail(with: error) }
     }
 
-    if let handler = handler {
-      producer.insertToReleasePool(handler)
-    }
-
-    if let cancellationToken = cancellationToken {
-      cancellationToken.notifyCancellation { [weak producer] in
-        producer?.cancel()
-      }
-    }
+    producer.insertHandlerToReleasePool(handler)
+    cancellationToken?.add(cancellable: producer)
 
     return producer
   }
 
   /// **internal use only**
-  func makeProducer<TransformedPeriodicValue, TransformedFinalValue, U: ExecutionContext>(
-    context: U,
-    executor: Executor?,
-    cancellationToken: CancellationToken?,
-    bufferSize: DerivedChannelBufferSize,
-    onValue: @escaping (U, Value, Producer<TransformedPeriodicValue, TransformedFinalValue>
-    ) throws -> Void
-    ) -> Producer<TransformedPeriodicValue, TransformedFinalValue> {
-    let producer: Producer<TransformedPeriodicValue, TransformedFinalValue>
-      = self.makeProducer(executor: executor ?? context.executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
-        [weak context] (value, producer) in
-        guard let context = context else { return }
-        try onValue(context, value, producer)
+  func makeProducer<P, S, C: ExecutionContext>(context: C,
+                    executor: Executor?,
+                    cancellationToken: CancellationToken?,
+                    bufferSize: DerivedChannelBufferSize,
+                    onValue: @escaping (C, Value, Producer<P, S>) throws -> Void
+    ) -> Producer<P, S> {
+    let executor_ = executor ?? context.executor
+    let producer: Producer<P, S> = self.makeProducer(executor: executor_,
+                                                     cancellationToken: cancellationToken,
+                                                     bufferSize: bufferSize)
+    {
+      [weak context] (value, producer) in
+      guard let context = context else { return }
+      try onValue(context, value, producer)
     }
-    context.notifyDeinit { [weak producer] (periodicValue) in
-      guard let producer = producer else { return }
-      producer.cancelBecauseOfDeallocatedContext()
-    }
+
+    context.addDependent(finite: producer)
+
     return producer
   }
 }
@@ -80,47 +72,64 @@ extension Channel {
 // MARK: - whole channel transformations
 public extension Channel {
 
-  /// Applies transformation to the whole channel. `mapPeriodic` methods are more convenient if you want to transform periodics values only.
+  /// Applies transformation to the whole channel. `mapPeriodic` methods
+  /// are more convenient if you want to transform periodics values only.
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor. Do not use this argument if you do not need to override executor
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need to override
+  ///     an executor provided by the context
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   ///   - transform: to apply
   ///   - strongContext: context restored from weak reference to specified context
   ///   - value: `ChannelValue` to transform. May be either periodic or final
   /// - Returns: transformed channel
-  func map<TransformedPeriodicValue, TransformedFinalValue, U: ExecutionContext>(
-    context: U,
-    executor: Executor? = nil,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    transform: @escaping (_ strongContext: U, _ value: Value) throws -> ChannelValue<TransformedPeriodicValue, TransformedFinalValue>
-    ) -> Channel<TransformedPeriodicValue, TransformedFinalValue> {
-    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+  func map<P, S, C: ExecutionContext>(context: C,
+           executor: Executor? = nil,
+           cancellationToken: CancellationToken? = nil,
+           bufferSize: DerivedChannelBufferSize = .default,
+           transform: @escaping (_ strongContext: C, _ value: Value) throws -> ChannelValue<P, S>
+    ) -> Channel<P, S> {
+    return self.makeProducer(context: context,
+                             executor: executor,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (context, value, producer) in
       let transformedValue = try transform(context, value)
       producer.apply(transformedValue)
     }
   }
 
-  /// Applies transformation to the whole channel. `mapPeriodic` methods are more convenient if you want to transform periodics values only.
+  /// Applies transformation to the whole channel. `mapPeriodic` methods
+  /// are more convenient if you want to transform periodics values only.
   ///
   /// - Parameters:
   ///   - executor: to execute transform on
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   ///   - transform: to apply
   ///   - value: `ChannelValue` to transform. May be either periodic or final
   /// - Returns: transformed channel
-  func map<TransformedPeriodicValue, TransformedFinalValue>(
-    executor: Executor = .primary,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    transform: @escaping (_ value: Value) throws -> ChannelValue<TransformedPeriodicValue, TransformedFinalValue>
-    ) -> Channel<TransformedPeriodicValue, TransformedFinalValue> {
-    return self.makeProducer(executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+  func map<P, S>(executor: Executor = .primary,
+           cancellationToken: CancellationToken? = nil,
+           bufferSize: DerivedChannelBufferSize = .default,
+           transform: @escaping (_ value: Value) throws -> ChannelValue<P, S>
+    ) -> Channel<P, S> {
+    return self.makeProducer(executor: executor,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (value, producer) in
       let transformedValue = try transform(value)
       producer.apply(transformedValue)
@@ -132,25 +141,36 @@ public extension Channel {
 
 public extension Channel {
 
-  /// Applies transformation to periodic values of the channel. `map` methods are more convenient if you want to transform both periodics and final value
+  /// Applies transformation to periodic values of the channel.
+  /// `map` methods are more convenient if you want to transform
+  /// both periodics and final value
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor. Do not use this argument if you do not need to override executor
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need to override
+  ///     an executor provided by the context
+  ///   - cancellationToken: `CancellationToken` to use. Keep default value
+  ///     of the argument unless you need an extended cancellation options
+  ///     of the returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   ///   - transform: to apply
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodicValue: `PeriodicValue` to transform
   /// - Returns: transformed channel
-  func mapPeriodic<TransformedPeriodicValue, U: ExecutionContext>(
-    context: U,
-    executor: Executor? = nil,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    transform: @escaping (_ strongContext: U, _ periodicValue: PeriodicValue) throws -> TransformedPeriodicValue
-    ) -> Channel<TransformedPeriodicValue, FinalValue> {
-    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+  func mapPeriodic<P, C: ExecutionContext>(context: C,
+                   executor: Executor? = nil,
+                   cancellationToken: CancellationToken? = nil,
+                   bufferSize: DerivedChannelBufferSize = .default,
+                   transform: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) throws -> P
+    ) -> Channel<P, FinalValue> {
+    return self.makeProducer(context: context,
+                             executor: executor,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (context, value, producer) in
       switch value {
       case .periodic(let periodic):
@@ -162,22 +182,30 @@ public extension Channel {
     }
   }
 
-  /// Applies transformation to periodic values of the channel. `map` methods are more convenient if you want to transform both periodics and final value
+  /// Applies transformation to periodic values of the channel.
+  /// `map` methods are more convenient if you want to transform
+  /// both periodics and final value
   ///
   /// - Parameters:
   ///   - executor: to execute transform on
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   ///   - transform: to apply
   ///   - periodicValue: `PeriodicValue` to transform
   /// - Returns: transformed channel
-  func mapPeriodic<TransformedPeriodicValue>(
-    executor: Executor = .primary,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    transform: @escaping (_ periodicValue: PeriodicValue) throws -> TransformedPeriodicValue
-    ) -> Channel<TransformedPeriodicValue, FinalValue> {
-    return self.makeProducer(executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+  func mapPeriodic<P>(executor: Executor = .primary,
+                   cancellationToken: CancellationToken? = nil,
+                   bufferSize: DerivedChannelBufferSize = .default,
+                   transform: @escaping (_ periodicValue: PeriodicValue) throws -> P
+    ) -> Channel<P, FinalValue> {
+    return self.makeProducer(executor: executor,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (value, producer) in
       switch value {
       case .periodic(let periodic):
@@ -198,21 +226,30 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor. Do not use this argument if you do not need to override executor
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need to override
+  ///     an executor provided by the context
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   ///   - transform: to apply. Nil returned from transform will not produce periodic value
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodicValue: `PeriodicValue` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<TransformedPeriodicValue, U: ExecutionContext>(
-    context: U,
-    executor: Executor? = nil,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    transform: @escaping (_ strongContext: U, _ periodicValue: PeriodicValue) throws -> TransformedPeriodicValue?
-    ) -> Channel<TransformedPeriodicValue, FinalValue> {
-    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+  func flatMapPeriodic<P, C: ExecutionContext>(context: C,
+                       executor: Executor? = nil,
+                       cancellationToken: CancellationToken? = nil,
+                       bufferSize: DerivedChannelBufferSize = .default,
+                       transform: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) throws -> P?
+    ) -> Channel<P, FinalValue> {
+    return self.makeProducer(context: context,
+                             executor: executor,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (context, value, producer) in
       switch value {
       case .periodic(let periodic):
@@ -229,18 +266,24 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - executor: to execute transform on
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   ///   - transform: to apply. Nil returned from transform will not produce periodic value
   ///   - periodicValue: `PeriodicValue` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<TransformedPeriodicValue>(
-    executor: Executor = .primary,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    transform: @escaping (_ periodicValue: PeriodicValue) throws -> TransformedPeriodicValue?
-    ) -> Channel<TransformedPeriodicValue, FinalValue> {
-    return self.makeProducer(executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+  func flatMapPeriodic<P>(executor: Executor = .primary,
+                       cancellationToken: CancellationToken? = nil,
+                       bufferSize: DerivedChannelBufferSize = .default,
+                       transform: @escaping (_ periodicValue: PeriodicValue) throws -> P?
+    ) -> Channel<P, FinalValue> {
+    return self.makeProducer(executor: executor,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (value, producer) in
       switch value {
       case .periodic(let periodic):
@@ -257,21 +300,31 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor. Do not use this argument if you do not need to override executor
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
-  ///   - transform: to apply. Sequence returned from transform will be treated as multiple period values
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need
+  ///     to override an executor provided by the context
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  ///   - transform: to apply. Sequence returned from transform
+  ///     will be treated as multiple period values
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodicValue: `PeriodicValue` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<S: Sequence, U: ExecutionContext>(
-    context: U,
-    executor: Executor? = nil,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    transform: @escaping (_ strongContext: U, _ periodicValue: PeriodicValue) throws -> S
-    ) -> Channel<S.Iterator.Element, FinalValue> {
-    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+  func flatMapPeriodic<PS: Sequence, C: ExecutionContext>(context: C,
+                       executor: Executor? = nil,
+                       cancellationToken: CancellationToken? = nil,
+                       bufferSize: DerivedChannelBufferSize = .default,
+                       transform: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) throws -> PS
+    ) -> Channel<PS.Iterator.Element, FinalValue> {
+    return self.makeProducer(context: context,
+                             executor: executor,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (context, value, producer) in
       switch value {
       case .periodic(let periodic):
@@ -286,18 +339,25 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - executor: to execute transform on
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
-  ///   - transform: to apply. Sequence returned from transform will be treated as multiple period values
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  ///   - transform: to apply. Sequence returned from transform
+  ///     will be treated as multiple period values
   ///   - periodicValue: `PeriodicValue` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<S: Sequence>(
-    executor: Executor = .primary,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    transform: @escaping (_ periodicValue: PeriodicValue) throws -> S
-    ) -> Channel<S.Iterator.Element, FinalValue> {
-    return self.makeProducer(executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+  func flatMapPeriodic<PS: Sequence>(executor: Executor = .primary,
+                       cancellationToken: CancellationToken? = nil,
+                       bufferSize: DerivedChannelBufferSize = .default,
+                       transform: @escaping (_ periodicValue: PeriodicValue) throws -> PS
+    ) -> Channel<PS.Iterator.Element, FinalValue> {
+    return self.makeProducer(executor: executor,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (value, producer) in
       switch value {
       case .periodic(let periodic):
@@ -312,32 +372,46 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor. Do not use this argument if you do not need to override executor
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
-  ///   - transform: to apply. Completion of a future will be used as periodic value of transformed channel
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need to override
+  ///     an executor provided by the context
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  ///   - transform: to apply. Completion of a future will be used
+  ///     as periodic value of transformed channel
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodicValue: `PeriodicValue` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<T, U: ExecutionContext>(
-    context: U,
-    executor: Executor? = nil,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    transform: @escaping (_ strongContext: U, _ periodicValue: PeriodicValue) throws -> Future<T>
-    ) -> Channel<Fallible<T>, FinalValue> {
-    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+  func flatMapPeriodic<P, C: ExecutionContext>(context: C,
+                       executor: Executor? = nil,
+                       cancellationToken: CancellationToken? = nil,
+                       bufferSize: DerivedChannelBufferSize = .default,
+                       transform: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) throws -> Future<P>
+    ) -> Channel<P, FinalValue> {
+    return self.makeProducer(context: context,
+                             executor: executor,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (context, value, producer) in
       switch value {
       case .periodic(let periodic):
-        let handler = (try transform(context, periodic))
-          .makeFinalHandler(executor: .immediate) { [weak producer] (periodic) -> Void in
-            producer?.send(periodic)
-
+        let future = try transform(context, periodic)
+        let handler = future
+          .makeFinalHandler(executor: .immediate) {
+            [weak producer] (periodicOrError) -> Void in
+            switch periodicOrError {
+            case let .success(periodic):
+              producer?.send(periodic)
+            case let .failure(error):
+              producer?.fail(with: error)
+            }
         }
-        if let handler = handler {
-          producer.insertToReleasePool(handler)
-        }
+        producer.insertHandlerToReleasePool(handler)
       case .final(let final):
         producer.complete(with: final)
       }
@@ -348,18 +422,25 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - executor: to execute transform on
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
-  ///   - transform: to apply. Completion of a future will be used as periodic value of transformed channel
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  ///   - transform: to apply. Completion of a future will be used
+  ///     as periodic value of transformed channel
   ///   - periodicValue: `PeriodicValue` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<T>(
-    executor: Executor = .primary,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    transform: @escaping (_ periodicValue: PeriodicValue) throws -> Future<T>
+  func flatMapPeriodic<T>(executor: Executor = .primary,
+                       cancellationToken: CancellationToken? = nil,
+                       bufferSize: DerivedChannelBufferSize = .default,
+                       transform: @escaping (_ periodicValue: PeriodicValue) throws -> Future<T>
     ) -> Channel<Fallible<T>, FinalValue> {
-    return self.makeProducer(executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+    return self.makeProducer(executor: executor,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (value, producer) in
       switch value {
       case .periodic(let periodic):
@@ -368,9 +449,7 @@ public extension Channel {
             producer?.send(periodic)
 
         }
-        if let handler = handler {
-          producer.insertToReleasePool(handler)
-        }
+        producer.insertHandlerToReleasePool(handler)
       case .final(let final):
         producer.complete(with: final)
       }
@@ -385,21 +464,24 @@ public extension Channel {
   /// Filters periodic values of the channel
   ///
   ///   - context: `ExectionContext` to apply predicate in
-  ///   - executor: override of `ExecutionContext`s executor. Do not use this argument if you do not need to override executor
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - executor: override of `ExecutionContext`s executor. Keep default value of the argument unless you need to override an executor provided by the context
+  ///   - cancellationToken: `CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel. Keep default value of the argument unless you need an extended buffering options of returned channel
   ///   - predicate: to apply
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodicValue: `PeriodicValue` to transform
   /// - Returns: filtered transform
-  func filterPeriodic<U: ExecutionContext>(
-    context: U,
-    executor: Executor? = nil,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    predicate: @escaping (_ strongContext: U, _ periodicValue: PeriodicValue) throws -> Bool
+  func filterPeriodic<C: ExecutionContext>(context: C,
+                      executor: Executor? = nil,
+                      cancellationToken: CancellationToken? = nil,
+                      bufferSize: DerivedChannelBufferSize = .default,
+                      predicate: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) throws -> Bool
     ) -> Channel<PeriodicValue, FinalValue> {
-    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+    return self.makeProducer(context: context,
+                             executor: executor,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (context, value, producer) in
       switch value {
       case .periodic(let periodic):
@@ -417,8 +499,12 @@ public extension Channel {
   /// Filters periodic values of the channel
   ///
   ///   - executor: to execute transform on
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   ///   - predicate: to apply
   ///   - periodicValue: `PeriodicValue` to transform
   /// - Returns: filtered transform
@@ -428,7 +514,10 @@ public extension Channel {
     bufferSize: DerivedChannelBufferSize = .default,
     predicate: @escaping (_ periodicValue: PeriodicValue) throws -> Bool
     ) -> Channel<PeriodicValue, FinalValue> {
-    return self.makeProducer(executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+    return self.makeProducer(executor: executor,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (value, producer) in
       switch value {
       case .periodic(let periodic):

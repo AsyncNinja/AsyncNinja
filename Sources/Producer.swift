@@ -41,13 +41,15 @@ final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, F
   override public var maxBufferSize: Int { return _maxBufferSize }
 
   /// final falue of channel. Returns nil if channel is not complete yet
-  override public var finalValue: Fallible<FinalValue>? { return (_container.head as? FinalState)?.final }
+  override public var finalValue: Fallible<FinalValue>? {
+    return (_container.head as? FinalState)?.final
+  }
 
   /// designated initializer of Producer. Initializes Producer with default buffer size
   override public convenience init() {
     self.init(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
   }
-  
+
   /// designated initializer of Producer. Initializes Producer with specified buffer size
   public init(bufferSize: Int) {
     _maxBufferSize = bufferSize
@@ -55,12 +57,16 @@ final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, F
 
   /// **internal use only**
   override public func makeHandler(executor: Executor,
-                                   block: @escaping (Value) -> Void) -> Handler? {
-    return self._makeHandler(executor: executor, avoidLocking: false, block: block)
+                                   block: @escaping (Value) -> Void
+    ) -> Handler? {
+    return self._makeHandler(executor: executor,
+                             avoidLocking: false,
+                             block: block)
   }
 
   fileprivate func _makeHandler(executor: Executor, avoidLocking: Bool,
-                                block: @escaping (Value) -> Void) -> Handler? {
+                                block: @escaping (Value) -> Void
+    ) -> Handler? {
     if !avoidLocking {
       self._locking.lock()
     }
@@ -95,10 +101,12 @@ final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, F
   }
 
   @discardableResult
-  private func notify(_ value: Value, head: ProducerState<PeriodicValue, FinalValue>?) -> Bool {
+  private func notify(_ value: Value,
+                      head: ProducerState<PeriodicValue, FinalValue>?
+    ) -> Bool {
     guard let regularState = head as? RegularState else { return false }
     var nextItem: RegularState? = regularState
-    
+
     while let currentItem = nextItem {
       currentItem.handler?.handle(value)
       nextItem = currentItem.next
@@ -139,7 +147,7 @@ final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, F
 
   /// Sends specified sequence of PeriodicValue to the Producer
   /// Values will not be sent for completed Producer
-  public func send<S : Sequence>(_ periodics: S)
+  public func send<S: Sequence>(_ periodics: S)
     where S.Iterator.Element == PeriodicValue {
 
       if self.maxBufferSize > 0 {
@@ -153,11 +161,12 @@ final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, F
         self.notify(.periodic(periodic), head: localHead as! ProducerState<PeriodicValue, FinalValue>?)
       }
   }
-  
+
   /// Tries to complete the Producer
   ///
   /// - Parameter final: value to complete Producer with
-  /// - Returns: true if Producer was completed with this call, false if it was completed before
+  /// - Returns: true if Producer was completed with this call,
+  ///   false if it was completed before
   @discardableResult
   public func tryComplete(with final: Fallible<FinalValue>) -> Bool {
     let (oldHead, newHead) = _container.updateHead {
@@ -197,7 +206,8 @@ final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, F
     }
   }
 
-  /// **internal use only** Inserts releasable to an internal release pool that will be drained on completion
+  /// **internal use only** Inserts releasable to an internal release pool
+  /// that will be drained on completion
   override public func insertToReleasePool(_ releasable: Releasable) {
     // assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     if !self.isComplete {
@@ -233,11 +243,7 @@ public func channel<PeriodicValue, FinalValue>(
 
   let producer = Producer<PeriodicValue, FinalValue>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
 
-  if let cancellationToken = cancellationToken {
-    cancellationToken.notifyCancellation { [weak producer] in
-      producer?.cancel()
-    }
-  }
+  cancellationToken?.add(cancellable: producer)
 
   executor.execute { [weak producer] in
     let fallibleFinalValue = fallible { try block { producer?.send($0) } }
@@ -258,15 +264,8 @@ public func channel<U: ExecutionContext, PeriodicValue, FinalValue>(
 
   let producer = Producer<PeriodicValue, FinalValue>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
 
-  context.notifyDeinit { [weak producer] in
-    producer?.cancelBecauseOfDeallocatedContext()
-  }
-
-  if let cancellationToken = cancellationToken {
-    cancellationToken.notifyCancellation { [weak producer] in
-      producer?.cancel()
-    }
-  }
+  context.addDependent(finite: producer)
+  cancellationToken?.add(cancellable: producer)
 
   (executor ?? context.executor).execute { [weak context, weak producer] in
     guard nil != producer else { return }
@@ -284,21 +283,21 @@ public func channel<U: ExecutionContext, PeriodicValue, FinalValue>(
 fileprivate class ProducerState<T, U> {
   typealias Value = ChannelValue<T, U>
   typealias Handler = ChannelHandler<T, U>
-  
+
   init() { }
 }
 
-fileprivate class RegularProducerState<T, U> : ProducerState<T, U> {
+fileprivate class RegularProducerState<T, U>: ProducerState<T, U> {
   weak var handler: Handler?
   let next: RegularProducerState<T, U>?
-  
+
   init(handler: Handler, next: RegularProducerState<T, U>?) {
     self.handler = handler
     self.next = next
   }
 }
 
-fileprivate class FinalProducerState<T, U> : ProducerState<T, U> {
+fileprivate class FinalProducerState<T, U>: ProducerState<T, U> {
   let final: Fallible<U>
 
   init(final: Fallible<U>) {
@@ -306,7 +305,8 @@ fileprivate class FinalProducerState<T, U> : ProducerState<T, U> {
   }
 }
 
-/// Specifies strategy of selecting buffer size of channel derived from another channel, e.g through transformations
+/// Specifies strategy of selecting buffer size of channel derived
+/// from another channel, e.g through transformations
 public enum DerivedChannelBufferSize {
 
   /// Specifies strategy to use as default value for arguments of methods
@@ -340,7 +340,7 @@ public enum DerivedChannelBufferSize {
   }
 }
 
-fileprivate class ProducerIteratorImpl<PeriodicValue, FinalValue> : ChannelIteratorImpl<PeriodicValue, FinalValue> {
+fileprivate class ProducerIteratorImpl<PeriodicValue, FinalValue>: ChannelIteratorImpl<PeriodicValue, FinalValue> {
   let _sema: DispatchSemaphore
   var _locking = makeLocking(isFair: true)
   let _bufferedPeriodics: QueueImpl<PeriodicValue>
@@ -396,7 +396,7 @@ fileprivate class ProducerIteratorImpl<PeriodicValue, FinalValue> : ChannelItera
     case let .final(final):
       _finalValue = final
     }
-
+    
     _sema.signal()
   }
 }

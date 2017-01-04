@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -34,7 +34,8 @@ func makeThreadSafeContainer() -> ThreadSafeContainer {
   #endif
 }
 
-/// ThreadSafeContainer is a data structure that has head and can change this head with thread safety.
+/// ThreadSafeContainer is a data structure that has head
+/// and can change this head with thread safety.
 protocol ThreadSafeContainer {
   var head: AnyObject? { get }
 
@@ -42,7 +43,7 @@ protocol ThreadSafeContainer {
   mutating func updateHead(_ block: (AnyObject?) -> AnyObject?) -> (oldHead: AnyObject?, newHead: AnyObject?)
 }
 
-private struct LockingThreadSafeContainer : ThreadSafeContainer {
+private struct LockingThreadSafeContainer: ThreadSafeContainer {
   private var _locking: Locking
   var head: AnyObject?
 

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -27,14 +27,14 @@ import Dispatch
   import Glibc
 #endif
 
-class BatchFutureTests : XCTestCase {
+class BatchFutureTests: XCTestCase {
 
   static let allTests = [
     ("testJoined", testJoined),
     ("testReduce", testReduce),
     ("testReduceThrows", testReduceThrows),
-    ("testMapToFuture", testMapToFuture),
-    ("testMapToValue", testMapToValue),
+    ("testFlatMap", testFlatMap),
+    ("testMap", testMap),
     ]
 
   func testJoined() {
@@ -64,15 +64,15 @@ class BatchFutureTests : XCTestCase {
     XCTAssertEqual(TestError.testCode, value.failure as! TestError)
   }
 
-  func testMapToFuture() {
+  func testFlatMap() {
     let value = (1...5)
-      .asyncMap(executor: .utility) { value in future(after: Double(value) / 10.0) { value } }
+      .asyncFlatMap(executor: .utility) { value in future(after: Double(value) / 10.0) { value } }
       .map { $0.reduce(5, +) }
       .wait().success!
     XCTAssertEqual(20, value)
   }
 
-  func testMapToValue() {
+  func testMap() {
     let value = (1...5)
       .asyncMap(executor: .utility)  { $0 }
       .map { $0.reduce(5) { $0 + $1 } }

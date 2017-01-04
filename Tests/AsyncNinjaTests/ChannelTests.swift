@@ -27,7 +27,7 @@ import Dispatch
   import Glibc
 #endif
 
-class ChannelTests : XCTestCase {
+class ChannelTests: XCTestCase {
   
   static let allTests = [
     ("testIterators", testIterators),

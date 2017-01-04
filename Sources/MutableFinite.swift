@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -23,8 +23,8 @@
 import Dispatch
 
 /// A protocol for objects that can be manually finish with value
-public protocol MutableFinite : Finite {
-  associatedtype ImmutableFinite : Finite
+public protocol MutableFinite: Finite, Cancellable {
+  associatedtype ImmutableFinite: Finite
 
   /// Required initializer
   init()

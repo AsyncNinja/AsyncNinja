@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -23,7 +23,7 @@
 import Dispatch
 
 /// A future that has been initialized as completed
-final class ConstantFuture<FinalValue> : Future<FinalValue> {
+final class ConstantFuture<FinalValue>: Future<FinalValue> {
   private var _value: Value
   override public var finalValue: Value? { return _value }
   let releasePool = ReleasePool()
@@ -33,7 +33,8 @@ final class ConstantFuture<FinalValue> : Future<FinalValue> {
   }
 
   override public func makeFinalHandler(executor: Executor,
-                                        block: @escaping (Fallible<FinalValue>) -> Void) -> FinalHandler? {
+                                        block: @escaping (Fallible<FinalValue>) -> Void
+    ) -> FinalHandler? {
     executor.execute { block(self._value) }
     return nil
   }

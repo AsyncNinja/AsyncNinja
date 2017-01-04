@@ -29,10 +29,13 @@ public extension Channel {
   /// **internal use only**
   private func _first(executor: Executor,
                       cancellationToken: CancellationToken?,
-                      `where` predicate: @escaping(PeriodicValue) throws -> Bool) -> Promise<PeriodicValue?> {
+                      `where` predicate: @escaping(PeriodicValue) throws -> Bool
+    ) -> Promise<PeriodicValue?> {
 
     let promise = Promise<PeriodicValue?>()
-    let handler = self.makeHandler(executor: executor.makeDerivedSerialExecutor()) { [weak promise] in
+    let executor_ = executor.makeDerivedSerialExecutor()
+    let handler = self.makeHandler(executor: executor_) {
+      [weak promise] in
       switch $0 {
       case let .periodic(periodicValue):
         do {
@@ -49,13 +52,8 @@ public extension Channel {
       }
     }
 
-    if let handler = handler {
-      promise.insertToReleasePool(handler)
-    }
-
-    cancellationToken?.notifyCancellation { [weak promise] in
-      promise?.cancel()
-    }
+    promise.insertHandlerToReleasePool(handler)
+    cancellationToken?.add(cancellable: promise)
 
     return promise
   }
@@ -64,24 +62,28 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor. Do not use this argument if you do not need to override executor
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - predicate: returns true if periodic value matches and returned future may be completed with it
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need
+  ///     to override an executor provided by the context
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - predicate: returns true if periodic value matches
+  ///     and returned future may be completed with it
   /// - Returns: future
-  func first<U: ExecutionContext>(context: U,
+  func first<C: ExecutionContext>(context: C,
              executor: Executor? = nil,
              cancellationToken: CancellationToken? = nil,
-             `where` predicate: @escaping(U, PeriodicValue) throws -> Bool
+             `where` predicate: @escaping(C, PeriodicValue) throws -> Bool
     ) -> Future<PeriodicValue?> {
-    let promise = self._first(executor: executor ?? context.executor, cancellationToken: cancellationToken) {
+    let executor_ = executor ?? context.executor
+    let promise = self._first(executor: executor_, cancellationToken: cancellationToken) {
       [weak context] (periodicValue) -> Bool in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try predicate(context, periodicValue)
     }
 
-    context.notifyDeinit { [weak promise] in
-      promise?.cancelBecauseOfDeallocatedContext()
-    }
+    context.addDependent(finite: promise)
 
     return promise
   }
@@ -90,13 +92,19 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - executor: to execute call predicate on
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - predicate: returns true if periodic value matches and returned future may be completed with it
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - predicate: returns true if periodic value matches
+  ///     and returned future may be completed with it
   /// - Returns: future
   func first(executor: Executor = .immediate,
              cancellationToken: CancellationToken? = nil,
-             `where` predicate: @escaping(PeriodicValue) throws -> Bool) -> Future<PeriodicValue?> {
-    return _first(executor: executor, cancellationToken: cancellationToken, where: predicate)
+             `where` predicate: @escaping(PeriodicValue) throws -> Bool
+    ) -> Future<PeriodicValue?> {
+    return _first(executor: executor,
+                  cancellationToken: cancellationToken,
+                  where: predicate)
   }
 }
 
@@ -106,13 +114,15 @@ public extension Channel {
 
   /// **internal use only**
   private func _last(executor: Executor,
-                      cancellationToken: CancellationToken?,
-                      `where` predicate: @escaping(PeriodicValue) throws -> Bool) -> Promise<PeriodicValue?> {
+                     cancellationToken: CancellationToken?,
+                     `where` predicate: @escaping(PeriodicValue) throws -> Bool
+    ) -> Promise<PeriodicValue?> {
 
     var latestMatchingPeriodic: PeriodicValue?
 
     let promise = Promise<PeriodicValue?>()
-    let handler = self.makeHandler(executor: executor.makeDerivedSerialExecutor()) { [weak promise] in
+    let executor_ = executor.makeDerivedSerialExecutor()
+    let handler = self.makeHandler(executor: executor_) { [weak promise] in
       switch $0 {
       case let .periodic(periodicValue):
         do {
@@ -133,13 +143,8 @@ public extension Channel {
       }
     }
 
-    if let handler = handler {
-      promise.insertToReleasePool(handler)
-    }
-
-    cancellationToken?.notifyCancellation { [weak promise] in
-      promise?.cancel()
-    }
+    promise.insertHandlerToReleasePool(handler)
+    cancellationToken?.add(cancellable: promise)
 
     return promise
   }
@@ -148,24 +153,27 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor. Do not use this argument if you do not need to override executor
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
+  ///   - executor: override of `ExecutionContext`s executor. Keep default value of the argument unless you need to override an executor provided by the context
+  ///   - cancellationToken: `CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned channel
   ///   - predicate: returns true if periodic value matches and returned future may be completed with it
   /// - Returns: future
-  func last<U: ExecutionContext>(context: U,
-             executor: Executor? = nil,
-             cancellationToken: CancellationToken? = nil,
-             `where` predicate: @escaping(U, PeriodicValue) throws -> Bool
+  func last<C: ExecutionContext>(context: C,
+            executor: Executor? = nil,
+            cancellationToken: CancellationToken? = nil,
+            `where` predicate: @escaping(C, PeriodicValue) throws -> Bool
     ) -> Future<PeriodicValue?> {
-    let promise = self._last(executor: executor ?? context.executor, cancellationToken: cancellationToken) {
+    let _executor = executor ?? context.executor
+    let promise = self._last(executor: _executor,
+                             cancellationToken: cancellationToken)
+    {
       [weak context] (periodicValue) -> Bool in
-      guard let context = context else { throw AsyncNinjaError.contextDeallocated }
+      guard let context = context else {
+        throw AsyncNinjaError.contextDeallocated
+      }
       return try predicate(context, periodicValue)
     }
 
-    context.notifyDeinit { [weak promise] in
-      promise?.cancelBecauseOfDeallocatedContext()
-    }
+    context.addDependent(finite: promise)
 
     return promise
   }
@@ -174,12 +182,15 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - executor: to execute call predicate on
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
+  ///   - cancellationToken: `CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned channel
   ///   - predicate: returns true if periodic value matches and returned future may be completed with it
   /// - Returns: future
   func last(executor: Executor = .immediate,
-             cancellationToken: CancellationToken? = nil,
-             `where` predicate: @escaping(PeriodicValue) throws -> Bool) -> Future<PeriodicValue?> {
-    return _last(executor: executor, cancellationToken: cancellationToken, where: predicate)
+            cancellationToken: CancellationToken? = nil,
+            `where` predicate: @escaping(PeriodicValue) throws -> Bool
+    ) -> Future<PeriodicValue?> {
+    return _last(executor: executor,
+                 cancellationToken: cancellationToken,
+                 where: predicate)
   }
 }

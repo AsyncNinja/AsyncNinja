@@ -23,18 +23,17 @@
 import Dispatch
 
 /// Merges channels with completely unrelated types into one
-public func merge<PeriodicValueA, PeriodicValueB, SuccessValueA, SuccessValueB>(
-  _ channelA: Channel<PeriodicValueA, SuccessValueA>,
-  _ channelB: Channel<PeriodicValueB, SuccessValueB>,
-  cancellationToken: CancellationToken? = nil,
-  bufferSize: DerivedChannelBufferSize = .default
-  ) -> Channel<Either<PeriodicValueA, PeriodicValueB>, (SuccessValueA, SuccessValueB)> {
+public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
+                  _ channelB: Channel<PB, SB>,
+                  cancellationToken: CancellationToken? = nil,
+                  bufferSize: DerivedChannelBufferSize = .default
+  ) -> Channel<Either<PA, PB>, (SA, SB)> {
   let bufferSize_ = bufferSize.bufferSize(channelA, channelB)
-  let producer = Producer<Either<PeriodicValueA, PeriodicValueB>, (SuccessValueA, SuccessValueB)>(bufferSize: bufferSize_)
+  let producer = Producer<Either<PA, PB>, (SA, SB)>(bufferSize: bufferSize_)
 
   var locking = makeLocking()
-  var successA: SuccessValueA?
-  var successB: SuccessValueB?
+  var successA: SA?
+  var successB: SB?
 
   func makeHandlerBlock<PeriodicValue, FinalValue>(
     periodicHandler: @escaping (PeriodicValue) -> Void,
@@ -59,42 +58,35 @@ public func merge<PeriodicValueA, PeriodicValueB, SuccessValueA, SuccessValueB>(
   }
 
   let handlerBlockA = makeHandlerBlock(periodicHandler: { [weak producer] in producer?.send(.left($0)) },
-                                       successHandler: { (success: SuccessValueA) in successA = success })
-  if let handler = channelA.makeHandler(executor: .immediate, block: handlerBlockA) {
-    producer.insertToReleasePool(handler)
-  }
+                                       successHandler: { (success: SA) in successA = success })
+  let handlerA = channelA.makeHandler(executor: .immediate, block: handlerBlockA)
+  producer.insertHandlerToReleasePool(handlerA)
 
   let handlerBlockB = makeHandlerBlock(periodicHandler: { [weak producer] in producer?.send(.right($0)) },
-                                       successHandler: { (success: SuccessValueB) in successB = success })
-  if let handler = channelB.makeHandler(executor: .immediate, block: handlerBlockB) {
-    producer.insertToReleasePool(handler)
-  }
+                                       successHandler: { (success: SB) in successB = success })
+  let handlerB = channelB.makeHandler(executor: .immediate, block: handlerBlockB)
+  producer.insertHandlerToReleasePool(handlerB)
 
-  if let cancellationToken = cancellationToken {
-    cancellationToken.notifyCancellation { [weak producer] in
-      producer?.cancel()
-    }
-  }
+  cancellationToken?.add(cancellable: producer)
 
   return producer
 }
 
 /// Merges channels into one
-public func merge<PeriodicValue, SuccessValueA, SuccessValueB>(
-  _ channelA: Channel<PeriodicValue, SuccessValueA>,
-  _ channelB: Channel<PeriodicValue, SuccessValueB>,
-  cancellationToken: CancellationToken? = nil,
-  bufferSize: DerivedChannelBufferSize = .default
-  ) -> Channel<PeriodicValue, (SuccessValueA, SuccessValueB)> {
+public func merge<P, SA, SB>(_ channelA: Channel<P, SA>,
+                  _ channelB: Channel<P, SB>,
+                  cancellationToken: CancellationToken? = nil,
+                  bufferSize: DerivedChannelBufferSize = .default
+  ) -> Channel<P, (SA, SB)> {
   let bufferSize_ = bufferSize.bufferSize(channelA, channelB)
-  let producer = Producer<PeriodicValue, (SuccessValueA, SuccessValueB)>(bufferSize: bufferSize_)
+  let producer = Producer<P, (SA, SB)>(bufferSize: bufferSize_)
 
   var locking = makeLocking()
-  var successA: SuccessValueA?
-  var successB: SuccessValueB?
+  var successA: SA?
+  var successB: SB?
 
   func makeHandlerBlock<T>(_ successHandler: @escaping (T) -> Void
-    ) -> (ChannelValue<PeriodicValue, T>) -> Void {
+    ) -> (ChannelValue<P, T>) -> Void {
     return {
       [weak producer] (value) in
       switch value {
@@ -113,21 +105,15 @@ public func merge<PeriodicValue, SuccessValueA, SuccessValueB>(
     }
   }
 
-  if let handler = channelA.makeHandler(executor: .immediate,
-                                        block: makeHandlerBlock { successA = $0 }) {
-    producer.insertToReleasePool(handler)
-  }
+  let handlerA = channelA.makeHandler(executor: .immediate,
+                                      block: makeHandlerBlock { successA = $0 })
+  producer.insertHandlerToReleasePool(handlerA)
 
-  if let handler = channelB.makeHandler(executor: .immediate,
-                                        block: makeHandlerBlock { successB = $0 }) {
-    producer.insertToReleasePool(handler)
-  }
 
-  if let cancellationToken = cancellationToken {
-    cancellationToken.notifyCancellation { [weak producer] in
-      producer?.cancel()
-    }
-  }
-
+  let handlerB = channelB.makeHandler(executor: .immediate,
+                                      block: makeHandlerBlock { successB = $0 })
+  producer.insertHandlerToReleasePool(handlerB)
+  cancellationToken?.add(cancellable: producer)
+  
   return producer
 }

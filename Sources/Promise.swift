@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -23,7 +23,7 @@
 import Dispatch
 
 /// Promise is a future that may be manually completed by owner
-final public class Promise<FinalValue> : Future<FinalValue>, MutableFinite {
+final public class Promise<FinalValue>: Future<FinalValue>, MutableFinite {
   public typealias ImmutableFinite = Future<FinalValue>
 
   private var _container = makeThreadSafeContainer()
@@ -117,7 +117,7 @@ fileprivate class AbstractPromiseState<T> {
 }
 
 /// **internal use only**
-fileprivate  class SubscribedPromiseState<T> : AbstractPromiseState<T> {
+fileprivate  class SubscribedPromiseState<T>: AbstractPromiseState<T> {
   typealias Value = Fallible<T>
   typealias Handler = FutureHandler<T>
   
@@ -135,7 +135,7 @@ fileprivate  class SubscribedPromiseState<T> : AbstractPromiseState<T> {
 }
 
 /// **internal use only**
-fileprivate  class CompletedPromiseState<T> : AbstractPromiseState<T> {
+fileprivate  class CompletedPromiseState<T>: AbstractPromiseState<T> {
   let value: Fallible<T>
   
   init(value: Fallible<T>) {

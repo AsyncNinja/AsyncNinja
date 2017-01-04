@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -44,7 +44,7 @@
     }
   }
 
-  private class KeyPathObserver<T> : NSObject {
+  private class KeyPathObserver<T>: NSObject {
     let keyPath: String
     weak var producer: Producer<T?, Void>?
 
@@ -55,7 +55,7 @@
 
     override func observeValue(forKeyPath keyPath: String?,
                                of object: Any?,
-                               change: [NSKeyValueChangeKey : Any]?,
+                               change: [NSKeyValueChangeKey: Any]?,
                                context: UnsafeMutableRawPointer?) {
       assert(keyPath == self.keyPath)
       guard
@@ -95,7 +95,7 @@
     }
   }
 
-  private class ActionReceiver : NSObject {
+  private class ActionReceiver: NSObject {
     weak var control: NSControl?
     let producer = Producer<NSControl.ActionChannelPeriodicValue, Void>(bufferSize: 0)
 
@@ -141,7 +141,7 @@
     }
   }
 
-  private class ActionReceiver : NSObject {
+  private class ActionReceiver: NSObject {
     weak var control: UIControl?
     let producer = Producer<UIControl.ActionChannelPeriodicValue, Void>(bufferSize: 0)
 

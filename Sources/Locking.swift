@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -41,7 +41,7 @@ func makeLocking(isFair: Bool = false) -> Locking {
   #endif
 }
 
-struct DispatchSemaphoreLocking : Locking {
+struct DispatchSemaphoreLocking: Locking {
   private let _sema = DispatchSemaphore(value: 1)
 
   mutating func lock() {
@@ -58,7 +58,7 @@ struct DispatchSemaphoreLocking : Locking {
 @available(iOS, deprecated: 10.0, message: "Use UnfairLockLocking instead")
 @available(tvOS, deprecated: 10.0, message: "Use UnfairLockLocking instead")
 @available(watchOS, deprecated: 3.0, message: "Use UnfairLockLocking instead")
-struct SpinLockLocking : Locking {
+struct SpinLockLocking: Locking {
   private var _lock: OSSpinLock = OS_SPINLOCK_INIT
 
   mutating func lock() {
@@ -71,7 +71,7 @@ struct SpinLockLocking : Locking {
 }
 
 @available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *)
-struct  UnfairLockLocking : Locking {
+struct  UnfairLockLocking: Locking {
   private var _lock = os_unfair_lock_s()
 
   mutating func lock() {

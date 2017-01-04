@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -84,7 +84,7 @@ public class ReleasePool {
     }
   }
 
-  private class NotifyItem : Item {
+  private class NotifyItem: Item {
     let notifyBlock: () -> Void
 
     init (notifyBlock: @escaping () -> Void, next: Item?) {
@@ -97,7 +97,7 @@ public class ReleasePool {
     }
   }
 
-  private class ReleasableItem : Item {
+  private class ReleasableItem: Item {
     let object: Releasable
 
     init(object: Releasable, next: Item?) {

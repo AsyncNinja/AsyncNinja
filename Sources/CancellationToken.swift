@@ -36,8 +36,19 @@ public class CancellationToken {
   /// Specified block will never be called if the token will never be cancelled
   public func notifyCancellation(_ block: @escaping () -> Void) {
     _container.updateHead {
-      if let notifyItem = $0 as? NotifyItem {
-        return NotifyItem(block: block, next: notifyItem)
+      if let nonCancelledItem = $0 as? NonCancelledItem {
+        return NotifyItem(block: block, next: nonCancelledItem)
+      } else {
+        return $0
+      }
+    }
+  }
+
+  /// Automatically cancelles passed cancellable object on cancellation
+  public func add(cancellable: Cancellable) {
+    _container.updateHead {
+      if let nonCancelledItem = $0 as? NonCancelledItem {
+        return ContainerOfCancellableItem(cancellable: cancellable, next: nonCancelledItem)
       } else {
         return $0
       }
@@ -48,19 +59,46 @@ public class CancellationToken {
     init() { }
   }
 
-  private class NotifyItem : Item {
-    let block: () -> Void
-    let next: NotifyItem?
+  private class NonCancelledItem: Item {
+    let next: NonCancelledItem?
 
-    init(block: @escaping () -> Void, next: NotifyItem?) {
-      self.block = block
+    init(next: NonCancelledItem?) {
       self.next = next
-    }
-
-    deinit {
-      self.block()
     }
   }
 
-  private class CancelledItem : Item { }
+  private class NotifyItem: NonCancelledItem {
+    let _block: () -> Void
+
+    init(block: @escaping () -> Void, next: NonCancelledItem?) {
+      _block = block
+      super.init(next: next)
+    }
+
+    deinit {
+      _block()
+    }
+  }
+
+  private class ContainerOfCancellableItem: NonCancelledItem {
+    weak var _cancellable: Cancellable?
+
+    init(cancellable: Cancellable, next: NonCancelledItem?) {
+      _cancellable = cancellable
+      super.init(next: next)
+    }
+
+    deinit {
+      _cancellable?.cancel()
+    }
+  }
+
+  private class CancelledItem: Item { }
+}
+
+/// Protocol for objects that have cancellation
+public protocol Cancellable: class {
+
+  /// Performs cancellation action
+  func cancel()
 }

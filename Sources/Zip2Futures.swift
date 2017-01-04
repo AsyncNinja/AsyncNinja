@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -27,8 +27,10 @@ import Dispatch
 /// - Parameters:
 ///   - futureA: first
 ///   - futureB: second
-/// - Returns: future of combined results. The future will complete right after completion of both futureA and futureB
-public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, B)> {
+/// - Returns: future of combined results.
+///   The future will complete right after completion of both futureA and futureB
+public func zip<A, B>(_ futureA: Future<A>,
+                _ futureB: Future<B>) -> Future<(A, B)> {
   // Test: ZipFuturesTest.test2Simple
   // Test: ZipFuturesTest.test2Delayed
   // Test: ZipFuturesTest.test2Failure
@@ -38,7 +40,8 @@ public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, 
   var subvalueA: A? = nil
   var subvalueB: B? = nil
   
-  let handlerA = futureA.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueA) in
+  let handlerA = futureA.makeFinalHandler(executor: .immediate) {
+    [weak promise] (localSubvalueA) in
     guard let promise = promise else { return }
     locking.lock()
     defer { locking.unlock() }
@@ -52,9 +55,7 @@ public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, 
     }
   }
 
-  if let handlerA = handlerA {
-    promise.insertToReleasePool(handlerA)
-  }
+  promise.insertHandlerToReleasePool(handlerA)
 
   let handlerB = futureB.makeFinalHandler(executor: .immediate) { [weak promise] (localSubvalueB) in
     guard let promise = promise else { return }
@@ -70,9 +71,7 @@ public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, 
     }
   }
 
-  if let handlerB = handlerB {
-    promise.insertToReleasePool(handlerB)
-  }
+  promise.insertHandlerToReleasePool(handlerB)
 
   return promise
 }
@@ -82,7 +81,8 @@ public func zip<A, B>(_ futureA: Future<A>, _ futureB: Future<B>) -> Future<(A, 
 /// - Parameters:
 ///   - futureA: first
 ///   - valueB: second
-/// - Returns: future of combined results. The future will complete right after completion of futureA.
+/// - Returns: future of combined results.
+///   The future will complete right after completion of futureA.
 public func zip<A, B>(_ futureA: Future<A>, _ valueB: B) -> Future<(A, B)> {
   // Test: ZipFuturesTest.test2Constant
   return futureA.map(executor: .immediate) { ($0, valueB) }

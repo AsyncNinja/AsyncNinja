@@ -27,8 +27,12 @@ public extension Channel {
   /// Adds indexes to periodic values of the channel
   ///
   /// - Parameters:
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   /// - Returns: channel with tuple (index, periodicValue) as periodic value
   func enumerated(cancellationToken: CancellationToken? = nil,
                   bufferSize: DerivedChannelBufferSize = .default
@@ -37,7 +41,10 @@ public extension Channel {
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 
       var index: OSAtomic_int64_aligned64_t = -1
-      return self.mapPeriodic(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      return self.mapPeriodic(executor: .immediate,
+                              cancellationToken: cancellationToken,
+                              bufferSize: bufferSize)
+      {
         let localIndex = Int(OSAtomicIncrement64(&index))
         return (localIndex, $0)
       }
@@ -46,7 +53,10 @@ public extension Channel {
 
       var locking = makeLocking()
       var index = 0
-      return self.mapPeriodic(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      return self.mapPeriodic(executor: .immediate,
+                              cancellationToken: cancellationToken,
+                              bufferSize: bufferSize)
+      {
         locking.lock()
         defer { locking.unlock() }
         let localIndex = index
@@ -60,17 +70,23 @@ public extension Channel {
   /// Makes channel of pairs of periodic values
   ///
   /// - Parameters:
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   /// - Returns: channel with tuple (periodicValue, periodicValue) as periodic value
-  func bufferedPairs(
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default
+  func bufferedPairs(cancellationToken: CancellationToken? = nil,
+                     bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<(PeriodicValue, PeriodicValue), FinalValue> {
     var locking = makeLocking()
     var previousPeriodic: PeriodicValue? = nil
 
-    return self.makeProducer(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+    return self.makeProducer(executor: .immediate,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (value, producer) in
       switch value {
       case let .periodic(periodic):
@@ -92,20 +108,27 @@ public extension Channel {
   /// Makes channel of arrays of periodic values
   ///
   /// - Parameters:
-  ///   - capacity: number of periodic values of original channel used as periodic value of derived channel
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - capacity: number of periodic values of original channel used
+  ///     as periodic value of derived channel
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   /// - Returns: channel with [periodicValue] as periodic value
-  func buffered(
-    capacity: Int,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default
+  func buffered(capacity: Int,
+                cancellationToken: CancellationToken? = nil,
+                bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<[PeriodicValue], FinalValue> {
     var buffer = [PeriodicValue]()
     buffer.reserveCapacity(capacity)
     var locking = makeLocking()
 
-    return self.makeProducer(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+    return self.makeProducer(executor: .immediate,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (value, producer) in
       locking.lock()
 
@@ -137,14 +160,21 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - timeout: in seconds to delay original channel by
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   /// - Returns: delayed channel
   func delayedPeriodic(timeout: Double,
                        cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<PeriodicValue, FinalValue> {
-    return self.makeProducer(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+    return self.makeProducer(executor: .immediate,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (value: Value, producer: Producer<PeriodicValue, FinalValue>) -> Void in
       Executor.primary.execute(after: timeout) { [weak producer] in
         guard let producer = producer else { return }
@@ -159,8 +189,11 @@ public extension Channel {
   ///   - deadline: to start picking peridic values after
   ///   - interval: interfal for picking latest periodic values
   ///   - leeway: leeway for timer
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
   /// - Returns: channel
   func debounce(deadline: DispatchTime = DispatchTime.now(),
                 interval: Double,
@@ -219,36 +252,37 @@ public extension Channel {
       }
     }
 
-    if let handler = handler {
-      self.insertToReleasePool(handler)
-    }
+    self.insertHandlerToReleasePool(handler)
+    cancellationToken?.add(cancellable: producer)
 
-    if let cancellationToken = cancellationToken {
-      cancellationToken.notifyCancellation { [weak producer] in
-        producer?.cancel()
-      }
-    }
-    
     return producer
   }
 }
 
-extension Channel where PeriodicValue : Equatable {
+extension Channel where PeriodicValue: Equatable {
 
-  /// Returns channel of distinct periodic values of original channel. Works only for equatable periodic values [0, 0, 1, 2, 3, 3, 4, 3] => [0, 1, 2, 3, 4, 3]
+  /// Returns channel of distinct periodic values of original channel.
+  /// Works only for equatable periodic values
+  /// [0, 0, 1, 2, 3, 3, 4, 3] => [0, 1, 2, 3, 4, 3]
   ///
   /// - Parameters:
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   /// - Returns: channel with distinct periodic values
-  public func distinct(
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default
+  public func distinct(cancellationToken: CancellationToken? = nil,
+                       bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<(PeriodicValue, PeriodicValue), FinalValue> {
     var locking = makeLocking()
     var previousPeriodic: PeriodicValue? = nil
 
-    return self.makeProducer(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+    return self.makeProducer(executor: .immediate,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
       (value, producer) in
       switch value {
       case let .periodic(periodic):

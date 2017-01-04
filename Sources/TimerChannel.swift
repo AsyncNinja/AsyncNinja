@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -32,79 +32,105 @@ private func makeTimer(dispatchTimer: DispatchSourceTimer) -> Channel<Void, Void
   return producer
 }
 
-/// Makes channel that will receive periodics after a *deadline*, in an *interval* (in seconds), with a *leeway*
+/// Makes channel that will receive periodics after a *deadline*,
+/// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(interval: DispatchTimeInterval) -> Channel<Void, Void> {
   return makeTimer(deadline: DispatchTime.now(), interval: interval)
 }
 
-/// Makes channel that will receive periodics after a *deadline*, in an *interval* (in seconds), with a *leeway*
-public func makeTimer(interval: DispatchTimeInterval, leeway: DispatchTimeInterval) -> Channel<Void, Void> {
+/// Makes channel that will receive periodics after a *deadline*,
+// in an *interval* (in seconds), with a *leeway*
+public func makeTimer(interval: DispatchTimeInterval,
+                      leeway: DispatchTimeInterval) -> Channel<Void, Void> {
   return makeTimer(deadline: DispatchTime.now(), interval: interval, leeway: leeway)
 }
 
-/// Makes channel that will receive periodics after a *deadline*, in an *interval* (in seconds), with a *leeway*
-public func makeTimer(deadline: DispatchTime, interval: DispatchTimeInterval) -> Channel<Void, Void> {
+/// Makes channel that will receive periodics after a *deadline*,
+/// in an *interval* (in seconds), with a *leeway*
+public func makeTimer(deadline: DispatchTime,
+                      interval: DispatchTimeInterval) -> Channel<Void, Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(deadline: deadline, interval: interval)
   return makeTimer(dispatchTimer: timer)
 }
 
-/// Makes channel that will receive periodics after a *deadline*, in an *interval* (in seconds), with a *leeway*
-public func makeTimer(deadline: DispatchTime, interval: DispatchTimeInterval, leeway: DispatchTimeInterval) -> Channel<Void, Void> {
+/// Makes channel that will receive periodics after a *deadline*,
+/// in an *interval* (in seconds), with a *leeway*
+public func makeTimer(deadline: DispatchTime,
+                      interval: DispatchTimeInterval,
+                      leeway: DispatchTimeInterval) -> Channel<Void, Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(deadline: deadline, interval: interval, leeway: leeway)
   return makeTimer(dispatchTimer: timer)
 }
 
-/// Makes channel that will receive periodics after a *deadline*, in an *interval* (in seconds), with a *leeway*
-public func makeTimer(wallDeadline: DispatchWallTime, interval: DispatchTimeInterval) -> Channel<Void, Void> {
+/// Makes channel that will receive periodics after a *deadline*,
+/// in an *interval* (in seconds), with a *leeway*
+public func makeTimer(wallDeadline: DispatchWallTime,
+                      interval: DispatchTimeInterval) -> Channel<Void, Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(wallDeadline: wallDeadline, interval: interval)
   return makeTimer(dispatchTimer: timer)
 }
 
-/// Makes channel that will receive periodics after a *deadline*, in an *interval* (in seconds), with a *leeway*
-public func makeTimer(wallDeadline: DispatchWallTime, interval: DispatchTimeInterval, leeway: DispatchTimeInterval) -> Channel<Void, Void> {
+/// Makes channel that will receive periodics after a *deadline*,
+/// in an *interval* (in seconds), with a *leeway*
+public func makeTimer(wallDeadline: DispatchWallTime,
+                      interval: DispatchTimeInterval,
+                      leeway: DispatchTimeInterval) -> Channel<Void, Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(wallDeadline: wallDeadline, interval: interval, leeway: leeway)
   return makeTimer(dispatchTimer: timer)
 }
 
-//
+// MARK: -
 
-/// Makes channel that will receive periodics after a *deadline*, in an *interval* (in seconds), with a *leeway*
+/// Makes channel that will receive periodics after a *deadline*,
+/// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(interval: Double) -> Channel<Void, Void> {
   return makeTimer(deadline: DispatchTime.now(), interval: interval)
 }
 
-/// Makes channel that will receive periodics after a *deadline*, in an *interval* (in seconds), with a *leeway*
-public func makeTimer(interval: Double, leeway: DispatchTimeInterval) -> Channel<Void, Void> {
+/// Makes channel that will receive periodics after a *deadline*,
+/// in an *interval* (in seconds), with a *leeway*
+public func makeTimer(interval: Double,
+                      leeway: DispatchTimeInterval) -> Channel<Void, Void> {
   return makeTimer(deadline: DispatchTime.now(), interval: interval, leeway: leeway)
 }
 
-/// Makes channel that will receive periodics after a *deadline*, in an *interval* (in seconds), with a *leeway*
-public func makeTimer(deadline: DispatchTime, interval: Double) -> Channel<Void, Void> {
+/// Makes channel that will receive periodics after a *deadline*,
+/// in an *interval* (in seconds), with a *leeway*
+public func makeTimer(deadline: DispatchTime,
+                      interval: Double) -> Channel<Void, Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(deadline: deadline, interval: interval)
   return makeTimer(dispatchTimer: timer)
 }
 
-/// Makes channel that will receive periodics after a *deadline*, in an *interval* (in seconds), with a *leeway*
-public func makeTimer(deadline: DispatchTime, interval: Double, leeway: DispatchTimeInterval) -> Channel<Void, Void> {
+/// Makes channel that will receive periodics after a *deadline*,
+/// in an *interval* (in seconds), with a *leeway*
+public func makeTimer(deadline: DispatchTime,
+                      interval: Double,
+                      leeway: DispatchTimeInterval) -> Channel<Void, Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(deadline: deadline, interval: interval, leeway: leeway)
   return makeTimer(dispatchTimer: timer)
 }
 
-/// Makes channel that will receive periodics after a *deadline*, in an *interval* (in seconds), with a *leeway*
-public func makeTimer(wallDeadline: DispatchWallTime, interval: Double) -> Channel<Void, Void> {
+/// Makes channel that will receive periodics after a *deadline*,
+/// in an *interval* (in seconds), with a *leeway*
+public func makeTimer(wallDeadline: DispatchWallTime,
+                      interval: Double) -> Channel<Void, Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(wallDeadline: wallDeadline, interval: interval)
   return makeTimer(dispatchTimer: timer)
 }
 
-/// Makes channel that will receive periodics after a *deadline*, in an *interval* (in seconds), with a *leeway*
-public func makeTimer(wallDeadline: DispatchWallTime, interval: Double, leeway: DispatchTimeInterval) -> Channel<Void, Void> {
+/// Makes channel that will receive periodics after a *deadline*,
+/// in an *interval* (in seconds), with a *leeway*
+public func makeTimer(wallDeadline: DispatchWallTime,
+                      interval: Double,
+                      leeway: DispatchTimeInterval) -> Channel<Void, Void> {
   let timer = DispatchSource.makeTimerSource()
   timer.scheduleRepeating(wallDeadline: wallDeadline, interval: interval, leeway: leeway)
   return makeTimer(dispatchTimer: timer)

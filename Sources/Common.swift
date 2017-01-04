@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -45,23 +45,26 @@ struct AsyncNinjaConstants {
   /// - 1: `2 3 4 5`
   /// - 2: `1 2 3 4 5`
   ///
-  /// This kind of behavior is present in each way of interaction with `Channel`: transformation, sync enumeration and etc.
+  /// This kind of behavior is present in each way of interaction
+  /// with `Channel`: transformation, sync enumeration and etc.
   static let defaultChannelBufferSize = 1
 }
 
 /// Errors produced by AsyncNinja
-public enum AsyncNinjaError : Swift.Error, Equatable {
-  /// An error of cancelled primitive. `Promises` and `Producers` can be cancecelled with method `cancel()`.
+public enum AsyncNinjaError: Swift.Error, Equatable {
+  /// An error of cancelled primitive. `Promises` and `Producers`
+  /// can be cancecelled with method `cancel()`.
   /// CancellationToken may be used in multiple other cases
   case cancelled
 
   /// An error of deallocated context
-  /// Basically means that execution was bound to context, by context was deallocated before execution started
+  /// Basically means that execution was bound to context,
+  /// by context was deallocated before execution started
   case contextDeallocated
 }
 
 /// Convenience protocol for detection cancellation
-public protocol CancellationRepresentableError : Swift.Error {
+public protocol CancellationRepresentableError: Swift.Error {
 
   /// returns true if the error is actually a cancellation
   var representsCancellation: Bool { get }
@@ -71,18 +74,20 @@ public protocol CancellationRepresentableError : Swift.Error {
 extension AsyncNinjaError: CancellationRepresentableError {
 
   /// returns true if the error is actually a cancellation
-  public var representsCancellation : Bool { return .cancelled == self }
+  public var representsCancellation: Bool { return .cancelled == self }
 }
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+
   import Foundation
 
   /// Conformance to CancellationRepresentableError
-  extension URLError : CancellationRepresentableError {
+  extension URLError: CancellationRepresentableError {
 
     /// tells if this error is actually a cancellation
-    public var representsCancellation : Bool {
+    public var representsCancellation: Bool {
       return self.errorCode == URLError.cancelled.rawValue
     }
   }
+  
 #endif

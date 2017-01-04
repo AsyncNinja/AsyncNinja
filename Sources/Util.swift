@@ -21,7 +21,9 @@
 //
 
 extension Dictionary {
-  mutating func value(forKey key: Key, orMake makeValue: (Key) throws -> Value) rethrows -> Value {
+  mutating func value(forKey key: Key,
+                      orMake makeValue: (Key) throws -> Value
+    ) rethrows -> Value {
     if let existingValue = self[key] {
       return existingValue
     } else {

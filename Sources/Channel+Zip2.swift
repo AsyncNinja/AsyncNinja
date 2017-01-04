@@ -23,22 +23,21 @@
 import Dispatch
 
 /// Zips two channels into channels of tuples
-public func zip<PeriodicValueA, PeriodicValueB, SuccessValueA, SuccessValueB>(
-  _ channelA: Channel<PeriodicValueA, SuccessValueA>,
-  _ channelB: Channel<PeriodicValueB, SuccessValueB>,
-  cancellationToken: CancellationToken? = nil,
-  bufferSize: DerivedChannelBufferSize = .default
-  ) -> Channel<(PeriodicValueA, PeriodicValueB), (SuccessValueA, SuccessValueB)> {
+public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
+                _ channelB: Channel<PB, SB>,
+                cancellationToken: CancellationToken? = nil,
+                bufferSize: DerivedChannelBufferSize = .default
+  ) -> Channel<(PA, PB), (SA, SB)> {
   let bufferSize_ = bufferSize.bufferSize(channelA, channelB)
-  let producer = Producer<(PeriodicValueA, PeriodicValueB), (SuccessValueA, SuccessValueB)>(bufferSize: bufferSize_)
+  let producer = Producer<(PA, PB), (SA, SB)>(bufferSize: bufferSize_)
 
   var locking = makeLocking()
-  let queueOfPeriodics = QueueImpl<Either<PeriodicValueA, PeriodicValueB>>()
-  var successA: SuccessValueA?
-  var successB: SuccessValueB?
+  let queueOfPeriodics = QueueImpl<Either<PA, PB>>()
+  var successA: SA?
+  var successB: SB?
 
   func makeHandlerBlock<PeriodicValue, SuccessValue>(
-    periodicHandler: @escaping (PeriodicValue) -> (PeriodicValueA, PeriodicValueB)?,
+    periodicHandler: @escaping (PeriodicValue) -> (PA, PB)?,
     successHandler: @escaping (SuccessValue) -> Void
     ) -> (ChannelValue<PeriodicValue, SuccessValue>) -> Void {
     return {
@@ -64,7 +63,7 @@ public func zip<PeriodicValueA, PeriodicValueB, SuccessValueA, SuccessValueB>(
   }
 
   do {
-    let handlerBlockA: (ChannelValue<PeriodicValueA, SuccessValueA>) -> Void = makeHandlerBlock(
+    let handlerBlockA: (ChannelValue<PA, SA>) -> Void = makeHandlerBlock(
       periodicHandler: {
         if let periodicB = queueOfPeriodics.first?.right {
           let _ = queueOfPeriodics.pop()
@@ -75,13 +74,13 @@ public func zip<PeriodicValueA, PeriodicValueB, SuccessValueA, SuccessValueB>(
         }
     }, successHandler: { successA = $0 })
 
-    if let handler = channelA.makeHandler(executor: .immediate, block: handlerBlockA) {
-      producer.insertToReleasePool(handler)
-    }
+    let handler = channelA.makeHandler(executor: .immediate,
+                                       block: handlerBlockA)
+    producer.insertHandlerToReleasePool(handler)
   }
 
   do {
-    let handlerBlockB: (ChannelValue<PeriodicValueB, SuccessValueB>) -> Void = makeHandlerBlock(
+    let handlerBlockB: (ChannelValue<PB, SB>) -> Void = makeHandlerBlock(
       periodicHandler: {
         if let periodicA = queueOfPeriodics.first?.left {
           let _ = queueOfPeriodics.pop()
@@ -92,16 +91,12 @@ public func zip<PeriodicValueA, PeriodicValueB, SuccessValueA, SuccessValueB>(
         }
     }, successHandler: { successB = $0 })
 
-    if let handler = channelB.makeHandler(executor: .immediate, block: handlerBlockB) {
-      producer.insertToReleasePool(handler)
-    }
+    let handler = channelB.makeHandler(executor: .immediate,
+                                       block: handlerBlockB)
+    producer.insertHandlerToReleasePool(handler)
   }
 
-  if let cancellationToken = cancellationToken {
-    cancellationToken.notifyCancellation { [weak producer] in
-      producer?.cancel()
-    }
-  }
-
+  cancellationToken?.add(cancellable: producer)
+  
   return producer
 }

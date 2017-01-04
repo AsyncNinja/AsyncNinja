@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -22,18 +22,23 @@
 
 import Dispatch
 
-/// Is a simple cache that can contain multiple values by unique hashable key. Does not invalidate cached values automatically. Parametrised with Key, MutableFiniteValue that can be either `Future` or `Channel` and Context. That gives an opportunity to make cache that can report of status of completion periodically (e.g. download persentage).
-public class Cache<Key : Hashable, MutableFiniteValue : MutableFinite, Context : ExecutionContext> {
+/// Is a simple cache that can contain multiple values by unique
+/// hashable key. Does not invalidate cached values automatically.
+/// Parametrised with Key, MutableFiniteValue that can be either
+/// `Future` or `Channel` and Context. That gives an opportunity to make
+/// cache that can report of status of completion periodically
+/// (e.g. download persentage).
+public class Cache<Key: Hashable, MutableFiniteValue: MutableFinite, Context: ExecutionContext> {
   typealias _CachableValue = CachableValueImpl<MutableFiniteValue, Context>
 
   /// Block that resolves miss
   public typealias MissHandler = (_ strongContext: Context, _ key: Key) throws -> MutableFiniteValue.ImmutableFinite
-  
+
   private var _locking = makeLocking()
   private weak var _context: Context?
   private let _missHandler: (Context, Key) throws -> MutableFiniteValue.ImmutableFinite
   private var _cachedValuesByKey = [Key:_CachableValue]()
-  
+
   /// Designated initializer
   ///
   /// - Parameters:
@@ -57,31 +62,31 @@ public class Cache<Key : Hashable, MutableFiniteValue : MutableFinite, Context :
       mutableFinite.fail(with: AsyncNinjaError.contextDeallocated)
       return mutableFinite as! MutableFiniteValue.ImmutableFinite
     }
-    
+
     _locking.lock()
     defer { _locking.unlock() }
     func makeCachableValue(key: Key) -> _CachableValue {
-      let missHandler = self._missHandler
+      let missHandler = _missHandler
       return _CachableValue(context: context) {
         try missHandler($0, key)
       }
     }
-    return self._cachedValuesByKey
+    return _cachedValuesByKey
       .value(forKey: key, orMake: makeCachableValue)
       .value(mustStartHandlingMiss: mustStartHandlingMiss, mustInvalidateOldValue: mustInvalidateOldValue)
   }
-  
+
   /// Invalidates cached value for specified key
   public func invalidate(valueForKey key: Key) {
-    let _ = self.value(forKey: key, mustStartHandlingMiss: false, mustInvalidateOldValue: true)
+    let _ = value(forKey: key, mustStartHandlingMiss: false, mustInvalidateOldValue: true)
   }
 }
 
 /// Convenience typealias for Cache based on `Future`
-public typealias SimpleCache<Key : Hashable, Value, Context : ExecutionContext> = Cache<Key, Promise<Value>, Context>
+public typealias SimpleCache<Key: Hashable, Value, Context: ExecutionContext> = Cache<Key, Promise<Value>, Context>
 
 /// Convenience typealias for Cache based on `Channel`
-public typealias ReportingCache<Key : Hashable, PeriodicValue, FinalValue, Context : ExecutionContext> = Cache<Key, Producer<PeriodicValue, FinalValue>, Context>
+public typealias ReportingCache<Key: Hashable, PeriodicValue, FinalValue, Context: ExecutionContext> = Cache<Key, Producer<PeriodicValue, FinalValue>, Context>
 
 /// Convenience function that makes `SimpleCache`
 public func makeCache<Key: Hashable, Value, Context: ExecutionContext>(

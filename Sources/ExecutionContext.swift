@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -29,7 +29,7 @@ import Dispatch
 /// Best way to conform for model-related classes looks like:
 ///
 /// ```swift
-/// public class MyService : ExecutionContext, ReleasePoolOwner {
+/// public class MyService: ExecutionContext, ReleasePoolOwner {
 ///   private let _internalQueue = DispatchQueue(label: "my-service-queue")
 ///   public var executor: Executor { return .queue(_internalQueue) }
 ///   public let releasePool = ReleasePool()
@@ -41,7 +41,7 @@ import Dispatch
 /// Best way to conform for classes related to main queue looks like:
 ///
 /// ```swift
-/// public class MyMainQueueService : ExecutionContext, ReleasePoolOwner {
+/// public class MyMainQueueService: ExecutionContext, ReleasePoolOwner {
 ///   public var executor: Executor { return .main }
 ///   public let releasePool = ReleasePool()
 ///
@@ -52,12 +52,12 @@ import Dispatch
 /// Best way to conform for classes related to UI manipulations looks like:
 ///
 /// ```swift
-/// public class MyPresenter : NSObject, ObjCUIInjectedExecutionContext {
+/// public class MyPresenter: NSObject, ObjCUIInjectedExecutionContext {
 ///   /* class implementation */
 /// }
 /// ```
 /// Classes that conform to NSResponder/UIResponder are automatically conformed to exection context.
-public protocol ExecutionContext : Retainer {
+public protocol ExecutionContext: Retainer {
 
   /// Executor to perform internal state-changing operations on.
   /// It is highly recommended to use serial executor
@@ -94,15 +94,32 @@ public extension ExecutionContext {
       block(strongSelf)
     }
   }
+
+  /// Adds dependent `Cancellable`. `Cancellable` will be weakly referenced
+  /// and cancelled on deinit
+  func addDependent(cancellable: Cancellable) {
+    self.notifyDeinit { [weak cancellable] in
+      cancellable?.cancel()
+    }
+  }
+
+  /// Adds dependent `MutableFinite`. `MutableFinite` will be weakly 
+  /// referenced and cancelled because of deallocated context on deinit
+  func addDependent<F: MutableFinite>(finite: F) {
+    self.notifyDeinit { [weak finite] in
+      finite?.cancelBecauseOfDeallocatedContext()
+    }
+  }
 }
 
 /// Protocol for any instance that has `ReleasePool`.
-/// Made to proxy calls of `func releaseOnDeinit(_ object: AnyObject)` and `func notifyDeinit(_ block: @escaping () -> Void)` to `ReleasePool`
-public protocol ReleasePoolOwner : Retainer {
+/// Made to proxy calls of `func releaseOnDeinit(_ object: AnyObject)`
+/// and `func notifyDeinit(_ block: @escaping () -> Void)` to `ReleasePool`
+public protocol ReleasePoolOwner: Retainer {
 
   /// `ReleasePool` to proxy calls to. Perfect implementation looks like:
   /// ```swift
-  /// public class MyService : ExecutionContext, ReleasePoolOwner {
+  /// public class MyService: ExecutionContext, ReleasePoolOwner {
   ///  let releasePool = ReleasePool()
   ///  /* other implementation */
   /// }
@@ -110,7 +127,7 @@ public protocol ReleasePoolOwner : Retainer {
   var releasePool: ReleasePool { get }
 }
 
-public extension ExecutionContext where Self : ReleasePoolOwner {
+public extension ExecutionContext where Self: ReleasePoolOwner {
   func releaseOnDeinit(_ object: AnyObject) {
     self.releasePool.insert(object)
   }
@@ -121,7 +138,7 @@ public extension ExecutionContext where Self : ReleasePoolOwner {
 }
 
 /// An object that can extend lifetime of another objects up to deinit or notify deinit
-public protocol Retainer : class {
+public protocol Retainer: class {
 
   /// Extends lifetime of specified object
   func releaseOnDeinit(_ object: AnyObject)

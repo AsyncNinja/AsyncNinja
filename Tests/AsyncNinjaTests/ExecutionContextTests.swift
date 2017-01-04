@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -30,14 +30,14 @@ import Dispatch
 struct SimpleRequest {}
 struct SimpleResponse {}
 
-class ExecutionContextTests : XCTestCase {
+class ExecutionContextTests: XCTestCase {
 
   static let allTests = [
     ("testFailure", testFailure),
     ]
 
   func testFailure() {
-    var object : TestActor? = TestActor()
+    var object: TestActor? = TestActor()
 
     let halfOfFutureValue = future(success: "Hello")
       .map(context: object!) { (object, value) -> String in

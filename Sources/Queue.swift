@@ -85,7 +85,7 @@ class QueueElementWrapper<T> {
   }
 }
 
-struct QueueIterator<T> : IteratorProtocol {
+struct QueueIterator<T>: IteratorProtocol {
   typealias Element = T
   typealias Wrapper = QueueElementWrapper<Element>
   private var _queueElementWrapper: Wrapper?

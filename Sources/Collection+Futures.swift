@@ -24,16 +24,18 @@ import Dispatch
 
 /// Collection improved with AsyncNinja
 /// Single failure fails them all
-public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element : Finite {
+public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element: Finite {
   fileprivate typealias FinalValue = Self.Iterator.Element.FinalValue
 
   /// joins an array of futures to a future array
   func joined() -> Future<[FinalValue]> {
-    return self.asyncMap(executor: .immediate) { $0 as! Future<FinalValue> }
+    return _asyncFlatMap(executor: .immediate) { $0 as! Future<FinalValue> }
   }
 
   /// reduces results of collection of futures to future accumulated value
-  func reduce<Result>(executor: Executor = .primary, initialResult: Result, isOrdered: Bool = false,
+  func reduce<Result>(executor: Executor = .primary,
+              initialResult: Result,
+              isOrdered: Bool = false,
               nextPartialResult: @escaping (Result, FinalValue) throws -> Result)
     -> Future<Result> {
 
@@ -52,7 +54,8 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
       var unknownSubvaluesCount = count
 
       for future in self {
-        let handler = future.makeFinalHandler(executor: executor_) { [weak promise] (fallibleValue) -> Void in
+        let handler = future.makeFinalHandler(executor: executor_) {
+          [weak promise] (fallibleValue) -> Void in
           guard let promise = promise else { return }
           guard canContinue else { return }
 
@@ -68,13 +71,13 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
             canContinue = false
           }
         }
-        
+
         if let handler = handler {
           promise.insertToReleasePool(handler)
         }
       }
-    
-//      promise.insertToReleasePool(self)
+
+      //      promise.insertToReleasePool(self)
 
       return promise
   }
@@ -83,15 +86,15 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
 
 /// Collection improved with AsyncNinja
 public extension Collection where Self.IndexDistance == Int {
-  /// transforms each element of collection on executor and provides future array of transformed values
-  public func asyncMap<T>(executor: Executor = .primary,
-                       transform: @escaping (Self.Iterator.Element) throws -> T) -> Future<[T]> {
-    return self.asyncMap(executor: executor) { future(success: try transform($0)) }
+  /// **internal use only**
+  func _asyncMap<T>(executor: Executor = .primary,
+                 transform: @escaping (Self.Iterator.Element) throws -> T) -> Promise<[T]> {
+    return _asyncFlatMap(executor: executor) { future(success: try transform($0)) }
   }
 
-  /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
-  public func asyncMap<T>(executor: Executor = .primary,
-                       transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
+  /// **internal use only**
+  func _asyncFlatMap<T>(executor: Executor,
+                     transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> Promise<[T]> {
     let promise = Promise<[T]>()
     var locking = makeLocking()
 
@@ -138,26 +141,51 @@ public extension Collection where Self.IndexDistance == Int {
       }
     }
 
-//    promise.insertToReleasePool(self)
+    //    promise.insertToReleasePool(self)
 
     return promise
   }
 
-  /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
-  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-                       transform: @escaping (U, Self.Iterator.Element) throws -> T) -> Future<[T]> {
-    return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> T in
-      guard let context = context else { throw AsyncNinjaError.contextDeallocated }
-      return try transform(context, value)
-    }
+  /// transforms each element of collection on executor and provides future array of transformed values
+  public func asyncMap<T>(executor: Executor = .primary,
+                       transform: @escaping (Self.Iterator.Element) throws -> T) -> Future<[T]> {
+    return _asyncMap(executor: executor, transform: transform)
   }
-  
+
   /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
-  public func asyncMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-                       transform: @escaping (U, Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
-    return self.asyncMap(executor: executor ?? context.executor) { [weak context] (value) -> Future<T> in
+  public func asyncFlatMap<T>(executor: Executor = .primary,
+                           transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
+    return _asyncFlatMap(executor: executor, transform: transform)
+  }
+
+  /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
+  public func asyncMap<T, C: ExecutionContext>(context: C,
+                       executor: Executor? = nil,
+                       transform: @escaping (C, Self.Iterator.Element) throws -> T) -> Future<[T]> {
+    let promise = _asyncMap(executor: executor ?? context.executor) {
+      [weak context] (value) -> T in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, value)
     }
+
+    context.addDependent(finite: promise)
+    return promise
+  }
+
+  /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
+  public func asyncFlatMap<T, C: ExecutionContext>(context: C,
+                           executor: Executor? = nil,
+                           transform: @escaping (C, Self.Iterator.Element) throws -> Future<T>
+    ) -> Future<[T]> {
+    let executor_ = executor ?? context.executor
+    let promise = _asyncFlatMap(executor: executor_) {
+      [weak context] (value) -> Future<T> in
+      guard let context = context else { throw AsyncNinjaError.contextDeallocated }
+      return try transform(context, value)
+    }
+    
+    context.addDependent(finite: promise)
+    
+    return promise
   }
 }

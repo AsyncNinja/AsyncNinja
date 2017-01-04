@@ -27,25 +27,29 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - samplerChannel: sampler
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
+  ///   - cancellationToken: `CancellationToken` to use. Keep default value
+  ///     of the argument unless you need an extended cancellation options
+  ///     of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   /// - Returns: sampled channel
-  func sample<T, U>(
-    with samplerChannel: Channel<T, U>,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<(PeriodicValue, T), (FinalValue, U)> {
+  func sample<P, S>(with samplerChannel: Channel<P, S>,
+              cancellationToken: CancellationToken? = nil,
+              bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<(PeriodicValue, P), (FinalValue, S)> {
 
     var locking = makeLocking()
     var latestLeftPeriodicValue: PeriodicValue? = nil
     var leftSuccessValue: FinalValue? = nil
-    var rightSuccessValue: U? = nil
+    var rightSuccessValue: S? = nil
 
     let bufferSize_ = bufferSize.bufferSize(self, samplerChannel)
-    let producer = Producer<(PeriodicValue, T), (FinalValue, U)>(bufferSize: bufferSize_)
+    let producer = Producer<(PeriodicValue, P), (FinalValue, S)>(bufferSize: bufferSize_)
 
     do {
-      let handler = self.makeHandler(executor: .immediate) { [weak producer] (value) in
+      let handler = makeHandler(executor: .immediate) {
+        [weak producer] (value) in
         locking.lock()
         defer { locking.unlock() }
 
@@ -56,7 +60,8 @@ public extension Channel {
           switch leftFinalValue {
           case let .success(localLeftSuccessValue):
             if let localRightSuccessValue = rightSuccessValue {
-              producer?.succeed(with: (localLeftSuccessValue, localRightSuccessValue))
+              let success = (localLeftSuccessValue, localRightSuccessValue)
+              producer?.succeed(with: success)
             } else {
               leftSuccessValue = localLeftSuccessValue
             }
@@ -66,13 +71,12 @@ public extension Channel {
         }
       }
 
-      if let handler = handler {
-        producer.insertToReleasePool(handler)
-      }
+      producer.insertHandlerToReleasePool(handler)
     }
 
     do {
-      let handler = samplerChannel.makeHandler(executor: .immediate) { [weak producer] (value) in
+      let handler = samplerChannel.makeHandler(executor: .immediate) {
+        [weak producer] (value) in
         locking.lock()
         defer { locking.unlock() }
 
@@ -86,7 +90,8 @@ public extension Channel {
           switch rightFinalValue {
           case let .success(localRightSuccessValue):
             if let localLeftSuccessValue = leftSuccessValue {
-              producer?.succeed(with: (localLeftSuccessValue, localRightSuccessValue))
+              let success = (localLeftSuccessValue, localRightSuccessValue)
+              producer?.succeed(with: success)
             } else {
               rightSuccessValue = localRightSuccessValue
             }
@@ -96,9 +101,7 @@ public extension Channel {
         }
       }
 
-      if let handler = handler {
-        producer.insertToReleasePool(handler)
-      }
+      producer.insertHandlerToReleasePool(handler)
     }
     
     return producer

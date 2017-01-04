@@ -31,7 +31,7 @@ public class MyActor {
 	}
 }
 
-extension MyActor : ExecutionContext 
+extension MyActor: ExecutionContext 
       let internalQueue = DispatchQueue(label: "com.company.app.my-actor", attributes: [])
       var executor: Executor { return .queue(self.internalQueue) }
       let releasePool = ReleasePool()
@@ -46,7 +46,7 @@ UI-related objects (windows, views, view controllers and etc) are mostly bound t
 ```swift
 import AsyncNinja
 
-class MyViewController : UIViewController {
+class MyViewController: UIViewController {
 	let myActor = MyActor()
 
 	@IBAction func doWork(_ sender: AnyObject?) {
@@ -66,7 +66,7 @@ class MyViewController : UIViewController {
 	}
 }
 
-extension MyViewController : ExecutionContext {
+extension MyViewController: ExecutionContext {
 	let executor = Executor.main
 	let releasePool = ReleasePool()
 }

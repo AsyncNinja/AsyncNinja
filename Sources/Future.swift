@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -23,7 +23,7 @@
 import Dispatch
 
 /// Future is a proxy of value that will be available at some point in the future.
-public class Future<FinalValue> : Finite {
+public class Future<FinalValue>: Finite {
   public typealias Value = Fallible<FinalValue>
   public typealias Handler = FutureHandler<FinalValue>
   public typealias FinalHandler = Handler
@@ -56,12 +56,15 @@ public extension Future {
   ///
   /// - Parameters:
   ///   - executor: is `Executor` to execute transform on
-  ///   - transform: is block to execute on successful completion of original future. Return from transformation block will cause returned future to complete successfuly. Throw from transformation block will returned future to complete with failure
+  ///   - transform: is block to execute on successful completion of original future.
+  ///     Return from transformation block will cause returned future to complete successfuly.
+  ///     Throw from transformation block will returned future to complete with failure
   ///   - finalValue: is a success value of original future
   ///
   /// - Returns: transformed future
   func map<T>(executor: Executor = .primary,
-           transform: @escaping (_ finalValue: FinalValue) throws -> T) -> Future<T> {
+           transform: @escaping (_ finalValue: FinalValue) throws -> T
+    ) -> Future<T> {
     // Test: FutureTests.testMap_Success
     // Test: FutureTests.testMap_Failure
     return self.mapSuccess(executor: executor, transform: transform)
@@ -71,45 +74,66 @@ public extension Future {
   ///
   /// - Parameters:
   ///   - executor: is `Executor` to execute transform on
-  ///   - transform: is block to execute on successful completion of original future. Return from transformation block will cause returned future to complete with future. Throw from transformation block will returned future to complete with failure
+  ///   - transform: is block to execute on successful completion of original future.
+  ///     Return from transformation block will cause returned future to complete with future.
+  ///     Throw from transformation block will returned future to complete with failure
   ///   - finalValue: is a success value of original future
   ///
   /// - Returns: transformed future
   func flatMap<T>(executor: Executor = .primary,
-               transform: @escaping (_ finalValue: FinalValue) throws -> Future<T>) -> Future<T> {
+               transform: @escaping (_ finalValue: FinalValue) throws -> Future<T>
+    ) -> Future<T> {
     return self.flatMapSuccess(executor: executor, transform: transform)
   }
 
   /// Applies the transformation to the future
   ///
   /// - Parameters:
-  ///   - context: is `ExecutionContext` to perform transform on. Instance of context will be passed as the first argument to the transformation. Transformation will not be executed if executor was deallocated before execution, returned future will fail with `AsyncNinjaError.contextDeallocated` error
+  ///   - context: is `ExecutionContext` to perform transform on.
+  ///     Instance of context will be passed as the first argument to the transformation.
+  ///     Transformation will not be executed if executor was deallocated before execution,
+  ///     returned future will fail with `AsyncNinjaError.contextDeallocated` error
   ///   - executor: is `Executor` to override executor provided by context
-  ///   - transform: is block to execute on successful completion of original future. Return from transformation block will cause returned future to complete successfuly. Throw from transformation block will returned future to complete with failure
+  ///   - transform: is block to execute on successful completion of original future.
+  ///     Return from transformation block will cause returned future to complete successfuly.
+  ///     Throw from transformation block will returned future to complete with failure
   ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
   ///   - finalValue: is a success value of original future
   /// - Returns: transformed future
-  func map<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-           transform: @escaping (_ strongContext: U, _ finalValue: FinalValue) throws -> T) -> Future<T> {
+  func map<T, C: ExecutionContext>(context: C,
+           executor: Executor? = nil,
+           transform: @escaping (_ strongContext: C, _ finalValue: FinalValue) throws -> T
+    ) -> Future<T> {
     // Test: FutureTests.testMapContextual_Success_ContextAlive
     // Test: FutureTests.testMapContextual_Success_ContextDead
     // Test: FutureTests.testMapContextual_Failure_ContextAlive
     // Test: FutureTests.testMapContextual_Failure_ContextDead
-    return self.mapSuccess(context: context, executor: executor, transform: transform)
+    return self.mapSuccess(context: context,
+                           executor: executor,
+                           transform: transform)
   }
 
   /// Applies the transformation to the future and flattens future returned by transformation
   ///
   /// - Parameters:
-  ///   - context: is `ExecutionContext` to perform transform on. Instance of context will be passed as the first argument to the transformation. Transformation will not be executed if executor was deallocated before execution, returned future will fail with `AsyncNinjaError.contextDeallocated` error
+  ///   - context: is `ExecutionContext` to perform transform on.
+  ///     Instance of context will be passed as the first argument to the transformation.
+  ///     Transformation will not be executed if executor was deallocated before execution,
+  ///     returned future will fail with `AsyncNinjaError.contextDeallocated` error
   ///   - executor: is `Executor` to override executor provided by context
-  ///   - transform: is block to execute on successful completion of original future. Return from transformation block will cause returned future to complete with future. Throw from transformation block will returned future to complete with failure
+  ///   - transform: is block to execute on successful completion of original future.
+  ///     Return from transformation block will cause returned future to complete with future.
+  ///     Throw from transformation block will returned future to complete with failure
   ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
   ///   - finalValue: is a success value of original future
   /// - Returns: transformed future
-  func flatMap<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-               transform: @escaping (_ strongContext: U, _ finalValue: FinalValue) throws -> Future<T>) -> Future<T> {
-    return self.flatMapSuccess(context: context, executor: executor, transform: transform)
+  func flatMap<T, C: ExecutionContext>(context: C,
+               executor: Executor? = nil,
+               transform: @escaping (_ strongContext: C, _ finalValue: FinalValue) throws -> Future<T>
+    ) -> Future<T> {
+    return self.flatMapSuccess(context: context,
+                               executor: executor,
+                               transform: transform)
   }
 
   /// Makes future with delayed completion
@@ -121,7 +145,7 @@ public extension Future {
   }
 }
 
-public extension Future where FinalValue : Finite {
+public extension Future where FinalValue: Finite {
   /// Flattens two nested futures
   ///
   /// - Returns: flattened future
@@ -130,7 +154,8 @@ public extension Future where FinalValue : Finite {
     // Test: FutureTests.testFlatten_OuterFailure
     // Test: FutureTests.testFlatten_InnerFailure
     let promise = Promise<FinalValue.FinalValue>()
-    let handler = self.makeFinalHandler(executor: .immediate) { [weak promise] (failure) in
+    let handler = self.makeFinalHandler(executor: .immediate) {
+      [weak promise] (failure) in
       guard let promise = promise else { return }
       switch failure {
       case .success(let future):
@@ -176,7 +201,10 @@ public class FutureHandler<T> {
   let block: (Fallible<T>) -> Void
   var owner: Future<T>?
 
-  init(executor: Executor, block: @escaping (Fallible<T>) -> Void, owner: Future<T>) {
+  init(executor: Executor,
+       block: @escaping (Fallible<T>) -> Void,
+       owner: Future<T>)
+  {
     self.executor = executor
     self.block = block
     self.owner = owner

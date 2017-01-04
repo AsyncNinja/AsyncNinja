@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -23,10 +23,10 @@
 import Dispatch
 
 /// A protocol for objects that can eventually finish with value
-public protocol Finite : class {
+public protocol Finite: class {
   associatedtype Value
   associatedtype FinalValue
-  associatedtype FinalHandler : AnyObject
+  associatedtype FinalHandler: AnyObject
 
   /// Returns either final value for complete `Finite` or nil otherwise
   var finalValue: Fallible<FinalValue>? { get }
@@ -44,10 +44,12 @@ public extension Finite {
   /// Shorthand property that returns true if `Finite` is complete
   var isComplete: Bool { return nil != self.finalValue }
 
-  /// Shorthand property that returns success value if `Finite` completed with success or nil otherwise
+  /// Shorthand property that returns success value
+  /// if `Finite` completed with success or nil otherwise
   var success: FinalValue? { return self.finalValue?.success }
 
-  /// Shorthand property that returns failure value if `Finite` completed with failure or nil otherwise
+  /// Shorthand property that returns failure value
+  /// if `Finite` completed with failure or nil otherwise
   var failure: Swift.Error? { return self.finalValue?.failure }
 }
 
@@ -86,7 +88,8 @@ public extension Finite {
 
   /// Transforms Finite<TypeA> => Future<TypeB>
   ///
-  /// This is the same as mapCompletion(executor:transform:) but does not perform transformation if this future fails.
+  /// This is the same as mapCompletion(executor:transform:)
+  /// but does not perform transformation if this future fails.
   func mapSuccess<TransformedValue>(
     executor: Executor = .primary,
     transform: @escaping (FinalValue) throws -> TransformedValue
@@ -100,7 +103,8 @@ public extension Finite {
 
   /// Transforms Finite<TypeA> => Future<TypeB>. Flattens future returned by the transform
   ///
-  /// This is the same as flatMapCompletion(executor:transform:) but does not perform transformation if this future fails.
+  /// This is the same as flatMapCompletion(executor:transform:)
+  /// but does not perform transformation if this future fails.
   func flatMapSuccess<TransformedValue>(
     executor: Executor = .primary,
     transform: @escaping (FinalValue) throws -> Future<TransformedValue>
@@ -151,13 +155,12 @@ public extension Finite {
   ///
   /// This method is suitable for impure transformations (changing state of context).
   /// Use method mapCompletion(context:transform:) for pure -ish transformations.
-  func mapCompletion<TransformedValue, U: ExecutionContext>(
-    context: U,
-    executor: Executor? = nil,
-                     transform: @escaping (U, Fallible<FinalValue>) throws -> TransformedValue
-    ) -> Future<TransformedValue> {
+  func mapCompletion<T, C: ExecutionContext>(context: C,
+                     executor: Executor? = nil,
+                     transform: @escaping (C, Fallible<FinalValue>) throws -> T
+    ) -> Future<T> {
     return self.mapCompletion(executor: executor ?? context.executor) {
-      [weak context] (value) -> TransformedValue in
+      [weak context] (value) -> T in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, value)
     }
@@ -167,21 +170,23 @@ public extension Finite {
   ///
   /// This method is suitable for impure transformations (changing state of context).
   /// Use method flatMapCompletion(context:transform:) for pure -ish transformations.
-  func flatMapCompletion<TransformedValue, U: ExecutionContext>(
-    context: U,
-    executor: Executor? = nil,
-    transform: @escaping (U, Fallible<FinalValue>) throws -> Future<TransformedValue>
-    ) -> Future<TransformedValue> {
+  func flatMapCompletion<T, C: ExecutionContext>(context: C,
+                         executor: Executor? = nil,
+                         transform: @escaping (C, Fallible<FinalValue>) throws -> Future<T>
+    ) -> Future<T> {
     return self.mapCompletion(context: context, executor: executor, transform: transform).flatten()
   }
 
   /// Transforms Finite<TypeA> => Future<TypeB>
   ///
-  /// This is the same as mapCompletion(context:executor:transform:) but does not perform transformation if this future fails.
-  func mapSuccess<TransformedValue, U: ExecutionContext>(context: U, executor: Executor? = nil,
-                  transform: @escaping (U, FinalValue) throws -> TransformedValue) -> Future<TransformedValue> {
+  /// This is the same as mapCompletion(context:executor:transform:)
+  /// but does not perform transformation if this future fails.
+  func mapSuccess<T, C: ExecutionContext>(context: C,
+                  executor: Executor? = nil,
+                  transform: @escaping (C, FinalValue) throws -> T
+    ) -> Future<T> {
     return self.mapCompletion(context: context, executor: executor) {
-      (context, value) -> TransformedValue in
+      (context, value) -> T in
       let success = try value.liftSuccess()
       return try transform(context, success)
     }
@@ -189,20 +194,19 @@ public extension Finite {
 
   /// Transforms Finite<TypeA> => Future<TypeB>. Flattens future returned by the transform
   ///
-  /// This is the same as flatMapCompletion(context:executor:transform:) but does not perform transformation if this future fails.
-  func flatMapSuccess<TransformedValue, U: ExecutionContext>(
-    context: U,
-    executor: Executor? = nil,
-    transform: @escaping (U, FinalValue) throws -> Future<TransformedValue>
-    ) -> Future<TransformedValue> {
+  /// This is the same as flatMapCompletion(context:executor:transform:)
+  /// but does not perform transformation if this future fails.
+  func flatMapSuccess<T, C: ExecutionContext>(context: C,
+                      executor: Executor? = nil,
+                      transform: @escaping (C, FinalValue) throws -> Future<T>
+    ) -> Future<T> {
     return self.mapSuccess(context: context, executor: executor, transform: transform).flatten()
   }
 
   /// Recovers failure of this future if there is one with contextual transformer.
-  func recover<U: ExecutionContext>(
-    context: U,
-    executor: Executor? = nil,
-    transform: @escaping (U, Swift.Error) throws -> FinalValue
+  func recover<C: ExecutionContext>(context: C,
+               executor: Executor? = nil,
+               transform: @escaping (C, Swift.Error) throws -> FinalValue
     ) -> Future<FinalValue> {
     return self.mapCompletion(context: context, executor: executor) {
       (context, value) -> FinalValue in
@@ -212,11 +216,11 @@ public extension Finite {
     }
   }
 
-  /// Recovers failure of this future if there is one with contextual transformer. Flattens future returned by the transform
-  func flatRecover<U: ExecutionContext>(
-    context: U,
-    executor: Executor? = nil,
-    transform: @escaping (U, Swift.Error) throws -> Future<FinalValue>
+  /// Recovers failure of this future if there is one with contextual transformer.
+  /// Flattens future returned by the transform
+  func flatRecover<C: ExecutionContext>(context: C,
+                   executor: Executor? = nil,
+                   transform: @escaping (C, Swift.Error) throws -> Future<FinalValue>
     ) -> Future<FinalValue> {
     return self.flatRecover(executor: executor ?? context.executor) {
       [weak context] (failure) -> Future<FinalValue> in
@@ -230,7 +234,8 @@ public extension Finite {
   /// Performs block when final value or failure becomes available.
   ///
   /// This method is method is less preferable then onComplete(context: ...).
-  func onComplete(executor: Executor = .primary, block: @escaping (Fallible<FinalValue>) -> Void) {
+  func onComplete(executor: Executor = .primary,
+                  block: @escaping (Fallible<FinalValue>) -> Void) {
     let handler = self.makeFinalHandler(executor: executor) {
       block($0)
     }
@@ -240,12 +245,14 @@ public extension Finite {
   }
 
   /// Performs block when final value becomes available.
-  func onSuccess(executor: Executor = .primary, block: @escaping (FinalValue) -> Void) {
+  func onSuccess(executor: Executor = .primary,
+                 block: @escaping (FinalValue) -> Void) {
     self.onComplete(executor: executor) { $0.onSuccess(block) }
   }
   
   /// Performs block when failure becomes available.
-  func onFailure(executor: Executor = .primary, block: @escaping (Swift.Error) -> Void) {
+  func onFailure(executor: Executor = .primary,
+                 block: @escaping (Swift.Error) -> Void) {
     self.onComplete(executor: executor) { $0.onFailure(block) }
   }
 }
@@ -368,5 +375,13 @@ public extension Finite {
     }
 
     return promise
+  }
+}
+
+extension Finite {
+  func insertHandlerToReleasePool(_ handler: AnyObject?) {
+    if let handler = handler {
+      self.insertToReleasePool(handler)
+    }
   }
 }

@@ -98,7 +98,7 @@ Most of well-architecturally-designed apps on Apple platforms have strong segreg
 ##### Example
 
 ```swift
-class NiceViewController : UIViewController {
+class NiceViewController: UIViewController {
   let webService: WebService
   var user: User?
   /* ... */

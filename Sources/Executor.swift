@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -38,7 +38,8 @@ public struct Executor {
   /// Initialiaes executor with custom handler
   ///
   /// - Parameters:
-  ///   - isSerial: specifies if blocks submitted to the handler will be executed serialy. Keep default value otherwise.
+  ///   - isSerial: specifies if blocks submitted to the handler will
+  ///     be executed serialy. Keep default value otherwise.
   ///   - handler: encapsulates asynchrounous way of execution escaped block
   public init(isSerial: Bool = false, handler: @escaping Handler) {
     // Test: ExecutorTests.testCustomHandler
@@ -49,7 +50,7 @@ public struct Executor {
   ///
   /// - Parameter block: to execute
   func execute(_ block: @escaping (Void) -> Void) {
-    _impl.fc_execute(block)
+    _impl.asyncNinja_execute(block)
   }
 
   /// Schedules specified block for execution after timeout
@@ -58,12 +59,13 @@ public struct Executor {
   ///   - timeout: to schedule execution of the block after
   ///   - block: to execute
   func execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
-    _impl.fc_execute(after: timeout, block)
+    _impl.asyncNinja_execute(after: timeout, block)
   }
 
-  /// Makes serial executor. Retured executor will serially perform blocks on current executor
+  /// Makes serial executor. Retured executor will
+  /// serially perform blocks on current executor
   func makeDerivedSerialExecutor() -> Executor {
-    return Executor(impl: _impl.fc_makeDerivedSerialExecutor())
+    return Executor(impl: _impl.asyncNinja_makeDerivedSerialExecutor())
   }
 }
 
@@ -71,7 +73,8 @@ public struct Executor {
 
 public extension Executor {
   // Test: ExecutorTests.testPrimary
-  /// primary executor is primary because it will be used as default value when executor argument is ommited
+  /// primary executor is primary because it will be used
+  /// as default value when executor argument is ommited
   static let primary = Executor.default
 
   /// shortcut to the main queue executor
@@ -124,44 +127,44 @@ public extension Executor {
 
 /// **internal use only**
 fileprivate protocol ExecutorImpl {
-  func fc_execute(_ block: @escaping (Void) -> Void)
-  func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void)
-  func fc_makeDerivedSerialExecutor() -> ExecutorImpl
+  func asyncNinja_execute(_ block: @escaping (Void) -> Void)
+  func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void)
+  func asyncNinja_makeDerivedSerialExecutor() -> ExecutorImpl
 }
 
-extension DispatchQueue : ExecutorImpl {
-  fileprivate func fc_execute(_ block: @escaping (Void) -> Void) {
+extension DispatchQueue: ExecutorImpl {
+  fileprivate func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
     self.async(execute: block)
   }
 
-  fileprivate func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
+  fileprivate func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
     let wallDeadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000_000_000))
     self.asyncAfter(wallDeadline: wallDeadline, execute: block)
   }
 
-  fileprivate func fc_makeDerivedSerialExecutor() -> ExecutorImpl {
+  fileprivate func asyncNinja_makeDerivedSerialExecutor() -> ExecutorImpl {
     return DispatchQueue(label: "derived", qos: .default, attributes: [], target: self)
   }
 }
 
-fileprivate class ImmediateExecutorImpl : ExecutorImpl {
-  func fc_execute(_ block: @escaping (Void) -> Void) {
+fileprivate class ImmediateExecutorImpl: ExecutorImpl {
+  func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
     block()
   }
 
-  func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
+  func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
     let deadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000_000_000))
     DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
       block()
     }
   }
 
-  func fc_makeDerivedSerialExecutor() -> ExecutorImpl {
+  func asyncNinja_makeDerivedSerialExecutor() -> ExecutorImpl {
     return DerivedHandlerBasedExecutorImpl(handler: { $0() })
   }
 }
 
-fileprivate class HandlerBasedExecutorImpl : ExecutorImpl {
+fileprivate class HandlerBasedExecutorImpl: ExecutorImpl {
   public typealias Handler = (@escaping (Void) -> Void) -> Void
   private let _handler: Handler
   let isSerial: Bool
@@ -171,18 +174,18 @@ fileprivate class HandlerBasedExecutorImpl : ExecutorImpl {
     self.isSerial = isSerial
   }
 
-  func fc_execute(_ block: @escaping (Void) -> Void) {
+  func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
     _handler(block)
   }
 
-  func fc_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
+  func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
     let deadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000_000_000))
     DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
-      self.fc_execute(block)
+      self.asyncNinja_execute(block)
     }
   }
 
-  func fc_makeDerivedSerialExecutor() -> ExecutorImpl {
+  func asyncNinja_makeDerivedSerialExecutor() -> ExecutorImpl {
     if self.isSerial {
       return self
     } else {
@@ -191,16 +194,16 @@ fileprivate class HandlerBasedExecutorImpl : ExecutorImpl {
   }
 }
 
-fileprivate class DerivedHandlerBasedExecutorImpl : HandlerBasedExecutorImpl {
+fileprivate class DerivedHandlerBasedExecutorImpl: HandlerBasedExecutorImpl {
   var _locking = makeLocking()
 
   init(handler: @escaping Handler) {
     super.init(handler: handler, isSerial: true)
   }
 
-  override func fc_execute(_ block: @escaping (Void) -> Void) {
+  override func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
     _locking.lock()
-    super.fc_execute(block)
+    super.asyncNinja_execute(block)
     _locking.unlock()
   }
 }

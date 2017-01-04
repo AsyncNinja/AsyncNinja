@@ -31,28 +31,20 @@ public class Channel<PeriodicValue, FinalValue>: Finite {
   public typealias Iterator = ChannelIterator<PeriodicValue, FinalValue>
 
   /// final falue of channel. Returns nil if channel is not complete yet
-  public var finalValue: Fallible<FinalValue>? {
-    /* abstact */
-    fatalError()
-  }
+  public var finalValue: Fallible<FinalValue>? { assertAbstract() }
 
   /// amount of currently stored periodics
-  public var bufferSize: Int {
-    /* abstact */
-    fatalError()
-  }
+  public var bufferSize: Int { assertAbstract() }
 
   /// maximal amount of periodics store
-  public var maxBufferSize: Int {
-    /* abstact */
-    fatalError()
-  }
+  public var maxBufferSize: Int { assertAbstract() }
 
   init() { }
 
   /// **internal use only**
   final public func makeFinalHandler(executor: Executor,
-                                     block: @escaping (Fallible<FinalValue>) -> Void) -> Handler? {
+                                     block: @escaping (Fallible<FinalValue>) -> Void
+    ) -> Handler? {
     return self.makeHandler(executor: executor) {
       if case .final(let value) = $0 { block(value) }
     }
@@ -60,7 +52,8 @@ public class Channel<PeriodicValue, FinalValue>: Finite {
 
   /// **internal use only**
   final public func makePeriodicHandler(executor: Executor,
-                                          block: @escaping (PeriodicValue) -> Void) -> Handler? {
+                                        block: @escaping (PeriodicValue) -> Void
+    ) -> Handler? {
     return self.makeHandler(executor: executor) {
       if case .periodic(let value) = $0 { block(value) }
     }
@@ -92,24 +85,25 @@ public extension Channel {
   ///   - value: received by the channel
   func onValue(executor: Executor = .primary, block: @escaping (_ value: Value) -> Void) {
     let handler = self.makeHandler(executor: executor, block: block)
-    
-    if let handler = handler {
-      self.insertToReleasePool(handler)
-    }
+    self.insertHandlerToReleasePool(handler)
   }
 
   /// Subscribes for buffered and new values (both periodic and final) for the channel
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor. Do not use this argument if you do not need to override executor
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need
+  ///     to override an executor provided by the context
   ///   - block: to execute. Will be called multiple times
   ///   - strongContext: context restored from weak reference to specified context
   ///   - value: received by the channel
-  func onValue<U: ExecutionContext>(context: U,
+  func onValue<C: ExecutionContext>(context: C,
                executor: Executor? = nil,
-               block: @escaping (_ strongContext: U, _ value: Value) -> Void) {
-    let handler = self.makeHandler(executor: executor ?? context.executor) { [weak context] (value) in
+               block: @escaping (_ strongContext: C, _ value: Value) -> Void) {
+    let executor_ = executor ?? context.executor
+    let handler = self.makeHandler(executor: executor_) {
+      [weak context] (value) in
       guard let context = context else { return }
       block(context, value)
     }
@@ -125,7 +119,8 @@ public extension Channel {
   ///   - executor: to execute block on
   ///   - block: to execute. Will be called multiple times
   ///   - periodicValue: received by the channel
-  func onPeriodic(executor: Executor = .primary, block: @escaping (_ periodicValue: PeriodicValue) -> Void) {
+  func onPeriodic(executor: Executor = .primary,
+                  block: @escaping (_ periodicValue: PeriodicValue) -> Void) {
     self.onValue(executor: executor) { (value) in
       switch value {
       case let .periodic(periodic):
@@ -139,13 +134,15 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor. Do not use this argument if you do not need to override executor
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need
+  ///     to override an executor provided by the context
   ///   - block: to execute. Will be called multiple times
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodicValue: received by the channel
-  func onPeriodic<U: ExecutionContext>(context: U,
+  func onPeriodic<C: ExecutionContext>(context: C,
                   executor: Executor? = nil,
-                  block: @escaping (_ strongContext: U, _ periodicValue: PeriodicValue) -> Void) {
+                  block: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) -> Void) {
     self.onValue(context: context, executor: executor) { (context, value) in
       switch value {
       case let .periodic(periodic):
@@ -162,11 +159,11 @@ public extension Channel {
   ///   - block: to execute. Will be called once with all values
   ///   - periodicValues: all received by the channel
   ///   - finalValue: received by the channel
-  func extractAll(
-    executor: Executor = .primary,
-    block: @escaping (_ periodicValues: [PeriodicValue], _ finalValue: Fallible<FinalValue>) -> Void) {
+  func extractAll(executor: Executor = .primary,
+                  block: @escaping (_ periodicValues: [PeriodicValue], _ finalValue: Fallible<FinalValue>) -> Void) {
     var periodics = [PeriodicValue]()
-    let handler = self.makeHandler(executor: executor.makeDerivedSerialExecutor()) { (value) in
+    let executor_ = executor.makeDerivedSerialExecutor()
+    let handler = self.makeHandler(executor: executor_) { (value) in
       switch value {
       case let .periodic(periodic):
         periodics.append(periodic)
@@ -175,25 +172,26 @@ public extension Channel {
       }
     }
 
-    if let handler = handler {
-      self.insertToReleasePool(handler)
-    }
+    self.insertHandlerToReleasePool(handler)
   }
 
   /// Subscribes for all buffered and new values (both periodic and final) for the channel
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor. Do not use this argument if you do not need to override executor
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need
+  ///     to override an executor provided by the context
   ///   - block: to execute. Will be called once with all values
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodicValues: all received by the channel
   ///   - finalValue: received by the channel
-  func extractAll<U: ExecutionContext>(context: U,
+  func extractAll<C: ExecutionContext>(context: C,
                   executor: Executor? = nil,
-                  block: @escaping (_ strongContext: U, _ periodicValues: [PeriodicValue], _ finalValue: Fallible<FinalValue>) -> Void) {
+                  block: @escaping (_ strongContext: C, _ periodicValues: [PeriodicValue], _ finalValue: Fallible<FinalValue>) -> Void) {
     var periodics = [PeriodicValue]()
-    let handler = self.makeHandler(executor: (executor ?? context.executor).makeDerivedSerialExecutor()) {
+    let executor_ = (executor ?? context.executor).makeDerivedSerialExecutor()
+    let handler = self.makeHandler(executor: executor_) {
       [weak context] (value) in
       switch value {
       case let .periodic(periodic):
@@ -222,7 +220,7 @@ public extension Channel {
 }
 
 /// Synchronously iterates over each periodic value of channel
-public struct ChannelIterator<PeriodicValue, FinalValue> : IteratorProtocol  {
+public struct ChannelIterator<PeriodicValue, FinalValue>: IteratorProtocol  {
   public typealias Element = PeriodicValue
   private var _implBox: Box<ChannelIteratorImpl<PeriodicValue, FinalValue>> // want to have reference to reference, because impl may actually be retained by some handler
 
@@ -234,7 +232,9 @@ public struct ChannelIterator<PeriodicValue, FinalValue> : IteratorProtocol  {
     _implBox = Box(impl)
   }
 
-  /// fetches next value from the channel. Waits for the next value to appear. Returns nil when then channel completes
+  /// fetches next value from the channel.
+  /// Waits for the next value to appear.
+  /// Returns nil when then channel completes
   public mutating func next() -> PeriodicValue? {
     if !isKnownUniquelyReferenced(&_implBox) {
       _implBox = Box(_implBox.value.clone())
@@ -279,7 +279,8 @@ public enum ChannelValue<T, U> {
   case final(Fallible<SuccessValue>)
 }
 
-/// **internal use only** Wraps each block submitted to the channel to provide required memory management behavior
+/// **internal use only** Wraps each block submitted to the channel
+/// to provide required memory management behavior
 final public class ChannelHandler<T, U> {
   public typealias PeriodicValue = T
   public typealias SuccessValue = U
