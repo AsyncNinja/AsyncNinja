@@ -1,3 +1,8 @@
+# 0.4.2
+* taking advantage of ability to make derived serial executor in order to avoid using locks
+* operations on channels added: first(where:), last(where:), zip(_:, _:)
+* fixing rare issue that could cause early releases of instances that depend on futures and channels
+
 # 0.4.1
 * putting back xcodeproj
 * fixing documentation references
