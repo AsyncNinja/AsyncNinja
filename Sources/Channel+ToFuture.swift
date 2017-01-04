@@ -32,7 +32,7 @@ public extension Channel {
                       `where` predicate: @escaping(PeriodicValue) throws -> Bool) -> Promise<PeriodicValue?> {
 
     let promise = Promise<PeriodicValue?>()
-    let handler = self.makeHandler(executor: executor) { [weak promise] in
+    let handler = self.makeHandler(executor: executor.makeDerivedSerialExecutor()) { [weak promise] in
       switch $0 {
       case let .periodic(periodicValue):
         do {
@@ -100,38 +100,86 @@ public extension Channel {
   }
 }
 
-extension Channel where PeriodicValue : Equatable {
+// MARK: - channel last(where:)
 
-  /// Returns channel of distinct periodic values of original channel. Works only for equatable periodic values [0, 0, 1, 2, 3, 3, 4, 3] => [0, 1, 2, 3, 4, 3]
-  ///
-  /// - Parameters:
-  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channe. Do not use this argument if you do not need extended buffering options of returned channel
-  /// - Returns: channel with distinct periodic values
-  public func distinct(
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<(PeriodicValue, PeriodicValue), FinalValue> {
-    var locking = makeLocking()
-    var previousPeriodic: PeriodicValue? = nil
+public extension Channel {
 
-    return self.makeProducer(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
-      (value, producer) in
-      switch value {
-      case let .periodic(periodic):
-        locking.lock()
-        let _previousPeriodic = previousPeriodic
-        previousPeriodic = periodic
-        locking.unlock()
+  /// **internal use only**
+  private func _last(executor: Executor,
+                      cancellationToken: CancellationToken?,
+                      `where` predicate: @escaping(PeriodicValue) throws -> Bool) -> Promise<PeriodicValue?> {
 
-        if let previousPeriodic = _previousPeriodic,
-          previousPeriodic != periodic {
-          let change = (previousPeriodic, periodic)
-          producer.send(change)
+    var latestMatchingPeriodic: PeriodicValue?
+
+    let promise = Promise<PeriodicValue?>()
+    let handler = self.makeHandler(executor: executor.makeDerivedSerialExecutor()) { [weak promise] in
+      switch $0 {
+      case let .periodic(periodicValue):
+        do {
+          if try predicate(periodicValue) {
+            latestMatchingPeriodic = periodicValue
+          }
+        } catch {
+          promise?.fail(with: error)
         }
-      case let .final(final):
-        producer.complete(with: final)
+      case .final(.success):
+        promise?.succeed(with: latestMatchingPeriodic)
+      case let .final(.failure(failureValue)):
+        if let latestMatchingPeriodic = latestMatchingPeriodic {
+          promise?.succeed(with: latestMatchingPeriodic)
+        } else {
+          promise?.fail(with: failureValue)
+        }
       }
     }
+
+    if let handler = handler {
+      promise.insertToReleasePool(handler)
+    }
+
+    cancellationToken?.notifyCancellation { [weak promise] in
+      promise?.cancel()
+    }
+
+    return promise
+  }
+
+  /// Returns future of last periodic value matching predicate
+  ///
+  /// - Parameters:
+  ///   - context: `ExectionContext` to apply transformation in
+  ///   - executor: override of `ExecutionContext`s executor. Do not use this argument if you do not need to override executor
+  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
+  ///   - predicate: returns true if periodic value matches and returned future may be completed with it
+  /// - Returns: future
+  func last<U: ExecutionContext>(context: U,
+             executor: Executor? = nil,
+             cancellationToken: CancellationToken? = nil,
+             `where` predicate: @escaping(U, PeriodicValue) throws -> Bool
+    ) -> Future<PeriodicValue?> {
+    let promise = self._last(executor: executor ?? context.executor, cancellationToken: cancellationToken) {
+      [weak context] (periodicValue) -> Bool in
+      guard let context = context else { throw AsyncNinjaError.contextDeallocated }
+      return try predicate(context, periodicValue)
+    }
+
+    context.notifyDeinit { [weak promise] in
+      promise?.cancelBecauseOfDeallocatedContext()
+    }
+
+    return promise
+  }
+
+  /// Returns future of last periodic value matching predicate
+  ///
+  /// - Parameters:
+  ///   - executor: to execute call predicate on
+  ///   - cancellationToken: `CancellationToken` to use. Do not use this argument if you do not need extended cancellation options of returned channel
+  ///   - predicate: returns true if periodic value matches and returned future may be completed with it
+  /// - Returns: future
+  func last(executor: Executor = .immediate,
+             cancellationToken: CancellationToken? = nil,
+             `where` predicate: @escaping(PeriodicValue) throws -> Bool) -> Future<PeriodicValue?> {
+    return _last(executor: executor, cancellationToken: cancellationToken, where: predicate)
   }
 }

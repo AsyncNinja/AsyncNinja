@@ -45,6 +45,11 @@ func assert(qos: DispatchQoS.QoSClass, file: StaticString = #file, line: UInt = 
   }
 }
 
+func assert(nonGlobalQoS: DispatchQoS.QoSClass, file: StaticString = #file, line: UInt = #line) {
+  // TODO: use file and line
+  // TODO: figure out qos of current queue
+}
+
 func assert(actor: TestActor, file: StaticString = #file, line: UInt = #line) {
   // TODO: use file and line
   if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
