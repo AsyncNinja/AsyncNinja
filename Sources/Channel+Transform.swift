@@ -275,7 +275,7 @@ extension Channel where PeriodicValue: Equatable {
   /// - Returns: channel with distinct periodic values
   public func distinct(cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<(PeriodicValue, PeriodicValue), FinalValue> {
+    ) -> Channel<PeriodicValue, FinalValue> {
     var locking = makeLocking()
     var previousPeriodic: PeriodicValue? = nil
 
@@ -291,10 +291,13 @@ extension Channel where PeriodicValue: Equatable {
         previousPeriodic = periodic
         locking.unlock()
 
-        if let previousPeriodic = _previousPeriodic,
-          previousPeriodic != periodic {
-          let change = (previousPeriodic, periodic)
-          producer.send(change)
+
+        if let previousPeriodic = _previousPeriodic {
+          if previousPeriodic != periodic {
+            producer.send(periodic)
+          }
+        } else {
+          producer.send(periodic)
         }
       case let .final(final):
         producer.complete(with: final)

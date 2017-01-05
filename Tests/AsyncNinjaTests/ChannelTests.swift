@@ -262,7 +262,7 @@ class ChannelTests: XCTestCase {
       periodics.append($0)
     }
     producer.send(fixture.suffix(from: bufferSize))
-    producer.succeed(with: ())
+    producer.succeed()
 
     let expectation = self.expectation(description: "completion of producer")
     producer.onSuccess(executor: .queue(queue)) {
@@ -273,6 +273,46 @@ class ChannelTests: XCTestCase {
     
     XCTAssertEqual(periodics, fixture, file: file, line: line)
   }
+
+  func testDistinctInts() {
+    let producer = Producer<Int, Void>()
+    let expectation = self.expectation(description: "completion of producer")
+
+    producer.distinct().extractAll { (periodics, completion) in
+      XCTAssertEqual(periodics, [1, 2, 3, 4, 5, 6, 7])
+      expectation.fulfill()
+    }
+
+    let fixture = [1, 2, 2, 3, 3, 3, 4, 5, 6, 6, 7]
+    DispatchQueue.global().async {
+      producer.send(fixture)
+      producer.succeed()
+    }
+
+    self.waitForExpectations(timeout: 1.0)
+  }
+
+//  func testDistinctOptionalInts() {
+//    let producer = Producer<Int?, Void>()
+//    let expectation = self.expectation(description: "completion of producer")
+//
+//    producer.distinct().extractAll { (periodics, completion) in
+//      let assumedResults = [nil, 1, nil, 2, 3, nil, 3, 4, 5, 6, 7]
+//      XCTAssertEqual(periodics.count, assumedResults.count)
+//      for (periodic, result) in zip(periodics, assumedResults) {
+//        XCTAssertEqual(periodic, result)
+//      }
+//      expectation.fulfill()
+//    }
+//
+//    let fixture = [nil, 1, nil, nil, 2, 2, 3, nil, 3, 3, 4, 5, 6, 6, 7]
+//    DispatchQueue.global().async {
+//      producer.send(fixture)
+//      producer.succeed()
+//    }
+//
+//    self.waitForExpectations(timeout: 1.0)
+//  }
 
   func testFirstSuccessIncomplete() {
     let producer = Producer<Int, Void>()
@@ -320,7 +360,7 @@ class ChannelTests: XCTestCase {
     producer.send(5)
     producer.send(7)
     producer.send(9)
-    producer.succeed(with: ())
+    producer.succeed()
 
     self.waitForExpectations(timeout: 1.0)
   }
@@ -376,7 +416,6 @@ class ChannelTests: XCTestCase {
     self.waitForExpectations(timeout: 1.0)
   }
 
-
   func testFirstNotFoundContextual() {
     let actor = TestActor()
     let producer = Producer<Int, Void>()
@@ -397,7 +436,7 @@ class ChannelTests: XCTestCase {
     producer.send(5)
     producer.send(7)
     producer.send(9)
-    producer.succeed(with: ())
+    producer.succeed()
 
     self.waitForExpectations(timeout: 1.0)
   }
@@ -475,7 +514,7 @@ class ChannelTests: XCTestCase {
     producer.send(8)
     producer.send(9)
     producer.send(10)
-    producer.succeed(with: ())
+    producer.succeed()
 
     self.waitForExpectations(timeout: 1.0)
   }
@@ -500,7 +539,7 @@ class ChannelTests: XCTestCase {
     producer.send(5)
     producer.send(7)
     producer.send(9)
-    producer.succeed(with: ())
+    producer.succeed()
 
     self.waitForExpectations(timeout: 1.0)
   }
@@ -552,11 +591,10 @@ class ChannelTests: XCTestCase {
     producer.send(8)
     producer.send(9)
     producer.send(10)
-    producer.succeed(with: ())
+    producer.succeed()
 
     self.waitForExpectations(timeout: 1.0)
   }
-
 
   func testLastNotFoundContextual() {
     let actor = TestActor()
@@ -578,7 +616,7 @@ class ChannelTests: XCTestCase {
     producer.send(5)
     producer.send(7)
     producer.send(9)
-    producer.succeed(with: ())
+    producer.succeed()
 
     self.waitForExpectations(timeout: 1.0)
   }

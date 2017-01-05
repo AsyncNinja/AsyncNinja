@@ -93,3 +93,11 @@ public extension MutableFinite {
     self.fail(with: AsyncNinjaError.contextDeallocated)
   }
 }
+
+extension MutableFinite where FinalValue == Void {
+
+  /// Convenience method succeeds mutable with void value
+  public func succeed() {
+    self.succeed(with: ())
+  }
+}
