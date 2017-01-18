@@ -27,12 +27,14 @@ public struct Executor {
   /// Handler that encapsulates asynchrounous way of execution escaped block
   public typealias Handler = (@escaping (Void) -> Void) -> Void
   private let _impl: ExecutorImpl
+  private let _isSerial: Bool
 
   /// Initializes executor with specified implementation
   ///
   /// - Parameter impl: implementation of executor
-  fileprivate init(impl: ExecutorImpl) {
+  fileprivate init(impl: ExecutorImpl, isSerial: Bool = false) {
     _impl = impl
+    _isSerial = isSerial
   }
 
   /// Initialiaes executor with custom handler
@@ -43,7 +45,8 @@ public struct Executor {
   ///   - handler: encapsulates asynchrounous way of execution escaped block
   public init(isSerial: Bool = false, handler: @escaping Handler) {
     // Test: ExecutorTests.testCustomHandler
-    _impl = HandlerBasedExecutorImpl(handler: handler, isSerial: isSerial)
+    _impl = HandlerBasedExecutorImpl(handler: handler)
+    _isSerial = isSerial
   }
 
   /// Schedules specified block for execution
@@ -65,7 +68,11 @@ public struct Executor {
   /// Makes serial executor. Retured executor will
   /// serially perform blocks on current executor
   func makeDerivedSerialExecutor() -> Executor {
-    return Executor(impl: _impl.asyncNinja_makeDerivedSerialExecutor())
+    if _isSerial {
+      return self
+    } else {
+      return Executor(impl: _impl.asyncNinja_makeDerivedSerialExecutor(), isSerial: true)
+    }
   }
 }
 
@@ -108,9 +115,9 @@ public extension Executor {
   ///
   /// - Parameter queue: to execute submitted blocks on
   /// - Returns: executor
-  static func queue(_ queue: DispatchQueue) -> Executor {
+  static func queue(_ queue: DispatchQueue, isSerial: Bool = false) -> Executor {
     // Test: ExecutorTests.testCustomQueue
-    return Executor(impl: queue)
+    return Executor(impl: queue, isSerial: isSerial)
   }
 
   // Test: ExecutorTests.testCustomQoS
@@ -167,11 +174,9 @@ fileprivate class ImmediateExecutorImpl: ExecutorImpl {
 fileprivate class HandlerBasedExecutorImpl: ExecutorImpl {
   public typealias Handler = (@escaping (Void) -> Void) -> Void
   private let _handler: Handler
-  let isSerial: Bool
 
-  init(handler: @escaping Handler, isSerial: Bool) {
+  init(handler: @escaping Handler) {
     _handler = handler
-    self.isSerial = isSerial
   }
 
   func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
@@ -186,20 +191,12 @@ fileprivate class HandlerBasedExecutorImpl: ExecutorImpl {
   }
 
   func asyncNinja_makeDerivedSerialExecutor() -> ExecutorImpl {
-    if self.isSerial {
-      return self
-    } else {
-      return DerivedHandlerBasedExecutorImpl(handler: _handler)
-    }
+    return DerivedHandlerBasedExecutorImpl(handler: _handler)
   }
 }
 
 fileprivate class DerivedHandlerBasedExecutorImpl: HandlerBasedExecutorImpl {
   var _locking = makeLocking()
-
-  init(handler: @escaping Handler) {
-    super.init(handler: handler, isSerial: true)
-  }
 
   override func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
     _locking.lock()

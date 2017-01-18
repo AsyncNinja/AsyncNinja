@@ -100,7 +100,7 @@ func square_failure(_ value: Int) throws -> Int {
 
 class TestActor: ExecutionContext, ReleasePoolOwner {
   let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
-  var executor: Executor { return .queue(self.internalQueue) }
+  var executor: Executor { return .queue(self.internalQueue, isSerial: true) }
   let releasePool = ReleasePool()
 
   deinit {
