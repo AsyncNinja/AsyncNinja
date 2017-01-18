@@ -182,8 +182,11 @@ public extension Channel {
   ///
   /// - Parameters:
   ///   - executor: to execute call predicate on
-  ///   - cancellationToken: `CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned channel
-  ///   - predicate: returns true if periodic value matches and returned future may be completed with it
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - predicate: returns true if periodic value matches
+  ///     and returned future may be completed with it
   /// - Returns: future
   func last(executor: Executor = .immediate,
             cancellationToken: CancellationToken? = nil,
@@ -192,5 +195,96 @@ public extension Channel {
     return _last(executor: executor,
                  cancellationToken: cancellationToken,
                  where: predicate)
+  }
+}
+
+// MARK: - channel reduce
+
+public extension Channel {
+
+  func _reduce<Result>(_ initialResult: Result,
+              executor: Executor = .immediate,
+              cancellationToken: CancellationToken? = nil,
+              _ nextPartialResult: @escaping (Result, PeriodicValue) throws -> Result
+    ) -> Promise<(Result, FinalValue)> {
+    var result = initialResult
+    let _executor = executor.makeDerivedSerialExecutor()
+    let promise = Promise<(Result, FinalValue)>()
+    let handler = self.makeHandler(executor: _executor) { [weak promise] in
+      switch $0 {
+      case let .periodic(periodicValue):
+        do {
+          result = try nextPartialResult(result, periodicValue)
+        } catch {
+          promise?.fail(with: error)
+        }
+      case .final(.success(let successValue)):
+        promise?.succeed(with: (result, successValue))
+      case let .final(.failure(failureValue)):
+        promise?.fail(with: failureValue)
+      }
+    }
+
+    promise.insertHandlerToReleasePool(handler)
+    cancellationToken?.add(cancellable: promise)
+
+    return promise
+  }
+
+  /// Returns future of the result of calling the given combining closure
+  /// with each periodic value of this channel and an accumulating value.
+  ///
+  /// - Parameters:
+  ///   - initialResult: the initial accumulating value.
+  ///   - context: `ExectionContext` to call accumulation closure on
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need to override
+  ///     an executor provided by the context
+  ///   - executor: to execute call predicate on accumulation closure on
+  ///   - cancellationToken: CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - nextPartialResult: A closure that combines an accumulating
+  ///     value and a periodic value of the channel into a new accumulating
+  ///     value, to be used in the next call of the `nextPartialResult`
+  ///     closure or returned to the caller.
+  /// - Returns: The future tuple of final accumulated value and success value of channel.
+  func reduce<Result, C: ExecutionContext>(_ initialResult: Result, context: C,
+              executor: Executor? = nil,
+              cancellationToken: CancellationToken? = nil,
+              _ nextPartialResult: @escaping (C, Result, PeriodicValue) throws -> Result
+    ) -> Future<(Result, FinalValue)> {
+    let _executor = executor ?? context.executor
+    let promise = _reduce(initialResult, executor: _executor, cancellationToken: cancellationToken) {
+      [weak context] (accumulator, value) -> Result in
+      guard let context = context else {
+        throw AsyncNinjaError.contextDeallocated
+      }
+
+      return try nextPartialResult(context, accumulator, value)
+    }
+
+    context.addDependent(finite: promise)
+
+    return promise
+  }
+
+  /// Returns future of the result of calling the given combining closure
+  /// with each periodic value of this channel and an accumulating value.
+  ///
+  /// - Parameters:
+  ///   - initialResult: the initial accumulating value.
+  ///   - executor: to execute call accumulation closure on
+  ///   - cancellationToken: CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned channel
+  ///   - nextPartialResult: A closure that combines an accumulating
+  ///     value and a periodic value of the channel into a new accumulating
+  ///     value, to be used in the next call of the `nextPartialResult` closure or returned to the caller.
+  /// - Returns: The future tuple of final accumulated value and success value of channel.
+  func reduce<Result>(_ initialResult: Result,
+              executor: Executor = .immediate,
+              cancellationToken: CancellationToken? = nil,
+              _ nextPartialResult: @escaping (Result, PeriodicValue) throws -> Result
+    ) -> Future<(Result, FinalValue)> {
+    return _reduce(initialResult, executor: executor, cancellationToken: cancellationToken, nextPartialResult)
   }
 }

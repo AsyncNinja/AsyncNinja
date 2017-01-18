@@ -55,6 +55,8 @@ class ChannelTests: XCTestCase {
     ("testLastNotFoundContextual", testLastNotFoundContextual),
     ("testLastFailureContextual", testLastFailureContextual),
     ("testLastDeadContextual", testLastDeadContextual),
+    ("testReduce", testReduce),
+    ("testReduceContextual", testReduceContextual),
     ("testMergeInts", testMergeInts),
     ("testMergeIntsAndStrings", testMergeIntsAndStrings),
     ("testZip", testZip),
@@ -669,6 +671,54 @@ class ChannelTests: XCTestCase {
     producer.send(9)
     producer.fail(with: TestError.testCode)
     
+    self.waitForExpectations(timeout: 1.0)
+  }
+
+  func testReduceContextual() {
+    let actor = TestActor()
+    let producer = Producer<String, Int>()
+    let expectation = self.expectation(description: "future to complete")
+
+    let future = producer.reduce("A", context: actor) { (actor, accumulator, value) -> String in
+      assert(actor: actor)
+      return accumulator + value
+    }
+
+    future.onSuccess { (concatString, successValue) in
+      XCTAssertEqual(concatString, "ABCDEF")
+      XCTAssertEqual(successValue, 7)
+      expectation.fulfill()
+    }
+
+    producer.send("B")
+    producer.send("C")
+    producer.send("D")
+    producer.send("E")
+    producer.send("F")
+    producer.succeed(with: 7)
+    self.waitForExpectations(timeout: 1.0)
+  }
+
+  func testReduce() {
+    let producer = Producer<String, Int>()
+    let expectation = self.expectation(description: "future to complete")
+
+    let future = producer.reduce("A") { (accumulator, value) -> String in
+      return accumulator + value
+    }
+
+    future.onSuccess { (concatString, successValue) in
+      XCTAssertEqual(concatString, "ABCDEF")
+      XCTAssertEqual(successValue, 7)
+      expectation.fulfill()
+    }
+
+    producer.send("B")
+    producer.send("C")
+    producer.send("D")
+    producer.send("E")
+    producer.send("F")
+    producer.succeed(with: 7)
     self.waitForExpectations(timeout: 1.0)
   }
 
