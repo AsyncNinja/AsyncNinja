@@ -202,7 +202,8 @@ public extension Channel {
 
 public extension Channel {
 
-  func _reduce<Result>(_ initialResult: Result,
+  /// **internal use only**
+  private func _reduce<Result>(_ initialResult: Result,
               executor: Executor = .immediate,
               cancellationToken: CancellationToken? = nil,
               _ nextPartialResult: @escaping (Result, PeriodicValue) throws -> Result
