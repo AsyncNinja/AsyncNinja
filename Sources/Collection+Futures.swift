@@ -119,6 +119,10 @@ public extension Collection where Self.IndexDistance == Int {
         }
       }
     }
+
+    promise.notifyDrain {
+      canContinue = false
+    }
     
     return promise
   }
@@ -164,10 +168,12 @@ public extension Collection where Self.IndexDistance == Int {
           }
         }
         
-        if let handler = handler {
-          promise.insertToReleasePool(handler)
-        }
+        promise.insertHandlerToReleasePool(handler)
       }
+    }
+    
+    promise.notifyDrain {
+      canContinue = false
     }
     
     return promise
