@@ -86,78 +86,105 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
 
 /// Collection improved with AsyncNinja
 public extension Collection where Self.IndexDistance == Int {
+  
   /// **internal use only**
   func _asyncMap<T>(executor: Executor = .primary,
                  transform: @escaping (Self.Iterator.Element) throws -> T) -> Promise<[T]> {
-    return _asyncFlatMap(executor: executor) { future(success: try transform($0)) }
+    let promise = Promise<[T]>()
+    var locking = makeLocking()
+    
+    var canContinue = true
+    let count = self.count
+    var subvalues = [T?](repeating: nil, count: count)
+    var unknownSubvaluesCount = count
+    
+    for (index, value) in self.enumerated() {
+      executor.execute { [weak promise] in
+        guard let promise = promise, canContinue else { return }
+        
+        let subvalue: T
+        do { subvalue = try transform(value) }
+        catch {
+          promise.fail(with: error)
+          canContinue = false
+          return
+        }
+        
+        locking.lock()
+        defer { locking.unlock() }
+        subvalues[index] = subvalue
+        unknownSubvaluesCount -= 1
+        if 0 == unknownSubvaluesCount {
+          promise.succeed(with: subvalues.map { $0! })
+        }
+      }
+    }
+    
+    return promise
   }
-
+  
   /// **internal use only**
   func _asyncFlatMap<T>(executor: Executor,
                      transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> Promise<[T]> {
     let promise = Promise<[T]>()
     var locking = makeLocking()
-
+    
     var canContinue = true
     let count = self.count
     var subvalues = [T?](repeating: nil, count: count)
     var unknownSubvaluesCount = count
-
-    let executor_ = executor.makeDerivedSerialExecutor()
+    
     for (index, value) in self.enumerated() {
-      executor_.execute { [weak promise] in
-        guard let promise = promise else { return }
-        guard canContinue else { return }
-
+      executor.execute { [weak promise] in
+        guard let promise = promise, canContinue else { return }
+        
         let futureSubvalue: Future<T>
         do { futureSubvalue = try transform(value) }
         catch { futureSubvalue = future(failure: error) }
-
+        
         let handler = futureSubvalue.makeFinalHandler(executor: .immediate) { [weak promise] subvalue in
           guard let promise = promise else { return }
-
+          
           locking.lock()
           defer { locking.unlock() }
-
+          
           guard canContinue else { return }
           subvalue.onSuccess {
             subvalues[index] = $0
             unknownSubvaluesCount -= 1
+            assert(unknownSubvaluesCount >= 0)
             if 0 == unknownSubvaluesCount {
-              promise.succeed(with: subvalues.flatMap { $0 })
-              canContinue = false
+              promise.succeed(with: subvalues.map { $0! })
             }
           }
-
+          
           subvalue.onFailure {
             promise.fail(with: $0)
             canContinue = false
           }
         }
-
+        
         if let handler = handler {
           promise.insertToReleasePool(handler)
         }
       }
     }
-
-    //    promise.insertToReleasePool(self)
-
+    
     return promise
   }
-
+  
   /// transforms each element of collection on executor and provides future array of transformed values
   public func asyncMap<T>(executor: Executor = .primary,
                        transform: @escaping (Self.Iterator.Element) throws -> T) -> Future<[T]> {
     return _asyncMap(executor: executor, transform: transform)
   }
-
+  
   /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
   public func asyncFlatMap<T>(executor: Executor = .primary,
                            transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> Future<[T]> {
     return _asyncFlatMap(executor: executor, transform: transform)
   }
-
+  
   /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
   public func asyncMap<T, C: ExecutionContext>(context: C,
                        executor: Executor? = nil,
@@ -167,11 +194,11 @@ public extension Collection where Self.IndexDistance == Int {
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, value)
     }
-
+    
     context.addDependent(finite: promise)
     return promise
   }
-
+  
   /// transforms each element of collection to fallible future values on executor and provides future array of transformed values
   public func asyncFlatMap<T, C: ExecutionContext>(context: C,
                            executor: Executor? = nil,
