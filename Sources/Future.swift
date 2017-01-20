@@ -190,6 +190,11 @@ public extension DispatchGroup {
     }
     return promise
   }
+  
+  /// Convenience method that leaves group on completion of provided Future or Channel
+  func leaveOnComplete<T: Finite>(of finite: T) {
+    finite.onComplete(executor: .immediate) { _ in self.leave() }
+  }
 }
 
 /// **Internal use only**
