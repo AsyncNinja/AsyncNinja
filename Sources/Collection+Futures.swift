@@ -25,18 +25,17 @@ import Dispatch
 /// Collection improved with AsyncNinja
 /// Single failure fails them all
 public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element: Finite {
-  fileprivate typealias FinalValue = Self.Iterator.Element.FinalValue
 
   /// joins an array of futures to a future array
-  func joined() -> Future<[FinalValue]> {
-    return _asyncFlatMap(executor: .immediate) { $0 as! Future<FinalValue> }
+  func joined() -> Future<[Self.Iterator.Element.FinalValue]> {
+    return _asyncFlatMap(executor: .immediate) { $0 as! Future<Self.Iterator.Element.FinalValue> }
   }
 
   /// reduces results of collection of futures to future accumulated value
   func reduce<Result>(executor: Executor = .primary,
               initialResult: Result,
               isOrdered: Bool = false,
-              nextPartialResult: @escaping (Result, FinalValue) throws -> Result)
+              nextPartialResult: @escaping (Result, Self.Iterator.Element.FinalValue) throws -> Result)
     -> Future<Result> {
 
       guard !isOrdered else {

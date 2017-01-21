@@ -38,7 +38,7 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
 
   func makeHandlerBlock<PeriodicValue, SuccessValue>(
     periodicHandler: @escaping (PeriodicValue) -> (PA, PB)?,
-    successHandler: @escaping (SuccessValue) -> Void
+    successHandler: @escaping (SuccessValue) -> (SA, SB)?
     ) -> (ChannelValue<PeriodicValue, SuccessValue>) -> Void {
     return {
       [weak producer] (value) in
@@ -54,9 +54,8 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
       case let .final(.success(localSuccess)):
         locking.lock()
         defer { locking.unlock() }
-        successHandler(localSuccess)
-        if let localSuccessA = successA, let localSuccessB = successB {
-          producer?.succeed(with: (localSuccessA, localSuccessB))
+        if let success = successHandler(localSuccess) {
+          producer?.succeed(with: success)
         }
       }
     }
@@ -72,7 +71,11 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
           queueOfPeriodics.push(.left($0))
           return nil
         }
-    }, successHandler: { successA = $0 })
+    }, successHandler: {
+      (success: SA) in
+      successA = success
+      return successB.map { (success, $0) }
+    })
 
     let handler = channelA.makeHandler(executor: .immediate,
                                        block: handlerBlockA)
@@ -89,7 +92,11 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
           queueOfPeriodics.push(.right($0))
           return nil
         }
-    }, successHandler: { successB = $0 })
+    }, successHandler: {
+      (success: SB) in
+      successB = success
+      return successA.map { ($0, success) }
+    })
 
     let handler = channelB.makeHandler(executor: .immediate,
                                        block: handlerBlockB)
@@ -97,6 +104,6 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   }
 
   cancellationToken?.add(cancellable: producer)
-  
+
   return producer
 }

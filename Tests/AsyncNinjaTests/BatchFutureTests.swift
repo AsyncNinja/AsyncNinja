@@ -67,11 +67,11 @@ class BatchFutureTests: XCTestCase {
   func testFlatMap() {
     let expectation = self.expectation(description: "finish")
     
-    let fixture = (1...50).map { _ in pickInt() }
+    let fixture = (1...10).map { _ in pickInt() }
     let sum = fixture.reduce(0, +)
     
     fixture
-      .asyncFlatMap { value in future(after: Double(value) / 100.0) { value } }
+      .asyncFlatMap { value in future(after: Double(value) / 200.0) { value } }
       .map { $0.reduce(0, +) }
       .onSuccess { (value) in
         XCTAssertEqual(sum, value)

@@ -37,7 +37,7 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
 
   func makeHandlerBlock<PeriodicValue, FinalValue>(
     periodicHandler: @escaping (PeriodicValue) -> Void,
-    successHandler: @escaping (FinalValue) -> Void
+    successHandler: @escaping (FinalValue) -> (SA, SB)?
     ) -> (ChannelValue<PeriodicValue, FinalValue>) -> Void {
     return {
       [weak producer] (value) in
@@ -49,21 +49,27 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
       case let .final(.success(localSuccess)):
         locking.lock()
         defer { locking.unlock() }
-        successHandler(localSuccess)
-        if let localSuccessA = successA, let localSuccessB = successB {
-          producer?.succeed(with: (localSuccessA, localSuccessB))
+        if let success = successHandler(localSuccess) {
+          producer?.succeed(with: success)
         }
       }
     }
   }
 
-  let handlerBlockA = makeHandlerBlock(periodicHandler: { [weak producer] in producer?.send(.left($0)) },
-                                       successHandler: { (success: SA) in successA = success })
+    let handlerBlockA = makeHandlerBlock(periodicHandler: { [weak producer] in producer?.send(.left($0)) },
+                                         successHandler: { (success: SA) in
+                                            successA = success
+                                            return successB.map { (success, $0) }
+    })
+
   let handlerA = channelA.makeHandler(executor: .immediate, block: handlerBlockA)
   producer.insertHandlerToReleasePool(handlerA)
 
   let handlerBlockB = makeHandlerBlock(periodicHandler: { [weak producer] in producer?.send(.right($0)) },
-                                       successHandler: { (success: SB) in successB = success })
+                                       successHandler: { (success: SB) in
+                                        successB = success
+                                        return successA.map { ($0, success) }
+  })
   let handlerB = channelB.makeHandler(executor: .immediate, block: handlerBlockB)
   producer.insertHandlerToReleasePool(handlerB)
 
@@ -85,7 +91,7 @@ public func merge<P, SA, SB>(_ channelA: Channel<P, SA>,
   var successA: SA?
   var successB: SB?
 
-  func makeHandlerBlock<T>(_ successHandler: @escaping (T) -> Void
+  func makeHandlerBlock<T>(_ successHandler: @escaping (T) -> (SA, SB)?
     ) -> (ChannelValue<P, T>) -> Void {
     return {
       [weak producer] (value) in
@@ -97,21 +103,26 @@ public func merge<P, SA, SB>(_ channelA: Channel<P, SA>,
       case let .final(.success(localSuccess)):
         locking.lock()
         defer { locking.unlock() }
-        successHandler(localSuccess)
-        if let localSuccessA = successA, let localSuccessB = successB {
-          producer?.succeed(with: (localSuccessA, localSuccessB))
+        if let success = successHandler(localSuccess) {
+            producer?.succeed(with: success)
         }
       }
     }
   }
 
   let handlerA = channelA.makeHandler(executor: .immediate,
-                                      block: makeHandlerBlock { successA = $0 })
+                                      block: makeHandlerBlock { (success: SA) in
+                                        successA = success
+                                        return successB.map { (success, $0) }
+  })
   producer.insertHandlerToReleasePool(handlerA)
 
 
   let handlerB = channelB.makeHandler(executor: .immediate,
-                                      block: makeHandlerBlock { successB = $0 })
+                                      block: makeHandlerBlock { (success: SB) in
+                                        successB = success
+                                        return successA.map { ($0, success) }
+  })
   producer.insertHandlerToReleasePool(handlerB)
   cancellationToken?.add(cancellable: producer)
   
