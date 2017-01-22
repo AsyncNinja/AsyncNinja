@@ -293,10 +293,12 @@ func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> {
 * [`Cache`](Documentation/Cache.md)
 * [`Executor`](Documentation/Executor.md)
 * [`ExecutionContext`](Documentation/ExecutionContext.md)
-* [`Fallible`](Documentation/Fallible.md)
 * [Actor Model](Documentation/ActorModel.md)
 * [Memory Management](Documentation/MemoryManagement.md)
 * [Integration](Documentation/Integration.md)
+
+### [`Fallible`](Documentation/Fallible.md) ![Fallible](https://drive.google.com/uc?export=download&id=0B9BWA0kaXtzEMW5GX3ByX1JXOWs)
+
 
 ## Related Articles
 * Moving to nice asynchronous Swift code
