@@ -37,9 +37,7 @@ Let's assume that we have:
 extension MyViewController {
   func present(personWithID identifier: String) {
     self.myService.person(identifier: identifier) {
-
-      /* do not forget the [weak self] */
-      [weak self] (person, error) in
+      (person, error) in
 
       /* do not forget to dispatch to the main queue */
       DispatchQueue.main.async {
@@ -59,7 +57,7 @@ extension MyViewController {
 }
 ```
 
-* "do not forget" comment **x3**
+* "do not forget" comment **x2**
 
 #### Code with other libraries that provide futures
 

@@ -1,3 +1,10 @@
+# 0.4.3
+* fixing code style
+* adding `reduce(::)` method to channel
+* convenience method for leaving group
+* fixing `asyncMap`s and improving tests
+* fixing compatibility with current swift master
+
 # 0.4.2
 * taking advantage of ability to make derived serial executor in order to avoid using locks
 * operations on channels added: first(where:), last(where:), zip(_:, _:)

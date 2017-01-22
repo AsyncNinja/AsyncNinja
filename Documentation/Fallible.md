@@ -1,7 +1,7 @@
 # `Fallible`
 This document describes concept and use of `Fallible`.
 
-**For class reference visit [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/0.4.2/Enums/Fallible.html).** 
+**For class reference visit [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/0.4.3/Enums/Fallible.html).** 
 
 ##### Contents
 *    [Concept](#concept)
