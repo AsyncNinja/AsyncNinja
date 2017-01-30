@@ -26,92 +26,41 @@ public typealias Releasable = Any
 
 /// ReleasePool is an object that retains another objects
 public class ReleasePool {
-  private var _tier1Container = makeThreadSafeContainer()
-  private var _tier2Container = makeThreadSafeContainer()
-  private var _tier3Container = makeThreadSafeContainer()
-  static let numberOfItemsForTier2 = (1 << 12) - 1
-  static let numberOfItemsForTier3 = (1 << 24) - 1
+  var _locking = makeLocking()
+  var _objectsContainer = [Releasable]()
+  var _blocksContainer = [() -> Void]()
 
   /// Designated initializer of ReleasePool
   public init() { }
-
-  deinit {
-    _tier1Container.updateHead { _ in return nil }
-    _tier2Container.updateHead { _ in return nil }
-    _tier3Container.updateHead { _ in return nil }
-  }
-
-  private func updateHead(_ block: (AnyObject?) -> AnyObject?) {
-    guard let item = _tier1Container.updateHead(block).newHead as? Item
-      else { return }
-
-    if (item.index & ReleasePool.numberOfItemsForTier2) == ReleasePool.numberOfItemsForTier2 {
-      _tier2Container.updateHead { NextTierItem(item: item, next: $0 as! NextTierItem?) }
-    }
-
-    if (item.index & ReleasePool.numberOfItemsForTier3) == ReleasePool.numberOfItemsForTier3 {
-      _tier3Container.updateHead { NextTierItem(item: item, next: $0 as! NextTierItem?) }
-    }
-  }
   
+  deinit {
+    drain()
+  }
+
   /// Inserts object to retain
   public func insert(_ releasable: Releasable) {
-    // assert(releasable as? AnyObject !== self)
-    self.updateHead { ReleasableItem(object: releasable, next: $0 as! Item?) }
+    _locking.lock()
+    defer { _locking.unlock() }
+    _objectsContainer.append(releasable)
   }
 
   /// Adds block to call on draining ReleasePool
   ///
   /// - Parameter block: to call
   public func notifyDrain(_ block: @escaping () -> Void) {
-    self.updateHead { NotifyItem(notifyBlock: block, next: $0 as! Item?) }
+    _locking.lock()
+    defer { _locking.unlock() }
+    _blocksContainer.append(block)
   }
 
   /// Causes release of all retained objects
   public func drain() {
-    _tier1Container.updateHead { _ in return nil }
-    _tier2Container.updateHead { _ in return nil }
-    _tier3Container.updateHead { _ in return nil }
-  }
-
-  private class Item {
-    let next: Item?
-    let index: Int
-
-    init(next: Item?) {
-      self.next = next
-      self.index = next.flatMap { $0.index + 1 } ?? 0
+    _locking.lock()
+    defer { _locking.unlock() }
+    _objectsContainer.removeAll()
+    for block in _blocksContainer {
+      block()
     }
-  }
-
-  private class NotifyItem: Item {
-    let notifyBlock: () -> Void
-
-    init (notifyBlock: @escaping () -> Void, next: Item?) {
-      self.notifyBlock = notifyBlock
-      super.init(next: next)
-    }
-
-    deinit {
-      self.notifyBlock()
-    }
-  }
-
-  private class ReleasableItem: Item {
-    let object: Releasable
-
-    init(object: Releasable, next: Item?) {
-      self.object = object
-      super.init(next: next)
-    }
-  }
-  
-  private class NextTierItem {
-    let item: Item
-    let next: NextTierItem?
-    init(item: Item, next: NextTierItem?) {
-      self.item = item
-      self.next = next
-    }
+    _blocksContainer.removeAll()
   }
 }
