@@ -32,7 +32,7 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   let producer = Producer<(PA, PB), (SA, SB)>(bufferSize: bufferSize_)
 
   var locking = makeLocking()
-  let queueOfPeriodics = QueueImpl<Either<PA, PB>>()
+  let queueOfPeriodics = Queue<Either<PA, PB>>()
   var successA: SA?
   var successB: SB?
 

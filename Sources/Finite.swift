@@ -42,7 +42,12 @@ public protocol Finite: class {
 public extension Finite {
 
   /// Shorthand property that returns true if `Finite` is complete
-  var isComplete: Bool { return nil != self.finalValue }
+  var isComplete: Bool {
+    switch self.finalValue {
+    case .some: return true
+    case .none: return false
+    }
+  }
 
   /// Shorthand property that returns success value
   /// if `Finite` completed with success or nil otherwise

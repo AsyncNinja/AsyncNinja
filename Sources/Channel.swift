@@ -244,14 +244,6 @@ public struct ChannelIterator<PeriodicValue, FinalValue>: IteratorProtocol  {
 }
 
 /// **Internal use only**
-private class Box<T> {
-  let value: T
-  init(_ value: T) {
-    self.value = value
-  }
-}
-
-/// **Internal use only**
 class ChannelIteratorImpl<PeriodicValue, FinalValue>  {
   public typealias Element = PeriodicValue
   var finalValue: Fallible<FinalValue>? { assertAbstract() }

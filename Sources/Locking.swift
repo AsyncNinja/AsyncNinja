@@ -53,6 +53,11 @@ struct DispatchSemaphoreLocking: Locking {
   }
 }
 
+struct PlaceholderLocking: Locking {
+  mutating func lock() { }
+  mutating func unlock() { }
+}
+
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 @available(macOS, deprecated: 10.12, message: "Use UnfairLockLocking instead")
 @available(iOS, deprecated: 10.0, message: "Use UnfairLockLocking instead")

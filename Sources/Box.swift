@@ -22,51 +22,20 @@
 
 import Dispatch
 
-public typealias Releasable = Any
+/// **Internal use only**
+class Box<T> {
+  let value: T
 
-/// ReleasePool is an object that retains another objects
-public class ReleasePool {
-  var _locking: Locking
-  var _objectsContainer = [Releasable]()
-  var _blocksContainer = [() -> Void]()
-
-  /// Designated initializer of ReleasePool
-  public init() {
-    _locking = makeLocking()
+  init(_ value: T) {
+    self.value = value
   }
+}
 
-  init(locking: Locking) {
-    _locking = locking
-  }
+/// **Internal use only**
+class WeakBox<T: AnyObject> {
+  private(set) weak var value: T?
 
-  deinit {
-    drain()
-  }
-
-  /// Inserts object to retain
-  public func insert(_ releasable: Releasable) {
-    _locking.lock()
-    defer { _locking.unlock() }
-    _objectsContainer.append(releasable)
-  }
-
-  /// Adds block to call on draining ReleasePool
-  ///
-  /// - Parameter block: to call
-  public func notifyDrain(_ block: @escaping () -> Void) {
-    _locking.lock()
-    defer { _locking.unlock() }
-    _blocksContainer.append(block)
-  }
-
-  /// Causes release of all retained objects
-  public func drain() {
-    _locking.lock()
-    defer { _locking.unlock() }
-    _objectsContainer.removeAll()
-    for block in _blocksContainer {
-      block()
-    }
-    _blocksContainer.removeAll()
+  init(_ value: T) {
+    self.value = value
   }
 }

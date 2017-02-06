@@ -22,13 +22,18 @@
 
 import Dispatch
 
-class QueueImpl<T> {
-  typealias Iterator = QueueIterator<T>
+typealias Queue<Element> = QueueImpl<QueueStrongElementWrapper<Element>>
+typealias QueueOfWeakElements<Element: AnyObject> = QueueImpl<QueueWeakElementWrapper<Element>>
 
-  private var _first: Iterator.Wrapper? = nil
-  private var _last: Iterator.Wrapper? = nil
+class QueueImpl<Wrapper: QueueElementWrapper> {
+  typealias Iterator = QueueIterator<Wrapper>
+  typealias Element = Wrapper.Element
+
+  private var _first: Wrapper? = nil
+  private var _last: Wrapper? = nil
   private(set) var count = 0
-  var first: T? { return _first?.element }
+  var first: Element? { return _first?.element }
+  var last: Element? { return _last?.element }
   var isEmpty: Bool { return nil == _first }
 
   init() { }
@@ -37,8 +42,8 @@ class QueueImpl<T> {
     return Iterator(queueElementWrapper: _first)
   }
 
-  func push(_ element: T) {
-    let new = Iterator.Wrapper(element: element)
+  func push(_ element: Element) {
+    let new = Wrapper(element: element)
     if let last = _last {
       last.next = new
     } else {
@@ -48,7 +53,7 @@ class QueueImpl<T> {
     self.count += 1
   }
 
-  func pop() -> T? {
+  func pop() -> Element? {
     guard let first = _first else { return nil }
     if let next = first.next {
       _first = next
@@ -66,35 +71,66 @@ class QueueImpl<T> {
     _last = nil
   }
 
-  func clone() -> QueueImpl<T> {
-    let result = QueueImpl<T>()
+  func clone() -> QueueImpl<Wrapper> {
+    let result = QueueImpl<Wrapper>()
     var iterator = self.makeIterator()
     while let value = iterator.next() {
       result.push(value)
     }
     return result
   }
+
+  func forEach(andReset: Bool = false, _ block: (Wrapper.Element) -> Void) {
+    var wrapper_ = _first
+    if andReset {
+      _first = nil
+      _last = nil
+    }
+    while let wrapper = wrapper_ {
+      if let element = wrapper.element {
+        block(element)
+      }
+      wrapper_ = wrapper.next
+    }
+  }
 }
 
-class QueueElementWrapper<T> {
-  let element: T
-  var next: QueueElementWrapper<T>?
+protocol QueueElementWrapper: class {
+  associatedtype Element
 
-  init(element: T) {
+  var element: Element? { get }
+  var next: Self? { get set }
+
+  init(element: Element)
+}
+
+final class QueueStrongElementWrapper<Element>: QueueElementWrapper {
+  let element: Element?
+  var next: QueueStrongElementWrapper<Element>?
+
+  required init(element: Element) {
     self.element = element
   }
 }
 
-struct QueueIterator<T>: IteratorProtocol {
-  typealias Element = T
-  typealias Wrapper = QueueElementWrapper<Element>
+final class QueueWeakElementWrapper<Element: AnyObject>: QueueElementWrapper {
+  private weak var _element: Element?
+  var element: Element? { return _element }
+  var next: QueueWeakElementWrapper<Element>?
+
+  required init(element: Element) {
+    _element = element
+  }
+}
+
+struct QueueIterator<Wrapper: QueueElementWrapper>: IteratorProtocol {
   private var _queueElementWrapper: Wrapper?
 
   init(queueElementWrapper: Wrapper?) {
     _queueElementWrapper = queueElementWrapper
   }
 
-  mutating func next() -> Element? {
+  mutating func next() -> Wrapper.Element? {
     if let wrapper = _queueElementWrapper {
       _queueElementWrapper = wrapper.next
       return wrapper.element
