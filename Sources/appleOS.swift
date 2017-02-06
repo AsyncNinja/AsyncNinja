@@ -74,12 +74,8 @@
   private struct Statics {
     static var increment: OSAtomic_int64_aligned64_t = 0
     static func withUniqueKey(_ block: (UnsafeRawPointer) -> Void) {
-      let unique = OSAtomicIncrement64Barrier(&increment)
-      let capacity = 2
-      let key = UnsafeMutablePointer<Int64>.allocate(capacity: capacity)
-      defer { key.deallocate(capacity: capacity) }
-      key.initialize(from: [unique, 0])
-      block(key)
+      var unique = OSAtomicIncrement64Barrier(&increment) << 8
+      block(&unique)
     }
   }
 
