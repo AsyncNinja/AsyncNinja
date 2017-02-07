@@ -1,3 +1,7 @@
+# 0.4.4
+* fixing issues in ReleasePool and Channel
+* improving performace
+
 # 0.4.3
 * fixing code style
 * adding `reduce(::)` method to channel
