@@ -39,7 +39,7 @@ public func makeTimer(interval: DispatchTimeInterval) -> Channel<Void, Void> {
 }
 
 /// Makes channel that will receive periodics after a *deadline*,
-// in an *interval* (in seconds), with a *leeway*
+/// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(interval: DispatchTimeInterval,
                       leeway: DispatchTimeInterval) -> Channel<Void, Void> {
   return makeTimer(deadline: DispatchTime.now(), interval: interval, leeway: leeway)
