@@ -60,7 +60,7 @@ func assert(actor: TestActor, file: StaticString = #file, line: UInt = #line) {
 }
 
 fileprivate struct Constants {
-  static let availableQosClassses: [DispatchQoS.QoSClass] = [.background, .utility, .default, .userInitiated, .userInteractive, ]
+  static let availableQosClassses: [DispatchQoS.QoSClass] = [/*.background, .utility, */.default, .userInitiated, .userInteractive, ]
 }
 
 func pickQoS() -> DispatchQoS.QoSClass {
