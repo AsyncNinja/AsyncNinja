@@ -296,6 +296,7 @@ func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> {
 * [Actor Model](Documentation/ActorModel.md)
 * [Memory Management](Documentation/MemoryManagement.md)
 * [Integration](Documentation/Integration.md)
+* [Navigating in methods of `Future` and `Channel`](Documentation/Navigation.md)
 
 ### [`Fallible`](Documentation/Fallible.md) ![Fallible](https://drive.google.com/uc?export=download&id=0B9BWA0kaXtzEMW5GX3ByX1JXOWs)
 
