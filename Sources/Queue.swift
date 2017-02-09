@@ -25,7 +25,7 @@ import Dispatch
 typealias Queue<Element> = QueueImpl<QueueStrongElementWrapper<Element>>
 typealias QueueOfWeakElements<Element: AnyObject> = QueueImpl<QueueWeakElementWrapper<Element>>
 
-class QueueImpl<Wrapper: QueueElementWrapper> {
+class QueueImpl<Wrapper: QueueElementWrapper>: Sequence {
   typealias Iterator = QueueIterator<Wrapper>
   typealias Element = Wrapper.Element
 
@@ -73,10 +73,7 @@ class QueueImpl<Wrapper: QueueElementWrapper> {
 
   func clone() -> QueueImpl<Wrapper> {
     let result = QueueImpl<Wrapper>()
-    var iterator = self.makeIterator()
-    while let value = iterator.next() {
-      result.push(value)
-    }
+    self.forEach(result.push)
     return result
   }
 

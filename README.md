@@ -222,12 +222,10 @@ let channelOfSquaredPrimeNumbers = channelOfPrimeNumbers
 #### Synchronously iterating over periodic values.
 
 ```swift
-var primeNumbersIterator = channelOfPrimeNumbers.makeIterator()
-while let number = primeNumbersIterator.next() {
+for number in channelOfPrimeNumbers {
   print(number)
 }
 ```
-*I would love to find out how to use for-loop, but I'm stuck with this.*
 
 #### Synchronously waiting for completion
 

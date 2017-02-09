@@ -76,8 +76,7 @@ final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, F
       self._locking.lock()
     }
 
-    var iterator = self._bufferedPeriodics.makeIterator()
-    while let periodic_ = iterator.next() {
+    for periodic_ in self._bufferedPeriodics {
       executor.execute {
         block(.periodic(periodic_))
       }

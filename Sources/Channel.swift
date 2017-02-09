@@ -23,7 +23,7 @@
 import Dispatch
 
 /// represents values that periodically arrive followed by failure of final value that completes Channel. Channel oftenly represents result of long running task that is not yet arrived and flow of some intermediate results.
-public class Channel<PeriodicValue, FinalValue>: Finite {
+public class Channel<PeriodicValue, FinalValue>: Finite, Sequence {
   public typealias Value = ChannelValue<PeriodicValue, FinalValue>
   public typealias Handler = ChannelHandler<PeriodicValue, FinalValue>
   public typealias PeriodicHandler = Handler
@@ -210,12 +210,7 @@ public extension Channel {
 
   /// Synchronously waits for channel to complete. Returns all periodic and final values
   func waitForAll() -> (periodics: [PeriodicValue], final: Fallible<FinalValue>) {
-    var periodics = [PeriodicValue]()
-    var iterator = self.makeIterator()
-    while let periodic = iterator.next() {
-      periodics.append(periodic)
-    }
-    return (periodics, iterator.finalValue!)
+    return (self.map { $0 }, self.finalValue!)
   }
 }
 
