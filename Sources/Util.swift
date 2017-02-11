@@ -43,7 +43,7 @@ func assertAbstract(file: StaticString = #file, line: UInt = #line) -> Never {
 }
 
 /// Simple implementation of either monad
-public enum Either<Left, Right> {
+public enum Either<Left, Right>: CustomStringConvertible {
 
   /// left case
   case left(Left)
@@ -61,6 +61,15 @@ public enum Either<Left, Right> {
   public var right: Right? {
     if case let .right(value) = self { return value }
     else { return nil }
+  }
+
+  public var description: String {
+    switch self {
+    case .left(let value):
+      return "left(\(value))"
+    case .right(let value):
+      return "right(\(value))"
+    }
   }
 }
 

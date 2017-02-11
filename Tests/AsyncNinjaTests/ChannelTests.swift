@@ -748,32 +748,43 @@ class ChannelTests: XCTestCase {
   }
 
   func testMergeIntsAndStrings() {
-    let producerOfOdds = Producer<Int, String>()
-    let producerOfEvents = Producer<String, String>()
-    let channelOfNumbers = merge(producerOfOdds, producerOfEvents)
-
-    DispatchQueue.global().async {
-      producerOfOdds.send(1)
-      producerOfOdds.send(3)
-      producerOfEvents.send("two")
-      producerOfEvents.send("four")
-      producerOfOdds.send(5)
-      producerOfEvents.send("six")
-      producerOfOdds.send(7)
-      producerOfOdds.succeed(with: "Hello")
-      producerOfEvents.send("eight")
-      producerOfEvents.succeed(with: "World")
-    }
-
-    let (numbers, stringsOfError) = channelOfNumbers.waitForAll()
-
     let fixtureNumbers: [Either<Int, String>] = [.left(1), .left(3), .right("two"), .right("four"), .left(5), .right("six"), .left(7), .right("eight")]
-    XCTAssertEqual(numbers.count, fixtureNumbers.count)
-    for (number, fixture) in zip(numbers, fixtureNumbers) {
-      XCTAssert(number == fixture)
+
+    multiTest {
+      let producerOfOdds = Producer<Int, String>()
+      let producerOfEvents = Producer<String, String>()
+      let channelOfNumbers = merge(producerOfOdds, producerOfEvents, bufferSize: .specific(8))
+      let sema = DispatchSemaphore(value: 0)
+
+      DispatchQueue.global().async {
+        let (numbers, stringsOfError) = channelOfNumbers.waitForAll()
+
+        print(numbers)
+        XCTAssertEqual(numbers.count, fixtureNumbers.count)
+        for (number, fixture) in zip(numbers, fixtureNumbers) {
+          XCTAssert(number == fixture)
+        }
+        XCTAssertEqual(stringsOfError.success!.0, "Hello")
+        XCTAssertEqual(stringsOfError.success!.1, "World")
+
+        sema.signal()
+      }
+
+      DispatchQueue.global().async {
+        producerOfOdds.send(1)
+        producerOfOdds.send(3)
+        producerOfEvents.send("two")
+        producerOfEvents.send("four")
+        producerOfOdds.send(5)
+        producerOfEvents.send("six")
+        producerOfOdds.send(7)
+        producerOfOdds.succeed(with: "Hello")
+        producerOfEvents.send("eight")
+        producerOfEvents.succeed(with: "World")
+      }
+
+      sema.wait()
     }
-    XCTAssertEqual(stringsOfError.success!.0, "Hello")
-    XCTAssertEqual(stringsOfError.success!.1, "World")
   }
 
   func testZip() {

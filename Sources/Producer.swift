@@ -206,7 +206,7 @@ final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, F
   override public func makeIterator() -> Iterator {
     _locking.lock()
     defer { _locking.unlock() }
-    let channelIteratorImpl = ProducerIteratorImpl<PeriodicValue, FinalValue>(channel: self, bufferedPeriodics: _bufferedPeriodics.clone())
+    let channelIteratorImpl = ProducerIteratorImpl<PeriodicValue, FinalValue>(channel: self, bufferedPeriodics: Queue())
     return ChannelIterator(impl: channelIteratorImpl)
   }
 }
