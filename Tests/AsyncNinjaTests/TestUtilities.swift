@@ -60,21 +60,23 @@ func assert(actor: TestActor, file: StaticString = #file, line: UInt = #line) {
 }
 
 extension XCTestCase {
-  func multiTest(_ test: @escaping () -> Void) {
+  func multiTest(repeating: Int = 1, _ test: @escaping () -> Void) {
     let configs: [(threads: Int, tests: Int)] = [ (1, 8), (2, 4), (4, 2), (8, 1) ]
 
-    for config in configs {
-      for threadIndex in 0..<config.threads {
-        let expectation = self.expectation(description: "multiTest expectation#\(threadIndex)")
-        DispatchQueue.global().async {
-          for _ in 0..<config.tests {
-            test()
-          }
-          expectation.fulfill()
-        }
-      }
+    for _ in 0..<repeating {
+      for config in configs {
+        let group = DispatchGroup()
 
-      self.waitForExpectations(timeout: 10.0, handler: nil)
+        for _ in 0..<config.threads {
+          DispatchQueue.global().async(group: group) {
+            for _ in 0..<config.tests {
+              test()
+            }
+          }
+        }
+
+        let _ = group.wait(timeout: DispatchTime.now() + .seconds(10))
+      }
     }
   }
 }

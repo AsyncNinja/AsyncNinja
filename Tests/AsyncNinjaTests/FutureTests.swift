@@ -61,15 +61,15 @@ class FutureTests: XCTestCase {
     ]
 
   func testLifetime() {
-    multiTest {
+    let queue = DispatchQueue(label: "testing queue", qos: DispatchQoS(qosClass: .default, relativePriority: 0))
+    multiTest(repeating: 100) {
       weak var weakFuture: Future<Int>?
       weak var weakMappedFuture: Future<Int>?
 
       let fixtureResult = pickInt()
       var result: Int? = nil
-      let sema = DispatchSemaphore(value: 0)
 
-      DispatchQueue.global().async {
+      queue.sync {
         var futureValue: Future<Int>? = future(success: fixtureResult)
         let qos = pickQoS()
         var mappedFutureValue: Future<Int>? = futureValue!
@@ -82,14 +82,15 @@ class FutureTests: XCTestCase {
         result = mappedFutureValue!.wait().success!
         futureValue = nil
         mappedFutureValue = nil
-
-        sema.signal()
       }
 
-      sema.wait()
-      XCTAssertEqual(result, fixtureResult * 3)
-      XCTAssertNil(weakFuture)
-      XCTAssertNil(weakMappedFuture)
+      queue.asyncAfter(deadline: DispatchTime.now() + .milliseconds(1)) {
+        XCTAssertEqual(result, fixtureResult * 3)
+        XCTAssertNil(weakFuture)
+        XCTAssertNil(weakMappedFuture)
+      }
+
+      queue.sync {}
     }
   }
 
