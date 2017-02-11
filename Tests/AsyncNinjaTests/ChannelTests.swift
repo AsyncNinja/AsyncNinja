@@ -700,51 +700,55 @@ class ChannelTests: XCTestCase {
   }
 
   func testReduce() {
-    let producer = Producer<String, Int>()
-    let expectation = self.expectation(description: "future to complete")
+    multiTest {
+      let producer = Producer<String, Int>()
+      let sema = DispatchSemaphore(value: 0)
 
-    let future = producer.reduce("A") { (accumulator, value) -> String in
-      return accumulator + value
+      let future = producer.reduce("A") { (accumulator, value) -> String in
+        return accumulator + value
+      }
+
+      future.onSuccess { (concatString, successValue) in
+        XCTAssertEqual(concatString, "ABCDEF")
+        XCTAssertEqual(successValue, 7)
+        sema.signal()
+      }
+
+      producer.send("B")
+      producer.send("C")
+      producer.send("D")
+      producer.send("E")
+      producer.send("F")
+      producer.succeed(with: 7)
+      sema.wait()
     }
-
-    future.onSuccess { (concatString, successValue) in
-      XCTAssertEqual(concatString, "ABCDEF")
-      XCTAssertEqual(successValue, 7)
-      expectation.fulfill()
-    }
-
-    producer.send("B")
-    producer.send("C")
-    producer.send("D")
-    producer.send("E")
-    producer.send("F")
-    producer.succeed(with: 7)
-    self.waitForExpectations(timeout: 1.0)
   }
 
   func testMergeInts() {
-    let producerOfOdds = Producer<Int, String>()
-    let producerOfEvents = Producer<Int, String>()
-    let channelOfNumbers = merge(producerOfOdds, producerOfEvents)
+    multiTest {
+      let producerOfOdds = Producer<Int, String>()
+      let producerOfEvents = Producer<Int, String>()
+      let channelOfNumbers = merge(producerOfOdds, producerOfEvents)
 
-    DispatchQueue.global().async {
-      producerOfOdds.send(1)
-      producerOfOdds.send(3)
-      producerOfEvents.send(2)
-      producerOfEvents.send(4)
-      producerOfOdds.send(5)
-      producerOfEvents.send(6)
-      producerOfOdds.send(7)
-      producerOfOdds.succeed(with: "Hello")
-      producerOfEvents.send(8)
-      producerOfEvents.succeed(with: "World")
+      DispatchQueue.global().async {
+        producerOfOdds.send(1)
+        producerOfOdds.send(3)
+        producerOfEvents.send(2)
+        producerOfEvents.send(4)
+        producerOfOdds.send(5)
+        producerOfEvents.send(6)
+        producerOfOdds.send(7)
+        producerOfOdds.succeed(with: "Hello")
+        producerOfEvents.send(8)
+        producerOfEvents.succeed(with: "World")
+      }
+
+      let (numbers, stringsOfError) = channelOfNumbers.waitForAll()
+
+      XCTAssertEqual(numbers, [1, 3, 2, 4, 5, 6, 7, 8])
+      XCTAssertEqual(stringsOfError.success!.0, "Hello")
+      XCTAssertEqual(stringsOfError.success!.1, "World")
     }
-
-    let (numbers, stringsOfError) = channelOfNumbers.waitForAll()
-
-    XCTAssertEqual(numbers, [1, 3, 2, 4, 5, 6, 7, 8])
-    XCTAssertEqual(stringsOfError.success!.0, "Hello")
-    XCTAssertEqual(stringsOfError.success!.1, "World")
   }
 
   func testMergeIntsAndStrings() {

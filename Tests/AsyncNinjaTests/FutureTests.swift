@@ -60,35 +60,36 @@ class FutureTests: XCTestCase {
     ]
 
   func testLifetime() {
+    multiTest {
+      weak var weakFuture: Future<Int>?
+      weak var weakMappedFuture: Future<Int>?
 
-    weak var weakFuture: Future<Int>?
-    weak var weakMappedFuture: Future<Int>?
+      let fixtureResult = pickInt()
+      var result: Int? = nil
+      let sema = DispatchSemaphore(value: 0)
 
-    let fixtureResult = pickInt()
-    var result: Int? = nil
-    let expectation = self.expectation(description: "waiting finished")
+      DispatchQueue.global().async {
+        var futureValue: Future<Int>? = future(success: fixtureResult)
+        let qos = pickQoS()
+        var mappedFutureValue: Future<Int>? = futureValue!
+          .map(executor: .queue(qos)) { (value) -> Int in
+            assert(qos: qos)
+            return value * 3
+        }
+        weakFuture = futureValue
+        weakMappedFuture = mappedFutureValue
+        result = mappedFutureValue!.wait().success!
+        futureValue = nil
+        mappedFutureValue = nil
 
-    DispatchQueue.global().async {
-      var futureValue: Future<Int>? = future(success: fixtureResult)
-      let qos = pickQoS()
-      var mappedFutureValue: Future<Int>? = futureValue!
-        .map(executor: .queue(qos)) { (value) -> Int in
-          assert(qos: qos)
-          return value * 3
+        sema.signal()
       }
-      weakFuture = futureValue
-      weakMappedFuture = mappedFutureValue
-      result = mappedFutureValue!.wait().success!
-      futureValue = nil
-      mappedFutureValue = nil
 
-      expectation.fulfill()
+      sema.wait()
+      XCTAssertEqual(result, fixtureResult * 3)
+      XCTAssertNil(weakFuture)
+      XCTAssertNil(weakMappedFuture)
     }
-
-    self.waitForExpectations(timeout: 1.0, handler: nil)
-    XCTAssertEqual(result, fixtureResult * 3)
-    XCTAssertNil(weakFuture)
-    XCTAssertNil(weakMappedFuture)
   }
 
   func testMapLifetime() {
