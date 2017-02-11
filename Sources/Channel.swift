@@ -76,6 +76,39 @@ public class Channel<PeriodicValue, FinalValue>: Finite, Sequence {
   }
 }
 
+// MARK: - Description
+
+extension Channel: CustomStringConvertible, CustomDebugStringConvertible {
+  /// A textual representation of this instance.
+  public var description: String {
+    return description(withBody: "Channel")
+  }
+
+  /// A textual representation of this instance, suitable for debugging.
+  public var debugDescription: String {
+    return description(withBody: "Channel<\(PeriodicValue.self), \(FinalValue.self)>")
+  }
+
+  /// **internal use only**
+  private func description(withBody body: String) -> String {
+    switch finalValue {
+    case .some(.success(let value)):
+      return "Succeded(\(value)) \(body)"
+    case .some(.failure(let error)):
+      return "Failed(\(error)) \(body)"
+    case .none:
+      let currentBufferSize = self.bufferSize
+      let maxBufferSize = self.maxBufferSize
+      let bufferedString = (0 == maxBufferSize)
+        ? ""
+        : " Buffered(\(currentBufferSize)/\(maxBufferSize))"
+      return "Incomplete\(bufferedString) \(body)"
+    }
+  }
+}
+
+// MARK: - Subscriptions
+
 public extension Channel {
   /// Subscribes for buffered and new values (both periodic and final) for the channel
   ///
@@ -163,7 +196,7 @@ public extension Channel {
                   block: @escaping (_ periodicValues: [PeriodicValue], _ finalValue: Fallible<FinalValue>) -> Void) {
     var periodics = [PeriodicValue]()
     let executor_ = executor.makeDerivedSerialExecutor()
-    let handler = self.makeHandler(executor: executor_) { (value) in
+    self.onValue(executor: executor_) { (value) in
       switch value {
       case let .periodic(periodic):
         periodics.append(periodic)
@@ -171,8 +204,6 @@ public extension Channel {
         block(periodics, final)
       }
     }
-
-    self.insertHandlerToReleasePool(handler)
   }
 
   /// Subscribes for all buffered and new values (both periodic and final) for the channel
@@ -191,20 +222,13 @@ public extension Channel {
                   block: @escaping (_ strongContext: C, _ periodicValues: [PeriodicValue], _ finalValue: Fallible<FinalValue>) -> Void) {
     var periodics = [PeriodicValue]()
     let executor_ = (executor ?? context.executor).makeDerivedSerialExecutor()
-    let handler = self.makeHandler(executor: executor_) {
-      [weak context] (value) in
+    self.onValue(context: context, executor: executor_) { (context, value) in
       switch value {
       case let .periodic(periodic):
         periodics.append(periodic)
       case let .final(final):
-        if let context = context {
-          block(context, periodics, final)
-        }
+        block(context, periodics, final)
       }
-    }
-
-    if let handler = handler {
-      context.releaseOnDeinit(handler)
     }
   }
 
@@ -213,6 +237,8 @@ public extension Channel {
     return (self.map { $0 }, self.finalValue!)
   }
 }
+
+// MARK: - Iterators
 
 /// Synchronously iterates over each periodic value of channel
 public struct ChannelIterator<PeriodicValue, FinalValue>: IteratorProtocol  {
@@ -265,6 +291,8 @@ public enum ChannelValue<T, U> {
   /// A kind of value that can be received once and completes the channel
   case final(Fallible<SuccessValue>)
 }
+
+// MARK: - Handlers
 
 /// **internal use only** Wraps each block submitted to the channel
 /// to provide required memory management behavior

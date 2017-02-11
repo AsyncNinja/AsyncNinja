@@ -51,6 +51,32 @@ public class Future<FinalValue>: Finite {
   }
 }
 
+// MARK: - Description
+extension Future: CustomStringConvertible, CustomDebugStringConvertible {
+  /// A textual representation of this instance.
+  public var description: String {
+    return description(withBody: "Future")
+  }
+
+  /// A textual representation of this instance, suitable for debugging.
+  public var debugDescription: String {
+    return description(withBody: "Future<\(FinalValue.self)>")
+  }
+
+  /// **internal use only**
+  private func description(withBody body: String) -> String {
+    switch finalValue {
+    case .some(.success(let value)):
+      return "Succeded(\(value)) \(body)"
+    case .some(.failure(let error)):
+      return "Failed(\(error)) \(body)"
+    case .none:
+      return "Incomplete \(body)"
+    }
+  }
+}
+
+// MARK: - Transformations
 public extension Future {
   /// Applies the transformation to the future
   ///
@@ -145,6 +171,7 @@ public extension Future {
   }
 }
 
+// MARK: - Flattening
 public extension Future where FinalValue: Finite {
   /// Flattens two nested futures
   ///

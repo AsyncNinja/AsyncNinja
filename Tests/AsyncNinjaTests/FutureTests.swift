@@ -57,6 +57,7 @@ class FutureTests: XCTestCase {
     ("testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextAlive", testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextAlive),
     ("testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead", testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead),
     ("testGroupCompletionFuture", testGroupCompletionFuture),
+    ("testDescription", testDescription),
     ]
 
   func testLifetime() {
@@ -623,5 +624,19 @@ class FutureTests: XCTestCase {
     }
 
     self.waitForExpectations(timeout: 0.2)
+  }
+
+  func testDescription() {
+    let futureA = future(success: 1)
+    XCTAssertEqual("Succeded(1) Future", futureA.description)
+    XCTAssertEqual("Succeded(1) Future<Int>", futureA.debugDescription)
+
+    let futureB: Future<Int> = future(failure: TestError.testCode)
+    XCTAssertEqual("Failed(testCode) Future", futureB.description)
+    XCTAssertEqual("Failed(testCode) Future<Int>", futureB.debugDescription)
+
+    let futureC = Promise<Int>()
+    XCTAssertEqual("Incomplete Future", futureC.description)
+    XCTAssertEqual("Incomplete Future<Int>", futureC.debugDescription)
   }
 }

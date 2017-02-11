@@ -47,6 +47,30 @@ public enum Fallible<Success>: _Fallible {
   }
 }
 
+// MARK: - Description
+
+extension Fallible: CustomStringConvertible, CustomDebugStringConvertible {
+  /// A textual representation of this instance.
+  public var description: String {
+    return description(withBody: "")
+  }
+
+  /// A textual representation of this instance, suitable for debugging.
+  public var debugDescription: String {
+    return description(withBody: "<\(Success.self)>")
+  }
+
+  /// **internal use only**
+  private func description(withBody body: String) -> String {
+    switch self {
+    case .success(let value):
+      return "success\(body)(\(value))"
+    case .failure(let value):
+      return "failure\(body)(\(value))"
+    }
+  }
+}
+
 /// MARK: - state managers
 public extension Fallible {
 
@@ -102,6 +126,7 @@ public extension Fallible {
 }
 
 // MARK: - transformers
+
 public extension Fallible {
   /// Applies transformation to Fallible
   ///
@@ -219,7 +244,7 @@ extension Fallible where Success: _Fallible {
 /// The combination of protocol _Fallible and enum Fallible is a dirty hack of type system.
 /// But there are no higher kinded types or generic protocols to implement it properly.
 /// Major propose is an ability to implement flatten() method.
-public protocol _Fallible {
+public protocol _Fallible: CustomStringConvertible {
   associatedtype Success
 
   /// returns success value if _Fallible contains one

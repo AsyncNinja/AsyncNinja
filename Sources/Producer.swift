@@ -50,7 +50,7 @@ final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, F
     return _finalValue
   }
 
-  /// designated initializer of Producer. Initializes Producer with default buffer size
+  /// convenience initializer of Producer. Initializes Producer with default buffer size
   override public convenience init() {
     self.init(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
   }
@@ -58,6 +58,18 @@ final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, F
   /// designated initializer of Producer. Initializes Producer with specified buffer size
   public init(bufferSize: Int) {
     _maxBufferSize = bufferSize
+  }
+
+  /// designated initializer of Producer. Initializes Producer with specified buffer size and values
+  public init<S: Sequence>(bufferSize: Int, bufferedPeriodics: S) where S.Iterator.Element == PeriodicValue {
+    _maxBufferSize = bufferSize
+    bufferedPeriodics.suffix(bufferSize).forEach(_bufferedPeriodics.push)
+  }
+
+  /// designated initializer of Producer. Initializes Producer with specified buffer size and values
+  public init<C: Collection>(bufferedPeriodics: C) where C.Iterator.Element == PeriodicValue, C.IndexDistance: Integer {
+    _maxBufferSize = Int(bufferedPeriodics.count.toIntMax())
+    bufferedPeriodics.forEach(_bufferedPeriodics.push)
   }
 
   /// **internal use only**
@@ -211,7 +223,9 @@ final public class Producer<PeriodicValue, FinalValue>: Channel<PeriodicValue, F
   }
 }
 
-/// Convenience factory of Channel. Encapsulates cancellation and producer creation.
+// MARK: - Constructors
+
+/// Convenience constructor of Channel. Encapsulates cancellation and producer creation.
 public func channel<PeriodicValue, FinalValue>(
   executor: Executor = .primary,
   cancellationToken: CancellationToken? = nil,
@@ -231,7 +245,7 @@ public func channel<PeriodicValue, FinalValue>(
   return producer
 }
 
-/// Convenience contextual factory of Channel. Encapsulates cancellation and producer creation.
+/// Convenience contextual constructor of Channel. Encapsulates cancellation and producer creation.
 public func channel<U: ExecutionContext, PeriodicValue, FinalValue>(
   context: U,
   executor: Executor? = nil,
@@ -256,6 +270,29 @@ public func channel<U: ExecutionContext, PeriodicValue, FinalValue>(
   }
 
   return producer
+}
+
+/// Convenience function constructs completed Channel with specified periodics and final value
+public func channel<C: Collection, FinalValue>(periodics: C, finalValue: Fallible<FinalValue>
+  ) -> Channel<C.Iterator.Element, FinalValue>
+  where C.IndexDistance: Integer {
+    let producer = Producer<C.Iterator.Element, FinalValue>(bufferedPeriodics: periodics)
+    producer.complete(with: finalValue)
+    return producer
+}
+
+/// Convenience function constructs succeded Channel with specified periodics and success value
+public func channel<C: Collection, FinalValue>(periodics: C, success: FinalValue
+  ) -> Channel<C.Iterator.Element, FinalValue>
+  where C.IndexDistance: Integer {
+    return channel(periodics: periodics, finalValue: .success(success))
+}
+
+/// Convenience function constructs failed Channel with specified periodics and failure error
+public func channel<C: Collection, FinalValue>(periodics: C, failure: Swift.Error
+  ) -> Channel<C.Iterator.Element, FinalValue>
+  where C.IndexDistance: Integer {
+    return channel(periodics: periodics, finalValue: .failure(failure))
 }
 
 /// Specifies strategy of selecting buffer size of channel derived
@@ -293,6 +330,7 @@ public enum DerivedChannelBufferSize {
   }
 }
 
+// MARK: - Iterators
 fileprivate class ProducerIteratorImpl<PeriodicValue, FinalValue>: ChannelIteratorImpl<PeriodicValue, FinalValue> {
   let _sema: DispatchSemaphore
   var _locking = makeLocking(isFair: true)

@@ -61,7 +61,8 @@ class ChannelTests: XCTestCase {
     ("testMergeIntsAndStrings", testMergeIntsAndStrings),
     ("testZip", testZip),
     ("testSample", testSample),
-    ("testDebounce", testDebounce)
+    ("testDebounce", testDebounce),
+    ("testDescription", testDescription),
   ]
 
   func testIterators() {
@@ -729,6 +730,16 @@ class ChannelTests: XCTestCase {
       let producerOfOdds = Producer<Int, String>()
       let producerOfEvents = Producer<Int, String>()
       let channelOfNumbers = merge(producerOfOdds, producerOfEvents)
+      let sema = DispatchSemaphore(value: 0)
+
+
+      channelOfNumbers.extractAll { (numbers, stringsOfError) in
+        XCTAssertEqual(numbers, [1, 3, 2, 4, 5, 6, 7, 8])
+        XCTAssertEqual(stringsOfError.success!.0, "Hello")
+        XCTAssertEqual(stringsOfError.success!.1, "World")
+
+        sema.signal()
+      }
 
       DispatchQueue.global().async {
         producerOfOdds.send(1)
@@ -743,11 +754,7 @@ class ChannelTests: XCTestCase {
         producerOfEvents.succeed(with: "World")
       }
 
-      let (numbers, stringsOfError) = channelOfNumbers.waitForAll()
-
-      XCTAssertEqual(numbers, [1, 3, 2, 4, 5, 6, 7, 8])
-      XCTAssertEqual(stringsOfError.success!.0, "Hello")
-      XCTAssertEqual(stringsOfError.success!.1, "World")
+      sema.wait()
     }
   }
 
@@ -760,10 +767,7 @@ class ChannelTests: XCTestCase {
       let channelOfNumbers = merge(producerOfOdds, producerOfEvents, bufferSize: .specific(8))
       let sema = DispatchSemaphore(value: 0)
 
-      DispatchQueue.global().async {
-        let (numbers, stringsOfError) = channelOfNumbers.waitForAll()
-
-        print(numbers)
+      channelOfNumbers.extractAll { (numbers, stringsOfError) in
         XCTAssertEqual(numbers.count, fixtureNumbers.count)
         for (number, fixture) in zip(numbers, fixtureNumbers) {
           XCTAssert(number == fixture)
@@ -901,5 +905,23 @@ class ChannelTests: XCTestCase {
     }
 
     self.waitForExpectations(timeout: 5.0)
+  }
+
+  func testDescription() {
+    let channelA = channel(periodics: [1, 2, 3], success: "Done")
+    XCTAssertEqual("Succeded(Done) Channel", channelA.description)
+    XCTAssertEqual("Succeded(Done) Channel<Int, String>", channelA.debugDescription)
+
+    let channelB: Channel<Int, String> = channel(periodics: [1, 2, 3], failure: TestError.testCode)
+    XCTAssertEqual("Failed(testCode) Channel", channelB.description)
+    XCTAssertEqual("Failed(testCode) Channel<Int, String>", channelB.debugDescription)
+
+    let channelC: Channel<Int, String> = Producer(bufferSize: 5, bufferedPeriodics: [1, 2, 3])
+    XCTAssertEqual("Incomplete Buffered(3/5) Channel", channelC.description)
+    XCTAssertEqual("Incomplete Buffered(3/5) Channel<Int, String>", channelC.debugDescription)
+
+    let channelD: Channel<Int, String> = Producer(bufferSize: 0)
+    XCTAssertEqual("Incomplete Channel", channelD.description)
+    XCTAssertEqual("Incomplete Channel<Int, String>", channelD.debugDescription)
   }
 }

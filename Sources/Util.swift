@@ -42,8 +42,10 @@ func assertAbstract(file: StaticString = #file, line: UInt = #line) -> Never {
   fatalError("This methods is abstract. May not reach here", file: file, line: line)
 }
 
+// MARK: - Either
+
 /// Simple implementation of either monad
-public enum Either<Left, Right>: CustomStringConvertible {
+public enum Either<Left, Right> {
 
   /// left case
   case left(Left)
@@ -62,17 +64,32 @@ public enum Either<Left, Right>: CustomStringConvertible {
     if case let .right(value) = self { return value }
     else { return nil }
   }
+}
 
+// MARK: - Description
+extension Either: CustomStringConvertible, CustomDebugStringConvertible {
+  /// A textual representation of this instance.
   public var description: String {
+    return description(withBody: "")
+  }
+
+  /// A textual representation of this instance, suitable for debugging.
+  public var debugDescription: String {
+    return description(withBody: "<\(Left.self), \(Right.self)>")
+  }
+
+  /// **internal use only**
+  private func description(withBody body: String) -> String {
     switch self {
     case .left(let value):
-      return "left(\(value))"
+      return "left\(body)(\(value))"
     case .right(let value):
-      return "right(\(value))"
+      return "right\(body)(\(value))"
     }
   }
 }
 
+// MARK: - Equatable
 extension Either where Left: Equatable, Right: Equatable {
 
   /// implementation of an "equals" operatior
