@@ -9,4 +9,4 @@ before_install:
 before_script:
   - swift package generate-xcodeproj
 script:
-  - set -o pipefail && xcodebuild build test -project AsyncNinja.xcodeproj -scheme AsyncNinja -sdk macosx10.12 | xcpretty --no-color --no-utf -f `xcpretty-travis-formatter`
+  - set -o pipefail && xcodebuild build test -project AsyncNinja.xcodeproj -scheme AsyncNinja -sdk macosx10.12 -configuration Release | xcpretty --no-color --no-utf -f `xcpretty-travis-formatter`
