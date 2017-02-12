@@ -22,20 +22,27 @@
 
 import Dispatch
 
+/// Flattening Behavior for Channel.flatMapPeriodic methods
+/// that transform periodic value to future. See cases for details.
 public enum ChannelFlatteningBehavior {
   /// perform transformations serially
+  /// ![transformSerially](https://github.com/AsyncNinja/AsyncNinja/raw/master/Documentation/Resources/transformSerially.png "transformSerially")
   case transformSerially
 
   /// send all transformed periodics in the order of initial periodics arrived
+  /// ![orderResults](https://github.com/AsyncNinja/AsyncNinja/raw/master/Documentation/Resources/orderResults.png "orderResults")
   case orderResults
 
   /// keeps signle latest transform
+  /// ![keepLatestTransform](https://github.com/AsyncNinja/AsyncNinja/raw/master/Documentation/Resources/keepLatestTransform.png "keepLatestTransform")
   case keepLatestTransform
 
   /// drop transformed periodics that came out of order
+  /// ![dropResultsOutOfOrder](https://github.com/AsyncNinja/AsyncNinja/raw/master/Documentation/Resources/dropResultsOutOfOrder.png "dropResultsOutOfOrder")
   case dropResultsOutOfOrder
 
   /// send transformed periodics as soon as they are arrive
+  /// ![keepUnordered](https://github.com/AsyncNinja/AsyncNinja/raw/master/Documentation/Resources/keepUnordered.png "keepUnordered")
   case keepUnordered
 
   fileprivate func makeStorage<P, S, T>(executor: Executor,
