@@ -173,9 +173,9 @@ public extension Channel {
             `where` predicate: @escaping(C, PeriodicValue) throws -> Bool
     ) -> Future<PeriodicValue?> {
 
-    // Test: Channel_ToFutureTests.testFirstSuccessIncomplete
-    // Test: Channel_ToFutureTests.testFirstNotFound
-    // Test: Channel_ToFutureTests.testFirstFailure
+    // Test: Channel_ToFutureTests.testLastSuccessIncompleteContextual
+    // Test: Channel_ToFutureTests.testLastNotFoundContextual
+    // Test: Channel_ToFutureTests.testLastFailureContextual
 
     let _executor = executor ?? context.executor
     let promise = self._last(executor: _executor,
@@ -207,6 +207,11 @@ public extension Channel {
             cancellationToken: CancellationToken? = nil,
             `where` predicate: @escaping(PeriodicValue) throws -> Bool
     ) -> Future<PeriodicValue?> {
+
+    // Test: Channel_ToFutureTests.testLastSuccessIncomplete
+    // Test: Channel_ToFutureTests.testLastNotFound
+    // Test: Channel_ToFutureTests.testLastFailure
+
     return _last(executor: executor,
                  cancellationToken: cancellationToken,
                  where: predicate)
