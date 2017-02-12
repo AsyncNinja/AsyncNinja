@@ -29,13 +29,13 @@
 		OBJ_70 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* Cache.swift */; };
 		OBJ_71 /* CancellationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_12 /* CancellationToken.swift */; };
 		OBJ_72 /* Channel+Combine.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* Channel+Combine.swift */; };
-		OBJ_73 /* Channel+Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* Channel+Map.swift */; };
-		OBJ_74 /* Channel+Merge2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* Channel+Merge2.swift */; };
-		OBJ_75 /* Channel+ToFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_16 /* Channel+ToFuture.swift */; };
-		OBJ_76 /* Channel+Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_17 /* Channel+Transform.swift */; };
-		OBJ_77 /* Channel+Zip2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_18 /* Channel+Zip2.swift */; };
-		OBJ_78 /* Channel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_19 /* Channel.swift */; };
-		OBJ_79 /* Channle+FlatMapFutures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_20 /* Channle+FlatMapFutures.swift */; };
+		OBJ_73 /* Channel+FlatMapFutures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* Channel+FlatMapFutures.swift */; };
+		OBJ_74 /* Channel+Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* Channel+Map.swift */; };
+		OBJ_75 /* Channel+Merge2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_16 /* Channel+Merge2.swift */; };
+		OBJ_76 /* Channel+ToFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_17 /* Channel+ToFuture.swift */; };
+		OBJ_77 /* Channel+Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_18 /* Channel+Transform.swift */; };
+		OBJ_78 /* Channel+Zip2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_19 /* Channel+Zip2.swift */; };
+		OBJ_79 /* Channel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_20 /* Channel.swift */; };
 		OBJ_80 /* Collection+Futures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_21 /* Collection+Futures.swift */; };
 		OBJ_81 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_22 /* Common.swift */; };
 		OBJ_82 /* ConstantFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_23 /* ConstantFuture.swift */; };
@@ -59,7 +59,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		F855FC431E509BE0003804DF /* PBXContainerItemProxy */ = {
+		F8D8B5821E50A75200AF9148 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = OBJ_1 /* Project object */;
 			proxyType = 1;
@@ -73,13 +73,13 @@
 		OBJ_11 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
 		OBJ_12 /* CancellationToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CancellationToken.swift; sourceTree = "<group>"; };
 		OBJ_13 /* Channel+Combine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Combine.swift"; sourceTree = "<group>"; };
-		OBJ_14 /* Channel+Map.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Map.swift"; sourceTree = "<group>"; };
-		OBJ_15 /* Channel+Merge2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Merge2.swift"; sourceTree = "<group>"; };
-		OBJ_16 /* Channel+ToFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+ToFuture.swift"; sourceTree = "<group>"; };
-		OBJ_17 /* Channel+Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Transform.swift"; sourceTree = "<group>"; };
-		OBJ_18 /* Channel+Zip2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Zip2.swift"; sourceTree = "<group>"; };
-		OBJ_19 /* Channel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Channel.swift; sourceTree = "<group>"; };
-		OBJ_20 /* Channle+FlatMapFutures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channle+FlatMapFutures.swift"; sourceTree = "<group>"; };
+		OBJ_14 /* Channel+FlatMapFutures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+FlatMapFutures.swift"; sourceTree = "<group>"; };
+		OBJ_15 /* Channel+Map.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Map.swift"; sourceTree = "<group>"; };
+		OBJ_16 /* Channel+Merge2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Merge2.swift"; sourceTree = "<group>"; };
+		OBJ_17 /* Channel+ToFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+ToFuture.swift"; sourceTree = "<group>"; };
+		OBJ_18 /* Channel+Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Transform.swift"; sourceTree = "<group>"; };
+		OBJ_19 /* Channel+Zip2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Channel+Zip2.swift"; sourceTree = "<group>"; };
+		OBJ_20 /* Channel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Channel.swift; sourceTree = "<group>"; };
 		OBJ_21 /* Collection+Futures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+Futures.swift"; sourceTree = "<group>"; };
 		OBJ_22 /* Common.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Common.swift; sourceTree = "<group>"; };
 		OBJ_23 /* ConstantFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstantFuture.swift; sourceTree = "<group>"; };
@@ -201,13 +201,13 @@
 				OBJ_11 /* Cache.swift */,
 				OBJ_12 /* CancellationToken.swift */,
 				OBJ_13 /* Channel+Combine.swift */,
-				OBJ_14 /* Channel+Map.swift */,
-				OBJ_15 /* Channel+Merge2.swift */,
-				OBJ_16 /* Channel+ToFuture.swift */,
-				OBJ_17 /* Channel+Transform.swift */,
-				OBJ_18 /* Channel+Zip2.swift */,
-				OBJ_19 /* Channel.swift */,
-				OBJ_20 /* Channle+FlatMapFutures.swift */,
+				OBJ_14 /* Channel+FlatMapFutures.swift */,
+				OBJ_15 /* Channel+Map.swift */,
+				OBJ_16 /* Channel+Merge2.swift */,
+				OBJ_17 /* Channel+ToFuture.swift */,
+				OBJ_18 /* Channel+Transform.swift */,
+				OBJ_19 /* Channel+Zip2.swift */,
+				OBJ_20 /* Channel.swift */,
 				OBJ_21 /* Collection+Futures.swift */,
 				OBJ_22 /* Common.swift */,
 				OBJ_23 /* ConstantFuture.swift */,
@@ -327,13 +327,13 @@
 				OBJ_70 /* Cache.swift in Sources */,
 				OBJ_71 /* CancellationToken.swift in Sources */,
 				OBJ_72 /* Channel+Combine.swift in Sources */,
-				OBJ_73 /* Channel+Map.swift in Sources */,
-				OBJ_74 /* Channel+Merge2.swift in Sources */,
-				OBJ_75 /* Channel+ToFuture.swift in Sources */,
-				OBJ_76 /* Channel+Transform.swift in Sources */,
-				OBJ_77 /* Channel+Zip2.swift in Sources */,
-				OBJ_78 /* Channel.swift in Sources */,
-				OBJ_79 /* Channle+FlatMapFutures.swift in Sources */,
+				OBJ_73 /* Channel+FlatMapFutures.swift in Sources */,
+				OBJ_74 /* Channel+Map.swift in Sources */,
+				OBJ_75 /* Channel+Merge2.swift in Sources */,
+				OBJ_76 /* Channel+ToFuture.swift in Sources */,
+				OBJ_77 /* Channel+Transform.swift in Sources */,
+				OBJ_78 /* Channel+Zip2.swift in Sources */,
+				OBJ_79 /* Channel.swift in Sources */,
 				OBJ_80 /* Collection+Futures.swift in Sources */,
 				OBJ_81 /* Common.swift in Sources */,
 				OBJ_82 /* ConstantFuture.swift in Sources */,
@@ -365,7 +365,7 @@
 		OBJ_123 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = OBJ_62 /* AsyncNinja */;
-			targetProxy = F855FC431E509BE0003804DF /* PBXContainerItemProxy */;
+			targetProxy = F8D8B5821E50A75200AF9148 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

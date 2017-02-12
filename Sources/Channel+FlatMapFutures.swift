@@ -280,17 +280,29 @@ private class DropResultsOutOfOrderChannelFlatteningBehaviorStorage<P, S, T>: Ba
 
 private class OrderResultsChannelFlatteningBehaviorStorage<P, S, T>: BaseChannelFlatteningBehaviorStorage<P, S, T> {
   var locking = makeLocking(isFair: true)
-  let futuresQueue = Queue<Future<T>>()
+  let futuresQueue = Queue<Future<T?>>()
   var isWaiting = false
 
   override func onValue(value: ChannelValue<P, S>, producer: Producer<Fallible<T>, S>) {
     switch value {
     case .periodic(let periodic):
-      guard let future = makeFutureOrWrapError({ try self.transform(periodic) })
-        else { return }
+      let promise = Promise<T?>()
       locking.lock()
-      futuresQueue.push(future)
+      futuresQueue.push(promise)
       locking.unlock()
+
+      executor.execute {
+        do {
+          if let future = try self.transform(periodic) {
+            promise.complete(with: future.map(executor: .immediate) { $0 } )
+          } else {
+            promise.succeed(with: nil)
+          }
+        } catch {
+          promise.fail(with: error)
+        }
+      }
+
       self.waitForTheNextFutureIfNeeded(producer: producer)
     case .final(let final):
       producer.complete(with: final)
@@ -313,7 +325,16 @@ private class OrderResultsChannelFlatteningBehaviorStorage<P, S, T>: BaseChannel
     let handler = future
       .makeFinalHandler(executor: .immediate) { [weak producer, weak weakSelf = self] (periodic) -> Void in
         guard let producer = producer else { return }
-        producer.send(periodic)
+
+        switch periodic {
+        case .success(.some(let value)):
+          producer.send(.success(value))
+        case .failure(let value):
+          producer.send(.failure(value))
+        default:
+          nop()
+        }
+
         guard let self_ = weakSelf else { return }
         self_.locking.lock()
         self_.isWaiting = false
@@ -344,16 +365,35 @@ private class TransformSeriallyChannelFlatteningBehaviorStorage<P, S, T>: BaseCh
   private func launchNextTransformIfNeeded(producer: Producer<Fallible<T>, S>) {
     guard
       !isRunning,
-      let periodic = periodicsQueue.pop(),
-      let future = makeFutureOrWrapError({ try self.transform(periodic) })
+      let periodic = periodicsQueue.pop()
       else { return }
 
     isRunning = true
+    let promise = Promise<T?>()
+    executor.execute {
+      do {
+        if let future = try self.transform(periodic) {
+          promise.complete(with: future.map(executor: .immediate) { $0 } )
+        } else {
+          promise.succeed(with: nil)
+        }
+      } catch {
+        promise.fail(with: error)
+      }
+    }
 
-    let handler = future
+    let handler = promise
       .makeFinalHandler(executor: .immediate) { [weak producer, weak weakSelf = self] (periodic) -> Void in
         guard let producer = producer else { return }
-        producer.send(periodic)
+        switch periodic {
+        case .success(.some(let value)):
+          producer.send(.success(value))
+        case .failure(let value):
+          producer.send(.failure(value))
+        default:
+          nop()
+        }
+
         guard let self_ = weakSelf else { return }
         self_.locking.lock()
         defer { self_.locking.unlock() }

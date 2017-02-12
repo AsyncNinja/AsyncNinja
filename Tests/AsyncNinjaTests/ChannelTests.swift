@@ -934,9 +934,9 @@ class ChannelTests: XCTestCase {
                           file: StaticString = #file, line: UInt = #line) {
     let producerA = Producer<(duration: Double, name: String), String>()
     let qos = pickQoS()
-    let channelB = producerA.flatMapPeriodic(behavior: behavior) { (duration, name) -> Future<String> in
-      return future(executor: .queue(qos),after: duration) {
-        assert(qos: qos)
+    let channelB = producerA.flatMapPeriodic(executor: .queue(qos), behavior: behavior) { (duration, name) -> Future<String> in
+      assert(qos: qos)
+      return future(after: duration) {
         return "t(\(name))"
       }
     }
