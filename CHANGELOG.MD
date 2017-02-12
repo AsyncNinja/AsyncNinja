@@ -1,5 +1,12 @@
+# 0.4.5
+* adding 5 various behaviors to flatMap that transforms periodic to future
+* adding descriptions (`CustomStringConvertible`, `CustomDebugStringConvertible`) for `Channel`, `Future`, `Fallible`, `Either`
+* introducing multirun tests in order to fix flaky tests
+* `Channel` is now `Sequence`
+* fixes of `Channel`
+
 # 0.4.4
-* fixing issues in ReleasePool and Channel
+* fixing issues in `ReleasePool` and `Channel`
 * improving performace
 
 # 0.4.3
