@@ -74,3 +74,15 @@ public func future<T>(failure: Swift.Error) -> Future<T> {
 public func cancelledFuture<T>() -> Future<T> {
     return future(failure: AsyncNinjaError.cancelled)
 }
+
+// **internal use only**
+func makeFutureOrWrapError<T>(_ block: () throws -> Future<T>) -> Future<T> {
+  do { return try block() }
+  catch { return future(failure: error) }
+}
+
+// **internal use only**
+func makeFutureOrWrapError<T>(_ block: () throws -> Future<T>?) -> Future<T>? {
+  do { return try block() }
+  catch { return future(failure: error) }
+}

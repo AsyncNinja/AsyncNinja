@@ -63,6 +63,11 @@ class ChannelTests: XCTestCase {
     ("testSample", testSample),
     ("testDebounce", testDebounce),
     ("testDescription", testDescription),
+    ("testFlatMapFutures_KeepUnordered", testFlatMapFutures_KeepUnordered),
+    ("testFlatMapFutures_KeepLatestTransform", testFlatMapFutures_KeepLatestTransform),
+    ("testFlatMapFutures_DropResultsOutOfOrder", testFlatMapFutures_DropResultsOutOfOrder),
+    ("testFlatMapFutures_OrderResults", testFlatMapFutures_OrderResults),
+    ("testFlatMapFutures_TransformSerially", testFlatMapFutures_TransformSerially),
   ]
 
   func testIterators() {
@@ -923,5 +928,75 @@ class ChannelTests: XCTestCase {
     let channelD: Channel<Int, String> = Producer(bufferSize: 0)
     XCTAssertEqual("Incomplete Channel", channelD.description)
     XCTAssertEqual("Incomplete Channel<Int, String>", channelD.debugDescription)
+  }
+
+  func _testFlatMapFutures(behavior: ChannelFlatteningBehavior, expectedResults: [String],
+                          file: StaticString = #file, line: UInt = #line) {
+    let producerA = Producer<(duration: Double, name: String), String>()
+    let qos = pickQoS()
+    let channelB = producerA.flatMapPeriodic(behavior: behavior) { (duration, name) -> Future<String> in
+      return future(executor: .queue(qos),after: duration) {
+        assert(qos: qos)
+        return "t(\(name))"
+      }
+    }
+
+    let zipped = zip(expectedResults, channelB)
+    DispatchQueue.global().async {
+      let sema = DispatchSemaphore(value: 0)
+      producerA.send((duration: 0.1, name: "x"))
+      let _ = sema.wait(timeout: DispatchTime.now() + .milliseconds(10))
+      sema.signal()
+
+      producerA.send((duration: 0.3, name: "y"))
+      let _ = sema.wait(timeout: DispatchTime.now() + .milliseconds(10))
+      sema.signal()
+
+      producerA.send((duration: 0.2, name: "z"))
+      let _ = sema.wait(timeout: DispatchTime.now() + .milliseconds(10))
+      sema.signal()
+
+      producerA.send((duration: 0.5, name: "done"))
+      let _ = sema.wait(timeout: DispatchTime.now() + .milliseconds(10))
+      sema.signal()
+    }
+
+    var count = 0
+    for (expectedResult, periodic) in zipped {
+      XCTAssertEqual(periodic.success, expectedResult, file: file, line: line)
+      count += 1
+    }
+
+    XCTAssertEqual(count, expectedResults.count, file: file, line: line)
+  }
+
+  func testFlatMapFutures_KeepUnordered() {
+    multiTest {
+      self._testFlatMapFutures(behavior: .keepUnordered, expectedResults: ["t(x)", "t(z)", "t(y)", "t(done)"])
+    }
+  }
+
+  func testFlatMapFutures_KeepLatestTransform() {
+    multiTest {
+      self._testFlatMapFutures(behavior: .keepLatestTransform, expectedResults: ["t(done)"])
+    }
+  }
+
+  func testFlatMapFutures_DropResultsOutOfOrder() {
+    multiTest {
+      self._testFlatMapFutures(behavior: .dropResultsOutOfOrder, expectedResults: ["t(x)", "t(z)", "t(done)"])
+    }
+  }
+
+  func testFlatMapFutures_OrderResults() {
+    multiTest {
+      self._testFlatMapFutures(behavior: .orderResults, expectedResults: ["t(x)", "t(y)", "t(z)", "t(done)"])
+    }
+  }
+
+  func testFlatMapFutures_TransformSerially() {
+    multiTest {
+      self._testFlatMapFutures(behavior: .transformSerially, expectedResults: ["t(x)", "t(y)", "t(z)", "t(done)"])
+    }
   }
 }

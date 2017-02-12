@@ -33,6 +33,16 @@ extension Channel {
     ) -> Producer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<P, S>(bufferSize: bufferSize)
+    self.attach(producer: producer, executor: executor, cancellationToken: cancellationToken, onValue: onValue)
+    return producer
+  }
+
+  /// **internal use only**
+  func attach<P, S>(producer: Producer<P, S>,
+              executor: Executor,
+              cancellationToken: CancellationToken?,
+              onValue: @escaping (Value, Producer<P, S>) throws -> Void)
+  {
     let handler = self.makeHandler(executor: executor) {
       [weak producer] (value) in
       guard let producer = producer else { return }
@@ -42,8 +52,6 @@ extension Channel {
 
     producer.insertHandlerToReleasePool(handler)
     cancellationToken?.add(cancellable: producer)
-
-    return producer
   }
 
   /// **internal use only**
@@ -53,10 +61,21 @@ extension Channel {
                     bufferSize: DerivedChannelBufferSize,
                     onValue: @escaping (C, Value, Producer<P, S>) throws -> Void
     ) -> Producer<P, S> {
+    let bufferSize = bufferSize.bufferSize(self)
+    let producer = Producer<P, S>(bufferSize: bufferSize)
+    self.attach(producer: producer, context: context, executor: executor, cancellationToken: cancellationToken, onValue: onValue)
+    return producer
+  }
+
+  /// **internal use only**
+  func attach<P, S, C: ExecutionContext>(producer: Producer<P, S>,
+              context: C,
+              executor: Executor?,
+              cancellationToken: CancellationToken?,
+              onValue: @escaping (C, Value, Producer<P, S>) throws -> Void)
+  {
     let executor_ = executor ?? context.executor
-    let producer: Producer<P, S> = self.makeProducer(executor: executor_,
-                                                     cancellationToken: cancellationToken,
-                                                     bufferSize: bufferSize)
+    self.attach(producer: producer, executor: executor_, cancellationToken: cancellationToken)
     {
       [weak context] (value, producer) in
       guard let context = context else { return }
@@ -64,8 +83,6 @@ extension Channel {
     }
 
     context.addDependent(finite: producer)
-
-    return producer
   }
 }
 
@@ -362,94 +379,6 @@ public extension Channel {
       switch value {
       case .periodic(let periodic):
         try transform(periodic).forEach(producer.send)
-      case .final(let final):
-        producer.complete(with: final)
-      }
-    }
-  }
-
-  /// Applies transformation to periodic values of the channel.
-  ///
-  /// - Parameters:
-  ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor.
-  ///     Keep default value of the argument unless you need to override
-  ///     an executor provided by the context
-  ///   - cancellationToken: `CancellationToken` to use.
-  ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
-  ///     Keep default value of the argument unless you need
-  ///     an extended buffering options of returned channel
-  ///   - transform: to apply. Completion of a future will be used
-  ///     as periodic value of transformed channel
-  ///   - strongContext: context restored from weak reference to specified context
-  ///   - periodicValue: `PeriodicValue` to transform
-  /// - Returns: transformed channel
-  func flatMapPeriodic<P, C: ExecutionContext>(context: C,
-                       executor: Executor? = nil,
-                       cancellationToken: CancellationToken? = nil,
-                       bufferSize: DerivedChannelBufferSize = .default,
-                       transform: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) throws -> Future<P>
-    ) -> Channel<P, FinalValue> {
-    return self.makeProducer(context: context,
-                             executor: executor,
-                             cancellationToken: cancellationToken,
-                             bufferSize: bufferSize)
-    {
-      (context, value, producer) in
-      switch value {
-      case .periodic(let periodic):
-        let future = try transform(context, periodic)
-        let handler = future
-          .makeFinalHandler(executor: .immediate) {
-            [weak producer] (periodicOrError) -> Void in
-            switch periodicOrError {
-            case let .success(periodic):
-              producer?.send(periodic)
-            case let .failure(error):
-              producer?.fail(with: error)
-            }
-        }
-        producer.insertHandlerToReleasePool(handler)
-      case .final(let final):
-        producer.complete(with: final)
-      }
-    }
-  }
-
-  /// Applies transformation to periodic values of the channel.
-  ///
-  /// - Parameters:
-  ///   - executor: to execute transform on
-  ///   - cancellationToken: `CancellationToken` to use.
-  ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
-  ///     Keep default value of the argument unless you need
-  ///     an extended buffering options of returned channel
-  ///   - transform: to apply. Completion of a future will be used
-  ///     as periodic value of transformed channel
-  ///   - periodicValue: `PeriodicValue` to transform
-  /// - Returns: transformed channel
-  func flatMapPeriodic<T>(executor: Executor = .primary,
-                       cancellationToken: CancellationToken? = nil,
-                       bufferSize: DerivedChannelBufferSize = .default,
-                       transform: @escaping (_ periodicValue: PeriodicValue) throws -> Future<T>
-    ) -> Channel<Fallible<T>, FinalValue> {
-    return self.makeProducer(executor: executor,
-                             cancellationToken: cancellationToken,
-                             bufferSize: bufferSize)
-    {
-      (value, producer) in
-      switch value {
-      case .periodic(let periodic):
-        let handler = (try transform(periodic))
-          .makeFinalHandler(executor: .immediate) { [weak producer] (periodic) -> Void in
-            producer?.send(periodic)
-
-        }
-        producer.insertHandlerToReleasePool(handler)
       case .final(let final):
         producer.complete(with: final)
       }
