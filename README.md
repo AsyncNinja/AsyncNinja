@@ -20,6 +20,7 @@ Contents
 * [Using Channels](#using-channels)
 * [Documentation](#documentation)
 * [Related Articles](#related-articles)
+* [Comparison with RxSwift](#comparison-with-rxswift)
 
 ![Ninja Cat](https://github.com/AsyncNinja/AsyncNinja/raw/master/NinjaCat.png)
 
@@ -303,3 +304,40 @@ func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> {
 * Moving to nice asynchronous Swift code
 	* [GitHub](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md)
 	* [Medium](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
+
+## Comparison with [RxSwift](https://github.com/ReactiveX/RxSwift)
+
+#### RxSwift
+```swift
+let searchResults = searchBar.rx.text.orEmpty
+  .throttle(0.3, scheduler: MainScheduler.instance)
+  .distinctUntilChanged()
+  .flatMapLatest { query -> Observable<[Repository]> in
+    if query.isEmpty {
+      return .just([])
+    }
+
+    return searchGitHub(query)
+        .catchErrorJustReturn([])
+  }
+  .observeOn(MainScheduler.instance)
+```
+
+#### AsyncNinja
+```swift
+let searchResults = searchBar.changes(of: "text").mapPeriodic { $0 ?? "" }
+  .debounce(interval: 0.3)
+  .distinct()
+  .flatMapPeriodic(behavior: .keepLatestTransform) { (query) -> Future<[SearchResult]> in
+	if query.isEmpty {
+	  return future(success: [])
+	}
+
+	return searchGitHub(query: query)
+	  .recover { _ in [] }
+  }
+```
+
+#### Differences beyond naming:
+- AsyncNinja lacks explicit lifetime and threading shenanigans such as `.observeOn(MainScheduler.instance)` and `.disposed(by: disposeBag)`
+- AsyncNinja has ability to dispatch to correct queue almost automatically (no additional code for UI-related classes and +3 lines for any other class)
