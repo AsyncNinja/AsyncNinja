@@ -27,8 +27,13 @@ import XCTest
   public func allTests() -> [XCTestCaseEntry] {
     return [
       testCase(BatchFutureTests.allTests),
-      testCase(ChannelTests.allTests),
       testCase(CachableValueTests.allTests),
+      testCase(Channel_CombineTests.allTests),
+      testCase(Channel_FlatMapFuturesTests.allTests),
+      testCase(Channel_Merge2Tests.allTests),
+      testCase(Channel_TransformTests.allTests),
+      testCase(Channel_Zip2.allTests),
+      testCase(ChannelTests.allTests),
       testCase(ExecutionContextTests.allTests),
       testCase(ExecutorTests.allTests),
       testCase(FallibleTests.allTests),

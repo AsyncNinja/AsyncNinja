@@ -202,6 +202,7 @@ public extension Channel {
                 bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<PeriodicValue, FinalValue> {
 
+    // Test: Channel_TransformTests.testDebounce
     let bufferSize_ = bufferSize.bufferSize(self)
     let producer = Producer<PeriodicValue, FinalValue>(bufferSize: bufferSize_)
     var locking = makeLocking()
@@ -276,6 +277,9 @@ extension Channel where PeriodicValue: Equatable {
   public func distinct(cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<PeriodicValue, FinalValue> {
+
+    // Test: Channel_TransformTests.testDistinctInts
+    
     var locking = makeLocking()
     var previousPeriodic: PeriodicValue? = nil
 

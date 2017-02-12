@@ -28,6 +28,9 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
                   cancellationToken: CancellationToken? = nil,
                   bufferSize: DerivedChannelBufferSize = .default
   ) -> Channel<Either<PA, PB>, (SA, SB)> {
+
+  // Tests: Channel_Merge2Tests.testMergeIntsAndStrings
+
   let bufferSize_ = bufferSize.bufferSize(channelA, channelB)
   let producer = Producer<Either<PA, PB>, (SA, SB)>(bufferSize: bufferSize_)
 
@@ -84,6 +87,9 @@ public func merge<P, SA, SB>(_ channelA: Channel<P, SA>,
                   cancellationToken: CancellationToken? = nil,
                   bufferSize: DerivedChannelBufferSize = .default
   ) -> Channel<P, (SA, SB)> {
+
+  // Tests: Channel_Merge2Tests.testMergeInts
+
   let bufferSize_ = bufferSize.bufferSize(channelA, channelB)
   let producer = Producer<P, (SA, SB)>(bufferSize: bufferSize_)
 

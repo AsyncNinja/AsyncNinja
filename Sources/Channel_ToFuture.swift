@@ -76,6 +76,11 @@ public extension Channel {
              cancellationToken: CancellationToken? = nil,
              `where` predicate: @escaping(C, PeriodicValue) throws -> Bool
     ) -> Future<PeriodicValue?> {
+
+    // Test: Channel_ToFutureTests.testFirstSuccessIncompleteContextual
+    // Test: Channel_ToFutureTests.testFirstNotFoundContextual
+    // Test: Channel_ToFutureTests.testFirstFailureContextual
+
     let executor_ = executor ?? context.executor
     let promise = self._first(executor: executor_, cancellationToken: cancellationToken) {
       [weak context] (periodicValue) -> Bool in
@@ -102,6 +107,11 @@ public extension Channel {
              cancellationToken: CancellationToken? = nil,
              `where` predicate: @escaping(PeriodicValue) throws -> Bool
     ) -> Future<PeriodicValue?> {
+
+    // Test: Channel_ToFutureTests.testFirstSuccessIncomplete
+    // Test: Channel_ToFutureTests.testFirstNotFound
+    // Test: Channel_ToFutureTests.testFirstFailure
+
     return _first(executor: executor,
                   cancellationToken: cancellationToken,
                   where: predicate)
@@ -162,6 +172,11 @@ public extension Channel {
             cancellationToken: CancellationToken? = nil,
             `where` predicate: @escaping(C, PeriodicValue) throws -> Bool
     ) -> Future<PeriodicValue?> {
+
+    // Test: Channel_ToFutureTests.testFirstSuccessIncomplete
+    // Test: Channel_ToFutureTests.testFirstNotFound
+    // Test: Channel_ToFutureTests.testFirstFailure
+
     let _executor = executor ?? context.executor
     let promise = self._last(executor: _executor,
                              cancellationToken: cancellationToken)
@@ -255,6 +270,9 @@ public extension Channel {
               cancellationToken: CancellationToken? = nil,
               _ nextPartialResult: @escaping (C, Result, PeriodicValue) throws -> Result
     ) -> Future<(Result, FinalValue)> {
+
+    // Test: Channel_ToFutureTests.testReduceContextual
+
     let _executor = executor ?? context.executor
     let promise = _reduce(initialResult, executor: _executor, cancellationToken: cancellationToken) {
       [weak context] (accumulator, value) -> Result in
@@ -286,6 +304,9 @@ public extension Channel {
               cancellationToken: CancellationToken? = nil,
               _ nextPartialResult: @escaping (Result, PeriodicValue) throws -> Result
     ) -> Future<(Result, FinalValue)> {
+
+    // Test: Channel_ToFutureTests.testReduce
+
     return _reduce(initialResult, executor: executor, cancellationToken: cancellationToken, nextPartialResult)
   }
 }

@@ -39,6 +39,7 @@ public extension Channel {
               bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<(PeriodicValue, P), (FinalValue, S)> {
 
+    // Test: Channel_CombineTests.testSample
     var locking = makeLocking()
     var latestLeftPeriodicValue: PeriodicValue? = nil
     var leftSuccessValue: FinalValue? = nil

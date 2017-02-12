@@ -219,6 +219,9 @@ public extension Channel {
                    bufferSize: DerivedChannelBufferSize = .default,
                    transform: @escaping (_ periodicValue: PeriodicValue) throws -> P
     ) -> Channel<P, FinalValue> {
+
+    // Test: Channel_MapTests.testMapPeriodic
+
     return self.makeProducer(executor: executor,
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
@@ -443,6 +446,9 @@ public extension Channel {
     bufferSize: DerivedChannelBufferSize = .default,
     predicate: @escaping (_ periodicValue: PeriodicValue) throws -> Bool
     ) -> Channel<PeriodicValue, FinalValue> {
+
+    // Test: Channel_MapTests.testFilterPeriodic
+
     return self.makeProducer(executor: executor,
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
