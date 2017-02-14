@@ -22,33 +22,33 @@
 
 import Dispatch
 
-/// A protocol for objects that can be manually finish with value
-public protocol MutableFinite: Finite, Cancellable {
-  associatedtype ImmutableFinite: Finite
+/// A protocol for objects that can be manually completed
+public protocol MutableCompletable: Completable, Cancellable {
+  associatedtype ImmutableCompletable: Completable
 
   /// Required initializer
   init()
 
-  /// Completes `MutableFinite` with value and returns true.
+  /// Completes `MutableCompletable` with value and returns true.
   /// Returns false if promise was completed before.
   ///
-  /// - Parameter final: value to compete `MutableFinite` with
+  /// - Parameter completion: value to compete `MutableCompletable` with
   /// - Returns: true if this call completed future
   @discardableResult
-  func tryComplete(with final: Fallible<SuccessValue>) -> Bool
+  func tryComplete(with completion: Fallible<Success>) -> Bool
 
   /// Shorthand to tryComplete that does not return value
-  func complete(with finite: ImmutableFinite)
+  func complete(with completion: ImmutableCompletable)
 
   /// **internal use only**
   func insertToReleasePool(_ releasable: Releasable)
 }
 
-public extension MutableFinite {
+public extension MutableCompletable {
   /// Completes promise when specified future completes.
   /// `self` will retain specified future until it`s completion
-  func complete(with future: Future<SuccessValue>) {
-    let handler = future.makeFinalHandler(executor: .immediate) { [weak self] in
+  func complete(with future: Future<Success>) {
+    let handler = future.makeCompletionHandler(executor: .immediate) { [weak self] in
       self?.complete(with: $0)
     }
     if let handler = handler {
@@ -57,18 +57,18 @@ public extension MutableFinite {
   }
 
   /// Shorthand to tryComplete(with:) that does not return value
-  func complete(with final: Fallible<SuccessValue>) {
-    self.tryComplete(with: final)
+  func complete(with completion: Fallible<Success>) {
+    self.tryComplete(with: completion)
   }
 
   /// Tries to complete self with success vlue
   @discardableResult
-  func trySucceed(with success: SuccessValue) -> Bool {
+  func trySucceed(with success: Success) -> Bool {
     return self.tryComplete(with: Fallible(success: success))
   }
 
   /// Shorthand to trySucceed(with:) that does not return value
-  func succeed(with success: SuccessValue) {
+  func succeed(with success: Success) {
     self.complete(with: Fallible(success: success))
   }
 
@@ -94,7 +94,7 @@ public extension MutableFinite {
   }
 }
 
-extension MutableFinite where SuccessValue == Void {
+extension MutableCompletable where Success == Void {
 
   /// Convenience method succeeds mutable with void value
   public func succeed() {

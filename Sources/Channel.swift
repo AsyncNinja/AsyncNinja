@@ -22,14 +22,14 @@
 
 import Dispatch
 
-/// represents values that periodically arrive followed by failure of final value that completes Channel. Channel oftenly represents result of long running task that is not yet arrived and flow of some intermediate results.
-public class Channel<PeriodicValue, SuccessValue>: Finite, Sequence {
-  public typealias Value = ChannelValue<PeriodicValue, SuccessValue>
-  public typealias Handler = ChannelHandler<PeriodicValue, SuccessValue>
-  public typealias Iterator = ChannelIterator<PeriodicValue, SuccessValue>
+/// represents values that periodically arrive followed by failure of completion that completes Channel. Channel oftenly represents result of long running task that is not yet arrived and flow of some intermediate results.
+public class Channel<Periodic, Success>: Completable, Sequence {
+  public typealias Value = ChannelValue<Periodic, Success>
+  public typealias Handler = ChannelHandler<Periodic, Success>
+  public typealias Iterator = ChannelIterator<Periodic, Success>
 
-  /// final falue of channel. Returns nil if channel is not complete yet
-  public var finalValue: Fallible<SuccessValue>? { assertAbstract() }
+  /// completion of channel. Returns nil if channel is not complete yet
+  public var completion: Fallible<Success>? { assertAbstract() }
 
   /// amount of currently stored periodics
   public var bufferSize: Int { assertAbstract() }
@@ -40,17 +40,17 @@ public class Channel<PeriodicValue, SuccessValue>: Finite, Sequence {
   init() { }
 
   /// **internal use only**
-  final public func makeFinalHandler(executor: Executor,
-                                     block: @escaping (Fallible<SuccessValue>) -> Void
+  final public func makeCompletionHandler(executor: Executor,
+                                          block: @escaping (Fallible<Success>) -> Void
     ) -> Handler? {
     return self.makeHandler(executor: executor) {
-      if case .final(let value) = $0 { block(value) }
+      if case .completion(let value) = $0 { block(value) }
     }
   }
 
   /// **internal use only**
   final public func makePeriodicHandler(executor: Executor,
-                                        block: @escaping (PeriodicValue) -> Void
+                                        block: @escaping (Periodic) -> Void
     ) -> Handler? {
     return self.makeHandler(executor: executor) {
       if case .periodic(let value) = $0 { block(value) }
@@ -84,12 +84,12 @@ extension Channel: CustomStringConvertible, CustomDebugStringConvertible {
 
   /// A textual representation of this instance, suitable for debugging.
   public var debugDescription: String {
-    return description(withBody: "Channel<\(PeriodicValue.self), \(SuccessValue.self)>")
+    return description(withBody: "Channel<\(Periodic.self), \(Success.self)>")
   }
 
   /// **internal use only**
   private func description(withBody body: String) -> String {
-    switch finalValue {
+    switch completion {
     case .some(.success(let value)):
       return "Succeded(\(value)) \(body)"
     case .some(.failure(let error)):
@@ -108,7 +108,7 @@ extension Channel: CustomStringConvertible, CustomDebugStringConvertible {
 // MARK: - Subscriptions
 
 public extension Channel {
-  /// Subscribes for buffered and new values (both periodic and final) for the channel
+  /// Subscribes for buffered and new values (both periodic and completion) for the channel
   ///
   /// - Parameters:
   ///   - executor: to execute block on
@@ -119,7 +119,7 @@ public extension Channel {
     self.insertHandlerToReleasePool(handler)
   }
 
-  /// Subscribes for buffered and new values (both periodic and final) for the channel
+  /// Subscribes for buffered and new values (both periodic and completion) for the channel
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
@@ -149,14 +149,14 @@ public extension Channel {
   /// - Parameters:
   ///   - executor: to execute block on
   ///   - block: to execute. Will be called multiple times
-  ///   - periodicValue: received by the channel
+  ///   - periodic: received by the channel
   func onPeriodic(executor: Executor = .primary,
-                  block: @escaping (_ periodicValue: PeriodicValue) -> Void) {
+                  block: @escaping (_ periodic: Periodic) -> Void) {
     self.onValue(executor: executor) { (value) in
       switch value {
       case let .periodic(periodic):
         block(periodic)
-      case .final: nop()
+      case .completion: nop()
       }
     }
   }
@@ -170,41 +170,41 @@ public extension Channel {
   ///     to override an executor provided by the context
   ///   - block: to execute. Will be called multiple times
   ///   - strongContext: context restored from weak reference to specified context
-  ///   - periodicValue: received by the channel
+  ///   - periodic: received by the channel
   func onPeriodic<C: ExecutionContext>(context: C,
                   executor: Executor? = nil,
-                  block: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) -> Void) {
+                  block: @escaping (_ strongContext: C, _ periodic: Periodic) -> Void) {
     self.onValue(context: context, executor: executor) { (context, value) in
       switch value {
       case let .periodic(periodic):
         block(context, periodic)
-      case .final: nop()
+      case .completion: nop()
       }
     }
   }
 
-  /// Subscribes for all buffered and new values (both periodic and final) for the channel
+  /// Subscribes for all buffered and new values (both periodic and completion) for the channel
   ///
   /// - Parameters:
   ///   - executor: to execute block on
   ///   - block: to execute. Will be called once with all values
-  ///   - periodicValues: all received by the channel
-  ///   - finalValue: received by the channel
+  ///   - periodics: all received by the channel
+  ///   - completion: received by the channel
   func extractAll(executor: Executor = .primary,
-                  block: @escaping (_ periodicValues: [PeriodicValue], _ finalValue: Fallible<SuccessValue>) -> Void) {
-    var periodics = [PeriodicValue]()
+                  block: @escaping (_ periodics: [Periodic], _ completion: Fallible<Success>) -> Void) {
+    var periodics = [Periodic]()
     let executor_ = executor.makeDerivedSerialExecutor()
     self.onValue(executor: executor_) { (value) in
       switch value {
       case let .periodic(periodic):
         periodics.append(periodic)
-      case let .final(final):
-        block(periodics, final)
+      case let .completion(completion):
+        block(periodics, completion)
       }
     }
   }
 
-  /// Subscribes for all buffered and new values (both periodic and final) for the channel
+  /// Subscribes for all buffered and new values (both periodic and completion) for the channel
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
@@ -213,48 +213,58 @@ public extension Channel {
   ///     to override an executor provided by the context
   ///   - block: to execute. Will be called once with all values
   ///   - strongContext: context restored from weak reference to specified context
-  ///   - periodicValues: all received by the channel
-  ///   - finalValue: received by the channel
+  ///   - periodics: all received by the channel
+  ///   - completion: received by the channel
   func extractAll<C: ExecutionContext>(context: C,
                   executor: Executor? = nil,
-                  block: @escaping (_ strongContext: C, _ periodicValues: [PeriodicValue], _ finalValue: Fallible<SuccessValue>) -> Void) {
-    var periodics = [PeriodicValue]()
+                  block: @escaping (_ strongContext: C, _ periodics: [Periodic], _ completion: Fallible<Success>) -> Void) {
+    var periodics = [Periodic]()
     let executor_ = (executor ?? context.executor).makeDerivedSerialExecutor()
     self.onValue(context: context, executor: executor_) { (context, value) in
       switch value {
       case let .periodic(periodic):
         periodics.append(periodic)
-      case let .final(final):
-        block(context, periodics, final)
+      case let .completion(completion):
+        block(context, periodics, completion)
       }
     }
   }
 
-  /// Synchronously waits for channel to complete. Returns all periodic and final values
-  func waitForAll() -> (periodics: [PeriodicValue], final: Fallible<SuccessValue>) {
-    return (self.map { $0 }, self.finalValue!)
+  /// Synchronously waits for channel to complete. Returns all periodics and completion
+  func waitForAll() -> (periodics: [Periodic], completion: Fallible<Success>) {
+    return (self.map { $0 }, self.completion!)
   }
 }
 
 // MARK: - Iterators
 
 /// Synchronously iterates over each periodic value of channel
-public struct ChannelIterator<PeriodicValue, SuccessValue>: IteratorProtocol  {
-  public typealias Element = PeriodicValue
-  private var _implBox: Box<ChannelIteratorImpl<PeriodicValue, SuccessValue>> // want to have reference to reference, because impl may actually be retained by some handler
+public struct ChannelIterator<Periodic, Success>: IteratorProtocol  {
+  public typealias Element = Periodic
+  private var _implBox: Box<ChannelIteratorImpl<Periodic, Success>> // want to have reference to reference, because impl may actually be retained by some handler
 
-  /// final value of the channel. Will be available as soon as the channel completes.
-  public var finalValue: Fallible<SuccessValue>? { return _implBox.value.finalValue }
+  /// completion of the channel. Will be available as soon as the channel completes.
+  public var completion: Fallible<Success>? { return _implBox.value.completion }
+
+  /// success of the channel. Will be available as soon as the channel completes with success.
+  public var success: Success? { return _implBox.value.completion?.success }
+  
+  /// failuew of the channel. Will be available as soon as the channel completes with failure.
+  public var filure: Swift.Error? { return _implBox.value.completion?.failure }
+
+  /// completion of the channel. Will be available as soon as the channel completes.
+  @available(*, deprecated, message: "use completion instead")
+  public var finalValue: Fallible<Success>? { return completion }
 
   /// **internal use only** Designated initializer
-  init(impl: ChannelIteratorImpl<PeriodicValue, SuccessValue>) {
+  init(impl: ChannelIteratorImpl<Periodic, Success>) {
     _implBox = Box(impl)
   }
 
   /// fetches next value from the channel.
   /// Waits for the next value to appear.
   /// Returns nil when then channel completes
-  public mutating func next() -> PeriodicValue? {
+  public mutating func next() -> Periodic? {
     if !isKnownUniquelyReferenced(&_implBox) {
       _implBox = Box(_implBox.value.clone())
     }
@@ -263,46 +273,43 @@ public struct ChannelIterator<PeriodicValue, SuccessValue>: IteratorProtocol  {
 }
 
 /// **Internal use only**
-class ChannelIteratorImpl<PeriodicValue, SuccessValue>  {
-  public typealias Element = PeriodicValue
-  var finalValue: Fallible<SuccessValue>? { assertAbstract() }
+class ChannelIteratorImpl<Periodic, Success>  {
+  public typealias Element = Periodic
+  var completion: Fallible<Success>? { assertAbstract() }
 
   init() { }
 
-  public func next() -> PeriodicValue? {
+  public func next() -> Periodic? {
     assertAbstract()
   }
 
-  func clone() -> ChannelIteratorImpl<PeriodicValue, SuccessValue> {
+  func clone() -> ChannelIteratorImpl<Periodic, Success> {
     assertAbstract()
   }
 }
 
 /// Value reveived by channel
-public enum ChannelValue<T, U> {
-  public typealias PeriodicValue = T
-  public typealias SuccessValue = U
-
-  /// A kind of value that can be received multiple times be for the final one
-  case periodic(PeriodicValue)
+public enum ChannelValue<Periodic, Success> {
+  /// A kind of value that can be received multiple times be for the completion one
+  case periodic(Periodic)
 
   /// A kind of value that can be received once and completes the channel
-  case final(Fallible<SuccessValue>)
+  case completion(Fallible<Success>)
 }
 
 // MARK: - Handlers
 
 /// **internal use only** Wraps each block submitted to the channel
 /// to provide required memory management behavior
-final public class ChannelHandler<PeriodicValue, SuccessValue> {
-  public typealias Value = ChannelValue<PeriodicValue, SuccessValue>
+final public class ChannelHandler<Periodic, Success> {
+  public typealias Value = ChannelValue<Periodic, Success>
 
   let executor: Executor
   let block: (Value) -> Void
-  var owner: Channel<PeriodicValue, SuccessValue>?
+  var owner: Channel<Periodic, Success>?
 
   /// Designated initializer of ChannelHandler
-  public init(executor: Executor, block: @escaping (Value) -> Void, owner: Channel<PeriodicValue, SuccessValue>) {
+  public init(executor: Executor, block: @escaping (Value) -> Void, owner: Channel<Periodic, Success>) {
     self.executor = executor
     self.block = block
     self.owner = owner

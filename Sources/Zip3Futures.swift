@@ -43,7 +43,7 @@ public func zip<A, B, C>(_ futureA: Future<A>,
   var subvalueB: B? = nil
   var subvalueC: C? = nil
   
-  let handlerA = futureA.makeFinalHandler(executor: .immediate) {
+  let handlerA = futureA.makeCompletionHandler(executor: .immediate) {
     [weak promise] (localSubvalueA) in
     guard let promise = promise else { return }
     locking.lock()
@@ -60,7 +60,7 @@ public func zip<A, B, C>(_ futureA: Future<A>,
 
   promise.insertHandlerToReleasePool(handlerA)
 
-  let handlerB = futureB.makeFinalHandler(executor: .immediate) {
+  let handlerB = futureB.makeCompletionHandler(executor: .immediate) {
     [weak promise] (localSubvalueB) in
     guard let promise = promise else { return }
     locking.lock()
@@ -77,7 +77,7 @@ public func zip<A, B, C>(_ futureA: Future<A>,
 
   promise.insertHandlerToReleasePool(handlerB)
 
-  let handlerC = futureC.makeFinalHandler(executor: .immediate) {
+  let handlerC = futureC.makeCompletionHandler(executor: .immediate) {
     [weak promise] (localSubvalueC) in
     guard let promise = promise else { return }
     locking.lock()

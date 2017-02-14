@@ -23,15 +23,15 @@
 import Dispatch
 
 /// Future is a proxy of value that will be available at some point in the future.
-public class Future<SuccessValue>: Finite {
-  public typealias Handler = FutureHandler<SuccessValue>
-  public typealias FinalHandler = Handler
+public class Future<Success>: Completable {
+  public typealias Handler = FutureHandler<Success>
+  public typealias CompletionHandler = Handler
 
-  /// Returns either final value for complete `Future` or nil otherwise
-  public var finalValue: Fallible<SuccessValue>? { assertAbstract() }
+  /// Returns either completion for complete `Future` or nil otherwise
+  public var completion: Fallible<Success>? { assertAbstract() }
 
-  /// Returns either final value if future is complete or nil
-  public var value: Fallible<SuccessValue>? { return self.finalValue }
+  /// Returns either completion for complete `Future` or nil otherwise
+  public var value: Fallible<Success>? { return self.completion }
 
   /// Base future is **abstract**.
   ///
@@ -39,8 +39,8 @@ public class Future<SuccessValue>: Finite {
   init() { }
 
   /// **Internal use only**.
-  public func makeFinalHandler(executor: Executor,
-                               block: @escaping (Fallible<SuccessValue>) -> Void) -> FinalHandler? {
+  public func makeCompletionHandler(executor: Executor,
+                                    block: @escaping (Fallible<Success>) -> Void) -> CompletionHandler? {
     assertAbstract()
   }
 
@@ -59,12 +59,12 @@ extension Future: CustomStringConvertible, CustomDebugStringConvertible {
 
   /// A textual representation of this instance, suitable for debugging.
   public var debugDescription: String {
-    return description(withBody: "Future<\(SuccessValue.self)>")
+    return description(withBody: "Future<\(Success.self)>")
   }
 
   /// **internal use only**
   private func description(withBody body: String) -> String {
-    switch finalValue {
+    switch completion {
     case .some(.success(let value)):
       return "Succeded(\(value)) \(body)"
     case .some(.failure(let error)):
@@ -84,11 +84,11 @@ public extension Future {
   ///   - transform: is block to execute on successful completion of original future.
   ///     Return from transformation block will cause returned future to complete successfuly.
   ///     Throw from transformation block will returned future to complete with failure
-  ///   - successValue: is a success value of original future
+  ///   - Success: is a success value of original future
   ///
   /// - Returns: transformed future
   func map<T>(executor: Executor = .primary,
-           transform: @escaping (_ successValue: SuccessValue) throws -> T
+           transform: @escaping (_ Success: Success) throws -> T
     ) -> Future<T> {
     // Test: FutureTests.testMap_Success
     // Test: FutureTests.testMap_Failure
@@ -102,11 +102,11 @@ public extension Future {
   ///   - transform: is block to execute on successful completion of original future.
   ///     Return from transformation block will cause returned future to complete with future.
   ///     Throw from transformation block will returned future to complete with failure
-  ///   - successValue: is a success value of original future
+  ///   - Success: is a success value of original future
   ///
   /// - Returns: transformed future
   func flatMap<T>(executor: Executor = .primary,
-               transform: @escaping (_ successValue: SuccessValue) throws -> Future<T>
+               transform: @escaping (_ Success: Success) throws -> Future<T>
     ) -> Future<T> {
     return self.flatMapSuccess(executor: executor, transform: transform)
   }
@@ -123,11 +123,11 @@ public extension Future {
   ///     Return from transformation block will cause returned future to complete successfuly.
   ///     Throw from transformation block will returned future to complete with failure
   ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
-  ///   - successValue: is a success value of original future
+  ///   - Success: is a success value of original future
   /// - Returns: transformed future
   func map<T, C: ExecutionContext>(context: C,
            executor: Executor? = nil,
-           transform: @escaping (_ strongContext: C, _ successValue: SuccessValue) throws -> T
+           transform: @escaping (_ strongContext: C, _ Success: Success) throws -> T
     ) -> Future<T> {
     // Test: FutureTests.testMapContextual_Success_ContextAlive
     // Test: FutureTests.testMapContextual_Success_ContextDead
@@ -150,11 +150,11 @@ public extension Future {
   ///     Return from transformation block will cause returned future to complete with future.
   ///     Throw from transformation block will returned future to complete with failure
   ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
-  ///   - successValue: is a success value of original future
+  ///   - Success: is a success value of original future
   /// - Returns: transformed future
   func flatMap<T, C: ExecutionContext>(context: C,
                executor: Executor? = nil,
-               transform: @escaping (_ strongContext: C, _ successValue: SuccessValue) throws -> Future<T>
+               transform: @escaping (_ strongContext: C, _ Success: Success) throws -> Future<T>
     ) -> Future<T> {
     return self.flatMapSuccess(context: context,
                                executor: executor,
@@ -165,29 +165,29 @@ public extension Future {
   ///
   /// - Parameter timeout: is `Double` (seconds) to delay competion of original future with.
   /// - Returns: delayed future
-  func delayed(timeout: Double) -> Future<SuccessValue> {
-    return self.delayedFinal(timeout: timeout)
+  func delayed(timeout: Double) -> Future<Success> {
+    return self.delayedCompletion(timeout: timeout)
   }
 }
 
 // MARK: - Flattening
-public extension Future where SuccessValue: Finite {
+public extension Future where Success: Completable {
   /// Flattens two nested futures
   ///
   /// - Returns: flattened future
-  func flatten() -> Future<SuccessValue.SuccessValue> {
+  func flatten() -> Future<Success.Success> {
     // Test: FutureTests.testFlatten
     // Test: FutureTests.testFlatten_OuterFailure
     // Test: FutureTests.testFlatten_InnerFailure
-    let promise = Promise<SuccessValue.SuccessValue>()
-    let handler = self.makeFinalHandler(executor: .immediate) {
+    let promise = Promise<Success.Success>()
+    let handler = self.makeCompletionHandler(executor: .immediate) {
       [weak promise] (failure) in
       guard let promise = promise else { return }
       switch failure {
       case .success(let future):
-        let handler = future.makeFinalHandler(executor: .immediate) {
-          [weak promise] (final) -> Void in
-          promise?.complete(with: final)
+        let handler = future.makeCompletionHandler(executor: .immediate) {
+          [weak promise] (completion) -> Void in
+          promise?.complete(with: completion)
         }
         if let handler = handler {
           promise.insertToReleasePool(handler)
@@ -218,8 +218,8 @@ public extension DispatchGroup {
   }
   
   /// Convenience method that leaves group on completion of provided Future or Channel
-  func leaveOnComplete<T: Finite>(of finite: T) {
-    finite.onComplete(executor: .immediate) { _ in self.leave() }
+  func leaveOnComplete<T: Completable>(of completable: T) {
+    completable.onComplete(executor: .immediate) { _ in self.leave() }
   }
 }
 
@@ -227,21 +227,21 @@ public extension DispatchGroup {
 ///
 /// Each subscription to a future value will be expressed in such handler.
 /// Future will accumulate handlers until completion or deallocacion.
-public class FutureHandler<SuccessValue> {
+public class FutureHandler<Success> {
   let executor: Executor
-  let block: (Fallible<SuccessValue>) -> Void
-  var owner: Future<SuccessValue>?
+  let block: (Fallible<Success>) -> Void
+  var owner: Future<Success>?
 
   init(executor: Executor,
-       block: @escaping (Fallible<SuccessValue>) -> Void,
-       owner: Future<SuccessValue>)
+       block: @escaping (Fallible<Success>) -> Void,
+       owner: Future<Success>)
   {
     self.executor = executor
     self.block = block
     self.owner = owner
   }
 
-  func handle(_ value: Fallible<SuccessValue>) {
+  func handle(_ value: Fallible<Success>) {
     self.executor.execute { self.block(value) }
   }
 

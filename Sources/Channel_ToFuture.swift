@@ -29,26 +29,26 @@ public extension Channel {
   /// **internal use only**
   private func _first(executor: Executor,
                       cancellationToken: CancellationToken?,
-                      `where` predicate: @escaping(PeriodicValue) throws -> Bool
-    ) -> Promise<PeriodicValue?> {
+                      `where` predicate: @escaping(Periodic) throws -> Bool
+    ) -> Promise<Periodic?> {
 
-    let promise = Promise<PeriodicValue?>()
+    let promise = Promise<Periodic?>()
     let executor_ = executor.makeDerivedSerialExecutor()
     let handler = self.makeHandler(executor: executor_) {
       [weak promise] in
       switch $0 {
-      case let .periodic(periodicValue):
+      case let .periodic(periodic):
         do {
-          if try predicate(periodicValue) {
-            promise?.succeed(with: periodicValue)
+          if try predicate(periodic) {
+            promise?.succeed(with: periodic)
           }
         } catch {
           promise?.fail(with: error)
         }
-      case .final(.success):
+      case .completion(.success):
         promise?.succeed(with: nil)
-      case let .final(.failure(failureValue)):
-        promise?.fail(with: failureValue)
+      case let .completion(.failure(failure)):
+        promise?.fail(with: failure)
       }
     }
 
@@ -74,8 +74,8 @@ public extension Channel {
   func first<C: ExecutionContext>(context: C,
              executor: Executor? = nil,
              cancellationToken: CancellationToken? = nil,
-             `where` predicate: @escaping(C, PeriodicValue) throws -> Bool
-    ) -> Future<PeriodicValue?> {
+             `where` predicate: @escaping(C, Periodic) throws -> Bool
+    ) -> Future<Periodic?> {
 
     // Test: Channel_ToFutureTests.testFirstSuccessIncompleteContextual
     // Test: Channel_ToFutureTests.testFirstNotFoundContextual
@@ -83,12 +83,12 @@ public extension Channel {
 
     let executor_ = executor ?? context.executor
     let promise = self._first(executor: executor_, cancellationToken: cancellationToken) {
-      [weak context] (periodicValue) -> Bool in
+      [weak context] (periodic) -> Bool in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
-      return try predicate(context, periodicValue)
+      return try predicate(context, periodic)
     }
 
-    context.addDependent(finite: promise)
+    context.addDependent(completable: promise)
 
     return promise
   }
@@ -105,8 +105,8 @@ public extension Channel {
   /// - Returns: future
   func first(executor: Executor = .immediate,
              cancellationToken: CancellationToken? = nil,
-             `where` predicate: @escaping(PeriodicValue) throws -> Bool
-    ) -> Future<PeriodicValue?> {
+             `where` predicate: @escaping(Periodic) throws -> Bool
+    ) -> Future<Periodic?> {
 
     // Test: Channel_ToFutureTests.testFirstSuccessIncomplete
     // Test: Channel_ToFutureTests.testFirstNotFound
@@ -125,30 +125,30 @@ public extension Channel {
   /// **internal use only**
   private func _last(executor: Executor,
                      cancellationToken: CancellationToken?,
-                     `where` predicate: @escaping(PeriodicValue) throws -> Bool
-    ) -> Promise<PeriodicValue?> {
+                     `where` predicate: @escaping(Periodic) throws -> Bool
+    ) -> Promise<Periodic?> {
 
-    var latestMatchingPeriodic: PeriodicValue?
+    var latestMatchingPeriodic: Periodic?
 
-    let promise = Promise<PeriodicValue?>()
+    let promise = Promise<Periodic?>()
     let executor_ = executor.makeDerivedSerialExecutor()
     let handler = self.makeHandler(executor: executor_) { [weak promise] in
       switch $0 {
-      case let .periodic(periodicValue):
+      case let .periodic(periodic):
         do {
-          if try predicate(periodicValue) {
-            latestMatchingPeriodic = periodicValue
+          if try predicate(periodic) {
+            latestMatchingPeriodic = periodic
           }
         } catch {
           promise?.fail(with: error)
         }
-      case .final(.success):
+      case .completion(.success):
         promise?.succeed(with: latestMatchingPeriodic)
-      case let .final(.failure(failureValue)):
+      case let .completion(.failure(failure)):
         if let latestMatchingPeriodic = latestMatchingPeriodic {
           promise?.succeed(with: latestMatchingPeriodic)
         } else {
-          promise?.fail(with: failureValue)
+          promise?.fail(with: failure)
         }
       }
     }
@@ -170,8 +170,8 @@ public extension Channel {
   func last<C: ExecutionContext>(context: C,
             executor: Executor? = nil,
             cancellationToken: CancellationToken? = nil,
-            `where` predicate: @escaping(C, PeriodicValue) throws -> Bool
-    ) -> Future<PeriodicValue?> {
+            `where` predicate: @escaping(C, Periodic) throws -> Bool
+    ) -> Future<Periodic?> {
 
     // Test: Channel_ToFutureTests.testLastSuccessIncompleteContextual
     // Test: Channel_ToFutureTests.testLastNotFoundContextual
@@ -181,14 +181,14 @@ public extension Channel {
     let promise = self._last(executor: _executor,
                              cancellationToken: cancellationToken)
     {
-      [weak context] (periodicValue) -> Bool in
+      [weak context] (periodic) -> Bool in
       guard let context = context else {
         throw AsyncNinjaError.contextDeallocated
       }
-      return try predicate(context, periodicValue)
+      return try predicate(context, periodic)
     }
 
-    context.addDependent(finite: promise)
+    context.addDependent(completable: promise)
 
     return promise
   }
@@ -205,8 +205,8 @@ public extension Channel {
   /// - Returns: future
   func last(executor: Executor = .immediate,
             cancellationToken: CancellationToken? = nil,
-            `where` predicate: @escaping(PeriodicValue) throws -> Bool
-    ) -> Future<PeriodicValue?> {
+            `where` predicate: @escaping(Periodic) throws -> Bool
+    ) -> Future<Periodic?> {
 
     // Test: Channel_ToFutureTests.testLastSuccessIncomplete
     // Test: Channel_ToFutureTests.testLastNotFound
@@ -226,23 +226,23 @@ public extension Channel {
   private func _reduce<Result>(_ initialResult: Result,
               executor: Executor = .immediate,
               cancellationToken: CancellationToken? = nil,
-              _ nextPartialResult: @escaping (Result, PeriodicValue) throws -> Result
-    ) -> Promise<(Result, SuccessValue)> {
+              _ nextPartialResult: @escaping (Result, Periodic) throws -> Result
+    ) -> Promise<(Result, Success)> {
     var result = initialResult
     let _executor = executor.makeDerivedSerialExecutor()
-    let promise = Promise<(Result, SuccessValue)>()
+    let promise = Promise<(Result, Success)>()
     let handler = self.makeHandler(executor: _executor) { [weak promise] in
       switch $0 {
-      case let .periodic(periodicValue):
+      case let .periodic(periodic):
         do {
-          result = try nextPartialResult(result, periodicValue)
+          result = try nextPartialResult(result, periodic)
         } catch {
           promise?.fail(with: error)
         }
-      case .final(.success(let successValue)):
+      case .completion(.success(let successValue)):
         promise?.succeed(with: (result, successValue))
-      case let .final(.failure(failureValue)):
-        promise?.fail(with: failureValue)
+      case let .completion(.failure(failure)):
+        promise?.fail(with: failure)
       }
     }
 
@@ -269,12 +269,12 @@ public extension Channel {
   ///     value and a periodic value of the channel into a new accumulating
   ///     value, to be used in the next call of the `nextPartialResult`
   ///     closure or returned to the caller.
-  /// - Returns: The future tuple of final accumulated value and success value of channel.
+  /// - Returns: The future tuple of accumulated completion and success of channel.
   func reduce<Result, C: ExecutionContext>(_ initialResult: Result, context: C,
               executor: Executor? = nil,
               cancellationToken: CancellationToken? = nil,
-              _ nextPartialResult: @escaping (C, Result, PeriodicValue) throws -> Result
-    ) -> Future<(Result, SuccessValue)> {
+              _ nextPartialResult: @escaping (C, Result, Periodic) throws -> Result
+    ) -> Future<(Result, Success)> {
 
     // Test: Channel_ToFutureTests.testReduceContextual
 
@@ -288,7 +288,7 @@ public extension Channel {
       return try nextPartialResult(context, accumulator, value)
     }
 
-    context.addDependent(finite: promise)
+    context.addDependent(completable: promise)
 
     return promise
   }
@@ -303,12 +303,12 @@ public extension Channel {
   ///   - nextPartialResult: A closure that combines an accumulating
   ///     value and a periodic value of the channel into a new accumulating
   ///     value, to be used in the next call of the `nextPartialResult` closure or returned to the caller.
-  /// - Returns: The future tuple of final accumulated value and success value of channel.
+  /// - Returns: The future tuple of accumulated completion and success of channel.
   func reduce<Result>(_ initialResult: Result,
               executor: Executor = .immediate,
               cancellationToken: CancellationToken? = nil,
-              _ nextPartialResult: @escaping (Result, PeriodicValue) throws -> Result
-    ) -> Future<(Result, SuccessValue)> {
+              _ nextPartialResult: @escaping (Result, Periodic) throws -> Result
+    ) -> Future<(Result, Success)> {
 
     // Test: Channel_ToFutureTests.testReduce
 

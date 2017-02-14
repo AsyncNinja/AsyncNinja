@@ -105,7 +105,7 @@ public func future<T, U: ExecutionContext>(context: U, executor: Executor? = nil
       }
   }
 
-  context.addDependent(finite: promise)
+  context.addDependent(completable: promise)
 
   return promise
 }
@@ -143,7 +143,7 @@ public func flatFuture<T, C: ExecutionContext>(context: C,
       }
   }
 
-  context.addDependent(finite: promise)
+  context.addDependent(completable: promise)
 
   return promise
 }
@@ -235,7 +235,7 @@ public func future<T, C: ExecutionContext>(context: C,
     return try block(context)
   }
 
-  context.addDependent(finite: promiseValue)
+  context.addDependent(completable: promiseValue)
 
   return promiseValue
 }
@@ -274,7 +274,7 @@ public func flatFuture<T, C: ExecutionContext>(context: C,
     return try block(context)
   }
 
-  context.addDependent(finite: promiseValue)
+  context.addDependent(completable: promiseValue)
 
   return promiseValue
 }

@@ -23,14 +23,14 @@
 import Dispatch
 
 /// Promise is a future that may be manually completed by owner
-final public class Promise<SuccessValue>: Future<SuccessValue>, MutableFinite {
-  public typealias ImmutableFinite = Future<SuccessValue>
+final public class Promise<Success>: Future<Success>, MutableCompletable {
+  public typealias ImmutableCompletable = Future<Success>
 
   private var _container = makeThreadSafeContainer()
   private let _releasePool = ReleasePool()
 
-  /// Returns either final value for complete `Future` or nil otherwise
-  override public var finalValue: Fallible<SuccessValue>? {
+  /// Returns either completion for complete `Promise` or nil otherwise
+  override public var completion: Fallible<Success>? {
     return (_container.head as? CompletedPromiseState)?.value
   }
 
@@ -38,17 +38,17 @@ final public class Promise<SuccessValue>: Future<SuccessValue>, MutableFinite {
   override public init() { }
 
   /// **internal use only**
-  override public func makeFinalHandler(executor: Executor,
-                                        block: @escaping (Fallible<SuccessValue>) -> Void
-    ) -> FinalHandler? {
+  override public func makeCompletionHandler(executor: Executor,
+                                        block: @escaping (Fallible<Success>) -> Void
+    ) -> CompletionHandler? {
     let handler = Handler(executor: executor, block: block, owner: self)
 
     _container.updateHead {
       switch $0 {
-      case let completedState as CompletedPromiseState<SuccessValue>:
+      case let completedState as CompletedPromiseState<Success>:
         handler.handle(completedState.value)
         return $0
-      case let incompleteState as SubscribedPromiseState<SuccessValue>:
+      case let incompleteState as SubscribedPromiseState<Success>:
         return SubscribedPromiseState(handler: handler, next: incompleteState)
       case .none:
         return SubscribedPromiseState(handler: handler, next: nil)
@@ -63,15 +63,15 @@ final public class Promise<SuccessValue>: Future<SuccessValue>, MutableFinite {
   /// Completes promise with value and returns true.
   /// Returns false if promise was completed before.
   ///
-  /// - Parameter final: value to complete future with
+  /// - Parameter completion: value to complete future with
   /// - Returns: true if `Promise` was completed with specified value
-  final public func tryComplete(with final: Fallible<SuccessValue>) -> Bool {
-    let completedItem = CompletedPromiseState(value: final)
+  public func tryComplete(with completion: Fallible<Success>) -> Bool {
+    let completedItem = CompletedPromiseState(value: completion)
     let (oldHead, newHead) = _container.updateHead {
       switch $0 {
-      case is SubscribedPromiseState<SuccessValue>:
+      case is SubscribedPromiseState<Success>:
         return completedItem
-      case let oldCompletedItem as CompletedPromiseState<SuccessValue>:
+      case let oldCompletedItem as CompletedPromiseState<Success>:
         return oldCompletedItem
       case .none:
         return completedItem
@@ -83,8 +83,8 @@ final public class Promise<SuccessValue>: Future<SuccessValue>, MutableFinite {
     guard didComplete else { return false }
     
     var nextItem = oldHead
-    while let currentItem = nextItem as? SubscribedPromiseState<SuccessValue> {
-      currentItem.handler?.handle(final)
+    while let currentItem = nextItem as? SubscribedPromiseState<Success> {
+      currentItem.handler?.handle(completion)
       currentItem.releaseOwner()
       nextItem = currentItem.next
     }
@@ -113,18 +113,18 @@ final public class Promise<SuccessValue>: Future<SuccessValue>, MutableFinite {
 }
 
 /// **internal use only**
-fileprivate class AbstractPromiseState<SuccessValue> {
+fileprivate class AbstractPromiseState<Success> {
 }
 
 /// **internal use only**
-fileprivate  class SubscribedPromiseState<SuccessValue>: AbstractPromiseState<SuccessValue> {
-  typealias Value = Fallible<SuccessValue>
-  typealias Handler = FutureHandler<SuccessValue>
+fileprivate  class SubscribedPromiseState<Success>: AbstractPromiseState<Success> {
+  typealias Value = Fallible<Success>
+  typealias Handler = FutureHandler<Success>
   
   weak private(set) var handler: Handler?
-  let next: SubscribedPromiseState<SuccessValue>?
+  let next: SubscribedPromiseState<Success>?
 
-  init(handler: Handler, next: SubscribedPromiseState<SuccessValue>?) {
+  init(handler: Handler, next: SubscribedPromiseState<Success>?) {
     self.handler = handler
     self.next = next
   }
@@ -135,10 +135,10 @@ fileprivate  class SubscribedPromiseState<SuccessValue>: AbstractPromiseState<Su
 }
 
 /// **internal use only**
-fileprivate  class CompletedPromiseState<SuccessValue>: AbstractPromiseState<SuccessValue> {
-  let value: Fallible<SuccessValue>
+fileprivate  class CompletedPromiseState<Success>: AbstractPromiseState<Success> {
+  let value: Fallible<Success>
   
-  init(value: Fallible<SuccessValue>) {
+  init(value: Fallible<Success>) {
     self.value = value
   }
 }

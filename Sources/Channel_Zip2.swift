@@ -36,10 +36,10 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   var successA: SA?
   var successB: SB?
 
-  func makeHandlerBlock<PeriodicValue, SuccessValue>(
-    periodicHandler: @escaping (PeriodicValue) -> (PA, PB)?,
-    successHandler: @escaping (SuccessValue) -> (SA, SB)?
-    ) -> (ChannelValue<PeriodicValue, SuccessValue>) -> Void {
+  func makeHandlerBlock<Periodic, Success>(
+    periodicHandler: @escaping (Periodic) -> (PA, PB)?,
+    successHandler: @escaping (Success) -> (SA, SB)?
+    ) -> (ChannelValue<Periodic, Success>) -> Void {
     return {
       [weak producer] (value) in
       switch value {
@@ -49,9 +49,9 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
         if let periodicAB = periodicHandler(periodic) {
           producer?.send(periodicAB)
         }
-      case let .final(.failure(error)):
+      case let .completion(.failure(error)):
         producer?.fail(with: error)
-      case let .final(.success(localSuccess)):
+      case let .completion(.success(localSuccess)):
         locking.lock()
         defer { locking.unlock() }
         if let success = successHandler(localSuccess) {

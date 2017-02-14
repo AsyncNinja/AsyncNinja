@@ -23,19 +23,19 @@
 import Dispatch
 
 /// A future that has been initialized as completed
-final class ConstantFuture<SuccessValue>: Future<SuccessValue> {
-  private var _finalValue: Fallible<SuccessValue>
-  override public var finalValue: Fallible<SuccessValue>? { return _finalValue }
+final class ConstantFuture<Success>: Future<Success> {
+  private var _completion: Fallible<Success>
+  override public var completion: Fallible<Success>? { return _completion }
   let releasePool = ReleasePool()
 
-  init(finalValue: Fallible<SuccessValue>) {
-    _finalValue = finalValue
+  init(completion: Fallible<Success>) {
+    _completion = completion
   }
 
-  override public func makeFinalHandler(executor: Executor,
-                                        block: @escaping (Fallible<SuccessValue>) -> Void
-    ) -> FinalHandler? {
-    executor.execute { block(self._finalValue) }
+  override public func makeCompletionHandler(executor: Executor,
+                                             block: @escaping (Fallible<Success>) -> Void
+    ) -> CompletionHandler? {
+    executor.execute { block(self._completion) }
     return nil
   }
   
@@ -48,45 +48,58 @@ final class ConstantFuture<SuccessValue>: Future<SuccessValue> {
 ///
 /// - Parameter value: value to complete future with
 /// - Returns: completed future
-public func future<SuccessValue>(value: Fallible<SuccessValue>) -> Future<SuccessValue> {
-  return ConstantFuture(finalValue: value)
+public func future<Success>(value: Fallible<Success>) -> Future<Success> {
+  return ConstantFuture(completion: value)
 }
 
-public func future<SuccessValue>(finalValue: Fallible<SuccessValue>) -> Future<SuccessValue> {
-  return ConstantFuture(finalValue: finalValue)
+/// Makes completed future
+///
+/// - Parameter finalValue: value to complete future with
+/// - Returns: completed future
+@available(*, deprecated, message: "use future(completion:) instead")
+public func future<Success>(finalValue: Fallible<Success>) -> Future<Success> {
+  return ConstantFuture(completion: finalValue)
+}
+
+/// Makes completed future
+///
+/// - Parameter completion: value to complete future with
+/// - Returns: completed future
+public func future<Success>(completion: Fallible<Success>) -> Future<Success> {
+  return ConstantFuture(completion: completion)
 }
 
 /// Makes succeeded future
 ///
 /// - Parameter success: success value to complete future with
 /// - Returns: succeeded future
-public func future<SuccessValue>(success: SuccessValue) -> Future<SuccessValue> {
-  return ConstantFuture(finalValue: Fallible(success: success))
+public func future<Success>(success: Success) -> Future<Success> {
+  return ConstantFuture(completion: Fallible(success: success))
 }
 
 /// Makes failed future
 ///
 /// - Parameter failure: failure value (Error) to complete future with
 /// - Returns: failed future
-public func future<SuccessValue>(failure: Swift.Error) -> Future<SuccessValue> {
-  return ConstantFuture(finalValue: Fallible(failure: failure))
+public func future<Success>(failure: Swift.Error) -> Future<Success> {
+  return ConstantFuture(completion: Fallible(failure: failure))
 }
 
 /// Makes cancelled future (shorthand to `future(failure: AsyncNinjaError.cancelled)`)
 ///
 /// - Returns: cancelled future
-public func cancelledFuture<SuccessValue>() -> Future<SuccessValue> {
+public func cancelledFuture<Success>() -> Future<Success> {
     return future(failure: AsyncNinjaError.cancelled)
 }
 
 // **internal use only**
-func makeFutureOrWrapError<SuccessValue>(_ block: () throws -> Future<SuccessValue>) -> Future<SuccessValue> {
+func makeFutureOrWrapError<Success>(_ block: () throws -> Future<Success>) -> Future<Success> {
   do { return try block() }
   catch { return future(failure: error) }
 }
 
 // **internal use only**
-func makeFutureOrWrapError<SuccessValue>(_ block: () throws -> Future<SuccessValue>?) -> Future<SuccessValue>? {
+func makeFutureOrWrapError<Success>(_ block: () throws -> Future<Success>?) -> Future<Success>? {
   do { return try block() }
   catch { return future(failure: error) }
 }

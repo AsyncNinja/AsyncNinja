@@ -46,7 +46,7 @@ public enum ChannelFlatteningBehavior {
   case keepUnordered
 
   fileprivate func makeStorage<P, S, T>(executor: Executor,
-                               transform: @escaping (_ periodicValue: P) throws -> Future<T>?
+                               transform: @escaping (_ periodic: P) throws -> Future<T>?
     ) -> BaseChannelFlatteningBehaviorStorage<P, S, T> {
     switch self {
     case .transformSerially:
@@ -81,28 +81,28 @@ public extension Channel {
   ///   - transform: to apply. Completion of a future will be used
   ///     as periodic value of transformed channel
   ///   - strongContext: context restored from weak reference to specified context
-  ///   - periodicValue: `PeriodicValue` to transform
+  ///   - periodic: `Periodic` to transform
   /// - Returns: transformed channel
   func flatMapPeriodic<T, C: ExecutionContext>(context: C,
                        executor: Executor? = nil,
                        behavior: ChannelFlatteningBehavior,
                        cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default,
-                       transform: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) throws -> Future<T>
-    ) -> Channel<Fallible<T>, SuccessValue> {
+                       transform: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> Future<T>
+    ) -> Channel<Fallible<T>, Success> {
 
     let bufferSize = bufferSize.bufferSize(self)
-    let producer = Producer<Fallible<T>, SuccessValue>(bufferSize: bufferSize)
-    let storage: BaseChannelFlatteningBehaviorStorage<PeriodicValue, SuccessValue, T>
-      = behavior.makeStorage(executor: executor ?? context.executor) { [weak context] (periodicValue) -> Future<T>? in
+    let producer = Producer<Fallible<T>, Success>(bufferSize: bufferSize)
+    let storage: BaseChannelFlatteningBehaviorStorage<Periodic, Success, T>
+      = behavior.makeStorage(executor: executor ?? context.executor) { [weak context] (periodic) -> Future<T>? in
       if let context = context {
-        return try transform(context, periodicValue)
+        return try transform(context, periodic)
       } else {
         return nil
       }
     }
 
-    context.addDependent(finite: producer)
+    context.addDependent(completable: producer)
     self.attach(producer: producer, executor: .immediate, cancellationToken: cancellationToken, onValue: storage.onValue)
     return producer
   }
@@ -119,14 +119,14 @@ public extension Channel {
   ///     an extended buffering options of returned channel
   ///   - transform: to apply. Completion of a future will be used
   ///     as periodic value of transformed channel
-  ///   - periodicValue: `PeriodicValue` to transform
+  ///   - periodic: `Periodic` to transform
   /// - Returns: transformed channel
   func flatMapPeriodic<T>(executor: Executor = .primary,
                        behavior: ChannelFlatteningBehavior,
                        cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default,
-                       transform: @escaping (_ periodicValue: PeriodicValue) throws -> Future<T>
-    ) -> Channel<Fallible<T>, SuccessValue> {
+                       transform: @escaping (_ periodic: Periodic) throws -> Future<T>
+    ) -> Channel<Fallible<T>, Success> {
 
     // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_KeepUnordered
     // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_KeepLatestTransform
@@ -135,8 +135,8 @@ public extension Channel {
     // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_TransformSerially
 
     let bufferSize = bufferSize.bufferSize(self)
-    let producer = Producer<Fallible<T>, SuccessValue>(bufferSize: bufferSize)
-    let storage: BaseChannelFlatteningBehaviorStorage<PeriodicValue, SuccessValue, T>
+    let producer = Producer<Fallible<T>, Success>(bufferSize: bufferSize)
+    let storage: BaseChannelFlatteningBehaviorStorage<Periodic, Success, T>
       = behavior.makeStorage(executor: executor, transform: transform)
     self.attach(producer: producer, executor: .immediate, cancellationToken: cancellationToken, onValue: storage.onValue)
     return producer
@@ -146,8 +146,8 @@ public extension Channel {
 
 private class BaseChannelFlatteningBehaviorStorage<P, S, T> {
   let executor: Executor
-  let transform: (_ periodicValue: P) throws -> Future<T>?
-  required init(executor: Executor, transform: @escaping (_ periodicValue: P) throws -> Future<T>?) {
+  let transform: (_ periodic: P) throws -> Future<T>?
+  required init(executor: Executor, transform: @escaping (_ periodic: P) throws -> Future<T>?) {
     self.executor = executor
     self.transform = transform
   }
@@ -163,14 +163,14 @@ private class KeepUnorderedChannelFlatteningBehaviorStorage<P, S, T>: BaseChanne
     case .periodic(let periodic):
       executor.execute {
         let handler = makeFutureOrWrapError({ try self.transform(periodic) })?
-          .makeFinalHandler(executor: .immediate) { [weak producer] (periodic) -> Void in
+          .makeCompletionHandler(executor: .immediate) { [weak producer] (periodic) -> Void in
             producer?.send(periodic)
 
         }
         producer.insertHandlerToReleasePool(handler)
       }
-    case .final(let final):
-      producer.complete(with: final)
+    case .completion(let completion):
+      producer.complete(with: completion)
     }
   }
 }
@@ -187,7 +187,7 @@ private class KeepLatestTransformChannelFlatteningBehaviorStorage<P, S, T>: Base
       defer { self.locking.unlock() }
       self.latestFuture = promise
       let handler = promise
-        .makeFinalHandler(executor: .immediate) { [weak producer, weak promise] (periodic) -> Void in
+        .makeCompletionHandler(executor: .immediate) { [weak producer, weak promise] (periodic) -> Void in
           guard let producer = producer, let promise = promise else { return }
           self.locking.lock()
           defer { self.locking.unlock() }
@@ -215,8 +215,8 @@ private class KeepLatestTransformChannelFlatteningBehaviorStorage<P, S, T>: Base
           promise.fail(with: error)
         }
       }
-    case .final(let final):
-      producer.complete(with: final)
+    case .completion(let completion):
+      producer.complete(with: completion)
     }
   }
 }
@@ -238,7 +238,7 @@ private class DropResultsOutOfOrderChannelFlatteningBehaviorStorage<P, S, T>: Ba
       locking.unlock()
 
       let handler = promise
-        .makeFinalHandler(executor: .immediate) { [weak producer] (periodic) -> Void in
+        .makeCompletionHandler(executor: .immediate) { [weak producer] (periodic) -> Void in
           guard
             let producer = producer
             else { return }
@@ -277,8 +277,8 @@ private class DropResultsOutOfOrderChannelFlatteningBehaviorStorage<P, S, T>: Ba
         }
       }
 
-    case .final(let final):
-      producer.complete(with: final)
+    case .completion(let completion):
+      producer.complete(with: completion)
     }
   }
 }
@@ -310,8 +310,8 @@ private class OrderResultsChannelFlatteningBehaviorStorage<P, S, T>: BaseChannel
       }
 
       self.waitForTheNextFutureIfNeeded(producer: producer)
-    case .final(let final):
-      producer.complete(with: final)
+    case .completion(let completion):
+      producer.complete(with: completion)
     }
   }
 
@@ -329,7 +329,7 @@ private class OrderResultsChannelFlatteningBehaviorStorage<P, S, T>: BaseChannel
     locking.unlock()
 
     let handler = future
-      .makeFinalHandler(executor: .immediate) { [weak producer, weak weakSelf = self] (periodic) -> Void in
+      .makeCompletionHandler(executor: .immediate) { [weak producer, weak weakSelf = self] (periodic) -> Void in
         guard let producer = producer else { return }
 
         switch periodic {
@@ -363,8 +363,8 @@ private class TransformSeriallyChannelFlatteningBehaviorStorage<P, S, T>: BaseCh
       defer { locking.unlock() }
       periodicsQueue.push(periodic)
       self.launchNextTransformIfNeeded(producer: producer)
-    case .final(let final):
-      producer.complete(with: final)
+    case .completion(let completion):
+      producer.complete(with: completion)
     }
   }
 
@@ -389,7 +389,7 @@ private class TransformSeriallyChannelFlatteningBehaviorStorage<P, S, T>: BaseCh
     }
 
     let handler = promise
-      .makeFinalHandler(executor: .immediate) { [weak producer, weak weakSelf = self] (periodic) -> Void in
+      .makeCompletionHandler(executor: .immediate) { [weak producer, weak weakSelf = self] (periodic) -> Void in
         guard let producer = producer else { return }
         switch periodic {
         case .success(.some(let value)):

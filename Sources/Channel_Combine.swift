@@ -37,16 +37,16 @@ public extension Channel {
   func sample<P, S>(with samplerChannel: Channel<P, S>,
               cancellationToken: CancellationToken? = nil,
               bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<(PeriodicValue, P), (SuccessValue, S)> {
+    ) -> Channel<(Periodic, P), (Success, S)> {
 
     // Test: Channel_CombineTests.testSample
     var locking = makeLocking()
-    var latestLeftPeriodicValue: PeriodicValue? = nil
-    var leftSuccessValue: SuccessValue? = nil
-    var rightSuccessValue: S? = nil
+    var latestLeftPeriodic: Periodic? = nil
+    var leftSuccess: Success? = nil
+    var rightSuccess: S? = nil
 
     let bufferSize_ = bufferSize.bufferSize(self, samplerChannel)
-    let producer = Producer<(PeriodicValue, P), (SuccessValue, S)>(bufferSize: bufferSize_)
+    let producer = Producer<(Periodic, P), (Success, S)>(bufferSize: bufferSize_)
 
     do {
       let handler = makeHandler(executor: .immediate) {
@@ -55,16 +55,16 @@ public extension Channel {
         defer { locking.unlock() }
 
         switch value {
-        case let .periodic(localPeriodicValue):
-          latestLeftPeriodicValue = localPeriodicValue
-        case let .final(leftFinalValue):
-          switch leftFinalValue {
-          case let .success(localLeftSuccessValue):
-            if let localRightSuccessValue = rightSuccessValue {
-              let success = (localLeftSuccessValue, localRightSuccessValue)
+        case let .periodic(localPeriodic):
+          latestLeftPeriodic = localPeriodic
+        case let .completion(leftCompletion):
+          switch leftCompletion {
+          case let .success(localLeftSuccess):
+            if let localRightSuccess = rightSuccess {
+              let success = (localLeftSuccess, localRightSuccess)
               producer?.succeed(with: success)
             } else {
-              leftSuccessValue = localLeftSuccessValue
+              leftSuccess = localLeftSuccess
             }
           case let .failure(error):
             producer?.fail(with: error)
@@ -82,19 +82,19 @@ public extension Channel {
         defer { locking.unlock() }
 
         switch value {
-        case let .periodic(localRightPeriodicValue):
-          if let localLeftPeriodicValue = latestLeftPeriodicValue {
-            producer?.send((localLeftPeriodicValue, localRightPeriodicValue))
-            latestLeftPeriodicValue = nil
+        case let .periodic(localRightPeriodic):
+          if let localLeftPeriodic = latestLeftPeriodic {
+            producer?.send((localLeftPeriodic, localRightPeriodic))
+            latestLeftPeriodic = nil
           }
-        case let .final(rightFinalValue):
-          switch rightFinalValue {
-          case let .success(localRightSuccessValue):
-            if let localLeftSuccessValue = leftSuccessValue {
-              let success = (localLeftSuccessValue, localRightSuccessValue)
+        case let .completion(rightCompletion):
+          switch rightCompletion {
+          case let .success(localRightSuccess):
+            if let localLeftSuccess = leftSuccess {
+              let success = (localLeftSuccess, localRightSuccess)
               producer?.succeed(with: success)
             } else {
-              rightSuccessValue = localRightSuccessValue
+              rightSuccess = localRightSuccess
             }
           case let .failure(error):
             producer?.fail(with: error)

@@ -137,7 +137,7 @@
       cancellationToken?.add(cancellable: task)
       cancellationToken?.add(cancellable: promise)
       context?.addDependent(cancellable: task)
-      context?.addDependent(finite: promise)
+      context?.addDependent(completable: promise)
 
       task.resume()
       return promise

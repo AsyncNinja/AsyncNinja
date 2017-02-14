@@ -24,18 +24,18 @@ import Dispatch
 
 /// Collection improved with AsyncNinja
 /// Single failure fails them all
-public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element: Finite {
+public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element: Completable {
 
   /// joins an array of futures to a future array
-  func joined() -> Future<[Self.Iterator.Element.SuccessValue]> {
-    return _asyncFlatMap(executor: .immediate) { $0 as! Future<Self.Iterator.Element.SuccessValue> }
+  func joined() -> Future<[Self.Iterator.Element.Success]> {
+    return _asyncFlatMap(executor: .immediate) { $0 as! Future<Self.Iterator.Element.Success> }
   }
 
   /// reduces results of collection of futures to future accumulated value
   func reduce<Result>(executor: Executor = .primary,
               initialResult: Result,
               isOrdered: Bool = false,
-              nextPartialResult: @escaping (Result, Self.Iterator.Element.SuccessValue) throws -> Result)
+              nextPartialResult: @escaping (Result, Self.Iterator.Element.Success) throws -> Result)
     -> Future<Result> {
 
       guard !isOrdered else {
@@ -53,7 +53,7 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
       var unknownSubvaluesCount = count
 
       for future in self {
-        let handler = future.makeFinalHandler(executor: executor_) {
+        let handler = future.makeCompletionHandler(executor: executor_) {
           [weak promise] (fallibleValue) -> Void in
           guard let promise = promise else { return }
           guard canContinue else { return }
@@ -145,7 +145,7 @@ public extension Collection where Self.IndexDistance == Int {
         do { futureSubvalue = try transform(value) }
         catch { futureSubvalue = future(failure: error) }
         
-        let handler = futureSubvalue.makeFinalHandler(executor: .immediate) { [weak promise] subvalue in
+        let handler = futureSubvalue.makeCompletionHandler(executor: .immediate) { [weak promise] subvalue in
           guard let promise = promise else { return }
           
           locking.lock()
@@ -200,7 +200,7 @@ public extension Collection where Self.IndexDistance == Int {
       return try transform(context, value)
     }
     
-    context.addDependent(finite: promise)
+    context.addDependent(completable: promise)
     return promise
   }
   
@@ -216,7 +216,7 @@ public extension Collection where Self.IndexDistance == Int {
       return try transform(context, value)
     }
     
-    context.addDependent(finite: promise)
+    context.addDependent(completable: promise)
     
     return promise
   }

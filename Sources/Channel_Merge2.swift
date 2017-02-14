@@ -38,18 +38,18 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   var successA: SA?
   var successB: SB?
 
-  func makeHandlerBlock<PeriodicValue, SuccessValue>(
-    periodicHandler: @escaping (PeriodicValue) -> Void,
-    successHandler: @escaping (SuccessValue) -> (SA, SB)?
-    ) -> (ChannelValue<PeriodicValue, SuccessValue>) -> Void {
+  func makeHandlerBlock<Periodic, Success>(
+    periodicHandler: @escaping (Periodic) -> Void,
+    successHandler: @escaping (Success) -> (SA, SB)?
+    ) -> (ChannelValue<Periodic, Success>) -> Void {
     return {
       [weak producer] (value) in
       switch value {
       case let .periodic(periodic):
         periodicHandler(periodic)
-      case let .final(.failure(error)):
+      case let .completion(.failure(error)):
         producer?.fail(with: error)
-      case let .final(.success(localSuccess)):
+      case let .completion(.success(localSuccess)):
         locking.lock()
         defer { locking.unlock() }
         if let success = successHandler(localSuccess) {
@@ -104,9 +104,9 @@ public func merge<P, SA, SB>(_ channelA: Channel<P, SA>,
       switch value {
       case let .periodic(periodic):
         producer?.send(periodic)
-      case let .final(.failure(error)):
+      case let .completion(.failure(error)):
         producer?.fail(with: error)
-      case let .final(.success(localSuccess)):
+      case let .completion(.success(localSuccess)):
         locking.lock()
         defer { locking.unlock() }
         if let success = successHandler(localSuccess) {
