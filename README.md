@@ -37,7 +37,7 @@ Let's assume that we have:
 ```swift
 extension MyViewController {
   func present(personWithID identifier: String) {
-    self.myService.person(identifier: identifier) {
+    myService.fetch(personWithID: identifier) {
       (person, error) in
 
       /* do not forget to dispatch to the main queue */
@@ -45,69 +45,83 @@ extension MyViewController {
 
         /* do not forget the [weak self] */
         [weak self] in
-        guard let strongSelf = self else { return }
+        guard let strongSelf = self
+          else { return }
 
-        if let error = error {
+        if let person = person {
+          strongSelf.present(person: person)
+        } else if let error = error {
           strongSelf.present(error: error)
         } else {
-          strongSelf.present(person: person)
+          fatalError("There is neither person nor error. What has happened to this world?")
         }
       }
     }
   }
 }
+
+extension MyService {
+  func fetch(personWithID: String, callback: @escaping (Person?, Error?) -> Void) {
+    /* ... */
+  }
+}
 ```
 
 * "do not forget" comment **x2**
+* the block will be retained and called even if MyViewController was already deallocated
 
 #### Code with other libraries that provide futures
 
 ```swift
 extension MyViewController {
   func present(personWithID identifier: String) {
-    self.myService.person(identifier: identifier)
+    myService.fetch(personWithID: identifier)
 
       /* do not forget to dispatch to the main queue */
       .onComplete(executor: .main) {
 
         /* do not forget the [weak self] */
-        [weak self] (personOrError) in
-        guard let strongSelf = self else { return }
+        [weak self] (completion) in
+        if let strongSelf = self {
+		  completion.onSuccess(strongSelf.present(person:))
+		  completion.onFailure(strongSelf.present(error:))
+	    }
+      }
+  }
+}
 
-        switch personOrError {
-        case .success(let person):
-          strongSelf.present(person: person)
-        case .failure(let error):
-          strongSelf.present(error: error)
-        }
-    }
+extension MyService {
+  func fetch(personWithID: String) -> Future<Person> {
+    /* ... */
   }
 }
 ```
 
 * "do not forget" comment **x2**
+* the block will be retained and called even if MyViewController was already deallocated
 
-#### Code with AsyncNinja
+#### Code with [AsyncNinja](https://github.com/AsyncNinja/AsyncNinja)
 
 ```swift
 extension MyViewController {
   func present(personWithID identifier: String) {
-    self.myService.person(identifier: identifier)
-      .onComplete(context: self) {
-        (self, personOrError) in
+    myService.fetch(personWithID: identifier)
+      .onComplete(context: self) { (self, completion) in
+		completion.onSuccess(self.present(person:))
+		completion.onFailure(self.present(error:))
+      }
+  }
+}
 
-        switch personOrError {
-        case .success(let person):
-          self.present(person: person)
-        case .failure(let error):
-          self.present(error: error)
-        }
-    }
+extension MyService {
+  func fetch(personWithID: String) -> Future<Person> {
+    /* ... */
   }
 }
 ```
 
 * "do not forget" comment **NONE**
+* the block will be retained and called as long as specified context (MyViewController) exists
 * [Want to see extended explanation?](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
 
 ## Implemented Primitives
