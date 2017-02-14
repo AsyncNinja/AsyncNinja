@@ -62,9 +62,9 @@ class Channel_MapTests: XCTestCase {
 
   func testFilterPeriodic() {
     let range = 0..<5
-    let final = "bye"
+    let success = "bye"
     let queue = DispatchQueue(label: "test", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
-    let (periodics, completion) = makeChannel(periodics: range, success: final)
+    let (periodics, completion) = makeChannel(periodics: range, success: success)
       .filterPeriodic(executor: .queue(queue)) { value -> Bool in
         assert(on: queue)
         return 0 == value % 2
@@ -72,6 +72,6 @@ class Channel_MapTests: XCTestCase {
       .waitForAll()
 
     XCTAssertEqual(range.filter { 0 == $0 % 2 }, periodics)
-    XCTAssertEqual(final, completion.success)
+    XCTAssertEqual(success, completion.success)
   }
 }

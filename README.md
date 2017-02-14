@@ -118,7 +118,7 @@ This framework is an implementation of following principles:
 	* doing wrong things harder
 * use abstraction is based on monads
     * [`Future`](Documentation/Future.md) is a proxy of value that will be available at some point in the future. See example for advances of using futures.
-    * [`Channel`](Documentation/Channel.md) is like a `Future` that may provide `Periodic` values before final one.
+    * [`Channel`](Documentation/Channel.md) is like a `Future` that may provide `Periodic` values before completion.
     * [`Executor`](Documentation/Executor.md) is object made to execute escaped block `(Void) -> Void`. Its propose is to encapsulate a way of an execution.
     * [`ExecutionContext`](Documentation/ExecutionContext.md) is a protocol concurrency-aware objects must conform to. It basically make them actors or components of actor.
     * [`Fallible`](Documentation/Fallible.md) is validation monad. Is an object that represents either success value of failure value (Error).

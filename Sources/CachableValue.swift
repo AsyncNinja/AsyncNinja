@@ -23,7 +23,7 @@
 import Dispatch
 
 /// Is a simple cache that can contain single value. Does not invalidate
-/// cached values automatically. Parametrised with MutableFiniteValue
+/// cached values automatically. Parametrised with MutableCompletable
 /// that can be either `Future` or `Channel` and Context. That gives
 /// an opportunity to make cache that can report of status of completion
 /// periodically (e.g. download persentage).
