@@ -86,7 +86,7 @@ public class Cache<Key: Hashable, MutableFiniteValue: MutableFinite, Context: Ex
 public typealias SimpleCache<Key: Hashable, Value, Context: ExecutionContext> = Cache<Key, Promise<Value>, Context>
 
 /// Convenience typealias for Cache based on `Channel`
-public typealias ReportingCache<Key: Hashable, PeriodicValue, FinalValue, Context: ExecutionContext> = Cache<Key, Producer<PeriodicValue, FinalValue>, Context>
+public typealias ReportingCache<Key: Hashable, PeriodicValue, SuccessValue, Context: ExecutionContext> = Cache<Key, Producer<PeriodicValue, SuccessValue>, Context>
 
 /// Convenience function that makes `SimpleCache`
 public func makeCache<Key: Hashable, Value, Context: ExecutionContext>(
@@ -97,9 +97,9 @@ public func makeCache<Key: Hashable, Value, Context: ExecutionContext>(
 }
 
 /// Convenience function that makes `ReportingCache`
-public func makeCache<Key: Hashable, PeriodicValue, FinalValue, Context: ExecutionContext>(
+public func makeCache<Key: Hashable, PeriodicValue, SuccessValue, Context: ExecutionContext>(
   context: Context,
-  missHandler: @escaping (Context, Key) -> Channel<PeriodicValue, FinalValue>
-  ) -> ReportingCache<Key, PeriodicValue, FinalValue, Context> {
+  missHandler: @escaping (Context, Key) -> Channel<PeriodicValue, SuccessValue>
+  ) -> ReportingCache<Key, PeriodicValue, SuccessValue, Context> {
   return Cache(context: context, missHandler: missHandler)
 }

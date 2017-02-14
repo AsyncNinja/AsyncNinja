@@ -35,7 +35,7 @@ public protocol MutableFinite: Finite, Cancellable {
   /// - Parameter final: value to compete `MutableFinite` with
   /// - Returns: true if this call completed future
   @discardableResult
-  func tryComplete(with final: Fallible<FinalValue>) -> Bool
+  func tryComplete(with final: Fallible<SuccessValue>) -> Bool
 
   /// Shorthand to tryComplete that does not return value
   func complete(with finite: ImmutableFinite)
@@ -47,7 +47,7 @@ public protocol MutableFinite: Finite, Cancellable {
 public extension MutableFinite {
   /// Completes promise when specified future completes.
   /// `self` will retain specified future until it`s completion
-  func complete(with future: Future<FinalValue>) {
+  func complete(with future: Future<SuccessValue>) {
     let handler = future.makeFinalHandler(executor: .immediate) { [weak self] in
       self?.complete(with: $0)
     }
@@ -57,18 +57,18 @@ public extension MutableFinite {
   }
 
   /// Shorthand to tryComplete(with:) that does not return value
-  func complete(with final: Fallible<FinalValue>) {
+  func complete(with final: Fallible<SuccessValue>) {
     self.tryComplete(with: final)
   }
 
   /// Tries to complete self with success vlue
   @discardableResult
-  func trySucceed(with success: FinalValue) -> Bool {
+  func trySucceed(with success: SuccessValue) -> Bool {
     return self.tryComplete(with: Fallible(success: success))
   }
 
   /// Shorthand to trySucceed(with:) that does not return value
-  func succeed(with success: FinalValue) {
+  func succeed(with success: SuccessValue) {
     self.complete(with: Fallible(success: success))
   }
 
@@ -94,7 +94,7 @@ public extension MutableFinite {
   }
 }
 
-extension MutableFinite where FinalValue == Void {
+extension MutableFinite where SuccessValue == Void {
 
   /// Convenience method succeeds mutable with void value
   public func succeed() {

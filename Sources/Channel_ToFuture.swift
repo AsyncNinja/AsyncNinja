@@ -227,10 +227,10 @@ public extension Channel {
               executor: Executor = .immediate,
               cancellationToken: CancellationToken? = nil,
               _ nextPartialResult: @escaping (Result, PeriodicValue) throws -> Result
-    ) -> Promise<(Result, FinalValue)> {
+    ) -> Promise<(Result, SuccessValue)> {
     var result = initialResult
     let _executor = executor.makeDerivedSerialExecutor()
-    let promise = Promise<(Result, FinalValue)>()
+    let promise = Promise<(Result, SuccessValue)>()
     let handler = self.makeHandler(executor: _executor) { [weak promise] in
       switch $0 {
       case let .periodic(periodicValue):
@@ -274,7 +274,7 @@ public extension Channel {
               executor: Executor? = nil,
               cancellationToken: CancellationToken? = nil,
               _ nextPartialResult: @escaping (C, Result, PeriodicValue) throws -> Result
-    ) -> Future<(Result, FinalValue)> {
+    ) -> Future<(Result, SuccessValue)> {
 
     // Test: Channel_ToFutureTests.testReduceContextual
 
@@ -308,7 +308,7 @@ public extension Channel {
               executor: Executor = .immediate,
               cancellationToken: CancellationToken? = nil,
               _ nextPartialResult: @escaping (Result, PeriodicValue) throws -> Result
-    ) -> Future<(Result, FinalValue)> {
+    ) -> Future<(Result, SuccessValue)> {
 
     // Test: Channel_ToFutureTests.testReduce
 

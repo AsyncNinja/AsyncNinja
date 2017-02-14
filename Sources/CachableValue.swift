@@ -132,7 +132,7 @@ class CachableValueImpl<MutableFiniteValue: MutableFinite, Context: ExecutionCon
           self__._state = .finished
           do {
             let success = try fallible.liftSuccess()
-            self__._mutableFinite.succeed(with: success as! MutableFiniteValue.FinalValue)
+            self__._mutableFinite.succeed(with: success as! MutableFiniteValue.SuccessValue)
           } catch {
             self__._mutableFinite.fail(with: error)
           }
@@ -157,9 +157,9 @@ private enum CachableValueState {
 }
 
 /// Convenience typealias for CachableValue based on `Future`
-public typealias SimpleCachableValue<Value, Context: ExecutionContext>
-  = CachableValue<Promise<Value>, Context>
+public typealias SimpleCachableValue<SuccessValue, Context: ExecutionContext>
+  = CachableValue<Promise<SuccessValue>, Context>
 
 /// Convenience typealias for CachableValue based on `Channel`
-public typealias ReportingCachableValue<PeriodicValue, FinalValue, Context: ExecutionContext>
-  = CachableValue<Producer<PeriodicValue, FinalValue>, Context>
+public typealias ReportingCachableValue<PeriodicValue, SuccessValue, Context: ExecutionContext>
+  = CachableValue<Producer<PeriodicValue, SuccessValue>, Context>

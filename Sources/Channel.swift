@@ -23,15 +23,13 @@
 import Dispatch
 
 /// represents values that periodically arrive followed by failure of final value that completes Channel. Channel oftenly represents result of long running task that is not yet arrived and flow of some intermediate results.
-public class Channel<PeriodicValue, FinalValue>: Finite, Sequence {
-  public typealias Value = ChannelValue<PeriodicValue, FinalValue>
-  public typealias Handler = ChannelHandler<PeriodicValue, FinalValue>
-  public typealias PeriodicHandler = Handler
-  public typealias FinalHandler = Handler
-  public typealias Iterator = ChannelIterator<PeriodicValue, FinalValue>
+public class Channel<PeriodicValue, SuccessValue>: Finite, Sequence {
+  public typealias Value = ChannelValue<PeriodicValue, SuccessValue>
+  public typealias Handler = ChannelHandler<PeriodicValue, SuccessValue>
+  public typealias Iterator = ChannelIterator<PeriodicValue, SuccessValue>
 
   /// final falue of channel. Returns nil if channel is not complete yet
-  public var finalValue: Fallible<FinalValue>? { assertAbstract() }
+  public var finalValue: Fallible<SuccessValue>? { assertAbstract() }
 
   /// amount of currently stored periodics
   public var bufferSize: Int { assertAbstract() }
@@ -43,7 +41,7 @@ public class Channel<PeriodicValue, FinalValue>: Finite, Sequence {
 
   /// **internal use only**
   final public func makeFinalHandler(executor: Executor,
-                                     block: @escaping (Fallible<FinalValue>) -> Void
+                                     block: @escaping (Fallible<SuccessValue>) -> Void
     ) -> Handler? {
     return self.makeHandler(executor: executor) {
       if case .final(let value) = $0 { block(value) }
@@ -86,7 +84,7 @@ extension Channel: CustomStringConvertible, CustomDebugStringConvertible {
 
   /// A textual representation of this instance, suitable for debugging.
   public var debugDescription: String {
-    return description(withBody: "Channel<\(PeriodicValue.self), \(FinalValue.self)>")
+    return description(withBody: "Channel<\(PeriodicValue.self), \(SuccessValue.self)>")
   }
 
   /// **internal use only**
@@ -193,7 +191,7 @@ public extension Channel {
   ///   - periodicValues: all received by the channel
   ///   - finalValue: received by the channel
   func extractAll(executor: Executor = .primary,
-                  block: @escaping (_ periodicValues: [PeriodicValue], _ finalValue: Fallible<FinalValue>) -> Void) {
+                  block: @escaping (_ periodicValues: [PeriodicValue], _ finalValue: Fallible<SuccessValue>) -> Void) {
     var periodics = [PeriodicValue]()
     let executor_ = executor.makeDerivedSerialExecutor()
     self.onValue(executor: executor_) { (value) in
@@ -219,7 +217,7 @@ public extension Channel {
   ///   - finalValue: received by the channel
   func extractAll<C: ExecutionContext>(context: C,
                   executor: Executor? = nil,
-                  block: @escaping (_ strongContext: C, _ periodicValues: [PeriodicValue], _ finalValue: Fallible<FinalValue>) -> Void) {
+                  block: @escaping (_ strongContext: C, _ periodicValues: [PeriodicValue], _ finalValue: Fallible<SuccessValue>) -> Void) {
     var periodics = [PeriodicValue]()
     let executor_ = (executor ?? context.executor).makeDerivedSerialExecutor()
     self.onValue(context: context, executor: executor_) { (context, value) in
@@ -233,7 +231,7 @@ public extension Channel {
   }
 
   /// Synchronously waits for channel to complete. Returns all periodic and final values
-  func waitForAll() -> (periodics: [PeriodicValue], final: Fallible<FinalValue>) {
+  func waitForAll() -> (periodics: [PeriodicValue], final: Fallible<SuccessValue>) {
     return (self.map { $0 }, self.finalValue!)
   }
 }
@@ -241,15 +239,15 @@ public extension Channel {
 // MARK: - Iterators
 
 /// Synchronously iterates over each periodic value of channel
-public struct ChannelIterator<PeriodicValue, FinalValue>: IteratorProtocol  {
+public struct ChannelIterator<PeriodicValue, SuccessValue>: IteratorProtocol  {
   public typealias Element = PeriodicValue
-  private var _implBox: Box<ChannelIteratorImpl<PeriodicValue, FinalValue>> // want to have reference to reference, because impl may actually be retained by some handler
+  private var _implBox: Box<ChannelIteratorImpl<PeriodicValue, SuccessValue>> // want to have reference to reference, because impl may actually be retained by some handler
 
   /// final value of the channel. Will be available as soon as the channel completes.
-  public var finalValue: Fallible<FinalValue>? { return _implBox.value.finalValue }
+  public var finalValue: Fallible<SuccessValue>? { return _implBox.value.finalValue }
 
   /// **internal use only** Designated initializer
-  init(impl: ChannelIteratorImpl<PeriodicValue, FinalValue>) {
+  init(impl: ChannelIteratorImpl<PeriodicValue, SuccessValue>) {
     _implBox = Box(impl)
   }
 
@@ -265,9 +263,9 @@ public struct ChannelIterator<PeriodicValue, FinalValue>: IteratorProtocol  {
 }
 
 /// **Internal use only**
-class ChannelIteratorImpl<PeriodicValue, FinalValue>  {
+class ChannelIteratorImpl<PeriodicValue, SuccessValue>  {
   public typealias Element = PeriodicValue
-  var finalValue: Fallible<FinalValue>? { assertAbstract() }
+  var finalValue: Fallible<SuccessValue>? { assertAbstract() }
 
   init() { }
 
@@ -275,7 +273,7 @@ class ChannelIteratorImpl<PeriodicValue, FinalValue>  {
     assertAbstract()
   }
 
-  func clone() -> ChannelIteratorImpl<PeriodicValue, FinalValue> {
+  func clone() -> ChannelIteratorImpl<PeriodicValue, SuccessValue> {
     assertAbstract()
   }
 }
@@ -296,17 +294,15 @@ public enum ChannelValue<T, U> {
 
 /// **internal use only** Wraps each block submitted to the channel
 /// to provide required memory management behavior
-final public class ChannelHandler<T, U> {
-  public typealias PeriodicValue = T
-  public typealias SuccessValue = U
+final public class ChannelHandler<PeriodicValue, SuccessValue> {
   public typealias Value = ChannelValue<PeriodicValue, SuccessValue>
 
   let executor: Executor
   let block: (Value) -> Void
-  var owner: Channel<T, U>?
+  var owner: Channel<PeriodicValue, SuccessValue>?
 
   /// Designated initializer of ChannelHandler
-  public init(executor: Executor, block: @escaping (Value) -> Void, owner: Channel<T, U>) {
+  public init(executor: Executor, block: @escaping (Value) -> Void, owner: Channel<PeriodicValue, SuccessValue>) {
     self.executor = executor
     self.block = block
     self.owner = owner

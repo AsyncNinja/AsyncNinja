@@ -27,15 +27,15 @@ import Dispatch
 public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element: Finite {
 
   /// joins an array of futures to a future array
-  func joined() -> Future<[Self.Iterator.Element.FinalValue]> {
-    return _asyncFlatMap(executor: .immediate) { $0 as! Future<Self.Iterator.Element.FinalValue> }
+  func joined() -> Future<[Self.Iterator.Element.SuccessValue]> {
+    return _asyncFlatMap(executor: .immediate) { $0 as! Future<Self.Iterator.Element.SuccessValue> }
   }
 
   /// reduces results of collection of futures to future accumulated value
   func reduce<Result>(executor: Executor = .primary,
               initialResult: Result,
               isOrdered: Bool = false,
-              nextPartialResult: @escaping (Result, Self.Iterator.Element.FinalValue) throws -> Result)
+              nextPartialResult: @escaping (Result, Self.Iterator.Element.SuccessValue) throws -> Result)
     -> Future<Result> {
 
       guard !isOrdered else {

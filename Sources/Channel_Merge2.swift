@@ -38,10 +38,10 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   var successA: SA?
   var successB: SB?
 
-  func makeHandlerBlock<PeriodicValue, FinalValue>(
+  func makeHandlerBlock<PeriodicValue, SuccessValue>(
     periodicHandler: @escaping (PeriodicValue) -> Void,
-    successHandler: @escaping (FinalValue) -> (SA, SB)?
-    ) -> (ChannelValue<PeriodicValue, FinalValue>) -> Void {
+    successHandler: @escaping (SuccessValue) -> (SA, SB)?
+    ) -> (ChannelValue<PeriodicValue, SuccessValue>) -> Void {
     return {
       [weak producer] (value) in
       switch value {

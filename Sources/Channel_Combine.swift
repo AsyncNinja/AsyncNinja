@@ -37,16 +37,16 @@ public extension Channel {
   func sample<P, S>(with samplerChannel: Channel<P, S>,
               cancellationToken: CancellationToken? = nil,
               bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<(PeriodicValue, P), (FinalValue, S)> {
+    ) -> Channel<(PeriodicValue, P), (SuccessValue, S)> {
 
     // Test: Channel_CombineTests.testSample
     var locking = makeLocking()
     var latestLeftPeriodicValue: PeriodicValue? = nil
-    var leftSuccessValue: FinalValue? = nil
+    var leftSuccessValue: SuccessValue? = nil
     var rightSuccessValue: S? = nil
 
     let bufferSize_ = bufferSize.bufferSize(self, samplerChannel)
-    let producer = Producer<(PeriodicValue, P), (FinalValue, S)>(bufferSize: bufferSize_)
+    let producer = Producer<(PeriodicValue, P), (SuccessValue, S)>(bufferSize: bufferSize_)
 
     do {
       let handler = makeHandler(executor: .immediate) {

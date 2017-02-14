@@ -36,7 +36,7 @@ public extension Channel {
   /// - Returns: channel with tuple (index, periodicValue) as periodic value
   func enumerated(cancellationToken: CancellationToken? = nil,
                   bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<(Int, PeriodicValue), FinalValue> {
+    ) -> Channel<(Int, PeriodicValue), SuccessValue> {
 
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 
@@ -79,7 +79,7 @@ public extension Channel {
   /// - Returns: channel with tuple (periodicValue, periodicValue) as periodic value
   func bufferedPairs(cancellationToken: CancellationToken? = nil,
                      bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<(PeriodicValue, PeriodicValue), FinalValue> {
+    ) -> Channel<(PeriodicValue, PeriodicValue), SuccessValue> {
     var locking = makeLocking()
     var previousPeriodic: PeriodicValue? = nil
 
@@ -120,7 +120,7 @@ public extension Channel {
   func buffered(capacity: Int,
                 cancellationToken: CancellationToken? = nil,
                 bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<[PeriodicValue], FinalValue> {
+    ) -> Channel<[PeriodicValue], SuccessValue> {
     var buffer = [PeriodicValue]()
     buffer.reserveCapacity(capacity)
     var locking = makeLocking()
@@ -170,12 +170,12 @@ public extension Channel {
   func delayedPeriodic(timeout: Double,
                        cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<PeriodicValue, FinalValue> {
+    ) -> Channel<PeriodicValue, SuccessValue> {
     return self.makeProducer(executor: .immediate,
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (value: Value, producer: Producer<PeriodicValue, FinalValue>) -> Void in
+      (value: Value, producer: Producer<PeriodicValue, SuccessValue>) -> Void in
       Executor.primary.execute(after: timeout) { [weak producer] in
         guard let producer = producer else { return }
         producer.apply(value)
@@ -200,11 +200,11 @@ public extension Channel {
                 leeway: DispatchTimeInterval? = nil,
                 cancellationToken: CancellationToken? = nil,
                 bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<PeriodicValue, FinalValue> {
+    ) -> Channel<PeriodicValue, SuccessValue> {
 
     // Test: Channel_TransformTests.testDebounce
     let bufferSize_ = bufferSize.bufferSize(self)
-    let producer = Producer<PeriodicValue, FinalValue>(bufferSize: bufferSize_)
+    let producer = Producer<PeriodicValue, SuccessValue>(bufferSize: bufferSize_)
     var locking = makeLocking()
     var latestPeriodicValue: PeriodicValue? = nil
     var didSendFirstPeriodicValue = false
@@ -276,7 +276,7 @@ extension Channel where PeriodicValue: Equatable {
   /// - Returns: channel with distinct periodic values
   public func distinct(cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<PeriodicValue, FinalValue> {
+    ) -> Channel<PeriodicValue, SuccessValue> {
 
     // Test: Channel_TransformTests.testDistinctInts
     

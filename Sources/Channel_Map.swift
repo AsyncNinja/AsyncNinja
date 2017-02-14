@@ -182,7 +182,7 @@ public extension Channel {
                    cancellationToken: CancellationToken? = nil,
                    bufferSize: DerivedChannelBufferSize = .default,
                    transform: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) throws -> P
-    ) -> Channel<P, FinalValue> {
+    ) -> Channel<P, SuccessValue> {
     return self.makeProducer(context: context,
                              executor: executor,
                              cancellationToken: cancellationToken,
@@ -218,7 +218,7 @@ public extension Channel {
                    cancellationToken: CancellationToken? = nil,
                    bufferSize: DerivedChannelBufferSize = .default,
                    transform: @escaping (_ periodicValue: PeriodicValue) throws -> P
-    ) -> Channel<P, FinalValue> {
+    ) -> Channel<P, SuccessValue> {
 
     // Test: Channel_MapTests.testMapPeriodic
 
@@ -264,7 +264,7 @@ public extension Channel {
                        cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default,
                        transform: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) throws -> P?
-    ) -> Channel<P, FinalValue> {
+    ) -> Channel<P, SuccessValue> {
     return self.makeProducer(context: context,
                              executor: executor,
                              cancellationToken: cancellationToken,
@@ -299,7 +299,7 @@ public extension Channel {
                        cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default,
                        transform: @escaping (_ periodicValue: PeriodicValue) throws -> P?
-    ) -> Channel<P, FinalValue> {
+    ) -> Channel<P, SuccessValue> {
     return self.makeProducer(executor: executor,
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
@@ -339,7 +339,7 @@ public extension Channel {
                        cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default,
                        transform: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) throws -> PS
-    ) -> Channel<PS.Iterator.Element, FinalValue> {
+    ) -> Channel<PS.Iterator.Element, SuccessValue> {
     return self.makeProducer(context: context,
                              executor: executor,
                              cancellationToken: cancellationToken,
@@ -373,7 +373,7 @@ public extension Channel {
                        cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default,
                        transform: @escaping (_ periodicValue: PeriodicValue) throws -> PS
-    ) -> Channel<PS.Iterator.Element, FinalValue> {
+    ) -> Channel<PS.Iterator.Element, SuccessValue> {
     return self.makeProducer(executor: executor,
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
@@ -408,7 +408,7 @@ public extension Channel {
                       cancellationToken: CancellationToken? = nil,
                       bufferSize: DerivedChannelBufferSize = .default,
                       predicate: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) throws -> Bool
-    ) -> Channel<PeriodicValue, FinalValue> {
+    ) -> Channel<PeriodicValue, SuccessValue> {
     return self.makeProducer(context: context,
                              executor: executor,
                              cancellationToken: cancellationToken,
@@ -445,7 +445,7 @@ public extension Channel {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     predicate: @escaping (_ periodicValue: PeriodicValue) throws -> Bool
-    ) -> Channel<PeriodicValue, FinalValue> {
+    ) -> Channel<PeriodicValue, SuccessValue> {
 
     // Test: Channel_MapTests.testFilterPeriodic
 

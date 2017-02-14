@@ -89,11 +89,11 @@ public extension Channel {
                        cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default,
                        transform: @escaping (_ strongContext: C, _ periodicValue: PeriodicValue) throws -> Future<T>
-    ) -> Channel<Fallible<T>, FinalValue> {
+    ) -> Channel<Fallible<T>, SuccessValue> {
 
     let bufferSize = bufferSize.bufferSize(self)
-    let producer = Producer<Fallible<T>, FinalValue>(bufferSize: bufferSize)
-    let storage: BaseChannelFlatteningBehaviorStorage<PeriodicValue, FinalValue, T>
+    let producer = Producer<Fallible<T>, SuccessValue>(bufferSize: bufferSize)
+    let storage: BaseChannelFlatteningBehaviorStorage<PeriodicValue, SuccessValue, T>
       = behavior.makeStorage(executor: executor ?? context.executor) { [weak context] (periodicValue) -> Future<T>? in
       if let context = context {
         return try transform(context, periodicValue)
@@ -126,7 +126,7 @@ public extension Channel {
                        cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default,
                        transform: @escaping (_ periodicValue: PeriodicValue) throws -> Future<T>
-    ) -> Channel<Fallible<T>, FinalValue> {
+    ) -> Channel<Fallible<T>, SuccessValue> {
 
     // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_KeepUnordered
     // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_KeepLatestTransform
@@ -135,8 +135,8 @@ public extension Channel {
     // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_TransformSerially
 
     let bufferSize = bufferSize.bufferSize(self)
-    let producer = Producer<Fallible<T>, FinalValue>(bufferSize: bufferSize)
-    let storage: BaseChannelFlatteningBehaviorStorage<PeriodicValue, FinalValue, T>
+    let producer = Producer<Fallible<T>, SuccessValue>(bufferSize: bufferSize)
+    let storage: BaseChannelFlatteningBehaviorStorage<PeriodicValue, SuccessValue, T>
       = behavior.makeStorage(executor: executor, transform: transform)
     self.attach(producer: producer, executor: .immediate, cancellationToken: cancellationToken, onValue: storage.onValue)
     return producer

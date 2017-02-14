@@ -23,19 +23,19 @@
 import Dispatch
 
 /// A future that has been initialized as completed
-final class ConstantFuture<FinalValue>: Future<FinalValue> {
-  private var _value: Value
-  override public var finalValue: Value? { return _value }
+final class ConstantFuture<SuccessValue>: Future<SuccessValue> {
+  private var _finalValue: Fallible<SuccessValue>
+  override public var finalValue: Fallible<SuccessValue>? { return _finalValue }
   let releasePool = ReleasePool()
 
-  init(value: Value) {
-    _value = value
+  init(finalValue: Fallible<SuccessValue>) {
+    _finalValue = finalValue
   }
 
   override public func makeFinalHandler(executor: Executor,
-                                        block: @escaping (Fallible<FinalValue>) -> Void
+                                        block: @escaping (Fallible<SuccessValue>) -> Void
     ) -> FinalHandler? {
-    executor.execute { block(self._value) }
+    executor.execute { block(self._finalValue) }
     return nil
   }
   
@@ -48,41 +48,45 @@ final class ConstantFuture<FinalValue>: Future<FinalValue> {
 ///
 /// - Parameter value: value to complete future with
 /// - Returns: completed future
-public func future<T>(value: Fallible<T>) -> Future<T> {
-  return ConstantFuture(value: value)
+public func future<SuccessValue>(value: Fallible<SuccessValue>) -> Future<SuccessValue> {
+  return ConstantFuture(finalValue: value)
+}
+
+public func future<SuccessValue>(finalValue: Fallible<SuccessValue>) -> Future<SuccessValue> {
+  return ConstantFuture(finalValue: finalValue)
 }
 
 /// Makes succeeded future
 ///
 /// - Parameter success: success value to complete future with
 /// - Returns: succeeded future
-public func future<T>(success: T) -> Future<T> {
-  return ConstantFuture(value: Fallible(success: success))
+public func future<SuccessValue>(success: SuccessValue) -> Future<SuccessValue> {
+  return ConstantFuture(finalValue: Fallible(success: success))
 }
 
 /// Makes failed future
 ///
 /// - Parameter failure: failure value (Error) to complete future with
 /// - Returns: failed future
-public func future<T>(failure: Swift.Error) -> Future<T> {
-  return ConstantFuture(value: Fallible(failure: failure))
+public func future<SuccessValue>(failure: Swift.Error) -> Future<SuccessValue> {
+  return ConstantFuture(finalValue: Fallible(failure: failure))
 }
 
 /// Makes cancelled future (shorthand to `future(failure: AsyncNinjaError.cancelled)`)
 ///
 /// - Returns: cancelled future
-public func cancelledFuture<T>() -> Future<T> {
+public func cancelledFuture<SuccessValue>() -> Future<SuccessValue> {
     return future(failure: AsyncNinjaError.cancelled)
 }
 
 // **internal use only**
-func makeFutureOrWrapError<T>(_ block: () throws -> Future<T>) -> Future<T> {
+func makeFutureOrWrapError<SuccessValue>(_ block: () throws -> Future<SuccessValue>) -> Future<SuccessValue> {
   do { return try block() }
   catch { return future(failure: error) }
 }
 
 // **internal use only**
-func makeFutureOrWrapError<T>(_ block: () throws -> Future<T>?) -> Future<T>? {
+func makeFutureOrWrapError<SuccessValue>(_ block: () throws -> Future<SuccessValue>?) -> Future<SuccessValue>? {
   do { return try block() }
   catch { return future(failure: error) }
 }
