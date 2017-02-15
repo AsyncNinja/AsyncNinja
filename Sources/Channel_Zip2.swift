@@ -32,22 +32,22 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   let producer = Producer<(PA, PB), (SA, SB)>(bufferSize: bufferSize_)
 
   var locking = makeLocking()
-  let queueOfPeriodics = Queue<Either<PA, PB>>()
+  let queueOfUpdates = Queue<Either<PA, PB>>()
   var successA: SA?
   var successB: SB?
 
-  func makeHandlerBlock<Periodic, Success>(
-    periodicHandler: @escaping (Periodic) -> (PA, PB)?,
+  func makeHandlerBlock<Update, Success>(
+    updateHandler: @escaping (Update) -> (PA, PB)?,
     successHandler: @escaping (Success) -> (SA, SB)?
-    ) -> (ChannelValue<Periodic, Success>) -> Void {
+    ) -> (ChannelValue<Update, Success>) -> Void {
     return {
       [weak producer] (value) in
       switch value {
-      case let .periodic(periodic):
+      case let .update(update):
         locking.lock()
         defer { locking.unlock() }
-        if let periodicAB = periodicHandler(periodic) {
-          producer?.send(periodicAB)
+        if let updateAB = updateHandler(update) {
+          producer?.send(updateAB)
         }
       case let .completion(.failure(error)):
         producer?.fail(with: error)
@@ -63,12 +63,12 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
 
   do {
     let handlerBlockA: (ChannelValue<PA, SA>) -> Void = makeHandlerBlock(
-      periodicHandler: {
-        if let periodicB = queueOfPeriodics.first?.right {
-          let _ = queueOfPeriodics.pop()
-          return ($0, periodicB)
+      updateHandler: {
+        if let updateB = queueOfUpdates.first?.right {
+          let _ = queueOfUpdates.pop()
+          return ($0, updateB)
         } else {
-          queueOfPeriodics.push(.left($0))
+          queueOfUpdates.push(.left($0))
           return nil
         }
     }, successHandler: {
@@ -83,12 +83,12 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
 
   do {
     let handlerBlockB: (ChannelValue<PB, SB>) -> Void = makeHandlerBlock(
-      periodicHandler: {
-        if let periodicA = queueOfPeriodics.first?.left {
-          let _ = queueOfPeriodics.pop()
-          return (periodicA, $0)
+      updateHandler: {
+        if let updateA = queueOfUpdates.first?.left {
+          let _ = queueOfUpdates.pop()
+          return (updateA, $0)
         } else {
-          queueOfPeriodics.push(.right($0))
+          queueOfUpdates.push(.right($0))
           return nil
         }
     }, successHandler: {

@@ -23,24 +23,24 @@
 import Dispatch
 
 /// Mutable subclass of channel
-/// You can send periodics and complete producer manually
-final public class Producer<Periodic, Success>: Channel<Periodic, Success>, MutableCompletable {
-  public typealias ImmutableCompletable = Channel<Periodic, Success>
+/// You can send updates and complete producer manually
+final public class Producer<Update, Success>: Channel<Update, Success>, MutableCompletable {
+  public typealias ImmutableCompletable = Channel<Update, Success>
 
   private let _maxBufferSize: Int
-  private let _bufferedPeriodics = Queue<Periodic>()
+  private let _bufferedUpdates = Queue<Update>()
   private let _releasePool = ReleasePool(locking: PlaceholderLocking())
   private var _locking = makeLocking()
   private var _handlers = QueueOfWeakElements<Handler>()
   private var _completion: Fallible<Success>?
 
-  /// amount of currently stored periodics
+  /// amount of currently stored updates
   override public var bufferSize: Int {
     _locking.lock()
     defer { _locking.unlock() }
-    return Int(_bufferedPeriodics.count)
+    return Int(_bufferedUpdates.count)
   }
-  /// maximal amount of periodics store
+  /// maximal amount of updates store
   override public var maxBufferSize: Int { return _maxBufferSize }
 
   /// completion of `Producer`. Returns nil if channel is not complete yet
@@ -61,15 +61,15 @@ final public class Producer<Periodic, Success>: Channel<Periodic, Success>, Muta
   }
 
   /// designated initializer of Producer. Initializes Producer with specified buffer size and values
-  public init<S: Sequence>(bufferSize: Int, bufferedPeriodics: S) where S.Iterator.Element == Periodic {
+  public init<S: Sequence>(bufferSize: Int, bufferedUpdates: S) where S.Iterator.Element == Update {
     _maxBufferSize = bufferSize
-    bufferedPeriodics.suffix(bufferSize).forEach(_bufferedPeriodics.push)
+    bufferedUpdates.suffix(bufferSize).forEach(_bufferedUpdates.push)
   }
 
   /// designated initializer of Producer. Initializes Producer with specified buffer size and values
-  public init<C: Collection>(bufferedPeriodics: C) where C.Iterator.Element == Periodic, C.IndexDistance: Integer {
-    _maxBufferSize = Int(bufferedPeriodics.count.toIntMax())
-    bufferedPeriodics.forEach(_bufferedPeriodics.push)
+  public init<C: Collection>(bufferedUpdates: C) where C.Iterator.Element == Update, C.IndexDistance: Integer {
+    _maxBufferSize = Int(bufferedUpdates.count.toIntMax())
+    bufferedUpdates.forEach(_bufferedUpdates.push)
   }
 
   /// **internal use only**
@@ -88,9 +88,9 @@ final public class Producer<Periodic, Success>: Channel<Periodic, Success>, Muta
       _locking.lock()
     }
     
-    for periodic_ in _bufferedPeriodics {
+    for update_ in _bufferedUpdates {
       executor.execute {
-        block(.periodic(periodic_))
+        block(.update(update_))
       }
     }
     
@@ -112,23 +112,23 @@ final public class Producer<Periodic, Success>: Channel<Periodic, Success>, Muta
   /// Value will not be applied for completed Producer
   public func apply(_ value: Value) {
     switch value {
-    case let .periodic(periodic):
-      self.send(periodic)
+    case let .update(update):
+      self.send(update)
     case let .completion(completion):
       self.complete(with: completion)
     }
   }
 
-  private func _pushPeriodicToBuffer(_ periodic: Periodic) {
-    _bufferedPeriodics.push(periodic)
-    if _bufferedPeriodics.count > self.maxBufferSize {
-      let _ = _bufferedPeriodics.pop()
+  private func _pushUpdateToBuffer(_ update: Update) {
+    _bufferedUpdates.push(update)
+    if _bufferedUpdates.count > self.maxBufferSize {
+      let _ = _bufferedUpdates.pop()
     }
   }
 
-  /// Sends specified Periodic to the Producer
+  /// Sends specified Update to the Producer
   /// Value will not be sent for completed Producer
-  public func send(_ periodic: Periodic) {
+  public func send(_ update: Update) {
 
     _locking.lock()
     defer { _locking.unlock() }
@@ -136,17 +136,17 @@ final public class Producer<Periodic, Success>: Channel<Periodic, Success>, Muta
       else { return }
 
     if self.maxBufferSize > 0 {
-      _pushPeriodicToBuffer(periodic)
+      _pushUpdateToBuffer(update)
     }
 
-    let value = Value.periodic(periodic)
+    let value = Value.update(update)
     _handlers.forEach { $0.handle(value) }
   }
 
-  /// Sends specified sequence of Periodic to the Producer
+  /// Sends specified sequence of Update to the Producer
   /// Values will not be sent for completed Producer
-  public func send<S: Sequence>(_ periodics: S)
-    where S.Iterator.Element == Periodic {
+  public func send<S: Sequence>(_ updates: S)
+    where S.Iterator.Element == Update {
 
       _locking.lock()
       defer { _locking.unlock() }
@@ -154,12 +154,12 @@ final public class Producer<Periodic, Success>: Channel<Periodic, Success>, Muta
         else { return }
 
       if self.maxBufferSize > 0 {
-        periodics.suffix(self.maxBufferSize).forEach(_pushPeriodicToBuffer)
+        updates.suffix(self.maxBufferSize).forEach(_pushUpdateToBuffer)
       }
 
       _handlers.forEach {
-        for periodic in periodics {
-          $0.handle(.periodic(periodic))
+        for update in updates {
+          $0.handle(.update(update))
         }
       }
   }
@@ -215,11 +215,11 @@ final public class Producer<Periodic, Success>: Channel<Periodic, Success>, Muta
     }
   }
 
-  /// Makes an iterator that allows synchronous iteration over periodic values of the channel
+  /// Makes an iterator that allows synchronous iteration over update values of the channel
   override public func makeIterator() -> Iterator {
     _locking.lock()
     defer { _locking.unlock() }
-    let channelIteratorImpl = ProducerIteratorImpl<Periodic, Success>(channel: self, bufferedPeriodics: Queue())
+    let channelIteratorImpl = ProducerIteratorImpl<Update, Success>(channel: self, bufferedUpdates: Queue())
     return ChannelIterator(impl: channelIteratorImpl)
   }
 }
@@ -227,14 +227,14 @@ final public class Producer<Periodic, Success>: Channel<Periodic, Success>, Muta
 // MARK: - Constructors
 
 /// Convenience constructor of Channel. Encapsulates cancellation and producer creation.
-public func channel<Periodic, Success>(
+public func channel<Update, Success>(
   executor: Executor = .primary,
   cancellationToken: CancellationToken? = nil,
   bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize,
-  block: @escaping (_ sendPeriodic: @escaping (Periodic) -> Void) throws -> Success
-  ) -> Channel<Periodic, Success> {
+  block: @escaping (_ sendUpdate: @escaping (Update) -> Void) throws -> Success
+  ) -> Channel<Update, Success> {
 
-  let producer = Producer<Periodic, Success>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
+  let producer = Producer<Update, Success>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
 
   cancellationToken?.add(cancellable: producer)
 
@@ -247,15 +247,15 @@ public func channel<Periodic, Success>(
 }
 
 /// Convenience contextual constructor of Channel. Encapsulates cancellation and producer creation.
-public func channel<U: ExecutionContext, Periodic, Success>(
+public func channel<U: ExecutionContext, Update, Success>(
   context: U,
   executor: Executor? = nil,
   cancellationToken: CancellationToken? = nil,
   bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize,
-  block: @escaping (_ strongContext: U, _ sendPeriodic: @escaping (Periodic) -> Void) throws -> Success
-  ) -> Channel<Periodic, Success> {
+  block: @escaping (_ strongContext: U, _ sendUpdate: @escaping (Update) -> Void) throws -> Success
+  ) -> Channel<Update, Success> {
 
-  let producer = Producer<Periodic, Success>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
+  let producer = Producer<Update, Success>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
 
   context.addDependent(completable: producer)
   cancellationToken?.add(cancellable: producer)
@@ -273,27 +273,27 @@ public func channel<U: ExecutionContext, Periodic, Success>(
   return producer
 }
 
-/// Convenience function constructs completed Channel with specified periodics and completion
-public func channel<C: Collection, Success>(periodics: C, completion: Fallible<Success>
+/// Convenience function constructs completed Channel with specified updates and completion
+public func channel<C: Collection, Success>(updates: C, completion: Fallible<Success>
   ) -> Channel<C.Iterator.Element, Success>
   where C.IndexDistance: Integer {
-    let producer = Producer<C.Iterator.Element, Success>(bufferedPeriodics: periodics)
+    let producer = Producer<C.Iterator.Element, Success>(bufferedUpdates: updates)
     producer.complete(with: completion)
     return producer
 }
 
-/// Convenience function constructs succeded Channel with specified periodics and success
-public func channel<C: Collection, Success>(periodics: C, success: Success
+/// Convenience function constructs succeded Channel with specified updates and success
+public func channel<C: Collection, Success>(updates: C, success: Success
   ) -> Channel<C.Iterator.Element, Success>
   where C.IndexDistance: Integer {
-    return channel(periodics: periodics, completion: .success(success))
+    return channel(updates: updates, completion: .success(success))
 }
 
-/// Convenience function constructs failed Channel with specified periodics and failure
-public func channel<C: Collection, Success>(periodics: C, failure: Swift.Error
+/// Convenience function constructs failed Channel with specified updates and failure
+public func channel<C: Collection, Success>(updates: C, failure: Swift.Error
   ) -> Channel<C.Iterator.Element, Success>
   where C.IndexDistance: Integer {
-    return channel(periodics: periodics, completion: .failure(failure))
+    return channel(updates: updates, completion: .failure(failure))
 }
 
 /// Specifies strategy of selecting buffer size of channel derived
@@ -319,9 +319,9 @@ public enum DerivedChannelBufferSize {
   }
 
   /// **internal use only**
-  func bufferSize<PeriodicA, SuccessA, PeriodicB, SuccessB>(
-    _ parentChannelA: Channel<PeriodicA, SuccessA>,
-    _ parentChannelB: Channel<PeriodicB, SuccessB>
+  func bufferSize<UpdateA, SuccessA, UpdateB, SuccessB>(
+    _ parentChannelA: Channel<UpdateA, SuccessA>,
+    _ parentChannelB: Channel<UpdateB, SuccessB>
     ) -> Int {
     switch self {
     case .default: return AsyncNinjaConstants.defaultChannelBufferSize
@@ -332,12 +332,12 @@ public enum DerivedChannelBufferSize {
 }
 
 // MARK: - Iterators
-fileprivate class ProducerIteratorImpl<Periodic, Success>: ChannelIteratorImpl<Periodic, Success> {
+fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Update, Success> {
   let _sema: DispatchSemaphore
   var _locking = makeLocking(isFair: true)
-  let _bufferedPeriodics: Queue<Periodic>
-  let _producer: Producer<Periodic, Success>
-  var _handler: ChannelHandler<Periodic, Success>?
+  let _bufferedUpdates: Queue<Update>
+  let _producer: Producer<Update, Success>
+  var _handler: ChannelHandler<Update, Success>?
   override var completion: Fallible<Success>? {
     _locking.lock()
     defer { _locking.unlock() }
@@ -345,11 +345,11 @@ fileprivate class ProducerIteratorImpl<Periodic, Success>: ChannelIteratorImpl<P
   }
   var _completion: Fallible<Success>?
 
-  init(channel: Producer<Periodic, Success>, bufferedPeriodics: Queue<Periodic>) {
+  init(channel: Producer<Update, Success>, bufferedUpdates: Queue<Update>) {
     _producer = channel
-    _bufferedPeriodics = bufferedPeriodics
+    _bufferedUpdates = bufferedUpdates
     _sema = DispatchSemaphore(value: 0)
-    for _ in 0..<_bufferedPeriodics.count {
+    for _ in 0..<_bufferedUpdates.count {
       _sema.signal()
     }
     super.init()
@@ -358,33 +358,33 @@ fileprivate class ProducerIteratorImpl<Periodic, Success>: ChannelIteratorImpl<P
     }
   }
 
-  override public func next() -> Periodic? {
+  override public func next() -> Update? {
     _sema.wait()
 
     _locking.lock()
     defer { _locking.unlock() }
 
-    if let periodic = _bufferedPeriodics.pop() {
-      return periodic
+    if let update = _bufferedUpdates.pop() {
+      return update
     } else {
       _sema.signal()
       return nil
     }
   }
 
-  override func clone() -> ChannelIteratorImpl<Periodic, Success> {
-    return ProducerIteratorImpl(channel: _producer, bufferedPeriodics: _bufferedPeriodics.clone())
+  override func clone() -> ChannelIteratorImpl<Update, Success> {
+    return ProducerIteratorImpl(channel: _producer, bufferedUpdates: _bufferedUpdates.clone())
   }
 
-  func handle(_ value: ChannelValue<Periodic, Success>) {
+  func handle(_ value: ChannelValue<Update, Success>) {
     _locking.lock()
     defer { _locking.unlock() }
 
     if case .some = _completion { return }
 
     switch value {
-    case let .periodic(periodic):
-      _bufferedPeriodics.push(periodic)
+    case let .update(update):
+      _bufferedUpdates.push(update)
     case let .completion(completion):
       _completion = completion
     }

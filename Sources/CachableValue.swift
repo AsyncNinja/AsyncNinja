@@ -26,7 +26,7 @@ import Dispatch
 /// cached values automatically. Parametrised with MutableCompletable
 /// that can be either `Future` or `Channel` and Context. That gives
 /// an opportunity to make cache that can report of status of completion
-/// periodically (e.g. download persentage).
+/// updateally (e.g. download persentage).
 public class CachableValue<T: MutableCompletable, Context: ExecutionContext> {
 
   /// Function that resolves cache misses. `strongContext` is a context restored from weak reference
@@ -161,5 +161,5 @@ public typealias SimpleCachableValue<Success, Context: ExecutionContext>
   = CachableValue<Promise<Success>, Context>
 
 /// Convenience typealias for CachableValue based on `Channel`
-public typealias ReportingCachableValue<Periodic, Success, Context: ExecutionContext>
-  = CachableValue<Producer<Periodic, Success>, Context>
+public typealias ReportingCachableValue<Update, Success, Context: ExecutionContext>
+  = CachableValue<Producer<Update, Success>, Context>

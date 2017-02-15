@@ -37,7 +37,7 @@ struct AsyncNinjaConstants {
   /// ```swift
   /// let producer = Producer<Int, Void>(bufferSize: ...)
   /// producer.send([0, 1, 2])
-  /// producer.onPeriodic { print($0) }
+  /// producer.onUpdate { print($0) }
   /// producer.send([3, 4, 5])
   /// ```
   /// Output will depend on buffer size:

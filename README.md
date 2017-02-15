@@ -132,7 +132,7 @@ This framework is an implementation of following principles:
 	* doing wrong things harder
 * use abstraction is based on monads
     * [`Future`](Documentation/Future.md) is a proxy of value that will be available at some point in the future. See example for advances of using futures.
-    * [`Channel`](Documentation/Channel.md) is like a `Future` that may provide `Periodic` values before completion.
+    * [`Channel`](Documentation/Channel.md) is like a `Future` that may provide `Update` values before completion.
     * [`Executor`](Documentation/Executor.md) is object made to execute escaped block `(Void) -> Void`. Its propose is to encapsulate a way of an execution.
     * [`ExecutionContext`](Documentation/ExecutionContext.md) is a protocol concurrency-aware objects must conform to. It basically make them actors or components of actor.
     * [`Fallible`](Documentation/Fallible.md) is validation monad. Is an object that represents either success value of failure value (Error).
@@ -229,12 +229,12 @@ func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> { /* ... */ }
 
 ```swift
 let channelOfSquaredPrimeNumbers = channelOfPrimeNumbers
-  .mapPeriodic { (number) -> Int in
+  .mapUpdate { (number) -> Int in
       return number * number
     }
 ```
 
-#### Synchronously iterating over periodic values.
+#### Synchronously iterating over update values.
 
 ```swift
 for number in channelOfPrimeNumbers {
@@ -258,10 +258,10 @@ if let fallibleNumberOfPrimes = channelOfPrimeNumbers.wait(seconds: 1.0) {
 let (primeNumbers, numberOfPrimeNumbers) = channelOfPrimeNumbers.waitForAll()
 ```
 
-#### Subscribing for periodic
+#### Subscribing for update
 
 ```swift
-channelOfPrimeNumbers.onPeriodic { print("Periodic: \($0)") }
+channelOfPrimeNumbers.onUpdate { print("Update: \($0)") }
 ```
 
 #### Subscribing for completion
@@ -274,13 +274,13 @@ channelOfPrimeNumbers.onComplete { print("Completed: \($0)") }
 
 ```swift
 func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> {
-  return channel { (sendPeriodic) -> Int in
+  return channel { (sendUpdate) -> Int in
     var numberOfPrimeNumbers = 0
     var isPrime = Array(repeating: true, count: n)
 
     for number in 2..<n where isPrime[number] {
       numberOfPrimeNumbers += 1
-      sendPeriodic(number)
+      sendUpdate(number)
 
       // updating seive
       var seiveNumber = number + number
@@ -339,10 +339,10 @@ let searchResults = searchBar.rx.text.orEmpty
 
 #### AsyncNinja
 ```swift
-let searchResults = searchBar.changes(of: "text").mapPeriodic { $0 ?? "" }
+let searchResults = searchBar.changes(of: "text").mapUpdate { $0 ?? "" }
   .debounce(interval: 0.3)
   .distinct()
-  .flatMapPeriodic(behavior: .keepLatestTransform) { (query) -> Future<[SearchResult]> in
+  .flatMapUpdate(behavior: .keepLatestTransform) { (query) -> Future<[SearchResult]> in
 	if query.isEmpty {
 	  return future(success: [])
 	}

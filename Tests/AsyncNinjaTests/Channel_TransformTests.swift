@@ -74,8 +74,8 @@ class Channel_TransformTests: XCTestCase {
     let producer = Producer<Int, Void>()
     let expectation = self.expectation(description: "completion of producer")
 
-    producer.distinct().extractAll { (periodics, completion) in
-      XCTAssertEqual(periodics, [1, 2, 3, 4, 5, 6, 7])
+    producer.distinct().extractAll { (updates, completion) in
+      XCTAssertEqual(updates, [1, 2, 3, 4, 5, 6, 7])
       expectation.fulfill()
     }
 
@@ -92,11 +92,11 @@ class Channel_TransformTests: XCTestCase {
 //    let producer = Producer<Int?, Void>()
 //    let expectation = self.expectation(description: "completion of producer")
 //
-//    producer.distinct().extractAll { (periodics, completion) in
+//    producer.distinct().extractAll { (updates, completion) in
 //      let assumedResults = [nil, 1, nil, 2, 3, nil, 3, 4, 5, 6, 7]
-//      XCTAssertEqual(periodics.count, assumedResults.count)
-//      for (periodic, result) in zip(periodics, assumedResults) {
-//        XCTAssertEqual(periodic, result)
+//      XCTAssertEqual(updates.count, assumedResults.count)
+//      for (update, result) in zip(updates, assumedResults) {
+//        XCTAssertEqual(update, result)
 //      }
 //      expectation.fulfill()
 //    }

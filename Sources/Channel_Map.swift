@@ -95,8 +95,8 @@ extension Channel {
 // MARK: - whole channel transformations
 public extension Channel {
 
-  /// Applies transformation to the whole channel. `mapPeriodic` methods
-  /// are more convenient if you want to transform periodics values only.
+  /// Applies transformation to the whole channel. `mapUpdate` methods
+  /// are more convenient if you want to transform updates values only.
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
@@ -111,7 +111,7 @@ public extension Channel {
   ///     an extended buffering options of returned channel
   ///   - transform: to apply
   ///   - strongContext: context restored from weak reference to specified context
-  ///   - value: `ChannelValue` to transform. May be either periodic or completion
+  ///   - value: `ChannelValue` to transform. May be either update or completion
   /// - Returns: transformed channel
   func map<P, S, C: ExecutionContext>(
     context: C,
@@ -131,8 +131,8 @@ public extension Channel {
     }
   }
 
-  /// Applies transformation to the whole channel. `mapPeriodic` methods
-  /// are more convenient if you want to transform periodics values only.
+  /// Applies transformation to the whole channel. `mapUpdate` methods
+  /// are more convenient if you want to transform updates values only.
   ///
   /// - Parameters:
   ///   - executor: to execute transform on
@@ -143,7 +143,7 @@ public extension Channel {
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
   ///   - transform: to apply
-  ///   - value: `ChannelValue` to transform. May be either periodic or completion
+  ///   - value: `ChannelValue` to transform. May be either update or completion
   /// - Returns: transformed channel
   func map<P, S>(
     executor: Executor = .primary,
@@ -162,13 +162,13 @@ public extension Channel {
   }
 }
 
-// MARK: - periodics only transformations
+// MARK: - updates only transformations
 
 public extension Channel {
 
-  /// Applies transformation to periodic values of the channel.
+  /// Applies transformation to update values of the channel.
   /// `map` methods are more convenient if you want to transform
-  /// both periodics and completion
+  /// both updates and completion
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
@@ -183,14 +183,14 @@ public extension Channel {
   ///     an extended buffering options of returned channel
   ///   - transform: to apply
   ///   - strongContext: context restored from weak reference to specified context
-  ///   - periodic: `Periodic` to transform
+  ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func mapPeriodic<P, C: ExecutionContext>(
+  func mapUpdate<P, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
-    _ transform: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> P
+    _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> P
     ) -> Channel<P, Success> {
     return self.makeProducer(context: context,
                              executor: executor,
@@ -199,8 +199,8 @@ public extension Channel {
     {
       (context, value, producer) in
       switch value {
-      case .periodic(let periodic):
-        let transformedValue = try transform(context, periodic)
+      case .update(let update):
+        let transformedValue = try transform(context, update)
         producer.send(transformedValue)
       case .completion(let completion):
         producer.complete(with: completion)
@@ -208,9 +208,9 @@ public extension Channel {
     }
   }
 
-  /// Applies transformation to periodic values of the channel.
+  /// Applies transformation to update values of the channel.
   /// `map` methods are more convenient if you want to transform
-  /// both periodics and completion
+  /// both updates and completion
   ///
   /// - Parameters:
   ///   - executor: to execute transform on
@@ -221,16 +221,16 @@ public extension Channel {
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
   ///   - transform: to apply
-  ///   - periodic: `Periodic` to transform
+  ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func mapPeriodic<P>(
+  func mapUpdate<P>(
     executor: Executor = .primary,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
-    _ transform: @escaping (_ periodic: Periodic) throws -> P
+    _ transform: @escaping (_ update: Update) throws -> P
     ) -> Channel<P, Success> {
 
-    // Test: Channel_MapTests.testMapPeriodic
+    // Test: Channel_MapTests.testMapUpdate
 
     return self.makeProducer(executor: executor,
                              cancellationToken: cancellationToken,
@@ -238,8 +238,8 @@ public extension Channel {
     {
       (value, producer) in
       switch value {
-      case .periodic(let periodic):
-        let transformedValue = try transform(periodic)
+      case .update(let update):
+        let transformedValue = try transform(update)
         producer.send(transformedValue)
       case .completion(let completion):
         producer.complete(with: completion)
@@ -248,11 +248,11 @@ public extension Channel {
   }
 }
 
-// MARK: - periodics only flattening transformations
+// MARK: - updates only flattening transformations
 
 public extension Channel {
 
-  /// Applies transformation to periodic values of the channel.
+  /// Applies transformation to update values of the channel.
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
@@ -265,16 +265,16 @@ public extension Channel {
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
-  ///   - transform: to apply. Nil returned from transform will not produce periodic value
+  ///   - transform: to apply. Nil returned from transform will not produce update value
   ///   - strongContext: context restored from weak reference to specified context
-  ///   - periodic: `Periodic` to transform
+  ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<P, C: ExecutionContext>(
+  func flatMapUpdate<P, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
-    _ transform: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> P?
+    _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> P?
     ) -> Channel<P, Success> {
     return self.makeProducer(context: context,
                              executor: executor,
@@ -283,8 +283,8 @@ public extension Channel {
     {
       (context, value, producer) in
       switch value {
-      case .periodic(let periodic):
-        if let transformedValue = try transform(context, periodic) {
+      case .update(let update):
+        if let transformedValue = try transform(context, update) {
           producer.send(transformedValue)
         }
       case .completion(let completion):
@@ -293,7 +293,7 @@ public extension Channel {
     }
   }
 
-  /// Applies transformation to periodic values of the channel.
+  /// Applies transformation to update values of the channel.
   ///
   /// - Parameters:
   ///   - executor: to execute transform on
@@ -303,14 +303,14 @@ public extension Channel {
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
-  ///   - transform: to apply. Nil returned from transform will not produce periodic value
-  ///   - periodic: `Periodic` to transform
+  ///   - transform: to apply. Nil returned from transform will not produce update value
+  ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<P>(
+  func flatMapUpdate<P>(
     executor: Executor = .primary,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
-    _ transform: @escaping (_ periodic: Periodic) throws -> P?
+    _ transform: @escaping (_ update: Update) throws -> P?
     ) -> Channel<P, Success> {
     return self.makeProducer(executor: executor,
                              cancellationToken: cancellationToken,
@@ -318,8 +318,8 @@ public extension Channel {
     {
       (value, producer) in
       switch value {
-      case .periodic(let periodic):
-        if let transformedValue = try transform(periodic) {
+      case .update(let update):
+        if let transformedValue = try transform(update) {
           producer.send(transformedValue)
         }
       case .completion(let completion):
@@ -328,7 +328,7 @@ public extension Channel {
     }
   }
 
-  /// Applies transformation to periodic values of the channel.
+  /// Applies transformation to update values of the channel.
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
@@ -344,14 +344,14 @@ public extension Channel {
   ///   - transform: to apply. Sequence returned from transform
   ///     will be treated as multiple period values
   ///   - strongContext: context restored from weak reference to specified context
-  ///   - periodic: `Periodic` to transform
+  ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<PS: Sequence, C: ExecutionContext>(
+  func flatMapUpdate<PS: Sequence, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
-    _ transform: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> PS
+    _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> PS
     ) -> Channel<PS.Iterator.Element, Success> {
     return self.makeProducer(context: context,
                              executor: executor,
@@ -360,15 +360,15 @@ public extension Channel {
     {
       (context, value, producer) in
       switch value {
-      case .periodic(let periodic):
-        try transform(context, periodic).forEach(producer.send)
+      case .update(let update):
+        try transform(context, update).forEach(producer.send)
       case .completion(let completion):
         producer.complete(with: completion)
       }
     }
   }
 
-  /// Applies transformation to periodic values of the channel.
+  /// Applies transformation to update values of the channel.
   ///
   /// - Parameters:
   ///   - executor: to execute transform on
@@ -380,13 +380,13 @@ public extension Channel {
   ///     an extended buffering options of returned channel
   ///   - transform: to apply. Sequence returned from transform
   ///     will be treated as multiple period values
-  ///   - periodic: `Periodic` to transform
+  ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<PS: Sequence>(
+  func flatMapUpdate<PS: Sequence>(
     executor: Executor = .primary,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
-    _ transform: @escaping (_ periodic: Periodic) throws -> PS
+    _ transform: @escaping (_ update: Update) throws -> PS
     ) -> Channel<PS.Iterator.Element, Success> {
     return self.makeProducer(executor: executor,
                              cancellationToken: cancellationToken,
@@ -394,8 +394,8 @@ public extension Channel {
     {
       (value, producer) in
       switch value {
-      case .periodic(let periodic):
-        try transform(periodic).forEach(producer.send)
+      case .update(let update):
+        try transform(update).forEach(producer.send)
       case .completion(let completion):
         producer.complete(with: completion)
       }
@@ -407,7 +407,7 @@ public extension Channel {
 
 public extension Channel {
 
-  /// Filters periodic values of the channel
+  /// Filters update values of the channel
   ///
   ///   - context: `ExectionContext` to apply predicate in
   ///   - executor: override of `ExecutionContext`s executor. Keep default value of the argument unless you need to override an executor provided by the context
@@ -415,15 +415,15 @@ public extension Channel {
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel. Keep default value of the argument unless you need an extended buffering options of returned channel
   ///   - predicate: to apply
   ///   - strongContext: context restored from weak reference to specified context
-  ///   - periodic: `Periodic` to transform
+  ///   - update: `Update` to transform
   /// - Returns: filtered transform
-  func filterPeriodic<C: ExecutionContext>(
+  func filterUpdate<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
-    _ predicate: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> Bool
-    ) -> Channel<Periodic, Success> {
+    _ predicate: @escaping (_ strongContext: C, _ update: Update) throws -> Bool
+    ) -> Channel<Update, Success> {
     return self.makeProducer(context: context,
                              executor: executor,
                              cancellationToken: cancellationToken,
@@ -431,10 +431,10 @@ public extension Channel {
     {
       (context, value, producer) in
       switch value {
-      case .periodic(let periodic):
+      case .update(let update):
         do {
-          if try predicate(context, periodic) {
-            producer.send(periodic)
+          if try predicate(context, update) {
+            producer.send(update)
           }
         } catch { producer.fail(with: error) }
       case .completion(let completion):
@@ -443,7 +443,7 @@ public extension Channel {
     }
   }
 
-  /// Filters periodic values of the channel
+  /// Filters update values of the channel
   ///
   ///   - executor: to execute transform on
   ///   - cancellationToken: `CancellationToken` to use.
@@ -453,16 +453,16 @@ public extension Channel {
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
   ///   - predicate: to apply
-  ///   - periodic: `Periodic` to transform
+  ///   - update: `Update` to transform
   /// - Returns: filtered transform
-  func filterPeriodic(
+  func filterUpdate(
     executor: Executor = .primary,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
-    _ predicate: @escaping (_ periodic: Periodic) throws -> Bool
-    ) -> Channel<Periodic, Success> {
+    _ predicate: @escaping (_ update: Update) throws -> Bool
+    ) -> Channel<Update, Success> {
 
-    // Test: Channel_MapTests.testFilterPeriodic
+    // Test: Channel_MapTests.testFilterUpdate
 
     return self.makeProducer(executor: executor,
                              cancellationToken: cancellationToken,
@@ -470,10 +470,10 @@ public extension Channel {
     {
       (value, producer) in
       switch value {
-      case .periodic(let periodic):
+      case .update(let update):
         do {
-          if try predicate(periodic) {
-            producer.send(periodic)
+          if try predicate(update) {
+            producer.send(update)
           }
         } catch { producer.fail(with: error) }
       case .completion(let completion):

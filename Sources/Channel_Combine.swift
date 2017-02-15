@@ -37,16 +37,16 @@ public extension Channel {
   func sample<P, S>(with samplerChannel: Channel<P, S>,
               cancellationToken: CancellationToken? = nil,
               bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<(Periodic, P), (Success, S)> {
+    ) -> Channel<(Update, P), (Success, S)> {
 
     // Test: Channel_CombineTests.testSample
     var locking = makeLocking()
-    var latestLeftPeriodic: Periodic? = nil
+    var latestLeftUpdate: Update? = nil
     var leftSuccess: Success? = nil
     var rightSuccess: S? = nil
 
     let bufferSize_ = bufferSize.bufferSize(self, samplerChannel)
-    let producer = Producer<(Periodic, P), (Success, S)>(bufferSize: bufferSize_)
+    let producer = Producer<(Update, P), (Success, S)>(bufferSize: bufferSize_)
 
     do {
       let handler = makeHandler(executor: .immediate) {
@@ -55,8 +55,8 @@ public extension Channel {
         defer { locking.unlock() }
 
         switch value {
-        case let .periodic(localPeriodic):
-          latestLeftPeriodic = localPeriodic
+        case let .update(localUpdate):
+          latestLeftUpdate = localUpdate
         case let .completion(leftCompletion):
           switch leftCompletion {
           case let .success(localLeftSuccess):
@@ -82,10 +82,10 @@ public extension Channel {
         defer { locking.unlock() }
 
         switch value {
-        case let .periodic(localRightPeriodic):
-          if let localLeftPeriodic = latestLeftPeriodic {
-            producer?.send((localLeftPeriodic, localRightPeriodic))
-            latestLeftPeriodic = nil
+        case let .update(localRightUpdate):
+          if let localLeftUpdate = latestLeftUpdate {
+            producer?.send((localLeftUpdate, localRightUpdate))
+            latestLeftUpdate = nil
           }
         case let .completion(rightCompletion):
           switch rightCompletion {

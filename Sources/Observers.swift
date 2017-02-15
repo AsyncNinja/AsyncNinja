@@ -73,13 +73,13 @@
 
   /// NSControl improved with AsyncNinja
   public extension NSControl {
-    /// Periodic of ActionChannel
-    typealias ActionChannelPeriodic = (sender: AnyObject?, objectValue: Any?)
+    /// Update of ActionChannel
+    typealias ActionChannelUpdate = (sender: AnyObject?, objectValue: Any?)
 
     /// Channel that contains actions sent by the control
-    typealias ActionChannel = Channel<ActionChannelPeriodic, Void>
+    typealias ActionChannel = Channel<ActionChannelUpdate, Void>
 
-    /// Makes or returns cached channel. The chennel that will have periodic on each triggering of action
+    /// Makes or returns cached channel. The chennel that will have update on each triggering of action
     func actionChannel() -> ActionChannel {
       let actionReceiver = (self.target as? ActionReceiver) ?? {
         let actionReceiver = ActionReceiver(control: self)
@@ -97,18 +97,18 @@
 
   private class ActionReceiver: NSObject {
     weak var control: NSControl?
-    let producer = Producer<NSControl.ActionChannelPeriodic, Void>(bufferSize: 0)
+    let producer = Producer<NSControl.ActionChannelUpdate, Void>(bufferSize: 0)
 
     init(control: NSControl) {
       self.control = control
     }
 
     dynamic func asyncNinjaAction(sender: AnyObject?) {
-      let periodic: NSControl.ActionChannelPeriodic = (
+      let update: NSControl.ActionChannelUpdate = (
         sender: sender,
         objectValue: self.control?.objectValue
       )
-      self.producer.send(periodic)
+      self.producer.send(update)
     }
   }
 #endif
@@ -118,13 +118,13 @@
 
   /// UIControl improved with AsyncNinja
   public extension UIControl {
-    /// Periodic of ActionChannel
-    typealias ActionChannelPeriodic = (sender: AnyObject?, event: UIEvent)
+    /// Update of ActionChannel
+    typealias ActionChannelUpdate = (sender: AnyObject?, event: UIEvent)
 
     /// Channel that contains actions sent by the control
-    typealias ActionChannel = Channel<ActionChannelPeriodic, Void>
+    typealias ActionChannel = Channel<ActionChannelUpdate, Void>
 
-    /// Makes channel that will have periodic value on each triggering of action
+    /// Makes channel that will have update value on each triggering of action
     ///
     /// - Parameter events: events that to listen for
     /// - Returns: unbuffered channel
@@ -143,18 +143,18 @@
 
   private class ActionReceiver: NSObject {
     weak var control: UIControl?
-    let producer = Producer<UIControl.ActionChannelPeriodic, Void>(bufferSize: 0)
+    let producer = Producer<UIControl.ActionChannelUpdate, Void>(bufferSize: 0)
 
     init(control: UIControl) {
       self.control = control
     }
 
     dynamic func asyncNinjaAction(sender: AnyObject?, forEvent event: UIEvent) {
-      let periodic: UIControl.ActionChannelPeriodic = (
+      let update: UIControl.ActionChannelUpdate = (
         sender: sender,
         event: event
       )
-      self.producer.send(periodic)
+      self.producer.send(update)
     }
   }
 #endif

@@ -62,9 +62,9 @@ class ChannelTests: XCTestCase {
   func testMakeChannel() {
     let numbers = Array(0..<100)
 
-    let channelA: Channel<Int, String> = channel { (sendPeriodic) -> String in
+    let channelA: Channel<Int, String> = channel { (sendUpdate) -> String in
       for i in numbers {
-        sendPeriodic(i)
+        sendUpdate(i)
       }
       return "done"
     }
@@ -73,7 +73,7 @@ class ChannelTests: XCTestCase {
     let serialQueue = DispatchQueue(label: "test-queue")
     let expectation = self.expectation(description: "channel to complete")
 
-    channelA.onPeriodic(executor: .queue(serialQueue)) {
+    channelA.onUpdate(executor: .queue(serialQueue)) {
       resultNumbers.append($0)
     }
 
@@ -90,19 +90,19 @@ class ChannelTests: XCTestCase {
   func testOnValueContextual() {
     let actor = TestActor()
 
-    var periodics = [Int]()
+    var updates = [Int]()
     var successValue: String? = nil
     weak var weakProducer: Producer<Int, String>? = nil
 
-    let periodicsFixture = pickInts()
+    let updatesFixture = pickInts()
     let successValueFixture = "I am working correctly!"
 
     let successExpectation = self.expectation(description: "success of promise")
     DispatchQueue.global().async {
       let producer = Producer<Int, String>()
       weakProducer = producer
-      producer.onPeriodic(context: actor) { (actor, periodic) in
-        periodics.append(periodic)
+      producer.onUpdate(context: actor) { (actor, update) in
+        updates.append(update)
       }
 
       producer.onSuccess(context: actor) { (actor, successValue_) in
@@ -115,7 +115,7 @@ class ChannelTests: XCTestCase {
           XCTFail()
           fatalError()
         }
-        producer.send(periodicsFixture)
+        producer.send(updatesFixture)
         producer.succeed(with: successValueFixture)
       }
     }
@@ -123,16 +123,16 @@ class ChannelTests: XCTestCase {
     self.waitForExpectations(timeout: 0.2, handler: nil)
 
     XCTAssertNil(weakProducer)
-    XCTAssertEqual(periodics, periodicsFixture)
+    XCTAssertEqual(updates, updatesFixture)
     XCTAssertEqual(successValue, successValueFixture)
   }
 
   func testOnValue() {
-    var periodics = [Int]()
+    var updates = [Int]()
     var successValue: String? = nil
     weak var weakProducer: Producer<Int, String>? = nil
 
-    let periodicsFixture = pickInts()
+    let updatesFixture = pickInts()
     let successValueFixture = "I am working correctly!"
 
     let successExpectation = self.expectation(description: "success of promise")
@@ -141,8 +141,8 @@ class ChannelTests: XCTestCase {
     DispatchQueue.global().async {
       let producer = Producer<Int, String>()
       weakProducer = producer
-      producer.onPeriodic(executor: .queue(queue)) { (periodic) in
-        periodics.append(periodic)
+      producer.onUpdate(executor: .queue(queue)) { (update) in
+        updates.append(update)
       }
 
       producer.onSuccess(executor: .queue(queue)) { (successValue_) in
@@ -155,7 +155,7 @@ class ChannelTests: XCTestCase {
           XCTFail()
           fatalError()
         }
-        producer.send(periodicsFixture)
+        producer.send(updatesFixture)
         producer.succeed(with: successValueFixture)
       }
     }
@@ -163,7 +163,7 @@ class ChannelTests: XCTestCase {
     self.waitForExpectations(timeout: 0.2, handler: nil)
 
     XCTAssertNil(weakProducer)
-    XCTAssertEqual(periodics, periodicsFixture)
+    XCTAssertEqual(updates, updatesFixture)
     XCTAssertEqual(successValue, successValueFixture)
   }
 
@@ -195,9 +195,9 @@ class ChannelTests: XCTestCase {
     producer.send(pickInts())
     producer.send(fixture.prefix(upTo: bufferSize))
 
-    var periodics = [Int]()
-    producer.onPeriodic(executor: .queue(queue)) {
-      periodics.append($0)
+    var updates = [Int]()
+    producer.onUpdate(executor: .queue(queue)) {
+      updates.append($0)
     }
     producer.send(fixture.suffix(from: bufferSize))
     producer.succeed()
@@ -209,19 +209,19 @@ class ChannelTests: XCTestCase {
     
     self.waitForExpectations(timeout: 1.0, handler: nil)
     
-    XCTAssertEqual(periodics, fixture, file: file, line: line)
+    XCTAssertEqual(updates, fixture, file: file, line: line)
   }
 
   func testDescription() {
-    let channelA = channel(periodics: [1, 2, 3], success: "Done")
+    let channelA = channel(updates: [1, 2, 3], success: "Done")
     XCTAssertEqual("Succeded(Done) Channel", channelA.description)
     XCTAssertEqual("Succeded(Done) Channel<Int, String>", channelA.debugDescription)
 
-    let channelB: Channel<Int, String> = channel(periodics: [1, 2, 3], failure: TestError.testCode)
+    let channelB: Channel<Int, String> = channel(updates: [1, 2, 3], failure: TestError.testCode)
     XCTAssertEqual("Failed(testCode) Channel", channelB.description)
     XCTAssertEqual("Failed(testCode) Channel<Int, String>", channelB.debugDescription)
 
-    let channelC: Channel<Int, String> = Producer(bufferSize: 5, bufferedPeriodics: [1, 2, 3])
+    let channelC: Channel<Int, String> = Producer(bufferSize: 5, bufferedUpdates: [1, 2, 3])
     XCTAssertEqual("Incomplete Buffered(3/5) Channel", channelC.description)
     XCTAssertEqual("Incomplete Buffered(3/5) Channel<Int, String>", channelC.debugDescription)
 

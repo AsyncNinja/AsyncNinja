@@ -10,9 +10,9 @@
 
 ## Step 2: Pick the Case
 
-| case         | success | failure | periodic |   | `Future` | `Channel` |
+| case         | success | failure | update |   | `Future` | `Channel` |
 |--------------|---------|---------|----------|---|----------|-----------|
-| on periodic  |         |         | ✅       |   |          | ✅        |
+| on update  |         |         | ✅       |   |          | ✅        |
 | on success   | ✅      |         |          |   | ✅       | ✅        |
 | on failure   |         | ✅      |          |   | ✅       | ✅        |
 | on complete  | ✅      | ✅      |          |   | ✅       | ✅        |
@@ -29,7 +29,7 @@
 ## Step 4: Pick Method
 You have chosen **kind of reaction**, **case**, **context relation**. Now navigate the table to find method you need.
 
-|                      | case ➡️            	| on periodic                        | on success                        | on failure                     | on complete                          | on value                   |
+|                      | case ➡️            	| on update                        | on success                        | on failure                     | on complete                          | on value                   |
 |----------------------|--------------------|------------------------------------|-----------------------------------|--------------------------------|--------------------------------------|----------------------------|
 | kind of reaction ⬇  | is contextual ⬇   	| | | | | |
 | `Future`             | `Future`          	| `Future`                           | `Future`                          | `Future`                       | `Future`                             | `Future`                   |
@@ -43,13 +43,13 @@ You have chosen **kind of reaction**, **case**, **context relation**. Now naviga
 ||||||||
 | kind of reaction ⬇  | is contextual ⬇   	| | | | | |
 | `Channel`            | `Channel`         	| `Channel`                          | `Channel`                         | `Channel`                      | `Channel`                            | `Channel`                  |
-| update state         |                   	| `onPeriodic(executor:block:)`      | `onSuccess(executor:block:)`      | `onFailure(executor:block:)`   | `onComplete(executor:block:)`        | `onValue(executor:block:)` |
-| transfrom            |                   	| `mapPeriodic(executor:block:)`     | `mapSuccess(executor:block:)`     | `recover(executor:block:)`     | `mapCompletion(executor:block:)`     | `map(executor:block:)`     |
-| flattening transform |                   	| `flatMapPeriodic(executor:block:)` | `flatMapSuccess(executor:block:)` | `flatRecover(executor:block:)` | `flatMapCompletion(executor:block:)` | -                          |
+| update state         |                   	| `onUpdate(executor:block:)`      | `onSuccess(executor:block:)`      | `onFailure(executor:block:)`   | `onComplete(executor:block:)`        | `onValue(executor:block:)` |
+| transfrom            |                   	| `mapUpdate(executor:block:)`     | `mapSuccess(executor:block:)`     | `recover(executor:block:)`     | `mapCompletion(executor:block:)`     | `map(executor:block:)`     |
+| flattening transform |                   	| `flatMapUpdate(executor:block:)` | `flatMapSuccess(executor:block:)` | `flatRecover(executor:block:)` | `flatMapCompletion(executor:block:)` | -                          |
 | `Channel`            | `Channel`         	| `Channel`                          | `Channel`                         | `Channel`                      | `Channel`                            | `Channel`                  |
-| update state         | ✅                 	| `onPeriodic(context:block:)`       | `onSuccess(context:block:)`       | `onFailure(context:block:)`    | `onComplete(context:block:)`         | `onValue(context:block:)`  |
-| transfrom            | ✅                 	| `mapPeriodic(context:block:)`      | `mapSuccess(context:block:)`      | `recover(context:block:)`      | `mapCompletion(context:block:)`      | `map(context:block:)`      |
-| flattening transform | ✅                 	| `flatMapPeriodic(context:block:)`  | `flatMapSuccess(context:block:)`  | `flatRecover(context:block:)`  | `flatMapCompletion(context:block:)`  | -                          |
+| update state         | ✅                 	| `onUpdate(context:block:)`       | `onSuccess(context:block:)`       | `onFailure(context:block:)`    | `onComplete(context:block:)`         | `onValue(context:block:)`  |
+| transfrom            | ✅                 	| `mapUpdate(context:block:)`      | `mapSuccess(context:block:)`      | `recover(context:block:)`      | `mapCompletion(context:block:)`      | `map(context:block:)`      |
+| flattening transform | ✅                 	| `flatMapUpdate(context:block:)`  | `flatMapSuccess(context:block:)`  | `flatRecover(context:block:)`  | `flatMapCompletion(context:block:)`  | -                          |
 
 
 ## No need to remember all of that
@@ -57,4 +57,4 @@ There is a rule of thumb for picking method: `<kind_of_reaction><case>(<context:
 
 | kind of reaction ⬇	| case ⬇	|
 |-----------------------|-----------|
-| **on** or **map** or **flatMap** | **Periodic** or **Successs** or **Failure** or **Completion** or **Value** |
+| **on** or **map** or **flatMap** | **Update** or **Successs** or **Failure** or **Completion** or **Value** |

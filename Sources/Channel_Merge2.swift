@@ -38,15 +38,15 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   var successA: SA?
   var successB: SB?
 
-  func makeHandlerBlock<Periodic, Success>(
-    periodicHandler: @escaping (Periodic) -> Void,
+  func makeHandlerBlock<Update, Success>(
+    updateHandler: @escaping (Update) -> Void,
     successHandler: @escaping (Success) -> (SA, SB)?
-    ) -> (ChannelValue<Periodic, Success>) -> Void {
+    ) -> (ChannelValue<Update, Success>) -> Void {
     return {
       [weak producer] (value) in
       switch value {
-      case let .periodic(periodic):
-        periodicHandler(periodic)
+      case let .update(update):
+        updateHandler(update)
       case let .completion(.failure(error)):
         producer?.fail(with: error)
       case let .completion(.success(localSuccess)):
@@ -59,7 +59,7 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
     }
   }
 
-    let handlerBlockA = makeHandlerBlock(periodicHandler: { [weak producer] in producer?.send(.left($0)) },
+    let handlerBlockA = makeHandlerBlock(updateHandler: { [weak producer] in producer?.send(.left($0)) },
                                          successHandler: { (success: SA) in
                                             successA = success
                                             return successB.map { (success, $0) }
@@ -68,7 +68,7 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   let handlerA = channelA.makeHandler(executor: .immediate, handlerBlockA)
   producer.insertHandlerToReleasePool(handlerA)
 
-  let handlerBlockB = makeHandlerBlock(periodicHandler: { [weak producer] in producer?.send(.right($0)) },
+  let handlerBlockB = makeHandlerBlock(updateHandler: { [weak producer] in producer?.send(.right($0)) },
                                        successHandler: { (success: SB) in
                                         successB = success
                                         return successA.map { ($0, success) }
@@ -102,8 +102,8 @@ public func merge<P, SA, SB>(_ channelA: Channel<P, SA>,
     return {
       [weak producer] (value) in
       switch value {
-      case let .periodic(periodic):
-        producer?.send(periodic)
+      case let .update(update):
+        producer?.send(update)
       case let .completion(.failure(error)):
         producer?.fail(with: error)
       case let .completion(.success(localSuccess)):

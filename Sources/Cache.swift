@@ -26,7 +26,7 @@ import Dispatch
 /// hashable key. Does not invalidate cached values automatically.
 /// Parametrised with Key, T that can be either
 /// `Future` or `Channel` and Context. That gives an opportunity to make
-/// cache that can report of status of completion periodically
+/// cache that can report of status of completion updateally
 /// (e.g. download persentage).
 public class Cache<Key: Hashable, T: MutableCompletable, Context: ExecutionContext> {
   typealias _CachableValue = CachableValueImpl<T, Context>
@@ -86,7 +86,7 @@ public class Cache<Key: Hashable, T: MutableCompletable, Context: ExecutionConte
 public typealias SimpleCache<Key: Hashable, Value, Context: ExecutionContext> = Cache<Key, Promise<Value>, Context>
 
 /// Convenience typealias for Cache based on `Channel`
-public typealias ReportingCache<Key: Hashable, Periodic, Success, Context: ExecutionContext> = Cache<Key, Producer<Periodic, Success>, Context>
+public typealias ReportingCache<Key: Hashable, Update, Success, Context: ExecutionContext> = Cache<Key, Producer<Update, Success>, Context>
 
 /// Convenience function that makes `SimpleCache`
 public func makeCache<Key: Hashable, Value, Context: ExecutionContext>(
@@ -97,9 +97,9 @@ public func makeCache<Key: Hashable, Value, Context: ExecutionContext>(
 }
 
 /// Convenience function that makes `ReportingCache`
-public func makeCache<Key: Hashable, Periodic, Success, Context: ExecutionContext>(
+public func makeCache<Key: Hashable, Update, Success, Context: ExecutionContext>(
   context: Context,
-  missHandler: @escaping (Context, Key) -> Channel<Periodic, Success>
-  ) -> ReportingCache<Key, Periodic, Success, Context> {
+  missHandler: @escaping (Context, Key) -> Channel<Update, Success>
+  ) -> ReportingCache<Key, Update, Success, Context> {
   return Cache(context: context, missHandler: missHandler)
 }

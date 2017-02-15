@@ -32,20 +32,20 @@ private func makeTimer(dispatchTimer: DispatchSourceTimer) -> Channel<Void, Void
   return producer
 }
 
-/// Makes channel that will receive periodics after a *deadline*,
+/// Makes channel that will receive updates after a *deadline*,
 /// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(interval: DispatchTimeInterval) -> Channel<Void, Void> {
   return makeTimer(deadline: DispatchTime.now(), interval: interval)
 }
 
-/// Makes channel that will receive periodics after a *deadline*,
+/// Makes channel that will receive updates after a *deadline*,
 /// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(interval: DispatchTimeInterval,
                       leeway: DispatchTimeInterval) -> Channel<Void, Void> {
   return makeTimer(deadline: DispatchTime.now(), interval: interval, leeway: leeway)
 }
 
-/// Makes channel that will receive periodics after a *deadline*,
+/// Makes channel that will receive updates after a *deadline*,
 /// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(deadline: DispatchTime,
                       interval: DispatchTimeInterval) -> Channel<Void, Void> {
@@ -54,7 +54,7 @@ public func makeTimer(deadline: DispatchTime,
   return makeTimer(dispatchTimer: timer)
 }
 
-/// Makes channel that will receive periodics after a *deadline*,
+/// Makes channel that will receive updates after a *deadline*,
 /// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(deadline: DispatchTime,
                       interval: DispatchTimeInterval,
@@ -64,7 +64,7 @@ public func makeTimer(deadline: DispatchTime,
   return makeTimer(dispatchTimer: timer)
 }
 
-/// Makes channel that will receive periodics after a *deadline*,
+/// Makes channel that will receive updates after a *deadline*,
 /// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(wallDeadline: DispatchWallTime,
                       interval: DispatchTimeInterval) -> Channel<Void, Void> {
@@ -73,7 +73,7 @@ public func makeTimer(wallDeadline: DispatchWallTime,
   return makeTimer(dispatchTimer: timer)
 }
 
-/// Makes channel that will receive periodics after a *deadline*,
+/// Makes channel that will receive updates after a *deadline*,
 /// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(wallDeadline: DispatchWallTime,
                       interval: DispatchTimeInterval,
@@ -85,20 +85,20 @@ public func makeTimer(wallDeadline: DispatchWallTime,
 
 // MARK: -
 
-/// Makes channel that will receive periodics after a *deadline*,
+/// Makes channel that will receive updates after a *deadline*,
 /// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(interval: Double) -> Channel<Void, Void> {
   return makeTimer(deadline: DispatchTime.now(), interval: interval)
 }
 
-/// Makes channel that will receive periodics after a *deadline*,
+/// Makes channel that will receive updates after a *deadline*,
 /// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(interval: Double,
                       leeway: DispatchTimeInterval) -> Channel<Void, Void> {
   return makeTimer(deadline: DispatchTime.now(), interval: interval, leeway: leeway)
 }
 
-/// Makes channel that will receive periodics after a *deadline*,
+/// Makes channel that will receive updates after a *deadline*,
 /// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(deadline: DispatchTime,
                       interval: Double) -> Channel<Void, Void> {
@@ -107,7 +107,7 @@ public func makeTimer(deadline: DispatchTime,
   return makeTimer(dispatchTimer: timer)
 }
 
-/// Makes channel that will receive periodics after a *deadline*,
+/// Makes channel that will receive updates after a *deadline*,
 /// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(deadline: DispatchTime,
                       interval: Double,
@@ -117,7 +117,7 @@ public func makeTimer(deadline: DispatchTime,
   return makeTimer(dispatchTimer: timer)
 }
 
-/// Makes channel that will receive periodics after a *deadline*,
+/// Makes channel that will receive updates after a *deadline*,
 /// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(wallDeadline: DispatchWallTime,
                       interval: Double) -> Channel<Void, Void> {
@@ -126,7 +126,7 @@ public func makeTimer(wallDeadline: DispatchWallTime,
   return makeTimer(dispatchTimer: timer)
 }
 
-/// Makes channel that will receive periodics after a *deadline*,
+/// Makes channel that will receive updates after a *deadline*,
 /// in an *interval* (in seconds), with a *leeway*
 public func makeTimer(wallDeadline: DispatchWallTime,
                       interval: Double,

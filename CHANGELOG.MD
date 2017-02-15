@@ -1,5 +1,5 @@
 # 0.4.5
-* adding 5 various behaviors to flatMap that transforms periodic to future
+* adding 5 various behaviors to flatMap that transforms update to future
 * adding descriptions (`CustomStringConvertible`, `CustomDebugStringConvertible`) for `Channel`, `Future`, `Fallible`, `Either`
 * introducing multirun tests in order to fix flaky tests
 * `Channel` is now `Sequence`
@@ -37,7 +37,7 @@
 * documentation improvements
 
 # 0.4.0-beta3
-* ActionChannels to NSControl and UIControl that catch actions and treat them as periodic values
+* ActionChannels to NSControl and UIControl that catch actions and treat them as update values
 * turning down performance tests
 * fixing critical issues of lifetime of `Future`s and `Channel`s
 
@@ -55,7 +55,7 @@
 * more convincing readme
 
 # 0.3.6
-* fix: `Channel` can callback on `onPeriodic` two times for first periodic
+* fix: `Channel` can callback on `onUpdate` two times for first update
 * fix: non-contextual `on<Event>` assertion failure
 
 # 0.3.5

@@ -30,48 +30,48 @@ import Dispatch
 class Channel_MapTests: XCTestCase {
   
   static let allTests = [
-    ("testMapPeriodic", testMapPeriodic),
-    ("testFilterPeriodic", testFilterPeriodic),
+    ("testMapUpdate", testMapUpdate),
+    ("testFilterUpdate", testFilterUpdate),
   ]
 
-  func makeChannel<S: Sequence, T>(periodics: S, success: T) -> Channel<S.Iterator.Element, T> {
+  func makeChannel<S: Sequence, T>(updates: S, success: T) -> Channel<S.Iterator.Element, T> {
     let producer = Producer<S.Iterator.Element, T>()
 
     DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
-      producer.send(periodics)
+      producer.send(updates)
       producer.succeed(with: success)
     }
 
     return producer
   }
 
-  func testMapPeriodic() {
+  func testMapUpdate() {
     let range = 0..<5
     let success = "bye"
     let queue = DispatchQueue(label: "test", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
-    let (periodics, completion) = makeChannel(periodics: range, success: success)
-      .mapPeriodic(executor: .queue(queue)) { value -> Int in
+    let (updates, completion) = makeChannel(updates: range, success: success)
+      .mapUpdate(executor: .queue(queue)) { value -> Int in
         assert(on: queue)
         return value * 2
       }
       .waitForAll()
 
-    XCTAssertEqual(range.map { $0 * 2 }, periodics)
+    XCTAssertEqual(range.map { $0 * 2 }, updates)
     XCTAssertEqual(success, completion.success)
   }
 
-  func testFilterPeriodic() {
+  func testFilterUpdate() {
     let range = 0..<5
     let success = "bye"
     let queue = DispatchQueue(label: "test", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
-    let (periodics, completion) = makeChannel(periodics: range, success: success)
-      .filterPeriodic(executor: .queue(queue)) { value -> Bool in
+    let (updates, completion) = makeChannel(updates: range, success: success)
+      .filterUpdate(executor: .queue(queue)) { value -> Bool in
         assert(on: queue)
         return 0 == value % 2
       }
       .waitForAll()
 
-    XCTAssertEqual(range.filter { 0 == $0 % 2 }, periodics)
+    XCTAssertEqual(range.filter { 0 == $0 % 2 }, updates)
     XCTAssertEqual(success, completion.success)
   }
 }

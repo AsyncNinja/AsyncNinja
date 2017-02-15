@@ -24,7 +24,7 @@ import Dispatch
 
 public extension Channel {
 
-  /// Adds indexes to periodic values of the channel
+  /// Adds indexes to update values of the channel
   ///
   /// - Parameters:
   ///   - cancellationToken: `CancellationToken` to use.
@@ -33,15 +33,15 @@ public extension Channel {
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
-  /// - Returns: channel with tuple (index, periodic) as periodic value
+  /// - Returns: channel with tuple (index, update) as update value
   func enumerated(cancellationToken: CancellationToken? = nil,
                   bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<(Int, Periodic), Success> {
+    ) -> Channel<(Int, Update), Success> {
 
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 
       var index: OSAtomic_int64_aligned64_t = -1
-      return self.mapPeriodic(executor: .immediate,
+      return self.mapUpdate(executor: .immediate,
                               cancellationToken: cancellationToken,
                               bufferSize: bufferSize)
       {
@@ -53,7 +53,7 @@ public extension Channel {
 
       var locking = makeLocking()
       var index = 0
-      return self.mapPeriodic(executor: .immediate,
+      return self.mapUpdate(executor: .immediate,
                               cancellationToken: cancellationToken,
                               bufferSize: bufferSize)
       {
@@ -67,7 +67,7 @@ public extension Channel {
     #endif
   }
 
-  /// Makes channel of pairs of periodic values
+  /// Makes channel of pairs of update values
   ///
   /// - Parameters:
   ///   - cancellationToken: `CancellationToken` to use.
@@ -76,12 +76,12 @@ public extension Channel {
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
-  /// - Returns: channel with tuple (periodic, periodic) as periodic value
+  /// - Returns: channel with tuple (update, update) as update value
   func bufferedPairs(cancellationToken: CancellationToken? = nil,
                      bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<(Periodic, Periodic), Success> {
+    ) -> Channel<(Update, Update), Success> {
     var locking = makeLocking()
-    var previousPeriodic: Periodic? = nil
+    var previousUpdate: Update? = nil
 
     return self.makeProducer(executor: .immediate,
                              cancellationToken: cancellationToken,
@@ -89,14 +89,14 @@ public extension Channel {
     {
       (value, producer) in
       switch value {
-      case let .periodic(periodic):
+      case let .update(update):
         locking.lock()
-        let _previousPeriodic = previousPeriodic
-        previousPeriodic = periodic
+        let _previousUpdate = previousUpdate
+        previousUpdate = update
         locking.unlock()
 
-        if let previousPeriodic = _previousPeriodic {
-          let change = (previousPeriodic, periodic)
+        if let previousUpdate = _previousUpdate {
+          let change = (previousUpdate, update)
           producer.send(change)
         }
       case let .completion(completion):
@@ -105,23 +105,23 @@ public extension Channel {
     }
   }
 
-  /// Makes channel of arrays of periodic values
+  /// Makes channel of arrays of update values
   ///
   /// - Parameters:
-  ///   - capacity: number of periodic values of original channel used
-  ///     as periodic value of derived channel
+  ///   - capacity: number of update values of original channel used
+  ///     as update value of derived channel
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
   ///     an extended cancellation options of returned channel
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
-  /// - Returns: channel with [periodic] as periodic value
+  /// - Returns: channel with [update] as update value
   func buffered(capacity: Int,
                 cancellationToken: CancellationToken? = nil,
                 bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<[Periodic], Success> {
-    var buffer = [Periodic]()
+    ) -> Channel<[Update], Success> {
+    var buffer = [Update]()
     buffer.reserveCapacity(capacity)
     var locking = makeLocking()
 
@@ -133,8 +133,8 @@ public extension Channel {
       locking.lock()
 
       switch value {
-      case let .periodic(periodic):
-        buffer.append(periodic)
+      case let .update(update):
+        buffer.append(update)
         if capacity == buffer.count {
           let localBuffer = buffer
           buffer.removeAll(keepingCapacity: true)
@@ -167,15 +167,15 @@ public extension Channel {
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
   /// - Returns: delayed channel
-  func delayedPeriodic(timeout: Double,
+  func delayedUpdate(timeout: Double,
                        cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Periodic, Success> {
+    ) -> Channel<Update, Success> {
     return self.makeProducer(executor: .immediate,
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (value: Value, producer: Producer<Periodic, Success>) -> Void in
+      (value: Value, producer: Producer<Update, Success>) -> Void in
       Executor.primary.execute(after: timeout) { [weak producer] in
         guard let producer = producer else { return }
         producer.apply(value)
@@ -183,11 +183,11 @@ public extension Channel {
     }
   }
 
-  /// Picks latest periodic value of the channel every interval and sends it
+  /// Picks latest update value of the channel every interval and sends it
   ///
   /// - Parameters:
   ///   - deadline: to start picking peridic values after
-  ///   - interval: interfal for picking latest periodic values
+  ///   - interval: interfal for picking latest update values
   ///   - leeway: leeway for timer
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
@@ -200,14 +200,14 @@ public extension Channel {
                 leeway: DispatchTimeInterval? = nil,
                 cancellationToken: CancellationToken? = nil,
                 bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Periodic, Success> {
+    ) -> Channel<Update, Success> {
 
     // Test: Channel_TransformTests.testDebounce
     let bufferSize_ = bufferSize.bufferSize(self)
-    let producer = Producer<Periodic, Success>(bufferSize: bufferSize_)
+    let producer = Producer<Update, Success>(bufferSize: bufferSize_)
     var locking = makeLocking()
-    var latestPeriodic: Periodic? = nil
-    var didSendFirstPeriodic = false
+    var latestUpdate: Update? = nil
+    var didSendFirstUpdate = false
 
     let timer = DispatchSource.makeTimerSource()
     if let leeway = leeway {
@@ -218,10 +218,10 @@ public extension Channel {
 
     timer.setEventHandler { [weak producer] in
       locking.lock()
-      if let periodic = latestPeriodic {
-        latestPeriodic = nil
+      if let update = latestUpdate {
+        latestUpdate = nil
         locking.unlock()
-        producer?.send(periodic)
+        producer?.send(update)
       } else {
         locking.unlock()
       }
@@ -238,17 +238,17 @@ public extension Channel {
 
       switch value {
       case let .completion(completion):
-        if let periodic = latestPeriodic {
-          producer?.send(periodic)
-          latestPeriodic = nil
+        if let update = latestUpdate {
+          producer?.send(update)
+          latestUpdate = nil
         }
         producer?.complete(with: completion)
-      case let .periodic(periodic):
-        if didSendFirstPeriodic {
-          latestPeriodic = periodic
+      case let .update(update):
+        if didSendFirstUpdate {
+          latestUpdate = update
         } else {
-          didSendFirstPeriodic = true
-          producer?.send(periodic)
+          didSendFirstUpdate = true
+          producer?.send(update)
         }
       }
     }
@@ -260,10 +260,10 @@ public extension Channel {
   }
 }
 
-extension Channel where Periodic: Equatable {
+extension Channel where Update: Equatable {
 
-  /// Returns channel of distinct periodic values of original channel.
-  /// Works only for equatable periodic values
+  /// Returns channel of distinct update values of original channel.
+  /// Works only for equatable update values
   /// [0, 0, 1, 2, 3, 3, 4, 3] => [0, 1, 2, 3, 4, 3]
   ///
   /// - Parameters:
@@ -273,15 +273,15 @@ extension Channel where Periodic: Equatable {
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
-  /// - Returns: channel with distinct periodic values
+  /// - Returns: channel with distinct update values
   public func distinct(cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Periodic, Success> {
+    ) -> Channel<Update, Success> {
 
     // Test: Channel_TransformTests.testDistinctInts
     
     var locking = makeLocking()
-    var previousPeriodic: Periodic? = nil
+    var previousUpdate: Update? = nil
 
     return self.makeProducer(executor: .immediate,
                              cancellationToken: cancellationToken,
@@ -289,19 +289,19 @@ extension Channel where Periodic: Equatable {
     {
       (value, producer) in
       switch value {
-      case let .periodic(periodic):
+      case let .update(update):
         locking.lock()
-        let _previousPeriodic = previousPeriodic
-        previousPeriodic = periodic
+        let _previousUpdate = previousUpdate
+        previousUpdate = update
         locking.unlock()
 
 
-        if let previousPeriodic = _previousPeriodic {
-          if previousPeriodic != periodic {
-            producer.send(periodic)
+        if let previousUpdate = _previousUpdate {
+          if previousUpdate != update {
+            producer.send(update)
           }
         } else {
-          producer.send(periodic)
+          producer.send(update)
         }
       case let .completion(completion):
         producer.complete(with: completion)
