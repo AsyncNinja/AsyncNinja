@@ -77,8 +77,7 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
       return successB.map { (success, $0) }
     })
 
-    let handler = channelA.makeHandler(executor: .immediate,
-                                       block: handlerBlockA)
+    let handler = channelA.makeHandler(executor: .immediate, handlerBlockA)
     producer.insertHandlerToReleasePool(handler)
   }
 
@@ -98,8 +97,7 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
       return successA.map { ($0, success) }
     })
 
-    let handler = channelB.makeHandler(executor: .immediate,
-                                       block: handlerBlockB)
+    let handler = channelB.makeHandler(executor: .immediate, handlerBlockB)
     producer.insertHandlerToReleasePool(handler)
   }
 

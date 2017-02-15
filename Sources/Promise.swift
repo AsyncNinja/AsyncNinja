@@ -38,11 +38,12 @@ final public class Promise<Success>: Future<Success>, MutableCompletable {
   override public init() { }
 
   /// **internal use only**
-  override public func makeCompletionHandler(executor: Executor,
-                                        block: @escaping (Fallible<Success>) -> Void
+  override public func makeCompletionHandler(
+    executor: Executor,
+    _ block: @escaping (Fallible<Success>) -> Void
     ) -> CompletionHandler? {
     let handler = Handler(executor: executor, block: block, owner: self)
-
+    
     _container.updateHead {
       switch $0 {
       case let completedState as CompletedPromiseState<Success>:
@@ -56,7 +57,7 @@ final public class Promise<Success>: Future<Success>, MutableCompletable {
         fatalError()
       }
     }
-
+    
     return handler
   }
 

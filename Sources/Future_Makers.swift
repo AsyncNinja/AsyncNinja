@@ -39,8 +39,9 @@ import Dispatch
 ///     returned future to complete successfuly.
 ///     Throw from block will returned future to complete with failure
 /// - Returns: future
-public func future<T>(executor: Executor = .primary,
-                   block: @escaping () throws -> T) -> Future<T> {
+public func future<T>(
+  executor: Executor = .primary,
+  _ block: @escaping () throws -> T) -> Future<T> {
   // Test: FutureTests.testMakeFutureOfBlock_Success
   // Test: FutureTests.testMakeFutureOfBlock_Failure
   let promise = Promise<T>()
@@ -58,8 +59,9 @@ public func future<T>(executor: Executor = .primary,
 ///   - executor: is `Executor` to execute block on
 ///   - block: is block to perform. Return from block will cause returned future to complete with future. Throw from block will returned future to complete with failure
 /// - Returns: future
-public func flatFuture<T>(executor: Executor = .primary,
-                       block: @escaping () throws -> Future<T>) -> Future<T> {
+public func flatFuture<T>(
+  executor: Executor = .primary,
+  _ block: @escaping () throws -> Future<T>) -> Future<T> {
   let promise = Promise<T>()
   executor.execute { [weak promise] in
     guard let promise = promise else { return }
@@ -85,18 +87,20 @@ public func flatFuture<T>(executor: Executor = .primary,
 ///   - strongContext: is `ExecutionContext` restored from
 ///     a weak reference of context passed to method
 /// - Returns: future
-public func future<T, U: ExecutionContext>(context: U, executor: Executor? = nil,
-                   block: @escaping (_ strongContext: U) throws -> T) -> Future<T> {
+public func future<T, U: ExecutionContext>(
+  context: U,
+  executor: Executor? = nil,
+  _ block: @escaping (_ strongContext: U) throws -> T) -> Future<T> {
   // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Success_ContextAlive
   // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Success_ContextDead
   // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive
   // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Failure_ContextDead
-
+  
   let promise = Promise<T>()
   (executor ?? context.executor)
     .execute { [weak promise, weak context] in
       guard nil != promise else { return }
-
+      
       if let context = context {
         let value = fallible { try block(context) }
         promise?.complete(with: value)
@@ -104,9 +108,9 @@ public func future<T, U: ExecutionContext>(context: U, executor: Executor? = nil
         promise?.cancelBecauseOfDeallocatedContext()
       }
   }
-
+  
   context.addDependent(completable: promise)
-
+  
   return promise
 }
 
@@ -123,14 +127,15 @@ public func future<T, U: ExecutionContext>(context: U, executor: Executor? = nil
 ///     Throw from block will complete returned future with failure.
 ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
 /// - Returns: future
-public func flatFuture<T, C: ExecutionContext>(context: C,
-                       executor: Executor? = nil,
-                       block: @escaping (_ strongContext: C) throws -> Future<T>) -> Future<T> {
+public func flatFuture<T, C: ExecutionContext>(
+  context: C,
+  executor: Executor? = nil,
+  _ block: @escaping (_ strongContext: C) throws -> Future<T>) -> Future<T> {
   let promise = Promise<T>()
   (executor ?? context.executor)
     .execute { [weak promise, weak context] in
       guard nil != promise else { return }
-
+      
       if let context = context {
         do {
           let futureResult = try block(context)
@@ -142,9 +147,9 @@ public func flatFuture<T, C: ExecutionContext>(context: C,
         promise?.cancelBecauseOfDeallocatedContext()
       }
   }
-
+  
   context.addDependent(completable: promise)
-
+  
   return promise
 }
 
@@ -162,17 +167,18 @@ public func flatFuture<T, C: ExecutionContext>(context: C,
 ///     returned future to complete successfuly.
 ///     Throw from block will returned future to complete with failure
 /// - Returns: future
-public func future<T>(executor: Executor = .primary,
-                   after timeout: Double,
-                   cancellationToken: CancellationToken? = nil,
-                   block: @escaping () throws -> T
+public func future<T>(
+  executor: Executor = .primary,
+  after timeout: Double,
+  cancellationToken: CancellationToken? = nil,
+  _ block: @escaping () throws -> T
   ) -> Future<T> {
   // Test: FutureTests.testMakeFutureOfDelayedFallibleBlock_Success
   // Test: FutureTests.testMakeFutureOfDelayedFallibleBlock_Failure
   return promise(executor: executor,
                  after: timeout,
                  cancellationToken: cancellationToken,
-                 block: block)
+                 block)
 }
 
 /// Asynchrounously executes block after timeout on executor and wraps returned value into future
@@ -187,15 +193,16 @@ public func future<T>(executor: Executor = .primary,
 ///     returned future to complete with future.
 ///     Throw from block will returned future to complete with failure
 /// - Returns: future
-public func flatFuture<T>(executor: Executor = .primary,
-                       after timeout: Double,
-                       cancellationToken: CancellationToken? = nil,
-                       block: @escaping () throws -> Future<T>
+public func flatFuture<T>(
+  executor: Executor = .primary,
+  after timeout: Double,
+  cancellationToken: CancellationToken? = nil,
+  _ block: @escaping () throws -> Future<T>
   ) -> Future<T> {
   return flatPromise(executor: executor,
                      after: timeout,
                      cancellationToken: cancellationToken,
-                     block: block)
+                     block)
 }
 
 // MARK: - future makers: contextual, delayed block scheduling
@@ -216,11 +223,12 @@ public func flatFuture<T>(executor: Executor = .primary,
 ///     Throw from block will returned future to complete with failure
 ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
 /// - Returns: future
-public func future<T, C: ExecutionContext>(context: C,
-                   executor: Executor? = nil,
-                   after timeout: Double,
-                   cancellationToken: CancellationToken? = nil,
-                   block: @escaping (_ strongContext: C) throws -> T
+public func future<T, C: ExecutionContext>(
+  context: C,
+  executor: Executor? = nil,
+  after timeout: Double,
+  cancellationToken: CancellationToken? = nil,
+  _ block: @escaping (_ strongContext: C) throws -> T
   ) -> Future<T> {
   // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextAlive
   // Test: FutureTests.testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextDead
@@ -231,12 +239,12 @@ public func future<T, C: ExecutionContext>(context: C,
   let promiseValue = promise(executor: executor ?? context.executor, after: timeout, cancellationToken: cancellationToken) { [weak context] () -> T in
     guard let context = context
       else { throw AsyncNinjaError.contextDeallocated }
-
+    
     return try block(context)
   }
-
+  
   context.addDependent(completable: promiseValue)
-
+  
   return promiseValue
 }
 
@@ -256,11 +264,12 @@ public func future<T, C: ExecutionContext>(context: C,
 ///     Throw from block will returned future to complete with failure
 ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
 /// - Returns: future
-public func flatFuture<T, C: ExecutionContext>(context: C,
-                       executor: Executor? = nil,
-                       after timeout: Double,
-                       cancellationToken: CancellationToken? = nil,
-                       block: @escaping (_ strongContext: C) throws -> Future<T>
+public func flatFuture<T, C: ExecutionContext>(
+  context: C,
+  executor: Executor? = nil,
+  after timeout: Double,
+  cancellationToken: CancellationToken? = nil,
+  _ block: @escaping (_ strongContext: C) throws -> Future<T>
   ) -> Future<T> {
   let executor_ = executor ?? context.executor
   let promiseValue = flatPromise(executor: executor_,
@@ -270,26 +279,27 @@ public func flatFuture<T, C: ExecutionContext>(context: C,
     [weak context] () -> Future<T> in
     guard let context = context
       else { throw AsyncNinjaError.contextDeallocated }
-
+    
     return try block(context)
   }
-
+  
   context.addDependent(completable: promiseValue)
-
+  
   return promiseValue
 }
 
 // MARK: - internal helper methods
 
 /// internal use only
-private func promise<T>(executor: Executor,
-                     after timeout: Double,
-                     cancellationToken: CancellationToken?,
-                     block: @escaping () throws -> T) -> Promise<T> {
+private func promise<T>(
+  executor: Executor,
+  after timeout: Double,
+  cancellationToken: CancellationToken?,
+  _ block: @escaping () throws -> T) -> Promise<T> {
   let promise = Promise<T>()
-
+  
   cancellationToken?.add(cancellable: promise)
-
+  
   executor.execute(after: timeout) { [weak promise] in
     if cancellationToken?.isCancelled ?? false {
       promise?.cancel()
@@ -298,19 +308,20 @@ private func promise<T>(executor: Executor,
       promise?.complete(with: completion)
     }
   }
-
+  
   return promise
 }
 
 /// **internal use only**
-private func flatPromise<T>(executor: Executor,
-                         after timeout: Double,
-                         cancellationToken: CancellationToken?,
-                         block: @escaping () throws -> Future<T>) -> Promise<T> {
+private func flatPromise<T>(
+  executor: Executor,
+  after timeout: Double,
+  cancellationToken: CancellationToken?,
+  _ block: @escaping () throws -> Future<T>) -> Promise<T> {
   let promise = Promise<T>()
-
+  
   cancellationToken?.add(cancellable: promise)
-
+  
   executor.execute(after: timeout) { [weak promise] in
     guard nil != promise else { return }
     if cancellationToken?.isCancelled ?? false {

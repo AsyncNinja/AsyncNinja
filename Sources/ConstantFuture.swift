@@ -32,8 +32,9 @@ final class ConstantFuture<Success>: Future<Success> {
     _completion = completion
   }
 
-  override public func makeCompletionHandler(executor: Executor,
-                                             block: @escaping (Fallible<Success>) -> Void
+  override public func makeCompletionHandler(
+    executor: Executor,
+    _ block: @escaping (Fallible<Success>) -> Void
     ) -> CompletionHandler? {
     executor.execute { block(self._completion) }
     return nil

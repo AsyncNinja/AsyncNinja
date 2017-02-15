@@ -41,7 +41,7 @@ public class Channel<Periodic, Success>: Completable, Sequence {
 
   /// **internal use only**
   final public func makeCompletionHandler(executor: Executor,
-                                          block: @escaping (Fallible<Success>) -> Void
+                                          _ block: @escaping (Fallible<Success>) -> Void
     ) -> Handler? {
     return self.makeHandler(executor: executor) {
       if case .completion(let value) = $0 { block(value) }
@@ -50,7 +50,7 @@ public class Channel<Periodic, Success>: Completable, Sequence {
 
   /// **internal use only**
   final public func makePeriodicHandler(executor: Executor,
-                                        block: @escaping (Periodic) -> Void
+                                        _ block: @escaping (Periodic) -> Void
     ) -> Handler? {
     return self.makeHandler(executor: executor) {
       if case .periodic(let value) = $0 { block(value) }
@@ -59,7 +59,7 @@ public class Channel<Periodic, Success>: Completable, Sequence {
 
   /// **internal use only**
   public func makeHandler(executor: Executor,
-                          block: @escaping (Value) -> Void) -> Handler? {
+                          _ block: @escaping (Value) -> Void) -> Handler? {
     assertAbstract()
   }
 
@@ -114,8 +114,10 @@ public extension Channel {
   ///   - executor: to execute block on
   ///   - block: to execute. Will be called multiple times
   ///   - value: received by the channel
-  func onValue(executor: Executor = .primary, _ block: @escaping (_ value: Value) -> Void) {
-    let handler = self.makeHandler(executor: executor, block: block)
+  func onValue(
+    executor: Executor = .primary,
+    _ block: @escaping (_ value: Value) -> Void) {
+    let handler = self.makeHandler(executor: executor, block)
     self.insertHandlerToReleasePool(handler)
   }
 
@@ -129,9 +131,10 @@ public extension Channel {
   ///   - block: to execute. Will be called multiple times
   ///   - strongContext: context restored from weak reference to specified context
   ///   - value: received by the channel
-  func onValue<C: ExecutionContext>(context: C,
-               executor: Executor? = nil,
-               _ block: @escaping (_ strongContext: C, _ value: Value) -> Void) {
+  func onValue<C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ block: @escaping (_ strongContext: C, _ value: Value) -> Void) {
     let executor_ = executor ?? context.executor
     let handler = self.makeHandler(executor: executor_) {
       [weak context] (value) in
@@ -150,8 +153,9 @@ public extension Channel {
   ///   - executor: to execute block on
   ///   - block: to execute. Will be called multiple times
   ///   - periodic: received by the channel
-  func onPeriodic(executor: Executor = .primary,
-                  _ block: @escaping (_ periodic: Periodic) -> Void) {
+  func onPeriodic(
+    executor: Executor = .primary,
+    _ block: @escaping (_ periodic: Periodic) -> Void) {
     self.onValue(executor: executor) { (value) in
       switch value {
       case let .periodic(periodic):
@@ -171,9 +175,10 @@ public extension Channel {
   ///   - block: to execute. Will be called multiple times
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodic: received by the channel
-  func onPeriodic<C: ExecutionContext>(context: C,
-                  executor: Executor? = nil,
-                  _ block: @escaping (_ strongContext: C, _ periodic: Periodic) -> Void) {
+  func onPeriodic<C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ block: @escaping (_ strongContext: C, _ periodic: Periodic) -> Void) {
     self.onValue(context: context, executor: executor) { (context, value) in
       switch value {
       case let .periodic(periodic):
@@ -190,8 +195,9 @@ public extension Channel {
   ///   - block: to execute. Will be called once with all values
   ///   - periodics: all received by the channel
   ///   - completion: received by the channel
-  func extractAll(executor: Executor = .primary,
-                  _ block: @escaping (_ periodics: [Periodic], _ completion: Fallible<Success>) -> Void) {
+  func extractAll(
+    executor: Executor = .primary,
+    _ block: @escaping (_ periodics: [Periodic], _ completion: Fallible<Success>) -> Void) {
     var periodics = [Periodic]()
     let executor_ = executor.makeDerivedSerialExecutor()
     self.onValue(executor: executor_) { (value) in
@@ -215,9 +221,10 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodics: all received by the channel
   ///   - completion: received by the channel
-  func extractAll<C: ExecutionContext>(context: C,
-                  executor: Executor? = nil,
-                  _ block: @escaping (_ strongContext: C, _ periodics: [Periodic], _ completion: Fallible<Success>) -> Void) {
+  func extractAll<C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ block: @escaping (_ strongContext: C, _ periodics: [Periodic], _ completion: Fallible<Success>) -> Void) {
     var periodics = [Periodic]()
     let executor_ = (executor ?? context.executor).makeDerivedSerialExecutor()
     self.onValue(context: context, executor: executor_) { (context, value) in

@@ -65,7 +65,7 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
                                             return successB.map { (success, $0) }
     })
 
-  let handlerA = channelA.makeHandler(executor: .immediate, block: handlerBlockA)
+  let handlerA = channelA.makeHandler(executor: .immediate, handlerBlockA)
   producer.insertHandlerToReleasePool(handlerA)
 
   let handlerBlockB = makeHandlerBlock(periodicHandler: { [weak producer] in producer?.send(.right($0)) },
@@ -73,7 +73,7 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
                                         successB = success
                                         return successA.map { ($0, success) }
   })
-  let handlerB = channelB.makeHandler(executor: .immediate, block: handlerBlockB)
+  let handlerB = channelB.makeHandler(executor: .immediate, handlerBlockB)
   producer.insertHandlerToReleasePool(handlerB)
 
   cancellationToken?.add(cancellable: producer)
@@ -117,15 +117,15 @@ public func merge<P, SA, SB>(_ channelA: Channel<P, SA>,
   }
 
   let handlerA = channelA.makeHandler(executor: .immediate,
-                                      block: makeHandlerBlock { (success: SA) in
+                                      makeHandlerBlock { (success: SA) in
                                         successA = success
                                         return successB.map { (success, $0) }
   })
   producer.insertHandlerToReleasePool(handlerA)
-
-
+  
+  
   let handlerB = channelB.makeHandler(executor: .immediate,
-                                      block: makeHandlerBlock { (success: SB) in
+                                      makeHandlerBlock { (success: SB) in
                                         successB = success
                                         return successA.map { ($0, success) }
   })

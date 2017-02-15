@@ -39,8 +39,9 @@ public class Future<Success>: Completable {
   init() { }
 
   /// **Internal use only**.
-  public func makeCompletionHandler(executor: Executor,
-                                    block: @escaping (Fallible<Success>) -> Void) -> CompletionHandler? {
+  public func makeCompletionHandler(
+    executor: Executor,
+    _ block: @escaping (Fallible<Success>) -> Void) -> CompletionHandler? {
     assertAbstract()
   }
 

@@ -73,38 +73,38 @@ final public class Producer<Periodic, Success>: Channel<Periodic, Success>, Muta
   }
 
   /// **internal use only**
-  override public func makeHandler(executor: Executor,
-                                   block: @escaping (Value) -> Void
+  override public func makeHandler(
+    executor: Executor,
+    _ block: @escaping (Value) -> Void
     ) -> Handler? {
-    return self._makeHandler(executor: executor,
-                             avoidLocking: false,
-                             block: block)
+    return _makeHandler(executor: executor, avoidLocking: false, block)
   }
 
-  fileprivate func _makeHandler(executor: Executor, avoidLocking: Bool,
-                                block: @escaping (Value) -> Void
+  fileprivate func _makeHandler(
+    executor: Executor, avoidLocking: Bool,
+    _ block: @escaping (Value) -> Void
     ) -> Handler? {
     if !avoidLocking {
-      self._locking.lock()
+      _locking.lock()
     }
-
-    for periodic_ in self._bufferedPeriodics {
+    
+    for periodic_ in _bufferedPeriodics {
       executor.execute {
         block(.periodic(periodic_))
       }
     }
-
+    
     let handler = Handler(executor: executor, block: block, owner: self)
     if let completion = _completion {
       handler.handle(.completion(completion))
     } else {
       _handlers.push(handler)
     }
-
+    
     if !avoidLocking {
-      self._locking.unlock()
+      _locking.unlock()
     }
-
+    
     return handler
   }
 

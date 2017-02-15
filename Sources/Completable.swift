@@ -32,7 +32,7 @@ public protocol Completable: class {
 
   /// **internal use only**
   func makeCompletionHandler(executor: Executor,
-                             block: @escaping (Fallible<Success>) -> Void) -> CompletionHandler?
+                             _ block: @escaping (Fallible<Success>) -> Void) -> CompletionHandler?
 
   /// **internal use only**
   func insertToReleasePool(_ releasable: Releasable)
