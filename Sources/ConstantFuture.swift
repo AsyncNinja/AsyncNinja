@@ -54,15 +54,6 @@ public func future<Success>(value: Fallible<Success>) -> Future<Success> {
 
 /// Makes completed future
 ///
-/// - Parameter finalValue: value to complete future with
-/// - Returns: completed future
-@available(*, deprecated, message: "use future(completion:) instead")
-public func future<Success>(finalValue: Fallible<Success>) -> Future<Success> {
-  return ConstantFuture(completion: finalValue)
-}
-
-/// Makes completed future
-///
 /// - Parameter completion: value to complete future with
 /// - Returns: completed future
 public func future<Success>(completion: Fallible<Success>) -> Future<Success> {

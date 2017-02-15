@@ -26,22 +26,25 @@ import Dispatch
 extension Channel {
 
   /// **internal use only**
-  func makeProducer<P, S>(executor: Executor,
-                    cancellationToken: CancellationToken?,
-                    bufferSize: DerivedChannelBufferSize,
-                    onValue: @escaping (Value, Producer<P, S>) throws -> Void
+  func makeProducer<P, S>(
+    executor: Executor,
+    cancellationToken: CancellationToken?,
+    bufferSize: DerivedChannelBufferSize,
+    _ onValue: @escaping (Value, Producer<P, S>) throws -> Void
     ) -> Producer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<P, S>(bufferSize: bufferSize)
-    self.attach(producer: producer, executor: executor, cancellationToken: cancellationToken, onValue: onValue)
+    self.attach(producer: producer, executor: executor,
+                cancellationToken: cancellationToken, onValue)
     return producer
   }
 
   /// **internal use only**
-  func attach<P, S>(producer: Producer<P, S>,
-              executor: Executor,
-              cancellationToken: CancellationToken?,
-              onValue: @escaping (Value, Producer<P, S>) throws -> Void)
+  func attach<P, S>(
+    producer: Producer<P, S>,
+    executor: Executor,
+    cancellationToken: CancellationToken?,
+    _ onValue: @escaping (Value, Producer<P, S>) throws -> Void)
   {
     let handler = self.makeHandler(executor: executor) {
       [weak producer] (value) in
@@ -55,24 +58,27 @@ extension Channel {
   }
 
   /// **internal use only**
-  func makeProducer<P, S, C: ExecutionContext>(context: C,
-                    executor: Executor?,
-                    cancellationToken: CancellationToken?,
-                    bufferSize: DerivedChannelBufferSize,
-                    onValue: @escaping (C, Value, Producer<P, S>) throws -> Void
+  func makeProducer<P, S, C: ExecutionContext>(
+    context: C,
+    executor: Executor?,
+    cancellationToken: CancellationToken?,
+    bufferSize: DerivedChannelBufferSize,
+    _ onValue: @escaping (C, Value, Producer<P, S>) throws -> Void
     ) -> Producer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<P, S>(bufferSize: bufferSize)
-    self.attach(producer: producer, context: context, executor: executor, cancellationToken: cancellationToken, onValue: onValue)
+    self.attach(producer: producer, context: context, executor: executor,
+                cancellationToken: cancellationToken, onValue)
     return producer
   }
 
   /// **internal use only**
-  func attach<P, S, C: ExecutionContext>(producer: Producer<P, S>,
-              context: C,
-              executor: Executor?,
-              cancellationToken: CancellationToken?,
-              onValue: @escaping (C, Value, Producer<P, S>) throws -> Void)
+  func attach<P, S, C: ExecutionContext>(
+    producer: Producer<P, S>,
+    context: C,
+    executor: Executor?,
+    cancellationToken: CancellationToken?,
+    _ onValue: @escaping (C, Value, Producer<P, S>) throws -> Void)
   {
     let executor_ = executor ?? context.executor
     self.attach(producer: producer, executor: executor_, cancellationToken: cancellationToken)
@@ -81,7 +87,7 @@ extension Channel {
       guard let context = context else { return }
       try onValue(context, value, producer)
     }
-
+    
     context.addDependent(completable: producer)
   }
 }
@@ -107,11 +113,12 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - value: `ChannelValue` to transform. May be either periodic or completion
   /// - Returns: transformed channel
-  func map<P, S, C: ExecutionContext>(context: C,
-           executor: Executor? = nil,
-           cancellationToken: CancellationToken? = nil,
-           bufferSize: DerivedChannelBufferSize = .default,
-           transform: @escaping (_ strongContext: C, _ value: Value) throws -> ChannelValue<P, S>
+  func map<P, S, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (_ strongContext: C, _ value: Value) throws -> ChannelValue<P, S>
     ) -> Channel<P, S> {
     return self.makeProducer(context: context,
                              executor: executor,
@@ -138,10 +145,11 @@ public extension Channel {
   ///   - transform: to apply
   ///   - value: `ChannelValue` to transform. May be either periodic or completion
   /// - Returns: transformed channel
-  func map<P, S>(executor: Executor = .primary,
-           cancellationToken: CancellationToken? = nil,
-           bufferSize: DerivedChannelBufferSize = .default,
-           transform: @escaping (_ value: Value) throws -> ChannelValue<P, S>
+  func map<P, S>(
+    executor: Executor = .primary,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (_ value: Value) throws -> ChannelValue<P, S>
     ) -> Channel<P, S> {
     return self.makeProducer(executor: executor,
                              cancellationToken: cancellationToken,
@@ -177,11 +185,12 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodic: `Periodic` to transform
   /// - Returns: transformed channel
-  func mapPeriodic<P, C: ExecutionContext>(context: C,
-                   executor: Executor? = nil,
-                   cancellationToken: CancellationToken? = nil,
-                   bufferSize: DerivedChannelBufferSize = .default,
-                   transform: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> P
+  func mapPeriodic<P, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> P
     ) -> Channel<P, Success> {
     return self.makeProducer(context: context,
                              executor: executor,
@@ -214,10 +223,11 @@ public extension Channel {
   ///   - transform: to apply
   ///   - periodic: `Periodic` to transform
   /// - Returns: transformed channel
-  func mapPeriodic<P>(executor: Executor = .primary,
-                   cancellationToken: CancellationToken? = nil,
-                   bufferSize: DerivedChannelBufferSize = .default,
-                   transform: @escaping (_ periodic: Periodic) throws -> P
+  func mapPeriodic<P>(
+    executor: Executor = .primary,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (_ periodic: Periodic) throws -> P
     ) -> Channel<P, Success> {
 
     // Test: Channel_MapTests.testMapPeriodic
@@ -259,11 +269,12 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodic: `Periodic` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<P, C: ExecutionContext>(context: C,
-                       executor: Executor? = nil,
-                       cancellationToken: CancellationToken? = nil,
-                       bufferSize: DerivedChannelBufferSize = .default,
-                       transform: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> P?
+  func flatMapPeriodic<P, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> P?
     ) -> Channel<P, Success> {
     return self.makeProducer(context: context,
                              executor: executor,
@@ -295,10 +306,11 @@ public extension Channel {
   ///   - transform: to apply. Nil returned from transform will not produce periodic value
   ///   - periodic: `Periodic` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<P>(executor: Executor = .primary,
-                       cancellationToken: CancellationToken? = nil,
-                       bufferSize: DerivedChannelBufferSize = .default,
-                       transform: @escaping (_ periodic: Periodic) throws -> P?
+  func flatMapPeriodic<P>(
+    executor: Executor = .primary,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (_ periodic: Periodic) throws -> P?
     ) -> Channel<P, Success> {
     return self.makeProducer(executor: executor,
                              cancellationToken: cancellationToken,
@@ -334,11 +346,12 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodic: `Periodic` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<PS: Sequence, C: ExecutionContext>(context: C,
-                       executor: Executor? = nil,
-                       cancellationToken: CancellationToken? = nil,
-                       bufferSize: DerivedChannelBufferSize = .default,
-                       transform: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> PS
+  func flatMapPeriodic<PS: Sequence, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> PS
     ) -> Channel<PS.Iterator.Element, Success> {
     return self.makeProducer(context: context,
                              executor: executor,
@@ -369,10 +382,11 @@ public extension Channel {
   ///     will be treated as multiple period values
   ///   - periodic: `Periodic` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<PS: Sequence>(executor: Executor = .primary,
-                       cancellationToken: CancellationToken? = nil,
-                       bufferSize: DerivedChannelBufferSize = .default,
-                       transform: @escaping (_ periodic: Periodic) throws -> PS
+  func flatMapPeriodic<PS: Sequence>(
+    executor: Executor = .primary,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (_ periodic: Periodic) throws -> PS
     ) -> Channel<PS.Iterator.Element, Success> {
     return self.makeProducer(executor: executor,
                              cancellationToken: cancellationToken,
@@ -403,11 +417,12 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodic: `Periodic` to transform
   /// - Returns: filtered transform
-  func filterPeriodic<C: ExecutionContext>(context: C,
-                      executor: Executor? = nil,
-                      cancellationToken: CancellationToken? = nil,
-                      bufferSize: DerivedChannelBufferSize = .default,
-                      predicate: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> Bool
+  func filterPeriodic<C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ predicate: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> Bool
     ) -> Channel<Periodic, Success> {
     return self.makeProducer(context: context,
                              executor: executor,
@@ -444,7 +459,7 @@ public extension Channel {
     executor: Executor = .primary,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
-    predicate: @escaping (_ periodic: Periodic) throws -> Bool
+    _ predicate: @escaping (_ periodic: Periodic) throws -> Bool
     ) -> Channel<Periodic, Success> {
 
     // Test: Channel_MapTests.testFilterPeriodic

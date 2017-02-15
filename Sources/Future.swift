@@ -84,15 +84,16 @@ public extension Future {
   ///   - transform: is block to execute on successful completion of original future.
   ///     Return from transformation block will cause returned future to complete successfuly.
   ///     Throw from transformation block will returned future to complete with failure
-  ///   - Success: is a success value of original future
+  ///   - success: is a success value of original future
   ///
   /// - Returns: transformed future
-  func map<T>(executor: Executor = .primary,
-           transform: @escaping (_ Success: Success) throws -> T
+  func map<T>(
+    executor: Executor = .primary,
+    _ transform: @escaping (_ success: Success) throws -> T
     ) -> Future<T> {
     // Test: FutureTests.testMap_Success
     // Test: FutureTests.testMap_Failure
-    return self.mapSuccess(executor: executor, transform: transform)
+    return self.mapSuccess(executor: executor, transform)
   }
 
   /// Applies the transformation to the future and flattens future returned by transformation
@@ -102,13 +103,14 @@ public extension Future {
   ///   - transform: is block to execute on successful completion of original future.
   ///     Return from transformation block will cause returned future to complete with future.
   ///     Throw from transformation block will returned future to complete with failure
-  ///   - Success: is a success value of original future
+  ///   - success: is a success value of original future
   ///
   /// - Returns: transformed future
-  func flatMap<T>(executor: Executor = .primary,
-               transform: @escaping (_ Success: Success) throws -> Future<T>
+  func flatMap<T>(
+    executor: Executor = .primary,
+    transform: @escaping (_ success: Success) throws -> Future<T>
     ) -> Future<T> {
-    return self.flatMapSuccess(executor: executor, transform: transform)
+    return self.flatMapSuccess(executor: executor, transform)
   }
 
   /// Applies the transformation to the future
@@ -125,17 +127,16 @@ public extension Future {
   ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
   ///   - Success: is a success value of original future
   /// - Returns: transformed future
-  func map<T, C: ExecutionContext>(context: C,
-           executor: Executor? = nil,
-           transform: @escaping (_ strongContext: C, _ Success: Success) throws -> T
+  func map<T, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ transform: @escaping (_ strongContext: C, _ Success: Success) throws -> T
     ) -> Future<T> {
     // Test: FutureTests.testMapContextual_Success_ContextAlive
     // Test: FutureTests.testMapContextual_Success_ContextDead
     // Test: FutureTests.testMapContextual_Failure_ContextAlive
     // Test: FutureTests.testMapContextual_Failure_ContextDead
-    return self.mapSuccess(context: context,
-                           executor: executor,
-                           transform: transform)
+    return self.mapSuccess(context: context, executor: executor, transform)
   }
 
   /// Applies the transformation to the future and flattens future returned by transformation
@@ -152,13 +153,12 @@ public extension Future {
   ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
   ///   - Success: is a success value of original future
   /// - Returns: transformed future
-  func flatMap<T, C: ExecutionContext>(context: C,
-               executor: Executor? = nil,
-               transform: @escaping (_ strongContext: C, _ Success: Success) throws -> Future<T>
+  func flatMap<T, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    transform: @escaping (_ strongContext: C, _ Success: Success) throws -> Future<T>
     ) -> Future<T> {
-    return self.flatMapSuccess(context: context,
-                               executor: executor,
-                               transform: transform)
+    return self.flatMapSuccess(context: context, executor: executor, transform)
   }
 
   /// Makes future with delayed completion

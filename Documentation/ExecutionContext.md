@@ -83,9 +83,9 @@ There are also some methods that are implemented to work with context only:
 
 ```swift
 extension Future {
-  func onComplete<U: ExecutionContext>(context: U, block: @escaping (U, Value) -> Void)
-  func onSuccess<U: ExecutionContext>(context: U, block: @escaping (U, Success) -> Void)
-  func onFailure<U: ExecutionContext>(context: U, block: @escaping (U, Swift.Error) -> Void)
+  func onComplete<U: ExecutionContext>(context: U, _ block: @escaping (U, Value) -> Void)
+  func onSuccess<U: ExecutionContext>(context: U, _ block: @escaping (U, Success) -> Void)
+  func onFailure<U: ExecutionContext>(context: U, _ block: @escaping (U, Swift.Error) -> Void)
 }
 ```
 

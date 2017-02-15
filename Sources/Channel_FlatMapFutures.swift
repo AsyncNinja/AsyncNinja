@@ -45,8 +45,10 @@ public enum ChannelFlatteningBehavior {
   /// ![keepUnordered](https://github.com/AsyncNinja/AsyncNinja/raw/master/Documentation/Resources/keepUnordered.png "keepUnordered")
   case keepUnordered
 
-  fileprivate func makeStorage<P, S, T>(executor: Executor,
-                               transform: @escaping (_ periodic: P) throws -> Future<T>?
+  /// **internal use only**
+  fileprivate func makeStorage<P, S, T>(
+    executor: Executor,
+    _ transform: @escaping (_ periodic: P) throws -> Future<T>?
     ) -> BaseChannelFlatteningBehaviorStorage<P, S, T> {
     switch self {
     case .transformSerially:
@@ -83,12 +85,13 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - periodic: `Periodic` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<T, C: ExecutionContext>(context: C,
-                       executor: Executor? = nil,
-                       behavior: ChannelFlatteningBehavior,
-                       cancellationToken: CancellationToken? = nil,
-                       bufferSize: DerivedChannelBufferSize = .default,
-                       transform: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> Future<T>
+  func flatMapPeriodic<T, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    behavior: ChannelFlatteningBehavior,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (_ strongContext: C, _ periodic: Periodic) throws -> Future<T>
     ) -> Channel<Fallible<T>, Success> {
 
     let bufferSize = bufferSize.bufferSize(self)
@@ -103,7 +106,7 @@ public extension Channel {
     }
 
     context.addDependent(completable: producer)
-    self.attach(producer: producer, executor: .immediate, cancellationToken: cancellationToken, onValue: storage.onValue)
+    self.attach(producer: producer, executor: .immediate, cancellationToken: cancellationToken, storage.onValue)
     return producer
   }
 
@@ -121,11 +124,12 @@ public extension Channel {
   ///     as periodic value of transformed channel
   ///   - periodic: `Periodic` to transform
   /// - Returns: transformed channel
-  func flatMapPeriodic<T>(executor: Executor = .primary,
-                       behavior: ChannelFlatteningBehavior,
-                       cancellationToken: CancellationToken? = nil,
-                       bufferSize: DerivedChannelBufferSize = .default,
-                       transform: @escaping (_ periodic: Periodic) throws -> Future<T>
+  func flatMapPeriodic<T>(
+    executor: Executor = .primary,
+    behavior: ChannelFlatteningBehavior,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (_ periodic: Periodic) throws -> Future<T>
     ) -> Channel<Fallible<T>, Success> {
 
     // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_KeepUnordered
@@ -137,8 +141,8 @@ public extension Channel {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<Fallible<T>, Success>(bufferSize: bufferSize)
     let storage: BaseChannelFlatteningBehaviorStorage<Periodic, Success, T>
-      = behavior.makeStorage(executor: executor, transform: transform)
-    self.attach(producer: producer, executor: .immediate, cancellationToken: cancellationToken, onValue: storage.onValue)
+      = behavior.makeStorage(executor: executor, transform)
+    self.attach(producer: producer, executor: .immediate, cancellationToken: cancellationToken, storage.onValue)
     return producer
   }
 }

@@ -40,10 +40,6 @@ public protocol Completable: class {
 
 public extension Completable {
 
-  /// Returns either completion value for complete `Completable` or nil otherwise
-  @available(*, deprecated, message: "use completion instead")
-  var finalValue: Fallible<Success>? { return self.completion }
-
   /// Shorthand property that returns true if `Completion` is complete
   var isComplete: Bool {
     switch self.completion {
@@ -68,7 +64,7 @@ public extension Completable {
   /// Use method mapCompletion(context:executor:transform:) for state changing transformations.
   func mapCompletion<Transformed>(
     executor: Executor = .primary,
-    transform: @escaping (Fallible<Success>) throws -> Transformed
+    _ transform: @escaping (Fallible<Success>) throws -> Transformed
     ) -> Future<Transformed> {
     let promise = Promise<Transformed>()
     let handler = self.makeCompletionHandler(executor: executor) { [weak promise] (value) -> Void in
@@ -86,9 +82,9 @@ public extension Completable {
   /// Use method flatMapCompletion(context:executor:transform:) for state changing transformations.
   func flatMapCompletion<Transformed>(
     executor: Executor = .primary,
-    transform: @escaping (Fallible<Success>) throws -> Future<Transformed>
+    _ transform: @escaping (Fallible<Success>) throws -> Future<Transformed>
     ) -> Future<Transformed> {
-    return self.mapCompletion(executor: executor, transform: transform).flatten()
+    return self.mapCompletion(executor: executor, transform).flatten()
   }
 
   /// Transforms Completable<SuccessA> => Future<SuccessB>
@@ -97,7 +93,7 @@ public extension Completable {
   /// but does not perform transformation if this future fails.
   func mapSuccess<Transformed>(
     executor: Executor = .primary,
-    transform: @escaping (Success) throws -> Transformed
+    _ transform: @escaping (Success) throws -> Transformed
     ) -> Future<Transformed> {
     return self.mapCompletion(executor: executor) { (value) -> Transformed in
       let transformedValue = try value.liftSuccess()
@@ -111,15 +107,15 @@ public extension Completable {
   /// but does not perform transformation if this future fails.
   func flatMapSuccess<Transformed>(
     executor: Executor = .primary,
-    transform: @escaping (Success) throws -> Future<Transformed>
+    _ transform: @escaping (Success) throws -> Future<Transformed>
     ) -> Future<Transformed> {
-    return self.mapSuccess(executor: executor, transform: transform).flatten()
+    return self.mapSuccess(executor: executor, transform).flatten()
   }
 
   /// Recovers failure of this future if there is one.
   func recover(
     executor: Executor = .primary,
-    transform: @escaping (Swift.Error) throws -> Success
+    _ transform: @escaping (Swift.Error) throws -> Success
     ) -> Future<Success> {
     return self.mapCompletion(executor: executor) {
       (value) -> Success in
@@ -133,7 +129,7 @@ public extension Completable {
   /// Recovers failure of this future if there is one. Flattens future returned by the transform
   func flatRecover(
     executor: Executor = .primary,
-    transform: @escaping (Swift.Error) throws -> Future<Success>
+    _ transform: @escaping (Swift.Error) throws -> Future<Success>
     ) -> Future<Success> {
     let promise = Promise<Success>()
     let handler = self.makeCompletionHandler(executor: executor) {
@@ -163,9 +159,10 @@ public extension Completable {
   ///
   /// This method is suitable for impure transformations (changing state of context).
   /// Use method mapCompletion(context:transform:) for pure -ish transformations.
-  func mapCompletion<Transformed, C: ExecutionContext>(context: C,
-                     executor: Executor? = nil,
-                     transform: @escaping (C, Fallible<Success>) throws -> Transformed
+  func mapCompletion<Transformed, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ transform: @escaping (C, Fallible<Success>) throws -> Transformed
     ) -> Future<Transformed> {
     return self.mapCompletion(executor: executor ?? context.executor) {
       [weak context] (value) -> Transformed in
@@ -178,20 +175,22 @@ public extension Completable {
   ///
   /// This method is suitable for impure transformations (changing state of context).
   /// Use method flatMapCompletion(context:transform:) for pure -ish transformations.
-  func flatMapCompletion<Transformed, C: ExecutionContext>(context: C,
-                         executor: Executor? = nil,
-                         transform: @escaping (C, Fallible<Success>) throws -> Future<Transformed>
+  func flatMapCompletion<Transformed, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ transform: @escaping (C, Fallible<Success>) throws -> Future<Transformed>
     ) -> Future<Transformed> {
-    return self.mapCompletion(context: context, executor: executor, transform: transform).flatten()
+    return self.mapCompletion(context: context, executor: executor, transform).flatten()
   }
 
   /// Transforms Completable<SuccessA> => Future<SuccessB>
   ///
   /// This is the same as mapCompletion(context:executor:transform:)
   /// but does not perform transformation if this future fails.
-  func mapSuccess<Transformed, C: ExecutionContext>(context: C,
-                  executor: Executor? = nil,
-                  transform: @escaping (C, Success) throws -> Transformed
+  func mapSuccess<Transformed, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ transform: @escaping (C, Success) throws -> Transformed
     ) -> Future<Transformed> {
     return self.mapCompletion(context: context, executor: executor) {
       (context, value) -> Transformed in
@@ -204,17 +203,19 @@ public extension Completable {
   ///
   /// This is the same as flatMapCompletion(context:executor:transform:)
   /// but does not perform transformation if this future fails.
-  func flatMapSuccess<Transformed, C: ExecutionContext>(context: C,
-                      executor: Executor? = nil,
-                      transform: @escaping (C, Success) throws -> Future<Transformed>
+  func flatMapSuccess<Transformed, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ transform: @escaping (C, Success) throws -> Future<Transformed>
     ) -> Future<Transformed> {
-    return self.mapSuccess(context: context, executor: executor, transform: transform).flatten()
+    return self.mapSuccess(context: context, executor: executor, transform).flatten()
   }
 
   /// Recovers failure of this future if there is one with contextual transformer.
-  func recover<C: ExecutionContext>(context: C,
-               executor: Executor? = nil,
-               transform: @escaping (C, Swift.Error) throws -> Success
+  func recover<C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ transform: @escaping (C, Swift.Error) throws -> Success
     ) -> Future<Success> {
     return self.mapCompletion(context: context, executor: executor) {
       (context, value) -> Success in
@@ -229,9 +230,10 @@ public extension Completable {
 
   /// Recovers failure of this future if there is one with contextual transformer.
   /// Flattens future returned by the transform
-  func flatRecover<C: ExecutionContext>(context: C,
-                   executor: Executor? = nil,
-                   transform: @escaping (C, Swift.Error) throws -> Future<Success>
+  func flatRecover<C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ transform: @escaping (C, Swift.Error) throws -> Future<Success>
     ) -> Future<Success> {
     return self.flatRecover(executor: executor ?? context.executor) {
       [weak context] (failure) -> Future<Success> in
@@ -245,8 +247,9 @@ public extension Completable {
   /// Performs block when completion value.
   ///
   /// This method is method is less preferable then onComplete(context: ...).
-  func onComplete(executor: Executor = .primary,
-                  block: @escaping (Fallible<Success>) -> Void) {
+  func onComplete(
+    executor: Executor = .primary,
+    _ block: @escaping (Fallible<Success>) -> Void) {
     let handler = self.makeCompletionHandler(executor: executor) {
       block($0)
     }
@@ -254,14 +257,16 @@ public extension Completable {
   }
 
   /// Performs block when competion becomes available.
-  func onSuccess(executor: Executor = .primary,
-                 block: @escaping (Success) -> Void) {
+  func onSuccess(
+    executor: Executor = .primary,
+    _ block: @escaping (Success) -> Void) {
     self.onComplete(executor: executor) { $0.onSuccess(block) }
   }
   
   /// Performs block when failure becomes available.
-  func onFailure(executor: Executor = .primary,
-                 block: @escaping (Swift.Error) -> Void) {
+  func onFailure(
+    executor: Executor = .primary,
+                 _ block: @escaping (Swift.Error) -> Void) {
     self.onComplete(executor: executor) { $0.onFailure(block) }
   }
 }
@@ -270,8 +275,10 @@ public extension Completable {
   /// Performs block when completion value.
   ///
   /// This method is suitable for applying completion of future to context.
-  func onComplete<C: ExecutionContext>(context: C, executor: Executor? = nil,
-               block: @escaping (C, Fallible<Success>) -> Void) {
+  func onComplete<C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ block: @escaping (C, Fallible<Success>) -> Void) {
     // Test: FutureTests.testOnCompleteContextual_ContextAlive
     // Test: FutureTests.testOnCompleteContextual_ContextDead
     let handler = self.makeCompletionHandler(executor: executor ?? context.executor) {
@@ -279,15 +286,17 @@ public extension Completable {
       guard let context = context else { return }
       block(context, $0)
     }
-
+    
     if let handler = handler {
       context.releaseOnDeinit(handler)
     }
   }
 
   /// Performs block when completion becomes available.
-  func onSuccess<C: ExecutionContext>(context: C, executor: Executor? = nil,
-                 block: @escaping (C, Success) -> Void) {
+  func onSuccess<C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ block: @escaping (C, Success) -> Void) {
     self.onComplete(context: context, executor: executor) {
       (context, value) in
       if let success = value.success {
@@ -297,8 +306,10 @@ public extension Completable {
   }
 
   /// Performs block when failure becomes available.
-  func onFailure<U: ExecutionContext>(context: U, executor: Executor? = nil,
-                 block: @escaping (U, Swift.Error) -> Void) {
+  func onFailure<C: ExecutionContext>(
+    context: C, executor:
+    Executor? = nil,
+    _ block: @escaping (C, Swift.Error) -> Void) {
     self.onComplete(context: context, executor: executor) {
       (context, value) in
       if let failure = value.failure {
@@ -384,12 +395,6 @@ public extension Completable {
     self.insertHandlerToReleasePool(handler)
 
     return promise
-  }
-
-  /// Returns future that completes after a timeout after completion of self
-  @available(*, deprecated, message: "use delayedCompletion(timeout:) instead")
-  func delayedFinal(timeout: Double) -> Future<Success> {
-    return self.delayedCompletion(timeout: timeout)
   }
 }
 
