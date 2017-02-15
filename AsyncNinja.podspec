@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "AsyncNinja"
-  s.version      = "0.4.5"
+  s.version      = "1.0.0-beta"
   s.summary      = "AsyncNinja is a concurrency library for Swift."
   s.description  = <<-DESC
 Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3. Contains primitives: Future, Channel, Executor, ExecutionContext, Fallible, Cache

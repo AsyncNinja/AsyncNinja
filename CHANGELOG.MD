@@ -1,3 +1,6 @@
+# 1.0.0-beta
+* major renaming has been done. Using more consistent names
+
 # 0.4.5
 * adding 5 various behaviors to flatMap that transforms update to future
 * adding descriptions (`CustomStringConvertible`, `CustomDebugStringConvertible`) for `Channel`, `Future`, `Fallible`, `Either`
