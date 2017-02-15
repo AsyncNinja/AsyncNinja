@@ -229,7 +229,7 @@ func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> { /* ... */ }
 
 ```swift
 let channelOfSquaredPrimeNumbers = channelOfPrimeNumbers
-  .mapUpdate { (number) -> Int in
+  .map { (number) -> Int in
       return number * number
     }
 ```
@@ -339,10 +339,10 @@ let searchResults = searchBar.rx.text.orEmpty
 
 #### AsyncNinja
 ```swift
-let searchResults = searchBar.changes(of: "text").mapUpdate { $0 ?? "" }
+let searchResults = searchBar.changes(of: "text").map { $0 ?? "" }
   .debounce(interval: 0.3)
   .distinct()
-  .flatMapUpdate(behavior: .keepLatestTransform) { (query) -> Future<[SearchResult]> in
+  .flatMap(behavior: .keepLatestTransform) { (query) -> Future<[SearchResult]> in
 	if query.isEmpty {
 	  return future(success: [])
 	}

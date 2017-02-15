@@ -30,7 +30,7 @@ import Dispatch
 class Channel_MapTests: XCTestCase {
   
   static let allTests = [
-    ("testMapUpdate", testMapUpdate),
+    ("testMap", testMap),
     ("testFilterUpdate", testFilterUpdate),
   ]
 
@@ -45,7 +45,7 @@ class Channel_MapTests: XCTestCase {
     return producer
   }
 
-  func testMapUpdate() {
+  func testMap() {
     let range = 0..<5
     let success = "bye"
     let queue = DispatchQueue(label: "test", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
