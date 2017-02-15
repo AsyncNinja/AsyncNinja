@@ -213,7 +213,7 @@ class MyService {
   func fetchPerson(withID personID: Person.Identifier,
                    callback: @escaping (Fallible<Person>) -> Void) {
     self.fetchPerson(withID: personID)
-      .onComplete(block: callback)
+      .onComplete(callback)
   }
 }
 ```

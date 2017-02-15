@@ -137,7 +137,7 @@ public extension Fallible {
   ///     **This block will not be executed if an original Fallible contains a failure. That failure will become a failure value of a transfomed Fallible**
   ///   - success: success value of original Fallible
   /// - Returns: transformed Fallible
-  func map<T>(transform: (_ success: Success) throws -> T) -> Fallible<T> {
+  func map<T>(_ transform: (_ success: Success) throws -> T) -> Fallible<T> {
     return self.flatMap { .success(try transform($0)) }
   }
 
@@ -150,7 +150,7 @@ public extension Fallible {
   ///     **This block will not be executed if an original Fallible contains a failure. That failure will become a failure value of a transfomed Fallible**
   ///   - success: success value of original Fallible
   /// - Returns: transformed Fallible
-  func flatMap<T>(transform: (_ success: Success) throws -> Fallible<T>) -> Fallible<T> {
+  func flatMap<T>(_ transform: (_ success: Success) throws -> Fallible<T>) -> Fallible<T> {
     switch self {
     case let .success(success):
       return flatFallible { try transform(success) }
@@ -168,7 +168,7 @@ public extension Fallible {
   ///     **This block will not be executed if an original Fallible contains a success value. That success value will become a success value of a transfomed Fallible**
   ///   - failure: failure value of original Fallible
   /// - Returns: transformed Fallible
-  func tryRecover(transform: (_ failure: Swift.Error) throws -> Success) -> Fallible<Success> {
+  func tryRecover(_ transform: (_ failure: Swift.Error) throws -> Success) -> Fallible<Success> {
     switch self {
     case let .success(success):
       return .success(success)
@@ -186,7 +186,7 @@ public extension Fallible {
   ///     **This block will not be executed if an original Fallible contains a success value. That success value will become a success value of a transfomed Fallible**
   ///   - failure: failure value of original Fallible
   /// - Returns: success value
-  func recover(transform: (_ failure: Swift.Error) -> Success) -> Success {
+  func recover(_ transform: (_ failure: Swift.Error) -> Success) -> Success {
     switch self {
     case let .success(success):
       return success
@@ -266,16 +266,16 @@ public protocol _Fallible: CustomStringConvertible {
   func onFailure(_ handler: (Swift.Error) throws -> Void) rethrows
 
   /// (success or failure) * (try transform success to success) -> (success or failure)
-  func map<T>(transform: (Success) throws -> T) -> Fallible<T>
+  func map<T>(_ transform: (Success) throws -> T) -> Fallible<T>
 
   /// (success or failure) * (try transform success to (success or failure)) -> (success or failure)
-  func flatMap<T>(transform: (Success) throws -> Fallible<T>) -> Fallible<T>
+  func flatMap<T>(_ transform: (Success) throws -> Fallible<T>) -> Fallible<T>
 
   /// (success or failure) * (try transform failure to success) -> (success or failure)
-  func tryRecover(transform: (Swift.Error) throws -> Success) -> Fallible<Success>
+  func tryRecover(_ transform: (Swift.Error) throws -> Success) -> Fallible<Success>
 
   /// (success or failure) * (transform failure to success) -> success
-  func recover(transform: (Swift.Error) -> Success) -> Success
+  func recover(_ transform: (Swift.Error) -> Success) -> Success
 
   /// returns success or throws failure
   func liftSuccess() throws -> Success
