@@ -95,7 +95,7 @@ extension Channel {
 // MARK: - whole channel transformations
 public extension Channel {
 
-  /// Applies transformation to the whole channel. `mapUpdate` methods
+  /// Applies transformation to the whole channel. `map` methods
   /// are more convenient if you want to transform updates values only.
   ///
   /// - Parameters:
@@ -131,7 +131,7 @@ public extension Channel {
         }
     }
 
-  /// Applies transformation to the whole channel. `mapUpdate` methods
+  /// Applies transformation to the whole channel. `map` methods
   /// are more convenient if you want to transform updates values only.
   ///
   /// - Parameters:
@@ -185,7 +185,7 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func mapUpdate<P, C: ExecutionContext>(
+  func map<P, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     cancellationToken: CancellationToken? = nil,
@@ -223,14 +223,14 @@ public extension Channel {
   ///   - transform: to apply
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func mapUpdate<P>(
+  func map<P>(
     executor: Executor = .primary,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ update: Update) throws -> P
     ) -> Channel<P, Success> {
 
-    // Test: Channel_MapTests.testMapUpdate
+    // Test: Channel_MapTests.testMap
 
     return self.makeProducer(executor: executor,
                              cancellationToken: cancellationToken,
@@ -269,7 +269,7 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMapUpdate<P, C: ExecutionContext>(
+  func flatMap<P, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     cancellationToken: CancellationToken? = nil,
@@ -306,7 +306,7 @@ public extension Channel {
   ///   - transform: to apply. Nil returned from transform will not produce update value
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMapUpdate<P>(
+  func flatMap<P>(
     executor: Executor = .primary,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
@@ -346,7 +346,7 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMapUpdate<PS: Sequence, C: ExecutionContext>(
+  func flatMap<PS: Sequence, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     cancellationToken: CancellationToken? = nil,
@@ -382,7 +382,7 @@ public extension Channel {
   ///     will be treated as multiple period values
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMapUpdate<PS: Sequence>(
+  func flatMap<PS: Sequence>(
     executor: Executor = .primary,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,

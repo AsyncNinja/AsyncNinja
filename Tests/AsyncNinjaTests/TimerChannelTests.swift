@@ -46,7 +46,7 @@ class TimerChannelTests: XCTestCase {
       weakTimer = timer
       XCTAssertNotNil(weakTimer)
 
-      let mappedTimer = timer.mapUpdate(executor: .utility) { _ -> DispatchTime in
+      let mappedTimer = timer.map(executor: .utility) { _ -> DispatchTime in
         assert(qos: .utility)
         return DispatchTime.now()
       }

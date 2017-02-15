@@ -41,9 +41,9 @@ public extension Channel {
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 
       var index: OSAtomic_int64_aligned64_t = -1
-      return self.mapUpdate(executor: .immediate,
-                              cancellationToken: cancellationToken,
-                              bufferSize: bufferSize)
+      return self.map(executor: .immediate,
+                      cancellationToken: cancellationToken,
+                      bufferSize: bufferSize)
       {
         let localIndex = Int(OSAtomicIncrement64(&index))
         return (localIndex, $0)
@@ -53,9 +53,9 @@ public extension Channel {
 
       var locking = makeLocking()
       var index = 0
-      return self.mapUpdate(executor: .immediate,
-                              cancellationToken: cancellationToken,
-                              bufferSize: bufferSize)
+      return self.map(executor: .immediate,
+                      cancellationToken: cancellationToken,
+                      bufferSize: bufferSize)
       {
         locking.lock()
         defer { locking.unlock() }

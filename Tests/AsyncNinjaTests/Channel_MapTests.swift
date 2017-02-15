@@ -50,7 +50,7 @@ class Channel_MapTests: XCTestCase {
     let success = "bye"
     let queue = DispatchQueue(label: "test", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
     let (updates, completion) = makeChannel(updates: range, success: success)
-      .mapUpdate(executor: .queue(queue)) { value -> Int in
+      .map(executor: .queue(queue)) { value -> Int in
         assert(on: queue)
         return value * 2
       }

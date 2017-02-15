@@ -41,7 +41,7 @@ class Channel_FlatMapFuturesTests: XCTestCase {
                           file: StaticString = #file, line: UInt = #line) {
     let producerA = Producer<(duration: Double, name: String), String>()
     let qos = pickQoS()
-    let channelB = producerA.flatMapUpdate(executor: .queue(qos), behavior: behavior) { (duration, name) -> Future<String> in
+    let channelB = producerA.flatMap(executor: .queue(qos), behavior: behavior) { (duration, name) -> Future<String> in
       assert(qos: qos)
       return future(after: duration) {
         return "t(\(name))"

@@ -22,7 +22,7 @@
 
 import Dispatch
 
-/// Flattening Behavior for Channel.flatMapUpdate methods
+/// Flattening Behavior for Channel.flatMap methods
 /// that transform update value to future. See cases for details.
 public enum ChannelFlatteningBehavior {
   /// perform transformations serially
@@ -85,7 +85,7 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMapUpdate<T, C: ExecutionContext>(
+  func flatMap<T, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     behavior: ChannelFlatteningBehavior,
@@ -124,7 +124,7 @@ public extension Channel {
   ///     as update value of transformed channel
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMapUpdate<T>(
+  func flatMap<T>(
     executor: Executor = .primary,
     behavior: ChannelFlatteningBehavior,
     cancellationToken: CancellationToken? = nil,
