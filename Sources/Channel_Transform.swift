@@ -175,10 +175,10 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (value: Value, producer: Producer<Update, Success>) -> Void in
+      (event: Event, producer: Producer<Update, Success>) -> Void in
       Executor.primary.execute(after: timeout) { [weak producer] in
         guard let producer = producer else { return }
-        producer.apply(value)
+        producer.apply(event)
       }
     }
   }
@@ -231,12 +231,12 @@ public extension Channel {
     producer.insertToReleasePool(timer)
 
     let handler = self.makeHandler(executor: .immediate) {
-      [weak producer] (value) in
+      [weak producer] (event) in
 
       locking.lock()
       defer { locking.unlock() }
 
-      switch value {
+      switch event {
       case let .completion(completion):
         if let update = latestUpdate {
           producer?.send(update)

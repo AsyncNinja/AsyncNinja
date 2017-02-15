@@ -67,9 +67,9 @@ public extension Completable {
     _ transform: @escaping (Fallible<Success>) throws -> Transformed
     ) -> Future<Transformed> {
     let promise = Promise<Transformed>()
-    let handler = self.makeCompletionHandler(executor: executor) { [weak promise] (value) -> Void in
+    let handler = self.makeCompletionHandler(executor: executor) { [weak promise] (completion) -> Void in
       guard case .some = promise else { return }
-      let transformedValue = fallible { try transform(value) }
+      let transformedValue = fallible { try transform(completion) }
       promise?.complete(with: transformedValue )
     }
     promise.insertHandlerToReleasePool(handler)

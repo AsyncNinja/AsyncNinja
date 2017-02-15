@@ -50,11 +50,11 @@ public extension Channel {
 
     do {
       let handler = makeHandler(executor: .immediate) {
-        [weak producer] (value) in
+        [weak producer] (event) in
         locking.lock()
         defer { locking.unlock() }
 
-        switch value {
+        switch event {
         case let .update(localUpdate):
           latestLeftUpdate = localUpdate
         case let .completion(leftCompletion):

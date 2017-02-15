@@ -41,10 +41,10 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   func makeHandlerBlock<Update, Success>(
     updateHandler: @escaping (Update) -> Void,
     successHandler: @escaping (Success) -> (SA, SB)?
-    ) -> (ChannelValue<Update, Success>) -> Void {
+    ) -> (ChannelEvent<Update, Success>) -> Void {
     return {
-      [weak producer] (value) in
-      switch value {
+      [weak producer] (event) in
+      switch event {
       case let .update(update):
         updateHandler(update)
       case let .completion(.failure(error)):
@@ -98,10 +98,10 @@ public func merge<P, SA, SB>(_ channelA: Channel<P, SA>,
   var successB: SB?
 
   func makeHandlerBlock<T>(_ successHandler: @escaping (T) -> (SA, SB)?
-    ) -> (ChannelValue<P, T>) -> Void {
+    ) -> (ChannelEvent<P, T>) -> Void {
     return {
-      [weak producer] (value) in
-      switch value {
+      [weak producer] (event) in
+      switch event {
       case let .update(update):
         producer?.send(update)
       case let .completion(.failure(error)):

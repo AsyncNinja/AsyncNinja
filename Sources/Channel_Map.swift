@@ -30,12 +30,12 @@ extension Channel {
     executor: Executor,
     cancellationToken: CancellationToken?,
     bufferSize: DerivedChannelBufferSize,
-    _ onValue: @escaping (Value, Producer<P, S>) throws -> Void
+    _ onEvent: @escaping (Event, Producer<P, S>) throws -> Void
     ) -> Producer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<P, S>(bufferSize: bufferSize)
     self.attach(producer: producer, executor: executor,
-                cancellationToken: cancellationToken, onValue)
+                cancellationToken: cancellationToken, onEvent)
     return producer
   }
 
@@ -44,12 +44,12 @@ extension Channel {
     producer: Producer<P, S>,
     executor: Executor,
     cancellationToken: CancellationToken?,
-    _ onValue: @escaping (Value, Producer<P, S>) throws -> Void)
+    _ onEvent: @escaping (Event, Producer<P, S>) throws -> Void)
   {
     let handler = self.makeHandler(executor: executor) {
-      [weak producer] (value) in
+      [weak producer] (event) in
       guard let producer = producer else { return }
-      do { try onValue(value, producer) }
+      do { try onEvent(event, producer) }
       catch { producer.fail(with: error) }
     }
 
@@ -63,12 +63,12 @@ extension Channel {
     executor: Executor?,
     cancellationToken: CancellationToken?,
     bufferSize: DerivedChannelBufferSize,
-    _ onValue: @escaping (C, Value, Producer<P, S>) throws -> Void
+    _ onEvent: @escaping (C, Event, Producer<P, S>) throws -> Void
     ) -> Producer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<P, S>(bufferSize: bufferSize)
     self.attach(producer: producer, context: context, executor: executor,
-                cancellationToken: cancellationToken, onValue)
+                cancellationToken: cancellationToken, onEvent)
     return producer
   }
 
@@ -78,14 +78,14 @@ extension Channel {
     context: C,
     executor: Executor?,
     cancellationToken: CancellationToken?,
-    _ onValue: @escaping (C, Value, Producer<P, S>) throws -> Void)
+    _ onEvent: @escaping (C, Event, Producer<P, S>) throws -> Void)
   {
     let executor_ = executor ?? context.executor
     self.attach(producer: producer, executor: executor_, cancellationToken: cancellationToken)
     {
-      [weak context] (value, producer) in
+      [weak context] (event, producer) in
       guard let context = context else { return }
-      try onValue(context, value, producer)
+      try onEvent(context, event, producer)
     }
     
     context.addDependent(completable: producer)
@@ -113,23 +113,23 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - value: `ChannelValue` to transform. May be either update or completion
   /// - Returns: transformed channel
-  func map<P, S, C: ExecutionContext>(
-    context: C,
-    executor: Executor? = nil,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default,
-    _ transform: @escaping (_ strongContext: C, _ value: Value) throws -> ChannelValue<P, S>
-    ) -> Channel<P, S> {
-    return self.makeProducer(context: context,
-                             executor: executor,
-                             cancellationToken: cancellationToken,
-                             bufferSize: bufferSize)
-    {
-      (context, value, producer) in
-      let transformedValue = try transform(context, value)
-      producer.apply(transformedValue)
+    func mapEvent<P, S, C: ExecutionContext>(
+        context: C,
+        executor: Executor? = nil,
+        cancellationToken: CancellationToken? = nil,
+        bufferSize: DerivedChannelBufferSize = .default,
+        _ transform: @escaping (_ strongContext: C, _ event: Event) throws -> ChannelEvent<P, S>
+        ) -> Channel<P, S> {
+        return self.makeProducer(context: context,
+                                 executor: executor,
+                                 cancellationToken: cancellationToken,
+                                 bufferSize: bufferSize)
+        {
+            (context, event, producer) in
+            let transformedEvent = try transform(context, event)
+            producer.apply(transformedEvent)
+        }
     }
-  }
 
   /// Applies transformation to the whole channel. `mapUpdate` methods
   /// are more convenient if you want to transform updates values only.
@@ -145,19 +145,19 @@ public extension Channel {
   ///   - transform: to apply
   ///   - value: `ChannelValue` to transform. May be either update or completion
   /// - Returns: transformed channel
-  func map<P, S>(
+  func mapEvent<P, S>(
     executor: Executor = .primary,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
-    _ transform: @escaping (_ value: Value) throws -> ChannelValue<P, S>
+    _ transform: @escaping (_ event: Event) throws -> ChannelEvent<P, S>
     ) -> Channel<P, S> {
     return self.makeProducer(executor: executor,
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (value, producer) in
-      let transformedValue = try transform(value)
-      producer.apply(transformedValue)
+      (event, producer) in
+      let transformedEvent = try transform(event)
+      producer.apply(transformedEvent)
     }
   }
 }

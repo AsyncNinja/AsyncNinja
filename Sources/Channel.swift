@@ -24,7 +24,7 @@ import Dispatch
 
 /// represents values that updateally arrive followed by failure of completion that completes Channel. Channel oftenly represents result of long running task that is not yet arrived and flow of some intermediate results.
 public class Channel<Update, Success>: Completable, Sequence {
-  public typealias Value = ChannelValue<Update, Success>
+  public typealias Event = ChannelEvent<Update, Success>
   public typealias Handler = ChannelHandler<Update, Success>
   public typealias Iterator = ChannelIterator<Update, Success>
 
@@ -59,7 +59,7 @@ public class Channel<Update, Success>: Completable, Sequence {
 
   /// **internal use only**
   public func makeHandler(executor: Executor,
-                          _ block: @escaping (Value) -> Void) -> Handler? {
+                          _ block: @escaping (Event) -> Void) -> Handler? {
     assertAbstract()
   }
 
@@ -113,13 +113,13 @@ public extension Channel {
   /// - Parameters:
   ///   - executor: to execute block on
   ///   - block: to execute. Will be called multiple times
-  ///   - value: received by the channel
-  func onValue(
-    executor: Executor = .primary,
-    _ block: @escaping (_ value: Value) -> Void) {
-    let handler = self.makeHandler(executor: executor, block)
-    self.insertHandlerToReleasePool(handler)
-  }
+  ///   - event: received by the channel
+    func onEvent(
+        executor: Executor = .primary,
+        _ block: @escaping (_ event: Event) -> Void) {
+        let handler = self.makeHandler(executor: executor, block)
+        self.insertHandlerToReleasePool(handler)
+    }
 
   /// Subscribes for buffered and new values (both update and completion) for the channel
   ///
@@ -130,11 +130,11 @@ public extension Channel {
   ///     to override an executor provided by the context
   ///   - block: to execute. Will be called multiple times
   ///   - strongContext: context restored from weak reference to specified context
-  ///   - value: received by the channel
-  func onValue<C: ExecutionContext>(
+  ///   - event: received by the channel
+  func onEvent<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    _ block: @escaping (_ strongContext: C, _ value: Value) -> Void) {
+    _ block: @escaping (_ strongContext: C, _ event: Event) -> Void) {
     let executor_ = executor ?? context.executor
     let handler = self.makeHandler(executor: executor_) {
       [weak context] (value) in
@@ -156,8 +156,8 @@ public extension Channel {
   func onUpdate(
     executor: Executor = .primary,
     _ block: @escaping (_ update: Update) -> Void) {
-    self.onValue(executor: executor) { (value) in
-      switch value {
+    self.onEvent(executor: executor) { (event) in
+      switch event {
       case let .update(update):
         block(update)
       case .completion: nop()
@@ -179,7 +179,7 @@ public extension Channel {
     context: C,
     executor: Executor? = nil,
     _ block: @escaping (_ strongContext: C, _ update: Update) -> Void) {
-    self.onValue(context: context, executor: executor) { (context, value) in
+    self.onEvent(context: context, executor: executor) { (context, value) in
       switch value {
       case let .update(update):
         block(context, update)
@@ -200,8 +200,8 @@ public extension Channel {
     _ block: @escaping (_ updates: [Update], _ completion: Fallible<Success>) -> Void) {
     var updates = [Update]()
     let executor_ = executor.makeDerivedSerialExecutor()
-    self.onValue(executor: executor_) { (value) in
-      switch value {
+    self.onEvent(executor: executor_) { (event) in
+      switch event {
       case let .update(update):
         updates.append(update)
       case let .completion(completion):
@@ -227,7 +227,7 @@ public extension Channel {
     _ block: @escaping (_ strongContext: C, _ updates: [Update], _ completion: Fallible<Success>) -> Void) {
     var updates = [Update]()
     let executor_ = (executor ?? context.executor).makeDerivedSerialExecutor()
-    self.onValue(context: context, executor: executor_) { (context, value) in
+    self.onEvent(context: context, executor: executor_) { (context, value) in
       switch value {
       case let .update(update):
         updates.append(update)
@@ -292,7 +292,7 @@ class ChannelIteratorImpl<Update, Success>  {
 }
 
 /// Value reveived by channel
-public enum ChannelValue<Update, Success> {
+public enum ChannelEvent<Update, Success> {
   /// A kind of value that can be received multiple times be for the completion one
   case update(Update)
 
@@ -305,22 +305,22 @@ public enum ChannelValue<Update, Success> {
 /// **internal use only** Wraps each block submitted to the channel
 /// to provide required memory management behavior
 final public class ChannelHandler<Update, Success> {
-  public typealias Value = ChannelValue<Update, Success>
+  public typealias Event = ChannelEvent<Update, Success>
 
   let executor: Executor
-  let block: (Value) -> Void
+  let block: (Event) -> Void
   var owner: Channel<Update, Success>?
 
   /// Designated initializer of ChannelHandler
-  public init(executor: Executor, block: @escaping (Value) -> Void, owner: Channel<Update, Success>) {
+  public init(executor: Executor, block: @escaping (Event) -> Void, owner: Channel<Update, Success>) {
     self.executor = executor
     self.block = block
     self.owner = owner
   }
 
-  func handle(_ value: Value) {
+  func handle(_ event: Event) {
     let block = self.block
-    self.executor.execute { block(value) }
+    self.executor.execute { block(event) }
   }
 
   func releaseOwner() {

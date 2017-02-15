@@ -28,23 +28,23 @@ public enum ChannelFlatteningBehavior {
   /// perform transformations serially
   /// ![transformSerially](https://github.com/AsyncNinja/AsyncNinja/raw/master/Documentation/Resources/transformSerially.png "transformSerially")
   case transformSerially
-
+  
   /// send all transformed updates in the order of initial updates arrived
   /// ![orderResults](https://github.com/AsyncNinja/AsyncNinja/raw/master/Documentation/Resources/orderResults.png "orderResults")
   case orderResults
-
+  
   /// keeps signle latest transform
   /// ![keepLatestTransform](https://github.com/AsyncNinja/AsyncNinja/raw/master/Documentation/Resources/keepLatestTransform.png "keepLatestTransform")
   case keepLatestTransform
-
+  
   /// drop transformed updates that came out of order
   /// ![dropResultsOutOfOrder](https://github.com/AsyncNinja/AsyncNinja/raw/master/Documentation/Resources/dropResultsOutOfOrder.png "dropResultsOutOfOrder")
   case dropResultsOutOfOrder
-
+  
   /// send transformed updates as soon as they are arrive
   /// ![keepUnordered](https://github.com/AsyncNinja/AsyncNinja/raw/master/Documentation/Resources/keepUnordered.png "keepUnordered")
   case keepUnordered
-
+  
   /// **internal use only**
   fileprivate func makeStorage<P, S, T>(
     executor: Executor,
@@ -93,23 +93,23 @@ public extension Channel {
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> Future<T>
     ) -> Channel<Fallible<T>, Success> {
-
+    
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<Fallible<T>, Success>(bufferSize: bufferSize)
     let storage: BaseChannelFlatteningBehaviorStorage<Update, Success, T>
       = behavior.makeStorage(executor: executor ?? context.executor) { [weak context] (update) -> Future<T>? in
-      if let context = context {
-        return try transform(context, update)
-      } else {
-        return nil
-      }
+        if let context = context {
+          return try transform(context, update)
+        } else {
+          return nil
+        }
     }
-
+    
     context.addDependent(completable: producer)
-    self.attach(producer: producer, executor: .immediate, cancellationToken: cancellationToken, storage.onValue)
+    self.attach(producer: producer, executor: .immediate, cancellationToken: cancellationToken, storage.onEvent)
     return producer
   }
-
+  
   /// Applies transformation to update values of the channel.
   ///
   /// - Parameters:
@@ -131,45 +131,47 @@ public extension Channel {
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ update: Update) throws -> Future<T>
     ) -> Channel<Fallible<T>, Success> {
-
+    
     // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_KeepUnordered
     // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_KeepLatestTransform
     // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_DropResultsOutOfOrder
     // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_OrderResults
     // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_TransformSerially
-
+    
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<Fallible<T>, Success>(bufferSize: bufferSize)
     let storage: BaseChannelFlatteningBehaviorStorage<Update, Success, T>
       = behavior.makeStorage(executor: executor, transform)
-    self.attach(producer: producer, executor: .immediate, cancellationToken: cancellationToken, storage.onValue)
+    self.attach(producer: producer, executor: .immediate, cancellationToken: cancellationToken, storage.onEvent)
     return producer
   }
 }
 
 
 private class BaseChannelFlatteningBehaviorStorage<P, S, T> {
+  typealias Event = ChannelEvent<P, S>
+  
   let executor: Executor
   let transform: (_ update: P) throws -> Future<T>?
   required init(executor: Executor, transform: @escaping (_ update: P) throws -> Future<T>?) {
     self.executor = executor
     self.transform = transform
   }
-
-  func onValue(value: ChannelValue<P, S>, producer: Producer<Fallible<T>, S>) {
+  
+  func onEvent(_ event: Event, producer: Producer<Fallible<T>, S>) {
     assertAbstract()
   }
 }
 
 private class KeepUnorderedChannelFlatteningBehaviorStorage<P, S, T>: BaseChannelFlatteningBehaviorStorage<P, S, T> {
-  override func onValue(value: ChannelValue<P, S>, producer: Producer<Fallible<T>, S>) {
-    switch value {
+  override func onEvent(_ event: Event, producer: Producer<Fallible<T>, S>) {
+    switch event {
     case .update(let update):
       executor.execute {
         let handler = makeFutureOrWrapError({ try self.transform(update) })?
           .makeCompletionHandler(executor: .immediate) { [weak producer] (update) -> Void in
             producer?.send(update)
-
+            
         }
         producer.insertHandlerToReleasePool(handler)
       }
@@ -182,9 +184,9 @@ private class KeepUnorderedChannelFlatteningBehaviorStorage<P, S, T>: BaseChanne
 private class KeepLatestTransformChannelFlatteningBehaviorStorage<P, S, T>: BaseChannelFlatteningBehaviorStorage<P, S, T> {
   var locking = makeLocking()
   var latestFuture: Future<T?>?
-
-  override func onValue(value: ChannelValue<P, S>, producer: Producer<Fallible<T>, S>) {
-    switch value {
+  
+  override func onEvent(_ event: Event, producer: Producer<Fallible<T>, S>) {
+    switch event {
     case .update(let update):
       let promise = Promise<T?>()
       self.locking.lock()
@@ -207,7 +209,7 @@ private class KeepLatestTransformChannelFlatteningBehaviorStorage<P, S, T>: Base
           }
       }
       producer.insertHandlerToReleasePool(handler)
-
+      
       executor.execute {
         do {
           if let future = try self.transform(update) {
@@ -229,10 +231,10 @@ private class DropResultsOutOfOrderChannelFlatteningBehaviorStorage<P, S, T>: Ba
   var locking = makeLocking()
   let futuresQueue = Queue<(future: Future<T?>, index: Int)>()
   var indexOfNextFuture = 1
-
-  override func onValue(value: ChannelValue<P, S>, producer: Producer<Fallible<T>, S>) {
-
-    switch value {
+  
+  override func onEvent(_ event: Event, producer: Producer<Fallible<T>, S>) {
+    
+    switch event {
     case .update(let update):
       locking.lock()
       let promise = Promise<T?>()
@@ -240,7 +242,7 @@ private class DropResultsOutOfOrderChannelFlatteningBehaviorStorage<P, S, T>: Ba
       futuresQueue.push((promise, index))
       indexOfNextFuture += 1
       locking.unlock()
-
+      
       let handler = promise
         .makeCompletionHandler(executor: .immediate) { [weak producer] (update) -> Void in
           guard
@@ -248,7 +250,7 @@ private class DropResultsOutOfOrderChannelFlatteningBehaviorStorage<P, S, T>: Ba
             else { return }
           self.locking.lock()
           defer { self.locking.unlock() }
-
+          
           while let first = self.futuresQueue.first {
             if first.index > index {
               break
@@ -268,7 +270,7 @@ private class DropResultsOutOfOrderChannelFlatteningBehaviorStorage<P, S, T>: Ba
           }
       }
       producer.insertHandlerToReleasePool(handler)
-
+      
       executor.execute {
         do {
           if let future = (try self.transform(update)) {
@@ -280,7 +282,7 @@ private class DropResultsOutOfOrderChannelFlatteningBehaviorStorage<P, S, T>: Ba
           promise.fail(with: error)
         }
       }
-
+      
     case .completion(let completion):
       producer.complete(with: completion)
     }
@@ -292,15 +294,15 @@ private class OrderResultsChannelFlatteningBehaviorStorage<P, S, T>: BaseChannel
   var locking = makeLocking(isFair: true)
   let futuresQueue = Queue<Future<T?>>()
   var isWaiting = false
-
-  override func onValue(value: ChannelValue<P, S>, producer: Producer<Fallible<T>, S>) {
-    switch value {
+  
+  override func onEvent(_ event: Event, producer: Producer<Fallible<T>, S>) {
+    switch event {
     case .update(let update):
       let promise = Promise<T?>()
       locking.lock()
       futuresQueue.push(promise)
       locking.unlock()
-
+      
       executor.execute {
         do {
           if let future = try self.transform(update) {
@@ -312,13 +314,13 @@ private class OrderResultsChannelFlatteningBehaviorStorage<P, S, T>: BaseChannel
           promise.fail(with: error)
         }
       }
-
+      
       self.waitForTheNextFutureIfNeeded(producer: producer)
     case .completion(let completion):
       producer.complete(with: completion)
     }
   }
-
+  
   private func waitForTheNextFutureIfNeeded(producer: Producer<Fallible<T>, S>) {
     locking.lock()
     guard
@@ -328,14 +330,14 @@ private class OrderResultsChannelFlatteningBehaviorStorage<P, S, T>: BaseChannel
         locking.unlock()
         return
     }
-
+    
     isWaiting = true
     locking.unlock()
-
+    
     let handler = future
       .makeCompletionHandler(executor: .immediate) { [weak producer, weak weakSelf = self] (update) -> Void in
         guard let producer = producer else { return }
-
+        
         switch update {
         case .success(.some(let value)):
           producer.send(.success(value))
@@ -344,7 +346,7 @@ private class OrderResultsChannelFlatteningBehaviorStorage<P, S, T>: BaseChannel
         default:
           nop()
         }
-
+        
         guard let self_ = weakSelf else { return }
         self_.locking.lock()
         self_.isWaiting = false
@@ -359,9 +361,9 @@ private class TransformSeriallyChannelFlatteningBehaviorStorage<P, S, T>: BaseCh
   var locking = makeLocking(isFair: true)
   let updatesQueue = Queue<P>()
   var isRunning = false
-
-  override func onValue(value: ChannelValue<P, S>, producer: Producer<Fallible<T>, S>) {
-    switch value {
+  
+  override func onEvent(_ event: Event, producer: Producer<Fallible<T>, S>) {
+    switch event {
     case .update(let update):
       locking.lock()
       defer { locking.unlock() }
@@ -371,13 +373,13 @@ private class TransformSeriallyChannelFlatteningBehaviorStorage<P, S, T>: BaseCh
       producer.complete(with: completion)
     }
   }
-
+  
   private func launchNextTransformIfNeeded(producer: Producer<Fallible<T>, S>) {
     guard
       !isRunning,
       let update = updatesQueue.pop()
       else { return }
-
+    
     isRunning = true
     let promise = Promise<T?>()
     executor.execute {
@@ -391,7 +393,7 @@ private class TransformSeriallyChannelFlatteningBehaviorStorage<P, S, T>: BaseCh
         promise.fail(with: error)
       }
     }
-
+    
     let handler = promise
       .makeCompletionHandler(executor: .immediate) { [weak producer, weak weakSelf = self] (update) -> Void in
         guard let producer = producer else { return }
@@ -403,7 +405,7 @@ private class TransformSeriallyChannelFlatteningBehaviorStorage<P, S, T>: BaseCh
         default:
           nop()
         }
-
+        
         guard let self_ = weakSelf else { return }
         self_.locking.lock()
         defer { self_.locking.unlock() }

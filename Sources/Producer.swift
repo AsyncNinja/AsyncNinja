@@ -75,14 +75,14 @@ final public class Producer<Update, Success>: Channel<Update, Success>, MutableC
   /// **internal use only**
   override public func makeHandler(
     executor: Executor,
-    _ block: @escaping (Value) -> Void
+    _ block: @escaping (Event) -> Void
     ) -> Handler? {
     return _makeHandler(executor: executor, avoidLocking: false, block)
   }
 
   fileprivate func _makeHandler(
     executor: Executor, avoidLocking: Bool,
-    _ block: @escaping (Value) -> Void
+    _ block: @escaping (Event) -> Void
     ) -> Handler? {
     if !avoidLocking {
       _locking.lock()
@@ -110,8 +110,8 @@ final public class Producer<Update, Success>: Channel<Update, Success>, MutableC
 
   /// Applies specified ChannelValue to the Producer
   /// Value will not be applied for completed Producer
-  public func apply(_ value: Value) {
-    switch value {
+    public func apply(_ event: Event) {
+    switch event {
     case let .update(update):
       self.send(update)
     case let .completion(completion):
@@ -139,8 +139,8 @@ final public class Producer<Update, Success>: Channel<Update, Success>, MutableC
       _pushUpdateToBuffer(update)
     }
 
-    let value = Value.update(update)
-    _handlers.forEach { $0.handle(value) }
+    let event = Event.update(update)
+    _handlers.forEach { $0.handle(event) }
   }
 
   /// Sends specified sequence of Update to the Producer
@@ -353,8 +353,8 @@ fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Upd
       _sema.signal()
     }
     super.init()
-    _handler = channel._makeHandler(executor: .immediate, avoidLocking: true) { [weak self] (value) in
-      self?.handle(value)
+    _handler = channel._makeHandler(executor: .immediate, avoidLocking: true) { [weak self] (event) in
+      self?.handle(event)
     }
   }
 
@@ -376,7 +376,7 @@ fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Upd
     return ProducerIteratorImpl(channel: _producer, bufferedUpdates: _bufferedUpdates.clone())
   }
 
-  func handle(_ value: ChannelValue<Update, Success>) {
+  func handle(_ value: ChannelEvent<Update, Success>) {
     _locking.lock()
     defer { _locking.unlock() }
 

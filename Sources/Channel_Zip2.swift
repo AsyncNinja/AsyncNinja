@@ -39,10 +39,10 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   func makeHandlerBlock<Update, Success>(
     updateHandler: @escaping (Update) -> (PA, PB)?,
     successHandler: @escaping (Success) -> (SA, SB)?
-    ) -> (ChannelValue<Update, Success>) -> Void {
+    ) -> (ChannelEvent<Update, Success>) -> Void {
     return {
-      [weak producer] (value) in
-      switch value {
+      [weak producer] (event) in
+      switch event {
       case let .update(update):
         locking.lock()
         defer { locking.unlock() }
@@ -62,7 +62,7 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   }
 
   do {
-    let handlerBlockA: (ChannelValue<PA, SA>) -> Void = makeHandlerBlock(
+    let handlerBlockA: (ChannelEvent<PA, SA>) -> Void = makeHandlerBlock(
       updateHandler: {
         if let updateB = queueOfUpdates.first?.right {
           let _ = queueOfUpdates.pop()
@@ -82,7 +82,7 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   }
 
   do {
-    let handlerBlockB: (ChannelValue<PB, SB>) -> Void = makeHandlerBlock(
+    let handlerBlockB: (ChannelEvent<PB, SB>) -> Void = makeHandlerBlock(
       updateHandler: {
         if let updateA = queueOfUpdates.first?.left {
           let _ = queueOfUpdates.pop()
