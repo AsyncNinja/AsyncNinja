@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		OBJ_100 /* MutableCompletable.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_32 /* MutableCompletable.swift */; };
+		OBJ_100 /* Locking.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_32 /* Locking.swift */; };
 		OBJ_101 /* Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_33 /* Observers.swift */; };
 		OBJ_102 /* OptionalAdaptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* OptionalAdaptor.swift */; };
 		OBJ_103 /* Producer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_35 /* Producer.swift */; };
@@ -57,18 +57,18 @@
 		OBJ_89 /* Collection+Futures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_21 /* Collection+Futures.swift */; };
 		OBJ_90 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_22 /* Common.swift */; };
 		OBJ_91 /* Completable.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_23 /* Completable.swift */; };
-		OBJ_92 /* ConstantFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_24 /* ConstantFuture.swift */; };
-		OBJ_93 /* ExecutionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_25 /* ExecutionContext.swift */; };
-		OBJ_94 /* Executor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_26 /* Executor.swift */; };
-		OBJ_95 /* Fallible.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_27 /* Fallible.swift */; };
-		OBJ_96 /* Future.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_28 /* Future.swift */; };
-		OBJ_97 /* Future_Makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_29 /* Future_Makers.swift */; };
-		OBJ_98 /* LockFreeThreadSafeContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* LockFreeThreadSafeContainer.swift */; };
-		OBJ_99 /* Locking.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_31 /* Locking.swift */; };
+		OBJ_92 /* Completing.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_24 /* Completing.swift */; };
+		OBJ_93 /* ConstantFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_25 /* ConstantFuture.swift */; };
+		OBJ_94 /* ExecutionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_26 /* ExecutionContext.swift */; };
+		OBJ_95 /* Executor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_27 /* Executor.swift */; };
+		OBJ_96 /* Fallible.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_28 /* Fallible.swift */; };
+		OBJ_97 /* Future.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_29 /* Future.swift */; };
+		OBJ_98 /* Future_Makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* Future_Makers.swift */; };
+		OBJ_99 /* LockFreeThreadSafeContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_31 /* LockFreeThreadSafeContainer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		F8743B711E58E2E9000D3CB6 /* PBXContainerItemProxy */ = {
+		F82C03EF1E58F87E00D849A2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = OBJ_1 /* Project object */;
 			proxyType = 1;
@@ -92,15 +92,15 @@
 		OBJ_21 /* Collection+Futures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+Futures.swift"; sourceTree = "<group>"; };
 		OBJ_22 /* Common.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Common.swift; sourceTree = "<group>"; };
 		OBJ_23 /* Completable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Completable.swift; sourceTree = "<group>"; };
-		OBJ_24 /* ConstantFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstantFuture.swift; sourceTree = "<group>"; };
-		OBJ_25 /* ExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutionContext.swift; sourceTree = "<group>"; };
-		OBJ_26 /* Executor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Executor.swift; sourceTree = "<group>"; };
-		OBJ_27 /* Fallible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fallible.swift; sourceTree = "<group>"; };
-		OBJ_28 /* Future.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Future.swift; sourceTree = "<group>"; };
-		OBJ_29 /* Future_Makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Future_Makers.swift; sourceTree = "<group>"; };
-		OBJ_30 /* LockFreeThreadSafeContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockFreeThreadSafeContainer.swift; sourceTree = "<group>"; };
-		OBJ_31 /* Locking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Locking.swift; sourceTree = "<group>"; };
-		OBJ_32 /* MutableCompletable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MutableCompletable.swift; sourceTree = "<group>"; };
+		OBJ_24 /* Completing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Completing.swift; sourceTree = "<group>"; };
+		OBJ_25 /* ConstantFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstantFuture.swift; sourceTree = "<group>"; };
+		OBJ_26 /* ExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutionContext.swift; sourceTree = "<group>"; };
+		OBJ_27 /* Executor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Executor.swift; sourceTree = "<group>"; };
+		OBJ_28 /* Fallible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fallible.swift; sourceTree = "<group>"; };
+		OBJ_29 /* Future.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Future.swift; sourceTree = "<group>"; };
+		OBJ_30 /* Future_Makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Future_Makers.swift; sourceTree = "<group>"; };
+		OBJ_31 /* LockFreeThreadSafeContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockFreeThreadSafeContainer.swift; sourceTree = "<group>"; };
+		OBJ_32 /* Locking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Locking.swift; sourceTree = "<group>"; };
 		OBJ_33 /* Observers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Observers.swift; sourceTree = "<group>"; };
 		OBJ_34 /* OptionalAdaptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionalAdaptor.swift; sourceTree = "<group>"; };
 		OBJ_35 /* Producer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Producer.swift; sourceTree = "<group>"; };
@@ -237,15 +237,15 @@
 				OBJ_21 /* Collection+Futures.swift */,
 				OBJ_22 /* Common.swift */,
 				OBJ_23 /* Completable.swift */,
-				OBJ_24 /* ConstantFuture.swift */,
-				OBJ_25 /* ExecutionContext.swift */,
-				OBJ_26 /* Executor.swift */,
-				OBJ_27 /* Fallible.swift */,
-				OBJ_28 /* Future.swift */,
-				OBJ_29 /* Future_Makers.swift */,
-				OBJ_30 /* LockFreeThreadSafeContainer.swift */,
-				OBJ_31 /* Locking.swift */,
-				OBJ_32 /* MutableCompletable.swift */,
+				OBJ_24 /* Completing.swift */,
+				OBJ_25 /* ConstantFuture.swift */,
+				OBJ_26 /* ExecutionContext.swift */,
+				OBJ_27 /* Executor.swift */,
+				OBJ_28 /* Fallible.swift */,
+				OBJ_29 /* Future.swift */,
+				OBJ_30 /* Future_Makers.swift */,
+				OBJ_31 /* LockFreeThreadSafeContainer.swift */,
+				OBJ_32 /* Locking.swift */,
 				OBJ_33 /* Observers.swift */,
 				OBJ_34 /* OptionalAdaptor.swift */,
 				OBJ_35 /* Producer.swift */,
@@ -372,15 +372,15 @@
 				OBJ_89 /* Collection+Futures.swift in Sources */,
 				OBJ_90 /* Common.swift in Sources */,
 				OBJ_91 /* Completable.swift in Sources */,
-				OBJ_92 /* ConstantFuture.swift in Sources */,
-				OBJ_93 /* ExecutionContext.swift in Sources */,
-				OBJ_94 /* Executor.swift in Sources */,
-				OBJ_95 /* Fallible.swift in Sources */,
-				OBJ_96 /* Future.swift in Sources */,
-				OBJ_97 /* Future_Makers.swift in Sources */,
-				OBJ_98 /* LockFreeThreadSafeContainer.swift in Sources */,
-				OBJ_99 /* Locking.swift in Sources */,
-				OBJ_100 /* MutableCompletable.swift in Sources */,
+				OBJ_92 /* Completing.swift in Sources */,
+				OBJ_93 /* ConstantFuture.swift in Sources */,
+				OBJ_94 /* ExecutionContext.swift in Sources */,
+				OBJ_95 /* Executor.swift in Sources */,
+				OBJ_96 /* Fallible.swift in Sources */,
+				OBJ_97 /* Future.swift in Sources */,
+				OBJ_98 /* Future_Makers.swift in Sources */,
+				OBJ_99 /* LockFreeThreadSafeContainer.swift in Sources */,
+				OBJ_100 /* Locking.swift in Sources */,
 				OBJ_101 /* Observers.swift in Sources */,
 				OBJ_102 /* OptionalAdaptor.swift in Sources */,
 				OBJ_103 /* Producer.swift in Sources */,
@@ -401,7 +401,7 @@
 		OBJ_141 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = OBJ_71 /* AsyncNinja */;
-			targetProxy = F8743B711E58E2E9000D3CB6 /* PBXContainerItemProxy */;
+			targetProxy = F82C03EF1E58F87E00D849A2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
