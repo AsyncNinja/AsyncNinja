@@ -38,7 +38,7 @@ class Channel_MapTests: XCTestCase {
     let producer = Producer<S.Iterator.Element, T>()
 
     DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
-      producer.send(updates)
+      producer.update(updates)
       producer.succeed(with: success)
     }
 

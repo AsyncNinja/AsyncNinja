@@ -59,15 +59,15 @@ class Channel_CombineTests: XCTestCase {
 
     DispatchQueue.global().async {
       usleep(100_000)
-      producerOfOdds.send(1)
-      producerOfOdds.send(3)
-      producerOfEvents.send(2)
-      producerOfEvents.send(4)
-      producerOfOdds.send(5)
-      producerOfEvents.send(6)
-      producerOfOdds.send(7)
+      producerOfOdds.update(1)
+      producerOfOdds.update(3)
+      producerOfEvents.update(2)
+      producerOfEvents.update(4)
+      producerOfOdds.update(5)
+      producerOfEvents.update(6)
+      producerOfOdds.update(7)
       producerOfOdds.succeed(with: "Hello")
-      producerOfEvents.send(8)
+      producerOfEvents.update(8)
       producerOfEvents.succeed(with: "World")
     }
 

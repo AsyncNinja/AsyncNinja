@@ -84,7 +84,7 @@ public extension Channel {
         switch value {
         case let .update(localRightUpdate):
           if let localLeftUpdate = latestLeftUpdate {
-            producer?.send((localLeftUpdate, localRightUpdate))
+            producer?.update((localLeftUpdate, localRightUpdate))
             latestLeftUpdate = nil
           }
         case let .completion(rightCompletion):

@@ -44,7 +44,7 @@ class ChannelTests: XCTestCase {
   func testIterators() {
     let producer = Producer<Int, String>(bufferSize: 5)
     var iteratorA = producer.makeIterator()
-    producer.send(0..<10)
+    producer.update(0..<10)
     producer.succeed(with: "finished")
     var iteratorB = producer.makeIterator()
 
@@ -62,9 +62,9 @@ class ChannelTests: XCTestCase {
   func testMakeChannel() {
     let numbers = Array(0..<100)
 
-    let channelA: Channel<Int, String> = channel { (sendUpdate) -> String in
+    let channelA: Channel<Int, String> = channel { (updateUpdate) -> String in
       for i in numbers {
-        sendUpdate(i)
+        updateUpdate(i)
       }
       return "done"
     }
@@ -115,7 +115,7 @@ class ChannelTests: XCTestCase {
           XCTFail()
           fatalError()
         }
-        producer.send(updatesFixture)
+        producer.update(updatesFixture)
         producer.succeed(with: successValueFixture)
       }
     }
@@ -155,7 +155,7 @@ class ChannelTests: XCTestCase {
           XCTFail()
           fatalError()
         }
-        producer.send(updatesFixture)
+        producer.update(updatesFixture)
         producer.succeed(with: successValueFixture)
       }
     }
@@ -190,20 +190,20 @@ class ChannelTests: XCTestCase {
   func _testBuffering(bufferSize: Int, file: StaticString = #file, line: UInt = #line) {
     let fixture = pickInts(count: 100)
     let queue = DispatchQueue(label: "testing queue", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
-    let producer = Producer<Int, Void>(bufferSize: bufferSize)
+    let updatable = Updatable<Int>(bufferSize: bufferSize)
 
-    producer.send(pickInts())
-    producer.send(fixture.prefix(upTo: bufferSize))
+    updatable.update(pickInts())
+    updatable.update(fixture.prefix(upTo: bufferSize))
 
     var updates = [Int]()
-    producer.onUpdate(executor: .queue(queue)) {
+    updatable.onUpdate(executor: .queue(queue)) {
       updates.append($0)
     }
-    producer.send(fixture.suffix(from: bufferSize))
-    producer.succeed()
+    updatable.update(fixture.suffix(from: bufferSize))
+    updatable.succeed()
 
     let expectation = self.expectation(description: "completion of producer")
-    producer.onSuccess(executor: .queue(queue)) {
+    updatable.onSuccess(executor: .queue(queue)) {
       expectation.fulfill()
     }
     

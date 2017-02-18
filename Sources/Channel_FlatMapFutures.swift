@@ -170,7 +170,7 @@ private class KeepUnorderedChannelFlatteningBehaviorStorage<P, S, T>: BaseChanne
       executor.execute {
         let handler = makeFutureOrWrapError({ try self.transform(update) })?
           .makeCompletionHandler(executor: .immediate) { [weak producer] (update) -> Void in
-            producer?.send(update)
+            producer?.update(update)
             
         }
         producer.insertHandlerToReleasePool(handler)
@@ -201,9 +201,9 @@ private class KeepLatestTransformChannelFlatteningBehaviorStorage<P, S, T>: Base
           self.latestFuture = nil
           switch update {
           case .success(.some(let value)):
-            producer.send(.success(value))
+            producer.update(.success(value))
           case .failure(let value):
-            producer.send(.failure(value))
+            producer.update(.failure(value))
           default:
             nop()
           }
@@ -259,9 +259,9 @@ private class DropResultsOutOfOrderChannelFlatteningBehaviorStorage<P, S, T>: Ba
               if first.index == index {
                 switch update {
                 case .success(.some(let value)):
-                  producer.send(.success(value))
+                  producer.update(.success(value))
                 case .failure(let value):
-                  producer.send(.failure(value))
+                  producer.update(.failure(value))
                 default:
                   nop()
                 }
@@ -340,9 +340,9 @@ private class OrderResultsChannelFlatteningBehaviorStorage<P, S, T>: BaseChannel
         
         switch update {
         case .success(.some(let value)):
-          producer.send(.success(value))
+          producer.update(.success(value))
         case .failure(let value):
-          producer.send(.failure(value))
+          producer.update(.failure(value))
         default:
           nop()
         }
@@ -399,9 +399,9 @@ private class TransformSeriallyChannelFlatteningBehaviorStorage<P, S, T>: BaseCh
         guard let producer = producer else { return }
         switch update {
         case .success(.some(let value)):
-          producer.send(.success(value))
+          producer.update(.success(value))
         case .failure(let value):
-          producer.send(.failure(value))
+          producer.update(.failure(value))
         default:
           nop()
         }

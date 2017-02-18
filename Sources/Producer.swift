@@ -22,8 +22,10 @@
 
 import Dispatch
 
+public typealias Updatable<T> = Producer<T, Void>
+
 /// Mutable subclass of channel
-/// You can send updates and complete producer manually
+/// You can update and complete producer manually
 final public class Producer<Update, Success>: Channel<Update, Success>, MutableCompletable {
   public typealias ImmutableCompletable = Channel<Update, Success>
 
@@ -113,7 +115,7 @@ final public class Producer<Update, Success>: Channel<Update, Success>, MutableC
     public func apply(_ event: Event) {
     switch event {
     case let .update(update):
-      self.send(update)
+      self.update(update)
     case let .completion(completion):
       self.complete(with: completion)
     }
@@ -128,7 +130,7 @@ final public class Producer<Update, Success>: Channel<Update, Success>, MutableC
 
   /// Sends specified Update to the Producer
   /// Value will not be sent for completed Producer
-  public func send(_ update: Update) {
+  public func update(_ update: Update) {
 
     _locking.lock()
     defer { _locking.unlock() }
@@ -145,7 +147,7 @@ final public class Producer<Update, Success>: Channel<Update, Success>, MutableC
 
   /// Sends specified sequence of Update to the Producer
   /// Values will not be sent for completed Producer
-  public func send<S: Sequence>(_ updates: S)
+  public func update<S: Sequence>(_ updates: S)
     where S.Iterator.Element == Update {
 
       _locking.lock()
@@ -231,7 +233,7 @@ public func channel<Update, Success>(
   executor: Executor = .primary,
   cancellationToken: CancellationToken? = nil,
   bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize,
-  block: @escaping (_ sendUpdate: @escaping (Update) -> Void) throws -> Success
+  block: @escaping (_ update: @escaping (Update) -> Void) throws -> Success
   ) -> Channel<Update, Success> {
 
   let producer = Producer<Update, Success>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
@@ -239,7 +241,7 @@ public func channel<Update, Success>(
   cancellationToken?.add(cancellable: producer)
 
   executor.execute { [weak producer] in
-    let fallibleCompletion = fallible { try block { producer?.send($0) } }
+    let fallibleCompletion = fallible { try block { producer?.update($0) } }
     producer?.complete(with: fallibleCompletion)
   }
 
@@ -252,7 +254,7 @@ public func channel<U: ExecutionContext, Update, Success>(
   executor: Executor? = nil,
   cancellationToken: CancellationToken? = nil,
   bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize,
-  block: @escaping (_ strongContext: U, _ sendUpdate: @escaping (Update) -> Void) throws -> Success
+  block: @escaping (_ strongContext: U, _ update: @escaping (Update) -> Void) throws -> Success
   ) -> Channel<Update, Success> {
 
   let producer = Producer<Update, Success>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
@@ -266,7 +268,7 @@ public func channel<U: ExecutionContext, Update, Success>(
       producer?.cancelBecauseOfDeallocatedContext()
       return
     }
-    let fallibleCompletable = fallible { try block(context) { producer?.send($0) } }
+    let fallibleCompletable = fallible { try block(context) { producer?.update($0) } }
     producer?.complete(with: fallibleCompletable)
   }
 

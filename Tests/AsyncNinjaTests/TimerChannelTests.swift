@@ -37,7 +37,7 @@ class TimerChannelTests: XCTestCase {
     let interval = 0.2
     let initialTime = DispatchTime.now()
 
-    weak var weakTimer: Channel<Void, Void>? = nil
+    weak var weakTimer: TimerChannel? = nil
     weak var weakMappedTimer: Channel<DispatchTime, Void>? = nil
     weak var weakTimesBuffer: Channel<[DispatchTime], Void>? = nil
 

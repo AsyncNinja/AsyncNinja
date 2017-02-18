@@ -37,9 +37,9 @@ import Dispatch
       }
 
       let myObject = MyObject()
-      let channelOfValues: Channel<Int?, Void> = myObject.changes(of: #keyPath(MyObject.myValue))
+      let updatingValues: Updating<Int?> = myObject.changes(of: #keyPath(MyObject.myValue))
       var detectedChanges = [Int]()
-      channelOfValues.onUpdate(executor: .immediate) {
+      updatingValues.onUpdate(executor: .immediate) {
         if let value = $0 {
           detectedChanges.append(value)
         }

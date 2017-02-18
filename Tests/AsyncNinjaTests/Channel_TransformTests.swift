@@ -48,21 +48,21 @@ class Channel_TransformTests: XCTestCase {
 
     DispatchQueue.global().async {
       usleep(100_000)
-      initalProducer.send(1)
-      initalProducer.send(2)
-      initalProducer.send(3)
+      initalProducer.update(1)
+      initalProducer.update(2)
+      initalProducer.update(3)
       usleep(250_000)
-      initalProducer.send(4)
-      initalProducer.send(5)
-      initalProducer.send(6)
+      initalProducer.update(4)
+      initalProducer.update(5)
+      initalProducer.update(6)
       usleep(250_000)
-      initalProducer.send(7)
-      initalProducer.send(8)
-      initalProducer.send(9)
+      initalProducer.update(7)
+      initalProducer.update(8)
+      initalProducer.update(9)
       usleep(1_000_000)
-      initalProducer.send(10)
-      initalProducer.send(11)
-      initalProducer.send(12)
+      initalProducer.update(10)
+      initalProducer.update(11)
+      initalProducer.update(12)
       usleep(200_000)
       initalProducer.succeed(with: "Finished!")
     }
@@ -71,28 +71,28 @@ class Channel_TransformTests: XCTestCase {
   }
 
   func testDistinctInts() {
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "completion of producer")
 
-    producer.distinct().extractAll { (updates, completion) in
+    updatable.distinct().extractAll { (updates, completion) in
       XCTAssertEqual(updates, [1, 2, 3, 4, 5, 6, 7])
       expectation.fulfill()
     }
 
     let fixture = [1, 2, 2, 3, 3, 3, 4, 5, 6, 6, 7]
     DispatchQueue.global().async {
-      producer.send(fixture)
-      producer.succeed()
+      updatable.update(fixture)
+      updatable.succeed()
     }
 
     self.waitForExpectations(timeout: 1.0)
   }
 
 //  func testDistinctOptionalInts() {
-//    let producer = Producer<Int?, Void>()
+//    let updatable = Updatable<Int?>()
 //    let expectation = self.expectation(description: "completion of producer")
 //
-//    producer.distinct().extractAll { (updates, completion) in
+//    updatable.distinct().extractAll { (updates, completion) in
 //      let assumedResults = [nil, 1, nil, 2, 3, nil, 3, 4, 5, 6, 7]
 //      XCTAssertEqual(updates.count, assumedResults.count)
 //      for (update, result) in zip(updates, assumedResults) {
@@ -103,8 +103,8 @@ class Channel_TransformTests: XCTestCase {
 //
 //    let fixture = [nil, 1, nil, nil, 2, 2, 3, nil, 3, 3, 4, 5, 6, 6, 7]
 //    DispatchQueue.global().async {
-//      producer.send(fixture)
-//      producer.succeed()
+//      updatable.update(fixture)
+//      updatable.succeed()
 //    }
 //
 //    self.waitForExpectations(timeout: 1.0)

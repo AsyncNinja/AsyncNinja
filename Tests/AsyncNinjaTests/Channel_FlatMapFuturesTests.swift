@@ -51,19 +51,19 @@ class Channel_FlatMapFuturesTests: XCTestCase {
     let zipped = zip(expectedResults, channelB)
     DispatchQueue.global().async {
       let sema = DispatchSemaphore(value: 0)
-      producerA.send((duration: 0.1, name: "x"))
+      producerA.update((duration: 0.1, name: "x"))
       let _ = sema.wait(timeout: DispatchTime.now() + .milliseconds(10))
       sema.signal()
 
-      producerA.send((duration: 0.3, name: "y"))
+      producerA.update((duration: 0.3, name: "y"))
       let _ = sema.wait(timeout: DispatchTime.now() + .milliseconds(10))
       sema.signal()
 
-      producerA.send((duration: 0.2, name: "z"))
+      producerA.update((duration: 0.2, name: "z"))
       let _ = sema.wait(timeout: DispatchTime.now() + .milliseconds(10))
       sema.signal()
 
-      producerA.send((duration: 0.5, name: "done"))
+      producerA.update((duration: 0.5, name: "done"))
       let _ = sema.wait(timeout: DispatchTime.now() + .milliseconds(10))
       sema.signal()
     }

@@ -201,7 +201,7 @@ public extension Channel {
       switch value {
       case .update(let update):
         let transformedValue = try transform(context, update)
-        producer.send(transformedValue)
+        producer.update(transformedValue)
       case .completion(let completion):
         producer.complete(with: completion)
       }
@@ -240,7 +240,7 @@ public extension Channel {
       switch value {
       case .update(let update):
         let transformedValue = try transform(update)
-        producer.send(transformedValue)
+        producer.update(transformedValue)
       case .completion(let completion):
         producer.complete(with: completion)
       }
@@ -285,7 +285,7 @@ public extension Channel {
       switch value {
       case .update(let update):
         if let transformedValue = try transform(context, update) {
-          producer.send(transformedValue)
+          producer.update(transformedValue)
         }
       case .completion(let completion):
         producer.complete(with: completion)
@@ -320,7 +320,7 @@ public extension Channel {
       switch value {
       case .update(let update):
         if let transformedValue = try transform(update) {
-          producer.send(transformedValue)
+          producer.update(transformedValue)
         }
       case .completion(let completion):
         producer.complete(with: completion)
@@ -361,7 +361,7 @@ public extension Channel {
       (context, value, producer) in
       switch value {
       case .update(let update):
-        try transform(context, update).forEach(producer.send)
+        try transform(context, update).forEach(producer.update)
       case .completion(let completion):
         producer.complete(with: completion)
       }
@@ -395,7 +395,7 @@ public extension Channel {
       (value, producer) in
       switch value {
       case .update(let update):
-        try transform(update).forEach(producer.send)
+        try transform(update).forEach(producer.update)
       case .completion(let completion):
         producer.complete(with: completion)
       }
@@ -434,7 +434,7 @@ public extension Channel {
       case .update(let update):
         do {
           if try predicate(context, update) {
-            producer.send(update)
+            producer.update(update)
           }
         } catch { producer.fail(with: error) }
       case .completion(let completion):
@@ -473,7 +473,7 @@ public extension Channel {
       case .update(let update):
         do {
           if try predicate(update) {
-            producer.send(update)
+            producer.update(update)
           }
         } catch { producer.fail(with: error) }
       case .completion(let completion):

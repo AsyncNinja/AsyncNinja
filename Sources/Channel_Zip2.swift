@@ -47,7 +47,7 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
         locking.lock()
         defer { locking.unlock() }
         if let updateAB = updateHandler(update) {
-          producer?.send(updateAB)
+          producer?.update(updateAB)
         }
       case let .completion(.failure(error)):
         producer?.fail(with: error)

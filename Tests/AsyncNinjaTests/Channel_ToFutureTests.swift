@@ -49,11 +49,11 @@ class Channel_ToFutureTests: XCTestCase {
     ]
 
   func testFirstSuccessIncomplete() {
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
     let qos = pickQoS()
 
-    producer.first(executor: .queue(qos)) {
+    updatable.first(executor: .queue(qos)) {
       assert(nonGlobalQoS: qos)
       return 0 == $0 % 2
       }
@@ -63,23 +63,23 @@ class Channel_ToFutureTests: XCTestCase {
         expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
-    producer.send(5)
-    producer.send(7)
-    producer.send(8)
-    producer.send(9)
-    producer.send(10)
+    updatable.update(1)
+    updatable.update(3)
+    updatable.update(5)
+    updatable.update(7)
+    updatable.update(8)
+    updatable.update(9)
+    updatable.update(10)
 
     self.waitForExpectations(timeout: 1.0)
   }
 
   func testFirstNotFound() {
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
     let qos = pickQoS()
 
-    producer.first(executor: .queue(qos)) {
+    updatable.first(executor: .queue(qos)) {
       assert(nonGlobalQoS: qos)
       return 0 == $0 % 2
       }
@@ -89,22 +89,22 @@ class Channel_ToFutureTests: XCTestCase {
         expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
-    producer.send(5)
-    producer.send(7)
-    producer.send(9)
-    producer.succeed()
+    updatable.update(1)
+    updatable.update(3)
+    updatable.update(5)
+    updatable.update(7)
+    updatable.update(9)
+    updatable.succeed()
 
     self.waitForExpectations(timeout: 1.0)
   }
 
   func testFirstFailure() {
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
     let qos = pickQoS()
 
-    producer.first(executor: .queue(qos)) {
+    updatable.first(executor: .queue(qos)) {
       assert(nonGlobalQoS: qos)
       return 0 == $0 % 2
       }
@@ -114,22 +114,22 @@ class Channel_ToFutureTests: XCTestCase {
         expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
-    producer.send(5)
-    producer.send(7)
-    producer.send(9)
-    producer.fail(with: TestError.testCode)
+    updatable.update(1)
+    updatable.update(3)
+    updatable.update(5)
+    updatable.update(7)
+    updatable.update(9)
+    updatable.fail(with: TestError.testCode)
 
     self.waitForExpectations(timeout: 1.0)
   }
 
   func testFirstSuccessIncompleteContextual() {
     let actor = TestActor()
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
 
-    producer.first(context: actor) { (actor, value) in
+    updatable.first(context: actor) { (actor, value) in
       assert(actor: actor)
       return 0 == value % 2
       }
@@ -139,23 +139,23 @@ class Channel_ToFutureTests: XCTestCase {
         expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
-    producer.send(5)
-    producer.send(7)
-    producer.send(8)
-    producer.send(9)
-    producer.send(10)
+    updatable.update(1)
+    updatable.update(3)
+    updatable.update(5)
+    updatable.update(7)
+    updatable.update(8)
+    updatable.update(9)
+    updatable.update(10)
 
     self.waitForExpectations(timeout: 1.0)
   }
 
   func testFirstNotFoundContextual() {
     let actor = TestActor()
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
 
-    producer.first(context: actor) { (actor, value) in
+    updatable.first(context: actor) { (actor, value) in
       assert(actor: actor)
       return 0 == value % 2
       }
@@ -165,22 +165,22 @@ class Channel_ToFutureTests: XCTestCase {
         expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
-    producer.send(5)
-    producer.send(7)
-    producer.send(9)
-    producer.succeed()
+    updatable.update(1)
+    updatable.update(3)
+    updatable.update(5)
+    updatable.update(7)
+    updatable.update(9)
+    updatable.succeed()
 
     self.waitForExpectations(timeout: 1.0)
   }
 
   func testFirstFailureContextual() {
     let actor = TestActor()
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
 
-    producer.first(context: actor) { (actor, value) in
+    updatable.first(context: actor) { (actor, value) in
       assert(actor: actor)
       return 0 == value % 2
       }
@@ -190,22 +190,22 @@ class Channel_ToFutureTests: XCTestCase {
         expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
-    producer.send(5)
-    producer.send(7)
-    producer.send(9)
-    producer.fail(with: TestError.testCode)
+    updatable.update(1)
+    updatable.update(3)
+    updatable.update(5)
+    updatable.update(7)
+    updatable.update(9)
+    updatable.fail(with: TestError.testCode)
 
     self.waitForExpectations(timeout: 1.0)
   }
 
   func testFirstDeadContextual() {
     var actor: TestActor? = TestActor()
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
 
-    let future = producer.first(context: actor!) { (actor, value) in
+    let future = updatable.first(context: actor!) { (actor, value) in
       assert(actor: actor)
       return 0 == value % 2
     }
@@ -214,24 +214,24 @@ class Channel_ToFutureTests: XCTestCase {
       expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
+    updatable.update(1)
+    updatable.update(3)
     actor = nil
-    producer.send(5)
-    producer.send(8)
-    producer.send(7)
-    producer.send(9)
-    producer.fail(with: TestError.testCode)
+    updatable.update(5)
+    updatable.update(8)
+    updatable.update(7)
+    updatable.update(9)
+    updatable.fail(with: TestError.testCode)
 
     self.waitForExpectations(timeout: 1.0)
   }
 
   func testLastSuccess() {
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
     let qos = pickQoS()
 
-    producer.last(executor: .queue(qos)) {
+    updatable.last(executor: .queue(qos)) {
       assert(nonGlobalQoS: qos)
       return 0 == $0 % 2
       }
@@ -241,24 +241,24 @@ class Channel_ToFutureTests: XCTestCase {
         expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
-    producer.send(5)
-    producer.send(7)
-    producer.send(8)
-    producer.send(9)
-    producer.send(10)
-    producer.succeed()
+    updatable.update(1)
+    updatable.update(3)
+    updatable.update(5)
+    updatable.update(7)
+    updatable.update(8)
+    updatable.update(9)
+    updatable.update(10)
+    updatable.succeed()
 
     self.waitForExpectations(timeout: 1.0)
   }
 
   func testLastNotFound() {
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
     let qos = pickQoS()
 
-    producer.last(executor: .queue(qos)) {
+    updatable.last(executor: .queue(qos)) {
       assert(nonGlobalQoS: qos)
       return 0 == $0 % 2
       }
@@ -268,22 +268,22 @@ class Channel_ToFutureTests: XCTestCase {
         expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
-    producer.send(5)
-    producer.send(7)
-    producer.send(9)
-    producer.succeed()
+    updatable.update(1)
+    updatable.update(3)
+    updatable.update(5)
+    updatable.update(7)
+    updatable.update(9)
+    updatable.succeed()
 
     self.waitForExpectations(timeout: 1.0)
   }
 
   func testLastFailure() {
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
     let qos = pickQoS()
 
-    producer.last(executor: .queue(qos)) {
+    updatable.last(executor: .queue(qos)) {
       assert(nonGlobalQoS: qos)
       return 0 == $0 % 2
       }
@@ -293,22 +293,22 @@ class Channel_ToFutureTests: XCTestCase {
         expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
-    producer.send(5)
-    producer.send(7)
-    producer.send(9)
-    producer.fail(with: TestError.testCode)
+    updatable.update(1)
+    updatable.update(3)
+    updatable.update(5)
+    updatable.update(7)
+    updatable.update(9)
+    updatable.fail(with: TestError.testCode)
 
     self.waitForExpectations(timeout: 1.0)
   }
 
   func testLastSuccessContextual() {
     let actor = TestActor()
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
 
-    producer.last(context: actor) { (actor, value) in
+    updatable.last(context: actor) { (actor, value) in
       assert(actor: actor)
       return 0 == value % 2
       }
@@ -318,24 +318,24 @@ class Channel_ToFutureTests: XCTestCase {
         expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
-    producer.send(5)
-    producer.send(7)
-    producer.send(8)
-    producer.send(9)
-    producer.send(10)
-    producer.succeed()
+    updatable.update(1)
+    updatable.update(3)
+    updatable.update(5)
+    updatable.update(7)
+    updatable.update(8)
+    updatable.update(9)
+    updatable.update(10)
+    updatable.succeed()
 
     self.waitForExpectations(timeout: 1.0)
   }
 
   func testLastNotFoundContextual() {
     let actor = TestActor()
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
 
-    producer.last(context: actor) { (actor, value) in
+    updatable.last(context: actor) { (actor, value) in
       assert(actor: actor)
       return 0 == value % 2
       }
@@ -345,22 +345,22 @@ class Channel_ToFutureTests: XCTestCase {
         expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
-    producer.send(5)
-    producer.send(7)
-    producer.send(9)
-    producer.succeed()
+    updatable.update(1)
+    updatable.update(3)
+    updatable.update(5)
+    updatable.update(7)
+    updatable.update(9)
+    updatable.succeed()
 
     self.waitForExpectations(timeout: 1.0)
   }
 
   func testLastFailureContextual() {
     let actor = TestActor()
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
 
-    producer.last(context: actor) { (actor, value) in
+    updatable.last(context: actor) { (actor, value) in
       assert(actor: actor)
       return 0 == value % 2
       }
@@ -370,22 +370,22 @@ class Channel_ToFutureTests: XCTestCase {
         expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
-    producer.send(5)
-    producer.send(7)
-    producer.send(9)
-    producer.fail(with: TestError.testCode)
+    updatable.update(1)
+    updatable.update(3)
+    updatable.update(5)
+    updatable.update(7)
+    updatable.update(9)
+    updatable.fail(with: TestError.testCode)
 
     self.waitForExpectations(timeout: 1.0)
   }
 
   func testLastDeadContextual() {
     var actor: TestActor? = TestActor()
-    let producer = Producer<Int, Void>()
+    let updatable = Updatable<Int>()
     let expectation = self.expectation(description: "future to finish")
 
-    let future = producer.last(context: actor!) { (actor, value) in
+    let future = updatable.last(context: actor!) { (actor, value) in
       assert(actor: actor)
       return 0 == value % 2
     }
@@ -394,14 +394,14 @@ class Channel_ToFutureTests: XCTestCase {
       expectation.fulfill()
     }
 
-    producer.send(1)
-    producer.send(3)
+    updatable.update(1)
+    updatable.update(3)
     actor = nil
-    producer.send(5)
-    producer.send(8)
-    producer.send(7)
-    producer.send(9)
-    producer.fail(with: TestError.testCode)
+    updatable.update(5)
+    updatable.update(8)
+    updatable.update(7)
+    updatable.update(9)
+    updatable.fail(with: TestError.testCode)
 
     self.waitForExpectations(timeout: 1.0)
   }
@@ -422,11 +422,11 @@ class Channel_ToFutureTests: XCTestCase {
       expectation.fulfill()
     }
 
-    producer.send("B")
-    producer.send("C")
-    producer.send("D")
-    producer.send("E")
-    producer.send("F")
+    producer.update("B")
+    producer.update("C")
+    producer.update("D")
+    producer.update("E")
+    producer.update("F")
     producer.succeed(with: 7)
     self.waitForExpectations(timeout: 1.0)
   }
@@ -446,11 +446,11 @@ class Channel_ToFutureTests: XCTestCase {
         sema.signal()
       }
       
-      producer.send("B")
-      producer.send("C")
-      producer.send("D")
-      producer.send("E")
-      producer.send("F")
+      producer.update("B")
+      producer.update("C")
+      producer.update("D")
+      producer.update("E")
+      producer.update("F")
       producer.succeed(with: 7)
       sema.wait()
     }

@@ -30,7 +30,7 @@
     /// - Parameter keyPath: to observe
     /// - Parameter channelBufferSize: size of the buffer within returned channel
     /// - Returns: channel new values
-    func changes<T>(of keyPath: String, channelBufferSize: Int = 1) -> Channel<T?, Void> {
+    func changes<T>(of keyPath: String, channelBufferSize: Int = 1) -> Updating<T?> {
       return changesDictionary(of: keyPath, options: [.initial, .new])
         .map(executor: .immediate) { $0[.newKey] as? T }
     }
@@ -40,7 +40,7 @@
     /// - Parameter keyPath: to observe
     /// - Parameter channelBufferSize: size of the buffer within returned channel
     /// - Returns: channel of pairs (old, new) values
-    func changesOldAndNew<T>(of keyPath: String, channelBufferSize: Int = 1) -> Channel<(old: T?, new: T?), Void> {
+    func changesOldAndNew<T>(of keyPath: String, channelBufferSize: Int = 1) -> Updating<(old: T?, new: T?)> {
       return changesDictionary(of: keyPath, options: [.initial, .new, .old])
         .map(executor: .immediate) { (old: $0[.oldKey] as? T, new: $0[.newKey] as? T) }
     }
@@ -54,12 +54,12 @@
       of keyPath: String,
       options: NSKeyValueObservingOptions,
       channelBufferSize: Int = 1
-      ) -> Channel<[NSKeyValueChangeKey: Any], Void> {
-      let producer = Producer<[NSKeyValueChangeKey: Any], Void>(bufferSize: channelBufferSize)
+      ) -> Updating<[NSKeyValueChangeKey: Any]> {
+      let producer = Updatable<[NSKeyValueChangeKey: Any]>(bufferSize: channelBufferSize)
 
       let observer = KeyPathObserver(keyPath: keyPath) {
         [weak producer] (changes) in
-        producer?.send(changes)
+        producer?.update(changes)
       }
       addObserver(observer, forKeyPath: keyPath, options: options, context: nil)
       let pointerToSelf = Unmanaged.passUnretained(self)
@@ -102,7 +102,7 @@
     typealias ActionChannelUpdate = (sender: AnyObject?, objectValue: Any?)
 
     /// Channel that contains actions sent by the control
-    typealias ActionChannel = Channel<ActionChannelUpdate, Void>
+    typealias ActionChannel = Updating<ActionChannelUpdate>
 
     /// Makes or returns cached channel. The channel that will have update on each triggering of action
     func actionChannel() -> ActionChannel {
@@ -122,7 +122,7 @@
 
   private class ActionReceiver: NSObject {
     weak var control: NSControl?
-    let producer = Producer<NSControl.ActionChannelUpdate, Void>(bufferSize: 0)
+    let producer = Updatable<NSControl.ActionChannelUpdate>(bufferSize: 0)
 
     init(control: NSControl) {
       self.control = control
@@ -133,7 +133,7 @@
         sender: sender,
         objectValue: self.control?.objectValue
       )
-      self.producer.send(update)
+      self.producer.update(update)
     }
   }
 #endif
@@ -147,7 +147,7 @@
     typealias ActionChannelUpdate = (sender: AnyObject?, event: UIEvent)
 
     /// Channel that contains actions sent by the control
-    typealias ActionChannel = Channel<ActionChannelUpdate, Void>
+    typealias ActionChannel = Updating<ActionChannelUpdate>
 
     /// Makes channel that will have update value on each triggering of action
     ///
@@ -168,7 +168,7 @@
 
   private class ActionReceiver: NSObject {
     weak var control: UIControl?
-    let producer = Producer<UIControl.ActionChannelUpdate, Void>(bufferSize: 0)
+    let producer = Updatable<UIControl.ActionChannelUpdate>(bufferSize: 0)
 
     init(control: UIControl) {
       self.control = control
@@ -179,7 +179,7 @@
         sender: sender,
         event: event
       )
-      self.producer.send(update)
+      self.producer.update(update)
     }
   }
 #endif

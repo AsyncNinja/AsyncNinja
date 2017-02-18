@@ -51,15 +51,15 @@ class Channel_Merge2Tests: XCTestCase {
       }
 
       DispatchQueue.global().async {
-        producerOfOdds.send(1)
-        producerOfOdds.send(3)
-        producerOfEvents.send(2)
-        producerOfEvents.send(4)
-        producerOfOdds.send(5)
-        producerOfEvents.send(6)
-        producerOfOdds.send(7)
+        producerOfOdds.update(1)
+        producerOfOdds.update(3)
+        producerOfEvents.update(2)
+        producerOfEvents.update(4)
+        producerOfOdds.update(5)
+        producerOfEvents.update(6)
+        producerOfOdds.update(7)
         producerOfOdds.succeed(with: "Hello")
-        producerOfEvents.send(8)
+        producerOfEvents.update(8)
         producerOfEvents.succeed(with: "World")
       }
 
@@ -88,15 +88,15 @@ class Channel_Merge2Tests: XCTestCase {
       }
 
       DispatchQueue.global().async {
-        producerOfOdds.send(1)
-        producerOfOdds.send(3)
-        producerOfEvents.send("two")
-        producerOfEvents.send("four")
-        producerOfOdds.send(5)
-        producerOfEvents.send("six")
-        producerOfOdds.send(7)
+        producerOfOdds.update(1)
+        producerOfOdds.update(3)
+        producerOfEvents.update("two")
+        producerOfEvents.update("four")
+        producerOfOdds.update(5)
+        producerOfEvents.update("six")
+        producerOfOdds.update(7)
         producerOfOdds.succeed(with: "Hello")
-        producerOfEvents.send("eight")
+        producerOfEvents.update("eight")
         producerOfEvents.succeed(with: "World")
       }
 

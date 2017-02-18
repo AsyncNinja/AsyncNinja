@@ -97,7 +97,7 @@ public extension Channel {
 
         if let previousUpdate = _previousUpdate {
           let change = (previousUpdate, update)
-          producer.send(change)
+          producer.update(change)
         }
       case let .completion(completion):
         producer.complete(with: completion)
@@ -139,7 +139,7 @@ public extension Channel {
           let localBuffer = buffer
           buffer.removeAll(keepingCapacity: true)
           locking.unlock()
-          producer.send(localBuffer)
+          producer.update(localBuffer)
         } else {
           locking.unlock()
         }
@@ -149,7 +149,7 @@ public extension Channel {
         locking.unlock()
 
         if !localBuffer.isEmpty {
-          producer.send(localBuffer)
+          producer.update(localBuffer)
         }
         producer.complete(with: completion)
       }
@@ -221,7 +221,7 @@ public extension Channel {
       if let update = latestUpdate {
         latestUpdate = nil
         locking.unlock()
-        producer?.send(update)
+        producer?.update(update)
       } else {
         locking.unlock()
       }
@@ -239,7 +239,7 @@ public extension Channel {
       switch event {
       case let .completion(completion):
         if let update = latestUpdate {
-          producer?.send(update)
+          producer?.update(update)
           latestUpdate = nil
         }
         producer?.complete(with: completion)
@@ -248,7 +248,7 @@ public extension Channel {
           latestUpdate = update
         } else {
           didSendFirstUpdate = true
-          producer?.send(update)
+          producer?.update(update)
         }
       }
     }
@@ -298,10 +298,10 @@ extension Channel where Update: Equatable {
 
         if let previousUpdate = _previousUpdate {
           if previousUpdate != update {
-            producer.send(update)
+            producer.update(update)
           }
         } else {
-          producer.send(update)
+          producer.update(update)
         }
       case let .completion(completion):
         producer.complete(with: completion)
