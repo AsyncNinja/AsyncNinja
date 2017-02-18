@@ -1,7 +1,7 @@
 # `Future`
 This document describes concept and use of `Future`.
 
-**For class reference visit [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/0.4.5/Classes/Future.html).** 
+**For class reference visit [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/1.0.0-beta2/Classes/Future.html).** 
 
 ##### Contents
 * [Concept](#concept)

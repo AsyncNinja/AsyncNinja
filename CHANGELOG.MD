@@ -1,3 +1,9 @@
+# 1.0.0-beta2
+* continue renaming
+* adding convenience methods for making completed futures and channels
+* adding convenience `typealias Updating<T> = Channel<T, Void>`, `typealias Updatable<>T = Producer<T, Void>`
+* adding OptionalAdaptor that helps to add methods for primitives parametrized with optionals
+
 # 1.0.0-beta
 * major renaming has been done. Using more consistent names
 
