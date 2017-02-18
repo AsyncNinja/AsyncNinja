@@ -88,25 +88,25 @@ class Channel_TransformTests: XCTestCase {
     self.waitForExpectations(timeout: 1.0)
   }
 
-//  func testDistinctOptionalInts() {
-//    let updatable = Updatable<Int?>()
-//    let expectation = self.expectation(description: "completion of producer")
-//
-//    updatable.distinct().extractAll { (updates, completion) in
-//      let assumedResults = [nil, 1, nil, 2, 3, nil, 3, 4, 5, 6, 7]
-//      XCTAssertEqual(updates.count, assumedResults.count)
-//      for (update, result) in zip(updates, assumedResults) {
-//        XCTAssertEqual(update, result)
-//      }
-//      expectation.fulfill()
-//    }
-//
-//    let fixture = [nil, 1, nil, nil, 2, 2, 3, nil, 3, 3, 4, 5, 6, 6, 7]
-//    DispatchQueue.global().async {
-//      updatable.update(fixture)
-//      updatable.succeed()
-//    }
-//
-//    self.waitForExpectations(timeout: 1.0)
-//  }
+  func testDistinctOptionalInts() {
+    let updatable = Updatable<Int?>()
+    let expectation = self.expectation(description: "completion of producer")
+
+    updatable.distinct().extractAll { (updates, completion) in
+      let assumedResults = [nil, 1, nil, 2, 3, nil, 3, 4, 5, 6, 7]
+      XCTAssertEqual(updates.count, assumedResults.count)
+      for (update, result) in zip(updates, assumedResults) {
+        XCTAssertEqual(update, result)
+      }
+      expectation.fulfill()
+    }
+
+    let fixture = [nil, 1, nil, nil, 2, 2, 3, nil, 3, 3, 4, 5, 6, 6, 7]
+    DispatchQueue.global().async {
+      updatable.update(fixture)
+      updatable.succeed()
+    }
+
+    self.waitForExpectations(timeout: 1.0)
+  }
 }
