@@ -274,13 +274,13 @@ channelOfPrimeNumbers.onComplete { print("Completed: \($0)") }
 
 ```swift
 func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> {
-  return channel { (sendUpdate) -> Int in
+  return channel { (update) -> Int in
     var numberOfPrimeNumbers = 0
     var isPrime = Array(repeating: true, count: n)
 
     for number in 2..<n where isPrime[number] {
       numberOfPrimeNumbers += 1
-      sendUpdate(number)
+      update(number)
 
       // updating seive
       var seiveNumber = number + number
@@ -339,11 +339,11 @@ let searchResults = searchBar.rx.text.orEmpty
 
 #### AsyncNinja
 ```swift
-let searchResults = searchBar.changes(of: "text").map { $0 ?? "" }
+let searchResults = searchBar.changes(of: "text")
   .debounce(interval: 0.3)
   .distinct()
   .flatMap(behavior: .keepLatestTransform) { (query) -> Future<[SearchResult]> in
-	if query.isEmpty {
+	if query?.isEmpty ?? true {
 	  return future(success: [])
 	}
 
