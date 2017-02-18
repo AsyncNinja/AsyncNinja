@@ -9,7 +9,10 @@ Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
 ![CocoaPods](https://img.shields.io/cocoapods/v/AsyncNinja.svg)
 ![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)
 
-* [**Integration**](Documentation/Integration.md): [SPM](https://github.com/apple/swift-package-manager), [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/)
+* **Integration**:
+    * [Swift Package Manager](Documentation/Integration.md#using-swift-package-manager)
+    * [CocoaPods](Documentation/Integration.md#cocoapods)
+    * [git submodule](Documentation/Integration.md#using-git-submodule)
 * [Found issue? Have a feature request? Have question?](https://github.com/AsyncNinja/AsyncNinja/issues)
 
 Contents
@@ -83,9 +86,9 @@ extension MyViewController {
         /* do not forget the [weak self] */
         [weak self] (completion) in
         if let strongSelf = self {
-		  completion.onSuccess(strongSelf.present(person:))
-		  completion.onFailure(strongSelf.present(error:))
-	    }
+          completion.onSuccess(strongSelf.present(person:))
+          completion.onFailure(strongSelf.present(error:))
+        }
       }
   }
 }
@@ -107,8 +110,8 @@ extension MyViewController {
   func present(personWithID identifier: String) {
     myService.fetch(personWithID: identifier)
       .onComplete(context: self) { (self, completion) in
-		completion.onSuccess(self.present(person:))
-		completion.onFailure(self.present(error:))
+        completion.onSuccess(self.present(person:))
+        completion.onFailure(self.present(error:))
       }
   }
 }
@@ -128,15 +131,15 @@ extension MyService {
 This framework is an implementation of following principles:
 
 * provide abstraction that makes
-	* doing right things easier
-	* doing wrong things harder
+    * doing right things easier
+    * doing wrong things harder
 * use abstraction is based on monads
     * [`Future`](Documentation/Future.md) is a proxy of value that will be available at some point in the future. See example for advances of using futures.
     * [`Channel`](Documentation/Channel.md) is like a `Future` that may provide `Update` values before completion.
     * [`Executor`](Documentation/Executor.md) is object made to execute escaped block `(Void) -> Void`. Its propose is to encapsulate a way of an execution.
     * [`ExecutionContext`](Documentation/ExecutionContext.md) is a protocol concurrency-aware objects must conform to. It basically make them actors or components of actor.
     * [`Fallible`](Documentation/Fallible.md) is validation monad. Is an object that represents either success value of failure value (Error).
-	* [`Cache`](Documentation/Cache.md) is a primitive that lets you coalesce requests and cache responses
+    * [`Cache`](Documentation/Cache.md) is a primitive that lets you coalesce requests and cache responses
 
 ## Using Futures
 
@@ -316,8 +319,8 @@ func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> {
 
 ## Related Articles
 * Moving to nice asynchronous Swift code
-	* [GitHub](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md)
-	* [Medium](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
+    * [GitHub](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md)
+    * [Medium](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
 
 ## Comparison with [RxSwift](https://github.com/ReactiveX/RxSwift)
 
@@ -345,7 +348,7 @@ let searchResults = searchBar.changes(of: "text")
   .flatMap(behavior: .keepLatestTransform) { (query) -> Future<[SearchResult]> in
     guard let query = query, !query.isEmpty
       else { return .just([]) }
-	return searchGitHub(query: query).recover(with: [])
+    return searchGitHub(query: query).recover(with: [])
   }
 ```
 

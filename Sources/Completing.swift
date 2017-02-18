@@ -40,7 +40,7 @@ public protocol Completing: class {
 
 public extension Completing {
 
-  /// Shorthand property that returns true if `Completion` is complete
+  /// Shorthand property that returns true if `Completing` is complete
   var isComplete: Bool {
     switch self.completion {
     case .some: return true

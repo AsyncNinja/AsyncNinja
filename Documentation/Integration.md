@@ -38,7 +38,7 @@ Add to your Podfile:
 ```yml
 target 'MyWonderfulApp' do
   use_frameworks!
-  pod 'AsyncNinja', :git => 'https://github.com/AsyncNinja/AsyncNinja.git'
+  pod 'AsyncNinja'
 end
 ```
 
