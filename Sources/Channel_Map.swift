@@ -417,7 +417,7 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - update: `Update` to transform
   /// - Returns: filtered transform
-  func filterUpdate<C: ExecutionContext>(
+  func filter<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     cancellationToken: CancellationToken? = nil,
