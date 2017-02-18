@@ -298,6 +298,35 @@ public func channel<C: Collection, Success>(updates: C, failure: Swift.Error
     return channel(updates: updates, completion: .failure(failure))
 }
 
+/// Convenience shortcuts for making completed channel
+public extension Channel {
+
+  /// Makes completed channel
+  static func completed(_ completion: Fallible<Success>) -> Channel<Update, Success> {
+    return channel(updates: [], completion: completion)
+  }
+
+  /// Makes succeeded channel
+  static func succeeded(_ success: Success) -> Channel<Update, Success> {
+    return .completed(.success(success))
+  }
+
+  /// Makes succeeded channel
+  static func just(_ success: Success) -> Channel<Update, Success> {
+    return .completed(.success(success))
+  }
+
+  /// Makes failed channel
+  static func failed(_ failure: Swift.Error) -> Channel<Update, Success> {
+    return .completed(.failure(failure))
+  }
+
+  /// Makes cancelled (failed with AsyncNinjaError.cancelled) channel
+  static var cancelled: Channel<Update, Success> {
+    return .failed(AsyncNinjaError.cancelled)
+  }
+}
+
 /// Specifies strategy of selecting buffer size of channel derived
 /// from another channel, e.g through transformations
 public enum DerivedChannelBufferSize {

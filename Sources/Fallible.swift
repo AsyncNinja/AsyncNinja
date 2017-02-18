@@ -45,6 +45,11 @@ public enum Fallible<Success>: _Fallible {
   public init(failure: Swift.Error) {
     self = .failure(failure)
   }
+
+  /// makes fallible with succees
+  public static func just(_ success: Success) -> Fallible<Success> {
+    return .success(success)
+  }
 }
 
 // MARK: - Description
@@ -192,6 +197,20 @@ public extension Fallible {
       return success
     case let .failure(error):
       return transform(error)
+    }
+  }
+
+  /// Applies non-trowable transformation to Fallible
+  ///
+  /// - Parameters:
+  ///   - success: recover failure with
+  /// - Returns: success value
+  func recover(with success: Success) -> Success {
+    switch self {
+    case let .success(success):
+      return success
+    case .failure:
+      return success
     }
   }
 }

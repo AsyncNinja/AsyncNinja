@@ -343,12 +343,9 @@ let searchResults = searchBar.changes(of: "text")
   .debounce(interval: 0.3)
   .distinct()
   .flatMap(behavior: .keepLatestTransform) { (query) -> Future<[SearchResult]> in
-	if query?.isEmpty ?? true {
-	  return future(success: [])
-	}
-
-	return searchGitHub(query: query)
-	  .recover { _ in [] }
+    guard let query = query, !query.isEmpty
+      else { return .just([]) }
+	return searchGitHub(query: query).recover(with: [])
   }
 ```
 

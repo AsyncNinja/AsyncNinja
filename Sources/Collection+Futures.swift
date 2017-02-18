@@ -146,7 +146,7 @@ public extension Collection where Self.IndexDistance == Int {
         
         let futureSubvalue: Future<T>
         do { futureSubvalue = try transform(value) }
-        catch { futureSubvalue = future(failure: error) }
+        catch { futureSubvalue = .failed(error) }
         
         let handler = futureSubvalue.makeCompletionHandler(executor: .immediate) { [weak promise] subvalue in
           guard let promise = promise else { return }

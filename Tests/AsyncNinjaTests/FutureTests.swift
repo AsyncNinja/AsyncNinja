@@ -57,7 +57,7 @@ class FutureTests: XCTestCase {
       var result: Int? = nil
 
       queue.sync {
-        var futureValue: Future<Int>? = future(success: fixtureResult)
+        var futureValue: Future<Int>? = .succeeded(fixtureResult)
         let qos = pickQoS()
         var mappedFutureValue: Future<Int>? = futureValue!
           .map(executor: .queue(qos)) { (value) -> Int in
@@ -372,7 +372,7 @@ class FutureTests: XCTestCase {
     XCTAssertEqual("Succeded(1) Future", futureA.description)
     XCTAssertEqual("Succeded(1) Future<Int>", futureA.debugDescription)
 
-    let futureB: Future<Int> = future(failure: TestError.testCode)
+    let futureB: Future<Int> = .failed(TestError.testCode)
     XCTAssertEqual("Failed(testCode) Future", futureB.description)
     XCTAssertEqual("Failed(testCode) Future<Int>", futureB.debugDescription)
 

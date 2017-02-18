@@ -45,6 +45,35 @@ final class ConstantFuture<Success>: Future<Success> {
   }
 }
 
+/// Convenience shortcuts for making completed futures
+public extension Future {
+
+  /// Makes completed future
+  static func completed(_ completion: Fallible<Success>) -> Future<Success> {
+    return ConstantFuture(completion: completion)
+  }
+
+  /// Makes succeeded future
+  static func succeeded(_ success: Success) -> Future<Success> {
+    return .completed(.success(success))
+  }
+
+  /// Makes succeeded future
+  static func just(_ success: Success) -> Future<Success> {
+    return .completed(.success(success))
+  }
+
+  /// Makes failed future
+  static func failed(_ failure: Swift.Error) -> Future<Success> {
+    return .completed(.failure(failure))
+  }
+
+  /// Makes cancelled (failed with AsyncNinjaError.cancelled) future
+  static var cancelled: Future<Success> {
+    return .failed(AsyncNinjaError.cancelled)
+  }
+}
+
 /// Makes completed future
 ///
 /// - Parameter value: value to complete future with

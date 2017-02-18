@@ -40,7 +40,7 @@ class CachableValueTests: XCTestCase {
     let value = pickInt()
     let holder = CachedValueHolder<Int>() { _ in
       sleep(1)
-      return future(success: value)
+      return .succeeded(value)
     }
     let futureA = holder.cachableValue.value()
     XCTAssertEqual(futureA.wait().success, value)
@@ -64,7 +64,7 @@ class CachableValueTests: XCTestCase {
     var value = firstValue
     let holder = CachedValueHolder<Int>() { _ in
       sleep(1)
-      return future(success: value)
+      return .succeeded(value)
     }
 
     let futureA = holder.cachableValue.value()

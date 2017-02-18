@@ -112,7 +112,18 @@ public extension Completable {
     return self.mapSuccess(executor: executor, transform).flatten()
   }
 
-  /// Recovers failure of this future if there is one.
+  /// Recovers failure of this future if there is one
+  func recover(with success: Success) -> Future<Success> {
+    return self.mapCompletion(executor: .immediate) {
+      (value) -> Success in
+      switch value {
+      case .success(let success): return success
+      case .failure: return success
+      }
+    }
+  }
+
+  /// Recovers failure of this future if there is one
   func recover(
     executor: Executor = .primary,
     _ transform: @escaping (Swift.Error) throws -> Success
