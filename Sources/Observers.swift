@@ -28,14 +28,42 @@
     /// makes channel of changes of value for specified key path
     ///
     /// - Parameter keyPath: to observe
-    /// - Returns: channel
-    func changes<T>(of keyPath: String) -> Channel<T?, Void> {
-      let producer = Producer<T?, Void>(bufferSize: 1)
-      let observer = KeyPathObserver<T>(keyPath: keyPath, producer: producer)
-      self.addObserver(observer, forKeyPath: keyPath, options: [.initial, .new], context: nil)
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel new values
+    func changes<T>(of keyPath: String, channelBufferSize: Int = 1) -> Channel<T?, Void> {
+      return changesDictionary(of: keyPath, options: [.initial, .new])
+        .map(executor: .immediate) { $0[.newKey] as? T }
+    }
 
+    /// makes channel of changes of value for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel of pairs (old, new) values
+    func changesOldAndNew<T>(of keyPath: String, channelBufferSize: Int = 1) -> Channel<(old: T?, new: T?), Void> {
+      return changesDictionary(of: keyPath, options: [.initial, .new, .old])
+        .map(executor: .immediate) { (old: $0[.oldKey] as? T, new: $0[.newKey] as? T) }
+    }
+
+    /// makes channel of changes of value for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel of changes dictionaries (see Foundation KVO for details)
+    func changesDictionary(
+      of keyPath: String,
+      options: NSKeyValueObservingOptions,
+      channelBufferSize: Int = 1
+      ) -> Channel<[NSKeyValueChangeKey: Any], Void> {
+      let producer = Producer<[NSKeyValueChangeKey: Any], Void>(bufferSize: channelBufferSize)
+
+      let observer = KeyPathObserver(keyPath: keyPath) {
+        [weak producer] (changes) in
+        producer?.send(changes)
+      }
+      addObserver(observer, forKeyPath: keyPath, options: options, context: nil)
       let pointerToSelf = Unmanaged.passUnretained(self)
-      self.notifyDeinit { [weak producer] in
+      notifyDeinit { [weak producer] in
         producer?.cancelBecauseOfDeallocatedContext()
         pointerToSelf.takeUnretainedValue().removeObserver(observer, forKeyPath: keyPath)
       }
@@ -44,13 +72,13 @@
     }
   }
 
-  private class KeyPathObserver<T>: NSObject {
+  private class KeyPathObserver: NSObject {
     let keyPath: String
-    weak var producer: Producer<T?, Void>?
+    let observationBlock: ([NSKeyValueChangeKey: Any]) -> Void
 
-    init(keyPath: String, producer: Producer<T?, Void>) {
+    init(keyPath: String, observationBlock: @escaping ([NSKeyValueChangeKey: Any]) -> Void) {
       self.keyPath = keyPath
-      self.producer = producer
+      self.observationBlock = observationBlock
     }
 
     override func observeValue(forKeyPath keyPath: String?,
@@ -58,12 +86,9 @@
                                change: [NSKeyValueChangeKey: Any]?,
                                context: UnsafeMutableRawPointer?) {
       assert(keyPath == self.keyPath)
-      guard
-        let producer = self.producer,
-        let change = change
-        else { return }
-
-      producer.send(change[.newKey] as? T)
+      if let change = change {
+        observationBlock(change)
+      }
     }
   }
 #endif
@@ -79,7 +104,7 @@
     /// Channel that contains actions sent by the control
     typealias ActionChannel = Channel<ActionChannelUpdate, Void>
 
-    /// Makes or returns cached channel. The chennel that will have update on each triggering of action
+    /// Makes or returns cached channel. The channel that will have update on each triggering of action
     func actionChannel() -> ActionChannel {
       let actionReceiver = (self.target as? ActionReceiver) ?? {
         let actionReceiver = ActionReceiver(control: self)
