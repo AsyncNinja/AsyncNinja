@@ -23,8 +23,8 @@
 import Dispatch
 
 /// Promise is a future that may be manually completed by owner
-final public class Promise<Success>: Future<Success>, MutableCompletable {
-  public typealias ImmutableCompletable = Future<Success>
+final public class Promise<Success>: Future<Success>, Completable {
+  public typealias CompletingType = Future<Success>
 
   private var _container = makeThreadSafeContainer()
   private let _releasePool = ReleasePool()

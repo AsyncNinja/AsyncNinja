@@ -26,8 +26,8 @@ public typealias Updatable<T> = Producer<T, Void>
 
 /// Mutable subclass of channel
 /// You can update and complete producer manually
-final public class Producer<Update, Success>: Channel<Update, Success>, MutableCompletable {
-  public typealias ImmutableCompletable = Channel<Update, Success>
+final public class Producer<Update, Success>: Channel<Update, Success>, Completable {
+  public typealias CompletingType = Channel<Update, Success>
 
   private let _maxBufferSize: Int
   private let _bufferedUpdates = Queue<Update>()
@@ -189,7 +189,7 @@ final public class Producer<Update, Success>: Channel<Update, Success>, MutableC
   }
 
   /// Completes the channel with a competion of specified Future or Channel
-  public func complete(with completable: ImmutableCompletable) {
+  public func complete(with completable: CompletingType) {
     let handler = completable.makeHandler(executor: .immediate) { [weak self] in
       self?.apply($0)
     }
@@ -268,8 +268,8 @@ public func channel<U: ExecutionContext, Update, Success>(
       producer?.cancelBecauseOfDeallocatedContext()
       return
     }
-    let fallibleCompletable = fallible { try block(context) { producer?.update($0) } }
-    producer?.complete(with: fallibleCompletable)
+    let fallibleCompleting = fallible { try block(context) { producer?.update($0) } }
+    producer?.complete(with: fallibleCompleting)
   }
 
   return producer

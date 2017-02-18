@@ -24,7 +24,7 @@ import Dispatch
 
 /// Collection improved with AsyncNinja
 /// Single failure fails them all
-public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element: Completable {
+public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element: Completing {
 
   /// joins an array of futures to a future array
   func joined() -> Future<[Self.Iterator.Element.Success]> {

@@ -25,7 +25,7 @@ import Dispatch
 public typealias Updating<T> = Channel<T, Void>
 
 /// represents values that updateally arrive followed by failure of completion that completes Channel. Channel oftenly represents result of long running task that is not yet arrived and flow of some intermediate results.
-public class Channel<Update, Success>: Completable, Sequence {
+public class Channel<Update, Success>: Completing, Sequence {
   public typealias Event = ChannelEvent<Update, Success>
   public typealias Handler = ChannelHandler<Update, Success>
   public typealias Iterator = ChannelIterator<Update, Success>

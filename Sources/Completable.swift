@@ -23,11 +23,11 @@
 import Dispatch
 
 /// A protocol for objects that can eventually complete with value
-public protocol Completable: class {
+public protocol Completing: class {
   associatedtype Success
   associatedtype CompletionHandler: AnyObject
   
-  /// Returns either completion value for complete `Completable` or nil otherwise
+  /// Returns either completion value for complete `Completing` or nil otherwise
   var completion: Fallible<Success>? { get }
 
   /// **internal use only**
@@ -38,7 +38,7 @@ public protocol Completable: class {
   func insertToReleasePool(_ releasable: Releasable)
 }
 
-public extension Completable {
+public extension Completing {
 
   /// Shorthand property that returns true if `Completion` is complete
   var isComplete: Bool {
@@ -49,16 +49,16 @@ public extension Completable {
   }
 
   /// Shorthand property that returns success
-  /// if `Completable` is completed with success or nil otherwise
+  /// if `Completing` is completed with success or nil otherwise
   var success: Success? { return self.completion?.success }
 
   /// Shorthand property that returns failure value
-  /// if `Completable` is completed with failure or nil otherwise
+  /// if `Completing` is completed with failure or nil otherwise
   var failure: Swift.Error? { return self.completion?.failure }
 }
 
-public extension Completable {
-  /// Transforms Completable<SuccessA> => Completable<SuccessB>
+public extension Completing {
+  /// Transforms Completing<SuccessA> => Completing<SuccessB>
   ///
   /// This method is suitable for **pure**ish transformations (not changing shared state).
   /// Use method mapCompletion(context:executor:transform:) for state changing transformations.
@@ -76,7 +76,7 @@ public extension Completable {
     return promise
   }
 
-  /// Transforms Completable<SuccessA> => Future<SuccessB>. Flattens future returned by the transform
+  /// Transforms Completing<SuccessA> => Future<SuccessB>. Flattens future returned by the transform
   ///
   /// This method is suitable for **pure**ish transformations (not changing shared state).
   /// Use method flatMapCompletion(context:executor:transform:) for state changing transformations.
@@ -87,7 +87,7 @@ public extension Completable {
     return self.mapCompletion(executor: executor, transform).flatten()
   }
 
-  /// Transforms Completable<SuccessA> => Future<SuccessB>
+  /// Transforms Completing<SuccessA> => Future<SuccessB>
   ///
   /// This is the same as mapCompletion(executor:transform:)
   /// but does not perform transformation if this future fails.
@@ -101,7 +101,7 @@ public extension Completable {
     }
   }
 
-  /// Transforms Completable<SuccessA> => Future<SuccessB>. Flattens future returned by the transform
+  /// Transforms Completing<SuccessA> => Future<SuccessB>. Flattens future returned by the transform
   ///
   /// This is the same as flatMapCompletion(executor:transform:)
   /// but does not perform transformation if this future fails.
@@ -165,8 +165,8 @@ public extension Completable {
   }
 }
 
-public extension Completable {
-  /// Transforms Completable<SuccessA> => Completable<SuccessB>
+public extension Completing {
+  /// Transforms Completing<SuccessA> => Completing<SuccessB>
   ///
   /// This method is suitable for impure transformations (changing state of context).
   /// Use method mapCompletion(context:transform:) for pure -ish transformations.
@@ -194,7 +194,7 @@ public extension Completable {
     return self.mapCompletion(context: context, executor: executor, transform).flatten()
   }
 
-  /// Transforms Completable<SuccessA> => Future<SuccessB>
+  /// Transforms Completing<SuccessA> => Future<SuccessB>
   ///
   /// This is the same as mapCompletion(context:executor:transform:)
   /// but does not perform transformation if this future fails.
@@ -210,7 +210,7 @@ public extension Completable {
     }
   }
 
-  /// Transforms Completable<SuccessA> => Future<SuccessB>. Flattens future returned by the transform
+  /// Transforms Completing<SuccessA> => Future<SuccessB>. Flattens future returned by the transform
   ///
   /// This is the same as flatMapCompletion(context:executor:transform:)
   /// but does not perform transformation if this future fails.
@@ -254,7 +254,7 @@ public extension Completable {
   }
 }
 
-public extension Completable {
+public extension Completing {
   /// Performs block when completion value.
   ///
   /// This method is method is less preferable then onComplete(context: ...).
@@ -282,7 +282,7 @@ public extension Completable {
   }
 }
 
-public extension Completable {
+public extension Completing {
   /// Performs block when completion value.
   ///
   /// This method is suitable for applying completion of future to context.
@@ -333,7 +333,7 @@ public extension Completable {
 /// Each of these methods synchronously awaits for future to complete.
 /// Using this method is **strongly** discouraged. Calling it on the same serial queue
 /// as any code performed on the same queue this future depends on will cause deadlock.
-public extension Completable {
+public extension Completing {
   private func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Fallible<Success>? {
     if let completion = self.completion {
       return completion
@@ -391,7 +391,7 @@ public extension Completable {
   }
 }
 
-public extension Completable {
+public extension Completing {
 
   /// Returns future that completes after a timeout after completion of self
   func delayedCompletion(timeout: Double) -> Future<Success> {
@@ -409,7 +409,7 @@ public extension Completable {
   }
 }
 
-extension Completable {
+extension Completing {
   
   /// **internal use only**
   func insertHandlerToReleasePool(_ handler: AnyObject?) {

@@ -23,7 +23,7 @@
 import Dispatch
 
 /// Future is a proxy of value that will be available at some point in the future.
-public class Future<Success>: Completable {
+public class Future<Success>: Completing {
   public typealias Handler = FutureHandler<Success>
   public typealias CompletionHandler = Handler
 
@@ -172,7 +172,7 @@ public extension Future {
 }
 
 // MARK: - Flattening
-public extension Future where Success: Completable {
+public extension Future where Success: Completing {
   /// Flattens two nested futures
   ///
   /// - Returns: flattened future
@@ -219,7 +219,7 @@ public extension DispatchGroup {
   }
   
   /// Convenience method that leaves group on completion of provided Future or Channel
-  func leaveOnComplete<T: Completable>(of completable: T) {
+  func leaveOnComplete<T: Completing>(of completable: T) {
     completable.onComplete(executor: .immediate) { _ in self.leave() }
   }
 }

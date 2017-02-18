@@ -23,14 +23,14 @@
 import Dispatch
 
 /// Is a simple cache that can contain single value. Does not invalidate
-/// cached values automatically. Parametrised with MutableCompletable
+/// cached values automatically. Parametrised with Completable
 /// that can be either `Future` or `Channel` and Context. That gives
 /// an opportunity to make cache that can report of status of completion
 /// updateally (e.g. download persentage).
-public class CachableValue<T: MutableCompletable, Context: ExecutionContext> {
+public class CachableValue<T: Completable, Context: ExecutionContext> {
 
   /// Function that resolves cache misses. `strongContext` is a context restored from weak reference
-  public typealias MissHandler = (_ strongContext: Context) throws -> T.ImmutableCompletable
+  public typealias MissHandler = (_ strongContext: Context) throws -> T.CompletingType
   private var _locking = makeLocking()
   private let _impl: CachableValueImpl<T, Context>
 
@@ -55,7 +55,7 @@ public class CachableValue<T: MutableCompletable, Context: ExecutionContext> {
   public func value(
     mustStartHandlingMiss: Bool = true,
     mustInvalidateOldValue: Bool = false
-    ) -> T.ImmutableCompletable {
+    ) -> T.CompletingType {
     _locking.lock()
     defer { _locking.unlock() }
     return _impl.value(mustStartHandlingMiss: mustStartHandlingMiss,
@@ -71,11 +71,11 @@ public class CachableValue<T: MutableCompletable, Context: ExecutionContext> {
 }
 
 /// **Internal use only** Implementation of CachableValue.
-class CachableValueImpl<T: MutableCompletable, Context: ExecutionContext> {
+class CachableValueImpl<T: Completable, Context: ExecutionContext> {
   typealias MissHandler = CachableValue<T, Context>.MissHandler
   private weak var _context: Context?
   private let _missHandler: MissHandler
-  private var _mutableCompletable = T()
+  private var _completing = T()
   private var _state: CachableValueState = .initial
 
   init(context: Context, missHandler: @escaping MissHandler) {
@@ -85,7 +85,7 @@ class CachableValueImpl<T: MutableCompletable, Context: ExecutionContext> {
 
   func value(mustStartHandlingMiss: Bool,
              mustInvalidateOldValue: Bool
-    ) -> T.ImmutableCompletable {
+    ) -> T.CompletingType {
     switch _state {
     case .initial:
       if mustStartHandlingMiss {
@@ -95,34 +95,34 @@ class CachableValueImpl<T: MutableCompletable, Context: ExecutionContext> {
       nop()
     case .finished:
       if mustInvalidateOldValue {
-        _mutableCompletable = T()
+        _completing = T()
         _state = .initial
         if mustStartHandlingMiss {
           _handleMiss()
         }
       }
     }
-    return _mutableCompletable as! T.ImmutableCompletable
+    return _completing as! T.CompletingType
   }
 
   private func _handleMiss() {
     _state = .handling
-    let mutableCompletable = _mutableCompletable
+    let completing = _completing
 
     guard let context = _context else {
-      mutableCompletable.fail(with: AsyncNinjaError.contextDeallocated)
+      completing.fail(with: AsyncNinjaError.contextDeallocated)
       return
     }
 
     context.executor.execute { [weak self] in
       guard let self_ = self else { return }
-      //let mutableCompletable = self_._mutableCompletable
+      //let completing = self_._completing
       guard let context = self_._context else {
-        mutableCompletable.fail(with: AsyncNinjaError.contextDeallocated)
+        completing.fail(with: AsyncNinjaError.contextDeallocated)
         return
       }
 
-      assert(mutableCompletable === self_._mutableCompletable)
+      assert(completing === self_._completing)
 
       do {
         let completable = try self_._missHandler(context)
@@ -132,15 +132,15 @@ class CachableValueImpl<T: MutableCompletable, Context: ExecutionContext> {
           self__._state = .finished
           do {
             let success = try fallible.liftSuccess()
-            mutableCompletable.succeed(with: success as! T.Success)
+            completing.succeed(with: success as! T.Success)
           } catch {
-            mutableCompletable.fail(with: error)
+            completing.fail(with: error)
           }
         }
-        mutableCompletable.complete(with: completable)
+        completing.complete(with: completable)
       } catch {
         self_._state = .finished
-        mutableCompletable.fail(with: error)
+        completing.fail(with: error)
       }
     }
   }

@@ -103,9 +103,9 @@ public extension ExecutionContext {
     }
   }
 
-  /// Adds dependent `MutableCompletable`. `MutableCompletable` will be weakly
+  /// Adds dependent `Completable`. `Completable` will be weakly
   /// referenced and cancelled because of deallocated context on deinit
-  func addDependent<T: MutableCompletable>(completable: T) {
+  func addDependent<T: Completable>(completable: T) {
     self.notifyDeinit { [weak completable] in
       completable?.cancelBecauseOfDeallocatedContext()
     }

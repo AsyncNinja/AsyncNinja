@@ -23,28 +23,28 @@
 import Dispatch
 
 /// A protocol for objects that can be manually completed
-public protocol MutableCompletable: Completable, Cancellable {
-  associatedtype ImmutableCompletable: Completable
+public protocol Completable: Completing, Cancellable {
+  associatedtype CompletingType: Completing
 
   /// Required initializer
   init()
 
-  /// Completes `MutableCompletable` with value and returns true.
+  /// Completes `Completing` with value and returns true.
   /// Returns false if promise was completed before.
   ///
-  /// - Parameter completion: value to compete `MutableCompletable` with
+  /// - Parameter completion: value to compete `Completing` with
   /// - Returns: true if this call completed future
   @discardableResult
   func tryComplete(with completion: Fallible<Success>) -> Bool
 
   /// Shorthand to tryComplete that does not return value
-  func complete(with completion: ImmutableCompletable)
+  func complete(with completion: CompletingType)
 
   /// **internal use only**
   func insertToReleasePool(_ releasable: Releasable)
 }
 
-public extension MutableCompletable {
+public extension Completable {
   /// Completes promise when specified future completes.
   /// `self` will retain specified future until it`s completion
   func complete(with future: Future<Success>) {
@@ -94,7 +94,7 @@ public extension MutableCompletable {
   }
 }
 
-extension MutableCompletable where Success == Void {
+extension Completable where Success == Void {
 
   /// Convenience method succeeds mutable with void value
   public func succeed() {

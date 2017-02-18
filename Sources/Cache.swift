@@ -28,15 +28,15 @@ import Dispatch
 /// `Future` or `Channel` and Context. That gives an opportunity to make
 /// cache that can report of status of completion updateally
 /// (e.g. download persentage).
-public class Cache<Key: Hashable, T: MutableCompletable, Context: ExecutionContext> {
+public class Cache<Key: Hashable, T: Completable, Context: ExecutionContext> {
   typealias _CachableValue = CachableValueImpl<T, Context>
 
   /// Block that resolves miss
-  public typealias MissHandler = (_ strongContext: Context, _ key: Key) throws -> T.ImmutableCompletable
+  public typealias MissHandler = (_ strongContext: Context, _ key: Key) throws -> T.CompletingType
 
   private var _locking = makeLocking()
   private weak var _context: Context?
-  private let _missHandler: (Context, Key) throws -> T.ImmutableCompletable
+  private let _missHandler: (Context, Key) throws -> T.CompletingType
   private var _cachedValuesByKey = [Key:_CachableValue]()
 
   /// Designated initializer
@@ -56,11 +56,11 @@ public class Cache<Key: Hashable, T: MutableCompletable, Context: ExecutionConte
   ///   - mustStartHandlingMiss: `true` if handling miss is allowed. `false` is useful if you want to use value if there is one and do not want to handle miss.
   ///   - mustInvalidateOldValue: `true` if previous value may not be used.
   /// - Returns: `Future` of `Channel`
-  public func value(forKey key: Key, mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> T.ImmutableCompletable {
+  public func value(forKey key: Key, mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> T.CompletingType {
     guard let context = _context else {
-      let mutableCompletable = T()
-      mutableCompletable.fail(with: AsyncNinjaError.contextDeallocated)
-      return mutableCompletable as! T.ImmutableCompletable
+      let completing = T()
+      completing.fail(with: AsyncNinjaError.contextDeallocated)
+      return completing as! T.CompletingType
     }
 
     _locking.lock()
