@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "OBJ_70"
+               BlueprintIdentifier = "OBJ_71"
                BuildableName = "AsyncNinja.framework"
                BlueprintName = "AsyncNinja"
                ReferencedContainer = "container:AsyncNinja.xcodeproj">
@@ -33,7 +33,7 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "OBJ_111"
+               BlueprintIdentifier = "OBJ_113"
                BuildableName = "AsyncNinjaTests.xctest"
                BlueprintName = "AsyncNinjaTests"
                ReferencedContainer = "container:AsyncNinja.xcodeproj">
@@ -56,7 +56,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "OBJ_70"
+            BlueprintIdentifier = "OBJ_71"
             BuildableName = "AsyncNinja.framework"
             BlueprintName = "AsyncNinja"
             ReferencedContainer = "container:AsyncNinja.xcodeproj">
