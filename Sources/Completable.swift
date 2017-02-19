@@ -47,8 +47,8 @@ public protocol Completable: Completing, Cancellable {
 public extension Completable {
   /// Completes promise when specified future completes.
   /// `self` will retain specified future until it`s completion
-  func complete(with future: Future<Success>) {
-    let handler = future.makeCompletionHandler(executor: .immediate) { [weak self] in
+  func complete<T: Completing>(with completing: T) where T.Success == Success {
+    let handler = completing.makeCompletionHandler(executor: .immediate) { [weak self] in
       self?.complete(with: $0)
     }
     if let handler = handler {
@@ -99,5 +99,23 @@ extension Completable where Success == Void {
   /// Convenience method succeeds mutable with void value
   public func succeed() {
     self.succeed(with: ())
+  }
+}
+
+public extension Completable where Success: AsyncNinjaOptionalAdaptor {
+  /// Completes promise when specified future completes.
+  /// `self` will retain specified future until it`s completion
+  func complete<T: Completing>(with completing: T) where T.Success == Success.AsyncNinjaWrapped {
+    let handler = completing.makeCompletionHandler(executor: .immediate) { [weak self] in
+      switch $0 {
+      case .success(let success):
+        self?.succeed(with: Success(asyncNinjaOptionalValue: success))
+      case .failure(let failure):
+        self?.fail(with: failure)
+      }
+    }
+    if let handler = handler {
+      self.insertToReleasePool(handler)
+    }
   }
 }

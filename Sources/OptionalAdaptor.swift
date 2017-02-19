@@ -25,6 +25,9 @@ public protocol AsyncNinjaOptionalAdaptor: ExpressibleByNilLiteral {
   /// The same as Optional.Wrapped
   associatedtype AsyncNinjaWrapped
 
+  /// Init with optional
+  init(asyncNinjaOptionalValue: AsyncNinjaWrapped?)
+
   /// Returns optional
   var asyncNinjaOptionalValue: AsyncNinjaWrapped? { get }
 }
@@ -32,6 +35,11 @@ public protocol AsyncNinjaOptionalAdaptor: ExpressibleByNilLiteral {
 extension Optional: AsyncNinjaOptionalAdaptor {
   /// The same as Optional.Wrapped
   public typealias AsyncNinjaWrapped = Wrapped
+
+  /// Init with optional
+  public init(asyncNinjaOptionalValue: AsyncNinjaWrapped?) {
+    self = asyncNinjaOptionalValue
+  }
 
   /// Returns optional
   public var asyncNinjaOptionalValue: AsyncNinjaWrapped? { return self }
