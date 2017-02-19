@@ -455,7 +455,7 @@ public extension Channel {
   ///   - predicate: to apply
   ///   - update: `Update` to transform
   /// - Returns: filtered transform
-  func filterUpdate(
+  func filter(
     executor: Executor = .primary,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
