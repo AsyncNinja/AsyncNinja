@@ -51,9 +51,7 @@ public extension Completable {
     let handler = completing.makeCompletionHandler(executor: .immediate) { [weak self] in
       self?.complete(with: $0)
     }
-    if let handler = handler {
-      self.insertToReleasePool(handler)
-    }
+    self.insertHandlerToReleasePool(handler)
   }
 
   /// Shorthand to tryComplete(with:) that does not return value
@@ -114,8 +112,6 @@ public extension Completable where Success: AsyncNinjaOptionalAdaptor {
         self?.fail(with: failure)
       }
     }
-    if let handler = handler {
-      self.insertToReleasePool(handler)
-    }
+    self.insertHandlerToReleasePool(handler)
   }
 }

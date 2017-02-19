@@ -190,17 +190,13 @@ public extension Future where Success: Completing {
           [weak promise] (completion) -> Void in
           promise?.complete(with: completion)
         }
-        if let handler = handler {
-          promise.insertToReleasePool(handler)
-        }
+        promise.insertHandlerToReleasePool(handler)
       case .failure(let error):
         promise.fail(with: error)
       }
     }
 
-    if let handler = handler {
-      promise.insertToReleasePool(handler)
-    }
+    promise.insertHandlerToReleasePool(handler)
 
     return promise
   }

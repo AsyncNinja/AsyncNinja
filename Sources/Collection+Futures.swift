@@ -72,12 +72,8 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
           }
         }
 
-        if let handler = handler {
-          promise.insertToReleasePool(handler)
-        }
+        promise.insertHandlerToReleasePool(handler)
       }
-
-      //      promise.insertToReleasePool(self)
 
       return promise
   }
