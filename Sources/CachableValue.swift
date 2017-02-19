@@ -31,7 +31,7 @@ public class CachableValue<T: Completable, Context: ExecutionContext> {
 
   /// Function that resolves cache misses. `strongContext` is a context restored from weak reference
   public typealias MissHandler = (_ strongContext: Context) throws -> T.CompletingType
-  private var _locking = makeLocking()
+  private var _lockingBox: MutableBox<Locking>
   private let _impl: CachableValueImpl<T, Context>
 
   /// Designated initializer
@@ -41,7 +41,11 @@ public class CachableValue<T: Completable, Context: ExecutionContext> {
   ///   - missHandler: block that handles cache misses
   ///   - strongContext: context restored from weak reference
   public init(context: Context, missHandler: @escaping MissHandler) {
-    _impl = CachableValueImpl(context: context, missHandler: missHandler)
+    let lockingBox = MutableBox(makeLocking())
+    _lockingBox = lockingBox
+    _impl = CachableValueImpl(context: context,
+                              locker: { lockingBox.value.locker($0) },
+                              missHandler: missHandler)
   }
 
   /// Fetches value
@@ -56,16 +60,16 @@ public class CachableValue<T: Completable, Context: ExecutionContext> {
     mustStartHandlingMiss: Bool = true,
     mustInvalidateOldValue: Bool = false
     ) -> T.CompletingType {
-    _locking.lock()
-    defer { _locking.unlock() }
+    _lockingBox.value.lock()
+    defer { _lockingBox.value.unlock() }
     return _impl.value(mustStartHandlingMiss: mustStartHandlingMiss,
                        mustInvalidateOldValue: mustInvalidateOldValue)
   }
 
   /// Invalidates cached value
   public func invalidate() {
-    _locking.lock()
-    defer { _locking.unlock() }
+    _lockingBox.value.lock()
+    defer { _lockingBox.value.unlock() }
     return _impl.invalidate()
   }
 }
@@ -74,12 +78,14 @@ public class CachableValue<T: Completable, Context: ExecutionContext> {
 class CachableValueImpl<T: Completable, Context: ExecutionContext> {
   typealias MissHandler = CachableValue<T, Context>.MissHandler
   private weak var _context: Context?
+  private let _locker: (() -> Void) -> Void
   private let _missHandler: MissHandler
   private var _completing = T()
   private var _state: CachableValueState = .initial
 
-  init(context: Context, missHandler: @escaping MissHandler) {
+  init(context: Context, locker: @escaping (() -> Void) -> Void, missHandler: @escaping MissHandler) {
     _context = context
+    _locker = locker
     _missHandler = missHandler
   }
 
@@ -107,40 +113,43 @@ class CachableValueImpl<T: Completable, Context: ExecutionContext> {
 
   private func _handleMiss() {
     _state = .handling
-    let completing = _completing
 
     guard let context = _context else {
-      completing.fail(with: AsyncNinjaError.contextDeallocated)
+      _completing.fail(with: AsyncNinjaError.contextDeallocated)
       return
     }
 
     context.executor.execute { [weak self] in
-      guard let self_ = self else { return }
-      //let completing = self_._completing
-      guard let context = self_._context else {
-        completing.fail(with: AsyncNinjaError.contextDeallocated)
-        return
+      self?._handleMissOnExecutor()
+    }
+  }
+
+  private func _handleMissOnExecutor() {
+    guard let context = self._context else {
+      _completing.fail(with: AsyncNinjaError.contextDeallocated)
+      return
+    }
+
+    do {
+      let completable = try _missHandler(context)
+      completable.onComplete(executor: .immediate) {
+        [weak self] (completion) in
+        self?._handle(completion: completion)
       }
+    } catch {
+      _state = .finished
+      _completing.fail(with: error)
+    }
+  }
 
-      assert(completing === self_._completing)
-
-      do {
-        let completable = try self_._missHandler(context)
-        completable.onComplete(context: context) {
-          [weak self_] (context, fallible) in
-          guard let self__ = self_ else { return }
-          self__._state = .finished
-          do {
-            let success = try fallible.liftSuccess()
-            completing.succeed(with: success as! T.Success)
-          } catch {
-            completing.fail(with: error)
-          }
-        }
-        completing.complete(with: completable)
-      } catch {
-        self_._state = .finished
-        completing.fail(with: error)
+  private func _handle(completion: Fallible<T.CompletingType.Success>) {
+    _locker {
+      _state = .finished
+      switch completion {
+      case .success(let success):
+        _completing.succeed(with: success as! T.Success)
+      case .failure(let failure):
+        _completing.fail(with: failure)
       }
     }
   }

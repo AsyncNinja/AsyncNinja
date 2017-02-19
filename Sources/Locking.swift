@@ -27,12 +27,26 @@ protocol Locking {
   mutating func unlock()
 }
 
+extension Locking {
+  mutating func locker<T>(_ locked: () throws -> T) rethrows -> T {
+    lock()
+    defer { unlock() }
+    return try locked()
+  }
+
+  mutating func locker(_ locked: () -> Void) -> Void {
+    lock()
+    locked()
+    unlock()
+  }
+}
+
 func makeLocking(isFair: Bool = false) -> Locking {
   #if os(Linux)
     return DispatchSemaphoreLocking()
   #else
     if isFair {
-      return DispatchSemaphoreLocking()
+      return DispatchSemaphore(value: 1)
     } else if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
       return UnfairLockLocking()
     } else {
@@ -41,21 +55,19 @@ func makeLocking(isFair: Bool = false) -> Locking {
   #endif
 }
 
-struct DispatchSemaphoreLocking: Locking {
-  private let _sema = DispatchSemaphore(value: 1)
-
-  mutating func lock() {
-    _sema.wait()
+extension DispatchSemaphore: Locking {
+  func lock() {
+    self.wait()
   }
 
-  mutating func unlock() {
-    _sema.signal()
+  func unlock() {
+    self.signal()
   }
 }
 
-struct PlaceholderLocking: Locking {
-  mutating func lock() { }
-  mutating func unlock() { }
+class PlaceholderLocking: Locking {
+  func lock() { }
+  func unlock() { }
 }
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)

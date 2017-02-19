@@ -37,67 +37,71 @@ class CachableValueTests: XCTestCase {
     ]
 
   func testSingleShotSuccess() {
-    let value = pickInt()
-    let holder = CachedValueHolder<Int>() { _ in
-      sleep(1)
-      return .succeeded(value)
+    multiTest {
+      let value = pickInt()
+      let holder = CachedValueHolder<Int>() { _ in
+        return future(after: 0.1) { value }
+      }
+      let futureA = holder.cachableValue.value()
+      XCTAssertEqual(futureA.wait().success, value)
+      let futureB = holder.cachableValue.value()
+      XCTAssertTrue(futureA === futureB)
     }
-    let futureA = holder.cachableValue.value()
-    XCTAssertEqual(futureA.wait().success, value)
-    let futureB = holder.cachableValue.value()
-    XCTAssertTrue(futureA === futureB)
   }
 
   func testSingleShotFailure() {
-    let holder = CachedValueHolder<Int>() { _ -> Future<Int> in
-      sleep(1)
-      throw TestError.testCode
+    multiTest {
+      let holder = CachedValueHolder<Int>() { _ -> Future<Int> in
+        return future(after: 0.1) { throw TestError.testCode }
+      }
+      let futureA = holder.cachableValue.value()
+      XCTAssertEqual(futureA.wait().failure as? TestError, TestError.testCode)
+      let futureB = holder.cachableValue.value()
+      XCTAssertTrue(futureA === futureB)
     }
-    let futureA = holder.cachableValue.value()
-    XCTAssertEqual(futureA.wait().failure as? TestError, TestError.testCode)
-    let futureB = holder.cachableValue.value()
-    XCTAssertTrue(futureA === futureB)
   }
 
   func testMultiUseSuccess() {
-    let firstValue = pickInt()
-    var value = firstValue
-    let holder = CachedValueHolder<Int>() { _ in
-      sleep(1)
-      return .succeeded(value)
+    multiTest {
+      let firstValue = pickInt()
+      var value = firstValue
+      let holder = CachedValueHolder<Int>() { _ in
+        return future(after: 0.1) { value }
+      }
+
+      let futureA = holder.cachableValue.value()
+      XCTAssertEqual(futureA.wait().success, firstValue)
+
+      let secondValue = pickInt()
+      value = secondValue
+      holder.cachableValue.invalidate()
+
+      let futureB = holder.cachableValue.value()
+      XCTAssertFalse(futureA === futureB)
+      XCTAssertEqual(futureB.wait().success, secondValue)
     }
-
-    let futureA = holder.cachableValue.value()
-    XCTAssertEqual(futureA.wait().success, firstValue)
-
-    let secondValue = pickInt()
-    value = secondValue
-    holder.cachableValue.invalidate()
-
-    let futureB = holder.cachableValue.value()
-    XCTAssertFalse(futureA === futureB)
-    XCTAssertEqual(futureB.wait().success, secondValue)
   }
 
   func testMultiUseFailure() {
-    let firstError = TestError.testCode
-    var error: Error
-    error = firstError
-    let holder = CachedValueHolder<Int>() { _ in
-      sleep(1)
-      throw error
+    multiTest {
+      let firstError = TestError.testCode
+      var error: Error
+      error = firstError
+      let holder = CachedValueHolder<Int>() { _ in
+        return future(after: 0.1) { throw error }
+      }
+
+      let futureA = holder.cachableValue.value()
+      XCTAssertEqual(futureA.wait().failure as? TestError, firstError)
+
+      let secondError = TestError.otherCode
+      error = secondError
+      holder.cachableValue.invalidate()
+
+      let futureB = holder.cachableValue.value()
+      XCTAssertFalse(futureA === futureB)
+      XCTAssertEqual(futureB.wait().failure as? TestError, secondError)
     }
-
-    let futureA = holder.cachableValue.value()
-    XCTAssertEqual(futureA.wait().failure as? TestError, firstError)
-
-    let secondError = TestError.otherCode
-    error = secondError
-    holder.cachableValue.invalidate()
-
-    let futureB = holder.cachableValue.value()
-    XCTAssertFalse(futureA === futureB)
-    XCTAssertEqual(futureB.wait().failure as? TestError, secondError)
   }
 }
 

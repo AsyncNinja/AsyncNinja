@@ -34,7 +34,7 @@ public class Cache<Key: Hashable, T: Completable, Context: ExecutionContext> {
   /// Block that resolves miss
   public typealias MissHandler = (_ strongContext: Context, _ key: Key) throws -> T.CompletingType
 
-  private var _locking = makeLocking()
+  private let _lockingBox = MutableBox(makeLocking())
   private weak var _context: Context?
   private let _missHandler: (Context, Key) throws -> T.CompletingType
   private var _cachedValuesByKey = [Key:_CachableValue]()
@@ -63,11 +63,12 @@ public class Cache<Key: Hashable, T: Completable, Context: ExecutionContext> {
       return completing as! T.CompletingType
     }
 
-    _locking.lock()
-    defer { _locking.unlock() }
+    _lockingBox.value.lock()
+    defer { _lockingBox.value.unlock() }
     func makeCachableValue(key: Key) -> _CachableValue {
       let missHandler = _missHandler
-      return _CachableValue(context: context) {
+      let lockingBox = _lockingBox
+      return _CachableValue(context: context, locker: { lockingBox.value.locker($0) }) {
         try missHandler($0, key)
       }
     }

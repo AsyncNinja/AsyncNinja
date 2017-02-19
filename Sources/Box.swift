@@ -32,6 +32,15 @@ class Box<T> {
 }
 
 /// **Internal use only**
+class MutableBox<T> {
+  var value: T
+
+  init(_ value: T) {
+    self.value = value
+  }
+}
+
+/// **Internal use only**
 class WeakBox<T: AnyObject> {
   private(set) weak var value: T?
 
