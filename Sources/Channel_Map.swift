@@ -488,4 +488,17 @@ public extension Channel where Update: _Fallible {
   var unsafelyUnwrapped: Channel<Update.Success, Success> {
     return map(executor: .immediate) { $0.unsafeSuccess }
   }
+
+  /// makes channel of unsafely unwrapped optional Updates
+  var unwrapped: Channel<Update.Success, Success> {
+    return map(executor: .immediate) {
+      if let success = $0.success {
+        return success
+      } else if let failure = $0.failure {
+        throw failure
+      } else {
+        fatalError("callback must return either success or failure")
+      }
+    }
+  }
 }

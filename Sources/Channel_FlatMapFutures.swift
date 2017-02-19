@@ -85,7 +85,7 @@ public extension Channel {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMap<T, C: ExecutionContext>(
+  func flatMapWithFallibleUpdate<T, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     behavior: ChannelFlatteningBehavior,
@@ -124,7 +124,7 @@ public extension Channel {
   ///     as update value of transformed channel
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMap<T>(
+  func flatMapWithFallibleUpdate<T>(
     executor: Executor = .primary,
     behavior: ChannelFlatteningBehavior,
     cancellationToken: CancellationToken? = nil,
@@ -147,6 +147,63 @@ public extension Channel {
   }
 }
 
+// MARK: - updates only flattening transformations with futures
+public extension Channel {
+  /// Applies transformation to update values of the channel.
+  ///
+  /// - Parameters:
+  ///   - context: `ExectionContext` to apply transformation in
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need to override
+  ///     an executor provided by the context
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  ///   - transform: to apply. Completion of a future will be used
+  ///     as update value of transformed channel
+  ///   - strongContext: context restored from weak reference to specified context
+  ///   - update: `Update` to transform
+  /// - Returns: transformed channel
+  func flatMap<T, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    behavior: ChannelFlatteningBehavior,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> Future<T>
+    ) -> Channel<T, Success> {
+
+    return flatMapWithFallibleUpdate(context: context, executor: executor, behavior: behavior, cancellationToken: cancellationToken, bufferSize: bufferSize, transform).unwrapped
+  }
+
+  /// Applies transformation to update values of the channel.
+  ///
+  /// - Parameters:
+  ///   - executor: to execute transform on
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  ///   - transform: to apply. Completion of a future will be used
+  ///     as update value of transformed channel
+  ///   - update: `Update` to transform
+  /// - Returns: transformed channel
+  func flatMap<T>(
+    executor: Executor = .primary,
+    behavior: ChannelFlatteningBehavior,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (_ update: Update) throws -> Future<T>
+    ) -> Channel<T, Success> {
+
+    return flatMapWithFallibleUpdate(executor: executor, behavior: behavior, cancellationToken: cancellationToken, bufferSize: bufferSize, transform).unwrapped
+  }
+}
 
 private class BaseChannelFlatteningBehaviorStorage<P, S, T> {
   typealias Event = ChannelEvent<P, S>

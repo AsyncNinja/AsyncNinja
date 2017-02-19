@@ -70,7 +70,7 @@ class Channel_FlatMapFuturesTests: XCTestCase {
 
     var count = 0
     for (expectedResult, update) in zipped {
-      XCTAssertEqual(update.success, expectedResult, file: file, line: line)
+      XCTAssertEqual(update, expectedResult, file: file, line: line)
       count += 1
     }
 
