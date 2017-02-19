@@ -31,7 +31,7 @@ class Channel_MapTests: XCTestCase {
   
   static let allTests = [
     ("testMap", testMap),
-    ("testFilterUpdate", testFilterUpdate),
+    ("testFilter", testFilter),
   ]
 
   func makeChannel<S: Sequence, T>(updates: S, success: T) -> Channel<S.Iterator.Element, T> {
@@ -60,12 +60,12 @@ class Channel_MapTests: XCTestCase {
     XCTAssertEqual(success, completion.success)
   }
 
-  func testFilterUpdate() {
+  func testFilter() {
     let range = 0..<5
     let success = "bye"
     let queue = DispatchQueue(label: "test", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
     let (updates, completion) = makeChannel(updates: range, success: success)
-      .filterUpdate(executor: .queue(queue)) { value -> Bool in
+      .filter(executor: .queue(queue)) { value -> Bool in
         assert(on: queue)
         return 0 == value % 2
       }
