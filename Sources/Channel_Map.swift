@@ -482,3 +482,10 @@ public extension Channel {
     }
   }
 }
+
+public extension Channel where Update: _Fallible {
+  /// makes channel of unsafely unwrapped optional Updates
+  var unsafelyUnwrapped: Channel<Update.Success, Success> {
+    return map(executor: .immediate) { $0.unsafeSuccess }
+  }
+}

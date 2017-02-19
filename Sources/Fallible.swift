@@ -86,6 +86,12 @@ public extension Fallible {
     else { return nil }
   }
 
+  /// Returns success if Fallible has a success value inside.
+  /// Crashes otherwise
+  var unsafeSuccess: Success! {
+    return success!
+  }
+
   /// Returns failure if Fallible has a failure value inside.
   /// Returns nil otherwise
   var failure: Swift.Error? {
@@ -268,6 +274,9 @@ public protocol _Fallible: CustomStringConvertible {
 
   /// returns success value if _Fallible contains one
   var success: Success? { get }
+
+  /// returns success if Fallible has a success value inside. Crashes otherwise
+  var unsafeSuccess: Success! { get }
 
   /// returns failure value if _Fallible contains one
   var failure: Swift.Error? { get }
