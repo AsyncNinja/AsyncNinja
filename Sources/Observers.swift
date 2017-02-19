@@ -28,44 +28,58 @@
     /// makes channel of changes of value for specified key path
     ///
     /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
     /// - Parameter channelBufferSize: size of the buffer within returned channel
     /// - Returns: channel new values
-    func changes<T>(of keyPath: String, channelBufferSize: Int = 1) -> Updating<T?> {
-      return changesDictionary(of: keyPath, options: [.initial, .new])
+    func changes<T>(
+      of keyPath: String,
+      observationSession: ObservationSession? = nil,
+      channelBufferSize: Int = 1
+      ) -> Updating<T?> {
+      return changesDictionary(of: keyPath, options: [.initial, .new], observationSession: observationSession)
         .map(executor: .immediate) { $0[.newKey] as? T }
     }
 
     /// makes channel of changes of value for specified key path
     ///
     /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
     /// - Parameter channelBufferSize: size of the buffer within returned channel
     /// - Returns: channel of pairs (old, new) values
-    func changesOldAndNew<T>(of keyPath: String, channelBufferSize: Int = 1) -> Updating<(old: T?, new: T?)> {
-      return changesDictionary(of: keyPath, options: [.initial, .new, .old])
-        .map(executor: .immediate) { (old: $0[.oldKey] as? T, new: $0[.newKey] as? T) }
+    func changesOldAndNew<T>(
+      of keyPath: String,
+      observationSession: ObservationSession? = nil,
+      channelBufferSize: Int = 1
+      ) -> Updating<(old: T?, new: T?)> {
+      return changesDictionary(of: keyPath, options: [.initial, .new, .old], observationSession: observationSession)
+        .map(executor: .immediate) {
+          (old: $0[.oldKey] as? T, new: $0[.newKey] as? T)
+      }
     }
 
     /// makes channel of changes of value for specified key path
     ///
     /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
     /// - Parameter channelBufferSize: size of the buffer within returned channel
     /// - Returns: channel of changes dictionaries (see Foundation KVO for details)
     func changesDictionary(
       of keyPath: String,
       options: NSKeyValueObservingOptions,
+      observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
       ) -> Updating<[NSKeyValueChangeKey: Any]> {
       let producer = Updatable<[NSKeyValueChangeKey: Any]>(bufferSize: channelBufferSize)
 
-      let observer = KeyPathObserver(keyPath: keyPath) {
+      let observer = KeyPathObserver(object: self, keyPath: keyPath, options: options, enabled: observationSession?.enabled ?? true) {
         [weak producer] (changes) in
         producer?.update(changes)
       }
-      addObserver(observer, forKeyPath: keyPath, options: options, context: nil)
-      let pointerToSelf = Unmanaged.passUnretained(self)
+
+      observationSession?.observers.push(observer)
       notifyDeinit { [weak producer] in
         producer?.cancelBecauseOfDeallocatedContext()
-        pointerToSelf.takeUnretainedValue().removeObserver(observer, forKeyPath: keyPath)
+        observer.enabled = false
       }
 
       return producer
@@ -73,12 +87,36 @@
   }
 
   private class KeyPathObserver: NSObject {
+    let object: Unmanaged<NSObject>
     let keyPath: String
+    let options: NSKeyValueObservingOptions
     let observationBlock: ([NSKeyValueChangeKey: Any]) -> Void
+    var enabled: Bool {
+      didSet {
+        if enabled == oldValue {
+          return
+        } else if enabled {
+          object.takeUnretainedValue().addObserver(self, forKeyPath: keyPath, options: options, context: nil)
+        } else {
+          object.takeUnretainedValue().removeObserver(self, forKeyPath: keyPath)
+        }
+      }
+    }
 
-    init(keyPath: String, observationBlock: @escaping ([NSKeyValueChangeKey: Any]) -> Void) {
+    init(object: NSObject, keyPath: String, options: NSKeyValueObservingOptions, enabled: Bool, observationBlock: @escaping ([NSKeyValueChangeKey: Any]) -> Void) {
+      self.object = Unmanaged.passUnretained(object)
       self.keyPath = keyPath
+      self.options = options
       self.observationBlock = observationBlock
+      self.enabled = enabled
+      super.init()
+      if enabled {
+        object.addObserver(self, forKeyPath: keyPath, options: options, context: nil)
+      }
+    }
+
+    deinit {
+      self.enabled = false
     }
 
     override func observeValue(forKeyPath keyPath: String?,
@@ -89,6 +127,28 @@
       if let change = change {
         observationBlock(change)
       }
+    }
+  }
+
+  /// An object that is able to control (enable and disable) observation-related channel constructors
+  public class ObservationSession {
+
+    /// enables or disables observation
+    public var enabled: Bool {
+      didSet {
+        if enabled != oldValue {
+          observers.forEach {
+            $0.enabled = enabled
+          }
+        }
+      }
+    }
+
+    fileprivate var observers = QueueOfWeakElements<KeyPathObserver>()
+
+    /// designated initializer
+    public init(enabled: Bool = true) {
+      self.enabled = enabled
     }
   }
 #endif
