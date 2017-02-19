@@ -50,8 +50,10 @@
   public extension ObjCInjectedRetainer {
     func releaseOnDeinit(_ object: AnyObject) {
       Statics.withUniqueKey {
-        objc_setAssociatedObject(self, $0, object,
-                                 .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        "asyncNinjaKey_\($0)".withCString {
+          objc_setAssociatedObject(self, $0, object,
+                                   .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
       }
     }
 
@@ -73,9 +75,9 @@
 
   private struct Statics {
     static var increment: OSAtomic_int64_aligned64_t = 0
-    static func withUniqueKey(_ block: (UnsafeRawPointer) -> Void) {
-      var unique = OSAtomicIncrement64Barrier(&increment) << 8
-      block(&unique)
+    static func withUniqueKey(_ block: (Int64) -> Void) {
+      let unique = OSAtomicIncrement64Barrier(&increment)
+      block(unique)
     }
   }
 
