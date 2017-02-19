@@ -43,7 +43,7 @@ extension Locking {
 
 func makeLocking(isFair: Bool = false) -> Locking {
   #if os(Linux)
-    return DispatchSemaphoreLocking()
+    return DispatchSemaphore(value: 1)
   #else
     if isFair {
       return DispatchSemaphore(value: 1)
