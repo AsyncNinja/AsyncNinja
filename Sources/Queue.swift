@@ -69,6 +69,7 @@ class QueueImpl<Wrapper: QueueElementWrapper>: Sequence {
   func removeAll() {
     _first = nil
     _last = nil
+    self.count = 0
   }
 
   func clone() -> QueueImpl<Wrapper> {
@@ -82,6 +83,7 @@ class QueueImpl<Wrapper: QueueElementWrapper>: Sequence {
     if andReset {
       _first = nil
       _last = nil
+      self.count = 0
     }
     while let wrapper = wrapper_ {
       if let element = wrapper.element {
