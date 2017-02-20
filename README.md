@@ -13,6 +13,9 @@ Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
     * [Swift Package Manager](Documentation/Integration.md#using-swift-package-manager)
     * [CocoaPods](Documentation/Integration.md#cocoapods)
     * [git submodule](Documentation/Integration.md#using-git-submodule)
+* Requirements
+    * Swift 3.0+ (Xcode 8.0+)
+    * macOS 10.10+, iOS 8.0+, watchOS 2.0+, tvOS 9.0+, Linux
 * [Found issue? Have a feature request? Have question?](https://github.com/AsyncNinja/AsyncNinja/issues)
 
 Contents
