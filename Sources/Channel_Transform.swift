@@ -23,7 +23,7 @@
 import Dispatch
 
 public extension Channel {
-
+  
   /// Adds indexes to update values of the channel
   ///
   /// - Parameters:
@@ -37,9 +37,9 @@ public extension Channel {
   func enumerated(cancellationToken: CancellationToken? = nil,
                   bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<(Int, Update), Success> {
-
+    
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-
+      
       var index: OSAtomic_int64_aligned64_t = -1
       return self.map(executor: .immediate,
                       cancellationToken: cancellationToken,
@@ -48,9 +48,9 @@ public extension Channel {
         let localIndex = Int(OSAtomicIncrement64(&index))
         return (localIndex, $0)
       }
-
+      
     #else
-
+      
       var locking = makeLocking()
       var index = 0
       return self.map(executor: .immediate,
@@ -63,10 +63,10 @@ public extension Channel {
         index += 1
         return (localIndex, $0)
       }
-
+      
     #endif
   }
-
+  
   /// Makes channel of pairs of update values
   ///
   /// - Parameters:
@@ -82,7 +82,7 @@ public extension Channel {
     ) -> Channel<(Update, Update), Success> {
     var locking = makeLocking()
     var previousUpdate: Update? = nil
-
+    
     return self.makeProducer(executor: .immediate,
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
@@ -94,7 +94,7 @@ public extension Channel {
         let _previousUpdate = previousUpdate
         previousUpdate = update
         locking.unlock()
-
+        
         if let previousUpdate = _previousUpdate {
           let change = (previousUpdate, update)
           producer.update(change)
@@ -104,7 +104,7 @@ public extension Channel {
       }
     }
   }
-
+  
   /// Makes channel of arrays of update values
   ///
   /// - Parameters:
@@ -124,14 +124,14 @@ public extension Channel {
     var buffer = [Update]()
     buffer.reserveCapacity(capacity)
     var locking = makeLocking()
-
+    
     return self.makeProducer(executor: .immediate,
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
       (value, producer) in
       locking.lock()
-
+      
       switch value {
       case let .update(update):
         buffer.append(update)
@@ -147,7 +147,7 @@ public extension Channel {
         let localBuffer = buffer
         buffer.removeAll(keepingCapacity: false)
         locking.unlock()
-
+        
         if !localBuffer.isEmpty {
           producer.update(localBuffer)
         }
@@ -155,7 +155,7 @@ public extension Channel {
       }
     }
   }
-
+  
   /// Makes channel that delays each value produced by originial channel
   ///
   /// - Parameters:
@@ -168,8 +168,8 @@ public extension Channel {
   ///     an extended buffering options of returned channel
   /// - Returns: delayed channel
   func delayedUpdate(timeout: Double,
-                       cancellationToken: CancellationToken? = nil,
-                       bufferSize: DerivedChannelBufferSize = .default
+                     cancellationToken: CancellationToken? = nil,
+                     bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     return self.makeProducer(executor: .immediate,
                              cancellationToken: cancellationToken,
@@ -182,7 +182,7 @@ public extension Channel {
       }
     }
   }
-
+  
   /// Picks latest update value of the channel every interval and sends it
   ///
   /// - Parameters:
@@ -201,21 +201,21 @@ public extension Channel {
                 cancellationToken: CancellationToken? = nil,
                 bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
-
+    
     // Test: Channel_TransformTests.testDebounce
     let bufferSize_ = bufferSize.bufferSize(self)
     let producer = Producer<Update, Success>(bufferSize: bufferSize_)
     var locking = makeLocking()
     var latestUpdate: Update? = nil
     var didSendFirstUpdate = false
-
+    
     let timer = DispatchSource.makeTimerSource()
     if let leeway = leeway {
       timer.scheduleRepeating(deadline: DispatchTime.now(), interval: interval, leeway: leeway)
     } else {
       timer.scheduleRepeating(deadline: DispatchTime.now(), interval: interval)
     }
-
+    
     timer.setEventHandler { [weak producer] in
       locking.lock()
       if let update = latestUpdate {
@@ -226,16 +226,16 @@ public extension Channel {
         locking.unlock()
       }
     }
-
+    
     timer.resume()
     producer.insertToReleasePool(timer)
-
+    
     let handler = self.makeHandler(executor: .immediate) {
       [weak producer] (event) in
-
+      
       locking.lock()
       defer { locking.unlock() }
-
+      
       switch event {
       case let .completion(completion):
         if let update = latestUpdate {
@@ -252,16 +252,16 @@ public extension Channel {
         }
       }
     }
-
+    
     self.insertHandlerToReleasePool(handler)
     cancellationToken?.add(cancellable: producer)
-
+    
     return producer
   }
 }
 
 extension Channel where Update: Equatable {
-
+  
   /// Returns channel of distinct update values of original channel.
   /// Works only for equatable update values
   /// [0, 0, 1, 2, 3, 3, 4, 3] => [0, 1, 2, 3, 4, 3]
@@ -277,12 +277,12 @@ extension Channel where Update: Equatable {
   public func distinct(cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
-
+    
     // Test: Channel_TransformTests.testDistinctInts
     
     var locking = makeLocking()
     var previousUpdate: Update? = nil
-
+    
     return self.makeProducer(executor: .immediate,
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
@@ -294,8 +294,8 @@ extension Channel where Update: Equatable {
         let _previousUpdate = previousUpdate
         previousUpdate = update
         locking.unlock()
-
-
+        
+        
         if let previousUpdate = _previousUpdate {
           if previousUpdate != update {
             producer.update(update)
@@ -311,7 +311,7 @@ extension Channel where Update: Equatable {
 }
 
 extension Channel where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrapped: Equatable {
-
+  
   /// Returns channel of distinct update values of original channel.
   /// Works only for equatable wrapped in optionals
   /// [nil, 1, nil, nil, 2, 2, 3, nil, 3, 3, 4, 5, 6, 6, 7] => [nil, 1, nil, 2, 3, nil, 3, 4, 5, 6, 7]
@@ -327,12 +327,12 @@ extension Channel where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrap
   public func distinct(cancellationToken: CancellationToken? = nil,
                        bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
-
+    
     // Test: Channel_TransformTests.testDistinctInts
-
+    
     var locking = makeLocking()
     var previousUpdate: Update? = nil
-
+    
     return self.makeProducer(executor: .immediate,
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
@@ -344,8 +344,8 @@ extension Channel where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrap
         let _previousUpdate = previousUpdate
         previousUpdate = update
         locking.unlock()
-
-
+        
+        
         if let previousUpdate = _previousUpdate {
           if previousUpdate.asyncNinjaOptionalValue != update.asyncNinjaOptionalValue {
             producer.update(update)
@@ -361,51 +361,101 @@ extension Channel where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrap
 }
 
 extension Channel where Update: Collection, Update.Iterator.Element: Equatable {
+  
+  /// Returns channel of distinct update values of original channel.
+  /// Works only for collections of equatable values
+  /// [[1], [1], [1, 2], [1, 2, 3], [1, 2, 3], [1]] => [[1], [1, 2], [1, 2, 3], [1]]
+  ///
+  /// - Parameters:
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  /// - Returns: channel with distinct update values
+  public func distinct(cancellationToken: CancellationToken? = nil,
+                       bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success> {
     
-    /// Returns channel of distinct update values of original channel.
-    /// Works only for collections of equatable values
-    /// [[1], [1], [1, 2], [1, 2, 3], [1, 2, 3], [1]] => [[1], [1, 2], [1, 2, 3], [1]]
-    ///
-    /// - Parameters:
-    ///   - cancellationToken: `CancellationToken` to use.
-    ///     Keep default value of the argument unless you need
-    ///     an extended cancellation options of returned channel
-    ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
-    ///     Keep default value of the argument unless you need
-    ///     an extended buffering options of returned channel
-    /// - Returns: channel with distinct update values
-    public func distinct(cancellationToken: CancellationToken? = nil,
-                         bufferSize: DerivedChannelBufferSize = .default
-        ) -> Channel<Update, Success> {
+    // Test: Channel_TransformTests.testDistinctInts
+    
+    var locking = makeLocking()
+    var previousUpdate: Update? = nil
+    
+    return self.makeProducer(executor: .immediate,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
+      (value, producer) in
+      switch value {
+      case let .update(update):
+        locking.lock()
+        let _previousUpdate = previousUpdate
+        previousUpdate = update
+        locking.unlock()
         
-        // Test: Channel_TransformTests.testDistinctInts
         
-        var locking = makeLocking()
-        var previousUpdate: Update? = nil
-        
-        return self.makeProducer(executor: .immediate,
-                                 cancellationToken: cancellationToken,
-                                 bufferSize: bufferSize)
-        {
-            (value, producer) in
-            switch value {
-            case let .update(update):
-                locking.lock()
-                let _previousUpdate = previousUpdate
-                previousUpdate = update
-                locking.unlock()
-                
-                
-                if let previousUpdate = _previousUpdate {
-                    if previousUpdate.count != update.count || zip(previousUpdate, update).contains(where: { $0 != $1 }) {
-                        producer.update(update)
-                    }
-                } else {
-                    producer.update(update)
-                }
-            case let .completion(completion):
-                producer.complete(with: completion)
-            }
+        if let previousUpdate = _previousUpdate {
+          if previousUpdate.count != update.count || zip(previousUpdate, update).contains(where: { $0 != $1 }) {
+            producer.update(update)
+          }
+        } else {
+          producer.update(update)
         }
+      case let .completion(completion):
+        producer.complete(with: completion)
+      }
     }
+  }
+}
+
+extension Channel where Update: NSObjectProtocol {
+  
+  /// Returns channel of distinct update values of original channel.
+  /// Works only for collections of equatable values
+  /// [objectA, objectA, objectB, objectC, objectC, objectA] => [objectA, objectB, objectC, objectA]
+  ///
+  /// - Parameters:
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  /// - Returns: channel with distinct update values
+  public func distinctNSObjects(cancellationToken: CancellationToken? = nil,
+                                bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success> {
+    
+    // Test: Channel_TransformTests.testDistinctInts
+    
+    var locking = makeLocking()
+    var previousUpdate: Update? = nil
+    
+    return self.makeProducer(executor: .immediate,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
+      (value, producer) in
+      switch value {
+      case let .update(update):
+        locking.lock()
+        let _previousUpdate = previousUpdate
+        previousUpdate = update
+        locking.unlock()
+        
+        
+        if let previousUpdate = _previousUpdate {
+          if !previousUpdate.isEqual(update) {
+            producer.update(update)
+          }
+        } else {
+          producer.update(update)
+        }
+      case let .completion(completion):
+        producer.complete(with: completion)
+      }
+    }
+  }
 }

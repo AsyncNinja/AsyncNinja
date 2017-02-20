@@ -128,10 +128,6 @@ class TestActor: Actor, ReleasePoolOwner {
   let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
   var executor: Executor { return .queue(self.internalQueue, isSerial: true) }
   let releasePool = ReleasePool()
-
-  deinit {
-    print("Hello!")
-  }
 }
 
 @available(macOS 10.10, iOS 8.0, tvOS 9.0, watchOS 2.0, *)
