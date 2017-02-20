@@ -32,7 +32,8 @@ class Channel_TransformTests: XCTestCase {
   static let allTests = [
     ("testDebounce", testDebounce),
     ("testDistinctInts", testDistinctInts),
-//    ("testDistinctOptionalInts", testDistinctOptionalInts),
+    ("testDistinctOptionalInts", testDistinctOptionalInts),
+    ("testDistinctArrays", testDistinctArrays),
   ]
 
   func testDebounce() {
@@ -107,6 +108,28 @@ class Channel_TransformTests: XCTestCase {
       updatable.succeed()
     }
 
+    self.waitForExpectations(timeout: 1.0)
+  }
+
+  func testDistinctArrays() {
+    let updatable = Updatable<[Int]>()
+    let expectation = self.expectation(description: "completion of producer")
+    
+    updatable.distinct().extractAll { (updates, completion) in
+      let assumedResults: [[Int]] = [[1], [1, 2], [1, 2, 3], [1]]
+      XCTAssertEqual(updates.count, assumedResults.count)
+      for (update, result) in zip(updates, assumedResults) {
+        XCTAssert(update == result)
+      }
+      expectation.fulfill()
+    }
+    
+    let fixture: [[Int]] =  [[1], [1], [1, 2], [1, 2, 3], [1, 2, 3], [1]]
+    DispatchQueue.global().async {
+      updatable.update(fixture)
+      updatable.succeed()
+    }
+    
     self.waitForExpectations(timeout: 1.0)
   }
 }

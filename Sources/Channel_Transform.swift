@@ -313,8 +313,8 @@ extension Channel where Update: Equatable {
 extension Channel where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrapped: Equatable {
 
   /// Returns channel of distinct update values of original channel.
-  /// Works only for equatable update values
-  /// [0, 0, 1, 2, 3, 3, 4, 3] => [0, 1, 2, 3, 4, 3]
+  /// Works only for equatable wrapped in optionals
+  /// [nil, 1, nil, nil, 2, 2, 3, nil, 3, 3, 4, 5, 6, 6, 7] => [nil, 1, nil, 2, 3, nil, 3, 4, 5, 6, 7]
   ///
   /// - Parameters:
   ///   - cancellationToken: `CancellationToken` to use.
@@ -358,4 +358,54 @@ extension Channel where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrap
       }
     }
   }
+}
+
+extension Channel where Update: Collection, Update.Iterator.Element: Equatable {
+    
+    /// Returns channel of distinct update values of original channel.
+    /// Works only for collections of equatable values
+    /// [[1], [1], [1, 2], [1, 2, 3], [1, 2, 3], [1]] => [[1], [1, 2], [1, 2, 3], [1]]
+    ///
+    /// - Parameters:
+    ///   - cancellationToken: `CancellationToken` to use.
+    ///     Keep default value of the argument unless you need
+    ///     an extended cancellation options of returned channel
+    ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+    ///     Keep default value of the argument unless you need
+    ///     an extended buffering options of returned channel
+    /// - Returns: channel with distinct update values
+    public func distinct(cancellationToken: CancellationToken? = nil,
+                         bufferSize: DerivedChannelBufferSize = .default
+        ) -> Channel<Update, Success> {
+        
+        // Test: Channel_TransformTests.testDistinctInts
+        
+        var locking = makeLocking()
+        var previousUpdate: Update? = nil
+        
+        return self.makeProducer(executor: .immediate,
+                                 cancellationToken: cancellationToken,
+                                 bufferSize: bufferSize)
+        {
+            (value, producer) in
+            switch value {
+            case let .update(update):
+                locking.lock()
+                let _previousUpdate = previousUpdate
+                previousUpdate = update
+                locking.unlock()
+                
+                
+                if let previousUpdate = _previousUpdate {
+                    if previousUpdate.count != update.count || zip(previousUpdate, update).contains(where: { $0 != $1 }) {
+                        producer.update(update)
+                    }
+                } else {
+                    producer.update(update)
+                }
+            case let .completion(completion):
+                producer.complete(with: completion)
+            }
+        }
+    }
 }
