@@ -35,6 +35,7 @@ class Channel_TransformTests: XCTestCase {
     ("testDistinctOptionalInts", testDistinctOptionalInts),
     ("testDistinctArrays", testDistinctArrays),
     ("testDistinctNSObjects", testDistinctNSObjects),
+    ("testDistinctArrayNSObjects", testDistinctArrayNSObjects),
   ]
 
   func testDebounce() {
@@ -149,6 +150,34 @@ class Channel_TransformTests: XCTestCase {
       }
       
       let fixture: [NSString] =  ["objectA", "objectA", "objectB", "objectC", "objectC", "objectA"]
+      DispatchQueue.global().async {
+        updatable.update(fixture)
+        updatable.succeed()
+      }
+      
+      self.waitForExpectations(timeout: 1.0)
+    #endif
+  }
+
+  func testDistinctArrayNSObjects() {
+    #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+      let updatable = Updatable<[NSString]>()
+      let expectation = self.expectation(description: "completion of producer")
+      
+      let objectA: NSString = "objectA"
+      let objectB: NSString = "objectB"
+      let objectC: NSString = "objectC"
+      
+      updatable.distinctCollectionOfNSObjects().extractAll { (updates, completion) in
+        let assumedResults: [[NSString]] = [[objectA], [objectA, objectB], [objectA, objectB, objectC], [objectA]]
+        XCTAssertEqual(updates.count, assumedResults.count)
+        for (update, result) in zip(updates, assumedResults) {
+          XCTAssert(update == result)
+        }
+        expectation.fulfill()
+      }
+      
+      let fixture: [[NSString]] =  [[objectA], [objectA], [objectA, objectB], [objectA, objectB, objectC], [objectA, objectB, objectC], [objectA]]
       DispatchQueue.global().async {
         updatable.update(fixture)
         updatable.succeed()

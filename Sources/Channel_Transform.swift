@@ -459,3 +459,53 @@ extension Channel where Update: NSObjectProtocol {
     }
   }
 }
+
+extension Channel where Update: Collection, Update.Iterator.Element: NSObjectProtocol {
+  
+  /// Returns channel of distinct update values of original channel.
+  /// Works only for collections of NSObjects values
+  /// [[objectA], [objectA], [objectA, objectB], [objectA, objectB, objectC], [objectA, objectB, objectC], [objectA]] => [[objectA], [objectA, objectB], [objectA, objectB, objectC], [objectA]]
+  ///
+  /// - Parameters:
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  /// - Returns: channel with distinct update values
+  public func distinctCollectionOfNSObjects(cancellationToken: CancellationToken? = nil,
+                                            bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success> {
+    
+    // Test: Channel_TransformTests.testDistinctInts
+    
+    var locking = makeLocking()
+    var previousUpdate: Update? = nil
+    
+    return self.makeProducer(executor: .immediate,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
+      (value, producer) in
+      switch value {
+      case let .update(update):
+        locking.lock()
+        let _previousUpdate = previousUpdate
+        previousUpdate = update
+        locking.unlock()
+        
+        
+        if let previousUpdate = _previousUpdate {
+          if previousUpdate.count != update.count || zip(previousUpdate, update).contains(where: { !$0.isEqual($1) }) {
+            producer.update(update)
+          }
+        } else {
+          producer.update(update)
+        }
+      case let .completion(completion):
+        producer.complete(with: completion)
+      }
+    }
+  }
+}
