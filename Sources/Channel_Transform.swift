@@ -260,6 +260,56 @@ public extension Channel {
   }
 }
 
+// MARK: - Distinct
+
+extension Channel {
+  /// Returns channel of distinct update values of original channel.
+  /// Requires dedicated equality checking closure
+  ///
+  /// - Parameters:
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  ///   - isEqual: closure that tells if specified values are equal
+  /// - Returns: channel with distinct update values
+  func distinct(cancellationToken: CancellationToken? = nil,
+                         bufferSize: DerivedChannelBufferSize = .default,
+                         isEqual: @escaping (Update, Update) -> Bool
+    ) -> Channel<Update, Success> {
+    
+    var locking = makeLocking()
+    var previousUpdate: Update? = nil
+    
+    return self.makeProducer(executor: .immediate,
+                             cancellationToken: cancellationToken,
+                             bufferSize: bufferSize)
+    {
+      (value, producer) in
+      switch value {
+      case let .update(update):
+        locking.lock()
+        let _previousUpdate = previousUpdate
+        previousUpdate = update
+        locking.unlock()
+        
+        
+        if let previousUpdate = _previousUpdate {
+          if !isEqual(previousUpdate, update) {
+            producer.update(update)
+          }
+        } else {
+          producer.update(update)
+        }
+      case let .completion(completion):
+        producer.complete(with: completion)
+      }
+    }
+  }
+}
+
 extension Channel where Update: Equatable {
   
   /// Returns channel of distinct update values of original channel.
@@ -279,34 +329,7 @@ extension Channel where Update: Equatable {
     ) -> Channel<Update, Success> {
     
     // Test: Channel_TransformTests.testDistinctInts
-    
-    var locking = makeLocking()
-    var previousUpdate: Update? = nil
-    
-    return self.makeProducer(executor: .immediate,
-                             cancellationToken: cancellationToken,
-                             bufferSize: bufferSize)
-    {
-      (value, producer) in
-      switch value {
-      case let .update(update):
-        locking.lock()
-        let _previousUpdate = previousUpdate
-        previousUpdate = update
-        locking.unlock()
-        
-        
-        if let previousUpdate = _previousUpdate {
-          if previousUpdate != update {
-            producer.update(update)
-          }
-        } else {
-          producer.update(update)
-        }
-      case let .completion(completion):
-        producer.complete(with: completion)
-      }
-    }
+    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: ==)
   }
 }
 
@@ -329,33 +352,8 @@ extension Channel where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrap
     ) -> Channel<Update, Success> {
     
     // Test: Channel_TransformTests.testDistinctInts
-    
-    var locking = makeLocking()
-    var previousUpdate: Update? = nil
-    
-    return self.makeProducer(executor: .immediate,
-                             cancellationToken: cancellationToken,
-                             bufferSize: bufferSize)
-    {
-      (value, producer) in
-      switch value {
-      case let .update(update):
-        locking.lock()
-        let _previousUpdate = previousUpdate
-        previousUpdate = update
-        locking.unlock()
-        
-        
-        if let previousUpdate = _previousUpdate {
-          if previousUpdate.asyncNinjaOptionalValue != update.asyncNinjaOptionalValue {
-            producer.update(update)
-          }
-        } else {
-          producer.update(update)
-        }
-      case let .completion(completion):
-        producer.complete(with: completion)
-      }
+    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      $0.asyncNinjaOptionalValue == $1.asyncNinjaOptionalValue
     }
   }
 }
@@ -378,34 +376,10 @@ extension Channel where Update: Collection, Update.Iterator.Element: Equatable {
                        bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     
-    // Test: Channel_TransformTests.testDistinctInts
-    
-    var locking = makeLocking()
-    var previousUpdate: Update? = nil
-    
-    return self.makeProducer(executor: .immediate,
-                             cancellationToken: cancellationToken,
-                             bufferSize: bufferSize)
-    {
-      (value, producer) in
-      switch value {
-      case let .update(update):
-        locking.lock()
-        let _previousUpdate = previousUpdate
-        previousUpdate = update
-        locking.unlock()
-        
-        
-        if let previousUpdate = _previousUpdate {
-          if previousUpdate.count != update.count || zip(previousUpdate, update).contains(where: { $0 != $1 }) {
-            producer.update(update)
-          }
-        } else {
-          producer.update(update)
-        }
-      case let .completion(completion):
-        producer.complete(with: completion)
-      }
+    // Test: Channel_TransformTests.testDistinctArray
+    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      return $0.count == $1.count
+        && !zip($0, $1).contains { $0 != $1 }
     }
   }
 }
@@ -428,34 +402,9 @@ extension Channel where Update: NSObjectProtocol {
                                 bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     
-    // Test: Channel_TransformTests.testDistinctInts
-    
-    var locking = makeLocking()
-    var previousUpdate: Update? = nil
-    
-    return self.makeProducer(executor: .immediate,
-                             cancellationToken: cancellationToken,
-                             bufferSize: bufferSize)
-    {
-      (value, producer) in
-      switch value {
-      case let .update(update):
-        locking.lock()
-        let _previousUpdate = previousUpdate
-        previousUpdate = update
-        locking.unlock()
-        
-        
-        if let previousUpdate = _previousUpdate {
-          if !previousUpdate.isEqual(update) {
-            producer.update(update)
-          }
-        } else {
-          producer.update(update)
-        }
-      case let .completion(completion):
-        producer.complete(with: completion)
-      }
+    // Test: Channel_TransformTests.testDistinctNSObjects
+    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      return $0.isEqual($1)
     }
   }
 }
@@ -478,34 +427,10 @@ extension Channel where Update: Collection, Update.Iterator.Element: NSObjectPro
                                             bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     
-    // Test: Channel_TransformTests.testDistinctInts
-    
-    var locking = makeLocking()
-    var previousUpdate: Update? = nil
-    
-    return self.makeProducer(executor: .immediate,
-                             cancellationToken: cancellationToken,
-                             bufferSize: bufferSize)
-    {
-      (value, producer) in
-      switch value {
-      case let .update(update):
-        locking.lock()
-        let _previousUpdate = previousUpdate
-        previousUpdate = update
-        locking.unlock()
-        
-        
-        if let previousUpdate = _previousUpdate {
-          if previousUpdate.count != update.count || zip(previousUpdate, update).contains(where: { !$0.isEqual($1) }) {
-            producer.update(update)
-          }
-        } else {
-          producer.update(update)
-        }
-      case let .completion(completion):
-        producer.complete(with: completion)
-      }
+    // Test: Channel_TransformTests.testDistinctArrayOfNSObjects
+    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      return $0.count == $1.count
+        && !zip($0, $1).contains { !$0.isEqual($1) }
     }
   }
 }
