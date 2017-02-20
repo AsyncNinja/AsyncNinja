@@ -38,7 +38,8 @@ class FutureTests: XCTestCase {
     ("testMapContextual_Success_ContextDead", testMapContextual_Success_ContextDead),
     ("testMapContextual_Failure_ContextAlive", testMapContextual_Failure_ContextAlive),
     ("testMapContextual_Failure_ContextDead", testMapContextual_Failure_ContextDead),
-    ("testOnCompleteContextual_ContextAlive", testOnCompleteContextual_ContextAlive),
+    ("testOnCompleteContextual_ContextAlive_RegularActor", testOnCompleteContextual_ContextAlive_RegularActor),
+    ("testOnCompleteContextual_ContextAlive_ObjcActor", testOnCompleteContextual_ContextAlive_ObjcActor),
     ("testOnCompleteContextual_ContextDead", testOnCompleteContextual_ContextDead),
     ("testFlatten", testFlatten),
     ("testFlatten_OuterFailure", testFlatten_OuterFailure),
@@ -254,24 +255,39 @@ class FutureTests: XCTestCase {
     XCTAssertEqual(result.failure as? AsyncNinjaError, .contextDeallocated)
   }
 
-  func testOnCompleteContextual_ContextAlive() {
-    let actor = TestActor()
-    let transformExpectation = self.expectation(description: "transform called")
-    weak var weakInitialFuture: Future<Int>?
-    let value = pickInt()
+  func testOnCompleteContextual_ContextAlive_RegularActor() {
+    testOnCompleteContextual_ContextAlive(makeActor: TestActor.init)
+  }
 
-    eval {
-      let initialFuture = future(success: value)
-      weakInitialFuture = initialFuture
-      initialFuture.onSuccess(context: actor) { (actor, value_) in
-        assert(actor: actor)
-        XCTAssertEqual(value, value_)
-        transformExpectation.fulfill()
+  func testOnCompleteContextual_ContextAlive_ObjcActor() {
+    #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+    testOnCompleteContextual_ContextAlive(makeActor: TestObjCActor.init)
+    #endif
+  }
+
+  private func testOnCompleteContextual_ContextAlive<T: Actor>(makeActor: @escaping () -> T) {
+    multiTest {
+      let actor = makeActor()
+      weak var weakInitialFuture: Future<Int>?
+      let value = pickInt()
+      
+      let group = DispatchGroup()
+      group.enter()
+      DispatchQueue.global().async {
+        let initialFuture = future(success: value)
+        weakInitialFuture = initialFuture
+        initialFuture
+          .flatMap { value in future(after: 0.1) { value } }
+          .onSuccess(context: actor) { (actor, value_) in
+            assert(actor: actor)
+            XCTAssertEqual(value, value_)
+            group.leave()
+        }
       }
+      
+      group.wait()
+      XCTAssertNil(weakInitialFuture)
     }
-
-    self.waitForExpectations(timeout: 0.2)
-    XCTAssertNil(weakInitialFuture)
   }
 
   func testOnCompleteContextual_ContextDead() {

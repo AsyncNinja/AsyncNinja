@@ -50,7 +50,7 @@ func assert(nonGlobalQoS: DispatchQoS.QoSClass, file: StaticString = #file, line
   // TODO: figure out qos of current queue
 }
 
-func assert(actor: TestActor, file: StaticString = #file, line: UInt = #line) {
+func assert(actor: Actor, file: StaticString = #file, line: UInt = #line) {
   // TODO: use file and line
   if #available(macOS 10.12, iOS 10.0, tvOS 10.0, *) {
     dispatchPrecondition(condition: .onQueue(actor.internalQueue))
@@ -120,7 +120,11 @@ func square_failure(_ value: Int) throws -> Int {
   throw TestError.testCode
 }
 
-class TestActor: ExecutionContext, ReleasePoolOwner {
+protocol Actor: ExecutionContext {
+    var internalQueue: DispatchQueue { get }
+}
+
+class TestActor: Actor, ReleasePoolOwner {
   let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
   var executor: Executor { return .queue(self.internalQueue, isSerial: true) }
   let releasePool = ReleasePool()
@@ -128,6 +132,12 @@ class TestActor: ExecutionContext, ReleasePoolOwner {
   deinit {
     print("Hello!")
   }
+}
+
+@available(macOS 10.10, iOS 8.0, tvOS 9.0, watchOS 2.0, *)
+class TestObjCActor: NSObject, Actor, ObjCInjectedRetainer {
+    let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
+    var executor: Executor { return .queue(self.internalQueue, isSerial: true) }
 }
 
 func eval<Result>(invoking body: () throws -> Result) rethrows -> Result {
