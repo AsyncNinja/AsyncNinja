@@ -1,3 +1,11 @@
+# 1.0.0-beta3
+* improvements using `OptionalAdaptor`
+* fixed locking within `CachableValue`
+* fixes of `ObjCInjectedRetainer`
+* adding unwrapping methods to `Future` and `Channel`
+* making more obvious behavior of Channel.flatMap a default one
+* introducing `ObservationSession` that helps to enable and disable multiple observations in a convenient way. This is very useful for enabling and disabling observation within `viewWillAppear` and `viewDidDisappear`
+
 # 1.0.0-beta2
 * continue renaming
 * adding convenience methods for making completed futures and channels

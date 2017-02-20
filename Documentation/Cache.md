@@ -1,7 +1,7 @@
 # `CachableValue` and `Cache`
 This document describes concept and use of `CachableValue` and `Cache`.
 
-**For class reference visit [CocoaPods - CachableValue](http://cocoadocs.org/docsets/AsyncNinja/1.0.0-beta2/Classes/CachableValue.html) and [CocoaPods - Cache](http://cocoadocs.org/docsets/AsyncNinja/1.0.0-beta2/Classes/Cache.html).** 
+**For class reference visit [CocoaPods - CachableValue](http://cocoadocs.org/docsets/AsyncNinja/1.0.0-beta3/Classes/CachableValue.html) and [CocoaPods - Cache](http://cocoadocs.org/docsets/AsyncNinja/1.0.0-beta3/Classes/Cache.html).** 
 
 ##### Contents
 * [Concept](#concept)
