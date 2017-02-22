@@ -178,6 +178,21 @@
       self.action = #selector(ActionReceiver.asyncNinjaAction(sender:))
       return actionReceiver.producer
     }
+
+    /// Shortcut that binds block to NSControl event
+    ///
+    /// - Parameters:
+    ///   - context: context to bind block to
+    ///   - block: block to execute on action on context
+    func onAction<C: ExecutionContext>(
+      context: C,
+      _ block: @escaping (C, AnyObject?, Any?) -> Void) {
+
+      self.actionChannel()
+        .onUpdate(context: context) { (context, update) in
+          block(context, update.sender, update.objectValue)
+      }
+    }
   }
 
   private class ActionReceiver: NSObject {
@@ -223,6 +238,23 @@
       }
 
       return actionReceiver.producer
+    }
+
+    /// Shortcut that binds block to UIControl event
+    ///
+    /// - Parameters:
+    ///   - events: events to react on
+    ///   - context: context to bind block to
+    ///   - block: block to execute on action on context
+    func onAction<C: ExecutionContext>(
+      forEvents events: UIControlEvents = UIControlEvents.allEvents,
+      context: C,
+      _ block: @escaping (C, AnyObject?, UIEvent) -> Void) {
+
+      self.actionChannel(forEvents: events)
+        .onUpdate(context: context) { (context, update) in
+          block(context, update.sender, update.event)
+      }
     }
   }
 
