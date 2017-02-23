@@ -74,7 +74,13 @@ import Dispatch
         updatableProperty.update(index)
       }
       
-      XCTAssertEqual(detectedChanges, [0, 1, 2, 3, 4])
+      let expectation = self.expectation(description: "done")
+      DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + .seconds(1)) {
+        XCTAssertEqual(detectedChanges, [0, 1, 2, 3, 4])
+        expectation.fulfill()
+      }
+      
+      self.waitForExpectations(timeout: 2.0)
     }
 
     func testObserverBinding() {
