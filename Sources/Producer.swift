@@ -23,14 +23,40 @@
 import Dispatch
 
 public typealias Updatable<T> = Producer<T, Void>
+public typealias UpdatableProperty<T> = ProducerProxy<T, Void>
+
+final public class Producer<Update, Success>: BaseProducer<Update, Success>, Completable {
+  /// convenience initializer of Producer. Initializes Producer with default buffer size
+  public init() {
+    super.init(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
+  }
+  
+  /// designated initializer of Producer. Initializes Producer with specified buffer size
+  override public init(bufferSize: Int) {
+    super.init(bufferSize: bufferSize)
+  }
+  
+  /// designated initializer of Producer. Initializes Producer with specified buffer size and values
+  public init<S: Sequence>(bufferSize: Int, bufferedUpdates: S) where S.Iterator.Element == Update {
+    super.init(bufferSize: bufferSize)
+    bufferedUpdates.suffix(bufferSize).forEach(_bufferedUpdates.push)
+  }
+  
+  /// designated initializer of Producer. Initializes Producer with specified buffer size and values
+  public init<C: Collection>(bufferedUpdates: C) where C.Iterator.Element == Update, C.IndexDistance: Integer {
+    super.init(bufferSize: Int(bufferedUpdates.count.toIntMax()))
+    bufferedUpdates.forEach(_bufferedUpdates.push)
+  }
+}
 
 /// Mutable subclass of channel
 /// You can update and complete producer manually
-final public class Producer<Update, Success>: Channel<Update, Success>, Completable {
+/// **internal use only**
+public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseCompletable {
   public typealias CompletingType = Channel<Update, Success>
 
   private let _maxBufferSize: Int
-  private let _bufferedUpdates = Queue<Update>()
+  fileprivate let _bufferedUpdates = Queue<Update>()
   private let _releasePool = ReleasePool(locking: PlaceholderLocking())
   private var _locking = makeLocking()
   private var _handlers = QueueOfWeakElements<Handler>()
@@ -52,26 +78,9 @@ final public class Producer<Update, Success>: Channel<Update, Success>, Completa
     return _completion
   }
 
-  /// convenience initializer of Producer. Initializes Producer with default buffer size
-  override public convenience init() {
-    self.init(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
-  }
-
   /// designated initializer of Producer. Initializes Producer with specified buffer size
-  public init(bufferSize: Int) {
+  init(bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize) {
     _maxBufferSize = bufferSize
-  }
-
-  /// designated initializer of Producer. Initializes Producer with specified buffer size and values
-  public init<S: Sequence>(bufferSize: Int, bufferedUpdates: S) where S.Iterator.Element == Update {
-    _maxBufferSize = bufferSize
-    bufferedUpdates.suffix(bufferSize).forEach(_bufferedUpdates.push)
-  }
-
-  /// designated initializer of Producer. Initializes Producer with specified buffer size and values
-  public init<C: Collection>(bufferedUpdates: C) where C.Iterator.Element == Update, C.IndexDistance: Integer {
-    _maxBufferSize = Int(bufferedUpdates.count.toIntMax())
-    bufferedUpdates.forEach(_bufferedUpdates.push)
   }
 
   /// **internal use only**
@@ -362,12 +371,48 @@ public enum DerivedChannelBufferSize {
   }
 }
 
+// MARK: - ProducerProxy
+
+public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
+  private let _updateHandler: (ProducerProxy<Update, Success>, Event) -> Void
+  private let _updateExecutor: Executor
+  
+  /// designated initializer of Producer. Initializes Producer with specified buffer size
+  init(bufferSize: Int, updateExecutor: Executor, updateHandler: @escaping (ProducerProxy<Update, Success>, Event) -> Void) {
+    _updateHandler = updateHandler
+    _updateExecutor = updateExecutor
+    super.init(bufferSize: bufferSize)
+  }
+  
+  func updateWithoutHandling(_ update: Update) {
+    super.update(update)
+  }
+
+  @discardableResult
+  func tryCompleteWithoutHandling(with completion: Fallible<Success>) -> Bool {
+    return super.tryComplete(with: completion)
+  }
+
+  override public func update(_ update: Update) {
+    _updateExecutor.execute {
+      self._updateHandler(self, .update(update))
+    }
+  }
+  
+  override public func tryComplete(with completion: Fallible<Success>) -> Bool {
+    _updateExecutor.execute {
+      self._updateHandler(self, .completion(completion))
+    }
+    return true
+  }
+}
+
 // MARK: - Iterators
 fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Update, Success> {
   let _sema: DispatchSemaphore
   var _locking = makeLocking(isFair: true)
   let _bufferedUpdates: Queue<Update>
-  let _producer: Producer<Update, Success>
+  let _producer: BaseProducer<Update, Success>
   var _handler: ChannelHandler<Update, Success>?
   override var completion: Fallible<Success>? {
     _locking.lock()
@@ -376,7 +421,7 @@ fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Upd
   }
   var _completion: Fallible<Success>?
 
-  init(channel: Producer<Update, Success>, bufferedUpdates: Queue<Update>) {
+  init(channel: BaseProducer<Update, Success>, bufferedUpdates: Queue<Update>) {
     _producer = channel
     _bufferedUpdates = bufferedUpdates
     _sema = DispatchSemaphore(value: 0)

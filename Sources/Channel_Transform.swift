@@ -175,7 +175,7 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (event: Event, producer: Producer<Update, Success>) -> Void in
+      (event: Event, producer: BaseProducer<Update, Success>) -> Void in
       Executor.primary.execute(after: timeout) { [weak producer] in
         guard let producer = producer else { return }
         producer.apply(event)

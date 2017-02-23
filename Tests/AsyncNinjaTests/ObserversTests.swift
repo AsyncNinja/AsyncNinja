@@ -29,6 +29,8 @@ import Dispatch
 
     static let allTests = [
       ("testObserver", testObserver),
+      ("testObserverMutation", testObserverMutation),
+      ("testObserverBinding", testObserverBinding),
       ]
 
     func testObserver() {
@@ -51,6 +53,62 @@ import Dispatch
       }
       
       XCTAssertEqual(detectedChanges, [0, 1, 2, 3, 4])
+    }
+    
+    func testObserverMutation() {
+      class MyObject: NSObject, ObjCInjectedRetainer {
+        dynamic var myValue: Int = 0
+      }
+      
+      let myObject = MyObject()
+      let updatableProperty: UpdatableProperty<Int?> = myObject.changes(of: #keyPath(MyObject.myValue))
+      var detectedChanges = [Int]()
+      updatableProperty.onUpdate(executor: .immediate) {
+        if let value = $0 {
+          detectedChanges.append(value)
+        }
+      }
+      
+      let range = 1..<5
+      for index in range {
+        updatableProperty.update(index)
+      }
+      
+      XCTAssertEqual(detectedChanges, [0, 1, 2, 3, 4])
+    }
+
+    func testObserverBinding() {
+      class MyObject: NSObject, ObjCInjectedRetainer {
+        dynamic var myValue: Int = 0
+      }
+      
+      let myObject = MyObject()
+      
+      let updatableProperty: UpdatableProperty<Int?> = myObject.changes(of: #keyPath(MyObject.myValue))
+      var detectedChanges = [Int]()
+      updatableProperty.onUpdate(executor: .immediate) {
+        if let value = $0 {
+          detectedChanges.append(value)
+        }
+      }
+      
+      let producer = Producer<Int?, String>()
+      producer.bind(to: updatableProperty)
+      
+      let range = 1..<5
+      for index in range {
+        producer.update(index)
+      }
+      
+      producer.succeed(with: "Done")
+
+      let expectation = self.expectation(description: "done")
+      DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + .seconds(1)) {
+        XCTAssertEqual(detectedChanges, [0, 1, 2, 3, 4])
+        expectation.fulfill()
+      }
+      
+      self.waitForExpectations(timeout: 2.0)
     }
   }
 #endif

@@ -22,12 +22,14 @@
 
 import Dispatch
 
-/// A protocol for objects that can be manually completed
-public protocol Completable: Completing, Cancellable {
-  associatedtype CompletingType: Completing
-
+public protocol Completable: BaseCompletable {
   /// Required initializer
   init()
+}
+
+/// A protocol for objects that can be manually completed
+public protocol BaseCompletable: Completing, Cancellable {
+  associatedtype CompletingType: Completing
 
   /// Completes `Completing` with value and returns true.
   /// Returns false if promise was completed before.
@@ -44,7 +46,7 @@ public protocol Completable: Completing, Cancellable {
   func insertToReleasePool(_ releasable: Releasable)
 }
 
-public extension Completable {
+public extension BaseCompletable {
   /// Completes promise when specified future completes.
   /// `self` will retain specified future until it`s completion
   func complete<T: Completing>(with completing: T) where T.Success == Success {
@@ -92,7 +94,7 @@ public extension Completable {
   }
 }
 
-extension Completable where Success == Void {
+extension BaseCompletable where Success == Void {
 
   /// Convenience method succeeds mutable with void value
   public func succeed() {
@@ -100,7 +102,7 @@ extension Completable where Success == Void {
   }
 }
 
-public extension Completable where Success: AsyncNinjaOptionalAdaptor {
+public extension BaseCompletable where Success: AsyncNinjaOptionalAdaptor {
   /// Completes promise when specified future completes.
   /// `self` will retain specified future until it`s completion
   func complete<T: Completing>(with completing: T) where T.Success == Success.AsyncNinjaWrapped {

@@ -166,6 +166,25 @@ public extension Channel {
       }
     }
   }
+  
+  func bindEvents(to producerProxy: ProducerProxy<Update, Success>, cancellationToken: CancellationToken? = nil) {
+    self.attach(producer: producerProxy, executor: .immediate, cancellationToken: cancellationToken) { (event, producer) in
+      producer.apply(event)
+    }
+  }
+
+  func bind(to updatableProperty: UpdatableProperty<Update>, cancellationToken: CancellationToken? = nil) {
+    self.attach(producer: updatableProperty, executor: .immediate, cancellationToken: cancellationToken) { (event, producer) in
+      switch event {
+      case let .update(update):
+        producer.update(update)
+      case let .completion(.failure(failure)):
+        producer.fail(with: failure)
+      case .completion(.success):
+        producer.succeed()
+      }
+    }
+  }
 
   /// Subscribes for buffered and new update values for the channel
   ///

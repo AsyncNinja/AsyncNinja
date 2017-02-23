@@ -215,13 +215,13 @@ private class BaseChannelFlatteningBehaviorStorage<P, S, T> {
     self.transform = transform
   }
   
-  func onEvent(_ event: Event, producer: Producer<Fallible<T>, S>) {
+  func onEvent(_ event: Event, producer: BaseProducer<Fallible<T>, S>) {
     assertAbstract()
   }
 }
 
 private class KeepUnorderedChannelFlatteningBehaviorStorage<P, S, T>: BaseChannelFlatteningBehaviorStorage<P, S, T> {
-  override func onEvent(_ event: Event, producer: Producer<Fallible<T>, S>) {
+  override func onEvent(_ event: Event, producer: BaseProducer<Fallible<T>, S>) {
     switch event {
     case .update(let update):
       executor.execute {
@@ -242,7 +242,7 @@ private class KeepLatestTransformChannelFlatteningBehaviorStorage<P, S, T>: Base
   var locking = makeLocking()
   var latestFuture: Future<T?>?
   
-  override func onEvent(_ event: Event, producer: Producer<Fallible<T>, S>) {
+  override func onEvent(_ event: Event, producer: BaseProducer<Fallible<T>, S>) {
     switch event {
     case .update(let update):
       let promise = Promise<T?>()
@@ -289,7 +289,7 @@ private class DropResultsOutOfOrderChannelFlatteningBehaviorStorage<P, S, T>: Ba
   let futuresQueue = Queue<(future: Future<T?>, index: Int)>()
   var indexOfNextFuture = 1
   
-  override func onEvent(_ event: Event, producer: Producer<Fallible<T>, S>) {
+  override func onEvent(_ event: Event, producer: BaseProducer<Fallible<T>, S>) {
     
     switch event {
     case .update(let update):
@@ -352,7 +352,7 @@ private class OrderResultsChannelFlatteningBehaviorStorage<P, S, T>: BaseChannel
   let futuresQueue = Queue<Future<T?>>()
   var isWaiting = false
   
-  override func onEvent(_ event: Event, producer: Producer<Fallible<T>, S>) {
+  override func onEvent(_ event: Event, producer: BaseProducer<Fallible<T>, S>) {
     switch event {
     case .update(let update):
       let promise = Promise<T?>()
@@ -378,7 +378,7 @@ private class OrderResultsChannelFlatteningBehaviorStorage<P, S, T>: BaseChannel
     }
   }
   
-  private func waitForTheNextFutureIfNeeded(producer: Producer<Fallible<T>, S>) {
+  private func waitForTheNextFutureIfNeeded(producer: BaseProducer<Fallible<T>, S>) {
     locking.lock()
     guard
       !isWaiting,
@@ -419,7 +419,7 @@ private class TransformSeriallyChannelFlatteningBehaviorStorage<P, S, T>: BaseCh
   let updatesQueue = Queue<P>()
   var isRunning = false
   
-  override func onEvent(_ event: Event, producer: Producer<Fallible<T>, S>) {
+  override func onEvent(_ event: Event, producer: BaseProducer<Fallible<T>, S>) {
     switch event {
     case .update(let update):
       locking.lock()
@@ -431,7 +431,7 @@ private class TransformSeriallyChannelFlatteningBehaviorStorage<P, S, T>: BaseCh
     }
   }
   
-  private func launchNextTransformIfNeeded(producer: Producer<Fallible<T>, S>) {
+  private func launchNextTransformIfNeeded(producer: BaseProducer<Fallible<T>, S>) {
     guard
       !isRunning,
       let update = updatesQueue.pop()

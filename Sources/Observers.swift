@@ -33,11 +33,31 @@
     /// - Returns: channel new values
     func changes<T>(
       of keyPath: String,
+      executor: Executor = .main,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
-      ) -> Updating<T?> {
-      return changesDictionary(of: keyPath, options: [.initial, .new], observationSession: observationSession)
-        .map(executor: .immediate) { $0[.newKey] as? T }
+      ) -> UpdatableProperty<T?> {
+      let producer = UpdatableProperty<T?>(bufferSize: channelBufferSize, updateExecutor: executor) { [weak self] (producerProxy, event) in
+        switch event {
+        case let .update(update):
+          self?.setValue(update, forKey: keyPath)
+        case .completion:
+          nop()
+        }
+      }
+      
+      let observer = KeyPathObserver(object: self, keyPath: keyPath, options: [.initial, .old, .new], enabled: observationSession?.enabled ?? true) {
+        [weak producer] (changes) in
+        producer?.updateWithoutHandling(changes[.newKey] as? T)
+      }
+      
+      observationSession?.observers.push(observer)
+      notifyDeinit { [weak producer] in
+        producer?.cancelBecauseOfDeallocatedContext()
+        observer.enabled = false
+      }
+      
+      return producer
     }
 
     /// makes channel of changes of value for specified key path
@@ -51,10 +71,20 @@
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
       ) -> Updating<(old: T?, new: T?)> {
-      return changesDictionary(of: keyPath, options: [.initial, .new, .old], observationSession: observationSession)
-        .map(executor: .immediate) {
-          (old: $0[.oldKey] as? T, new: $0[.newKey] as? T)
+      let producer = Updatable<(old: T?, new: T?)>(bufferSize: channelBufferSize)
+      
+      let observer = KeyPathObserver(object: self, keyPath: keyPath, options: [.initial, .old, .new], enabled: observationSession?.enabled ?? true) {
+        [weak producer] (changes) in
+        producer?.update((old: changes[.oldKey] as? T, new: changes[.newKey] as? T))
       }
+      
+      observationSession?.observers.push(observer)
+      notifyDeinit { [weak producer] in
+        producer?.cancelBecauseOfDeallocatedContext()
+        observer.enabled = false
+      }
+      
+      return producer
     }
 
     /// makes channel of changes of value for specified key path
@@ -129,6 +159,7 @@
       }
     }
   }
+  
 
   /// An object that is able to control (enable and disable) observation-related channel constructors
   public class ObservationSession {

@@ -30,8 +30,8 @@ extension Channel {
     executor: Executor,
     cancellationToken: CancellationToken?,
     bufferSize: DerivedChannelBufferSize,
-    _ onEvent: @escaping (Event, Producer<P, S>) throws -> Void
-    ) -> Producer<P, S> {
+    _ onEvent: @escaping (Event, BaseProducer<P, S>) throws -> Void
+    ) -> BaseProducer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<P, S>(bufferSize: bufferSize)
     self.attach(producer: producer, executor: executor,
@@ -41,10 +41,10 @@ extension Channel {
 
   /// **internal use only**
   func attach<P, S>(
-    producer: Producer<P, S>,
+    producer: BaseProducer<P, S>,
     executor: Executor,
     cancellationToken: CancellationToken?,
-    _ onEvent: @escaping (Event, Producer<P, S>) throws -> Void)
+    _ onEvent: @escaping (Event, BaseProducer<P, S>) throws -> Void)
   {
     let handler = self.makeHandler(executor: executor) {
       [weak producer] (event) in
@@ -63,10 +63,10 @@ extension Channel {
     executor: Executor?,
     cancellationToken: CancellationToken?,
     bufferSize: DerivedChannelBufferSize,
-    _ onEvent: @escaping (C, Event, Producer<P, S>) throws -> Void
-    ) -> Producer<P, S> {
+    _ onEvent: @escaping (C, Event, BaseProducer<P, S>) throws -> Void
+    ) -> BaseProducer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
-    let producer = Producer<P, S>(bufferSize: bufferSize)
+    let producer = BaseProducer<P, S>(bufferSize: bufferSize)
     self.attach(producer: producer, context: context, executor: executor,
                 cancellationToken: cancellationToken, onEvent)
     return producer
@@ -74,11 +74,11 @@ extension Channel {
 
   /// **internal use only**
   func attach<P, S, C: ExecutionContext>(
-    producer: Producer<P, S>,
+    producer: BaseProducer<P, S>,
     context: C,
     executor: Executor?,
     cancellationToken: CancellationToken?,
-    _ onEvent: @escaping (C, Event, Producer<P, S>) throws -> Void)
+    _ onEvent: @escaping (C, Event, BaseProducer<P, S>) throws -> Void)
   {
     let executor_ = executor ?? context.executor
     self.attach(producer: producer, executor: executor_, cancellationToken: cancellationToken)
