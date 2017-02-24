@@ -24,7 +24,9 @@
   import Foundation
 
   // MARK: - regular observation
-  public extension Retainer where Self: NSObject {
+  
+  public extension ExecutionContext where Self: NSObject {
+
     /// makes channel of changes of value for specified key path
     ///
     /// - Parameter keyPath: to observe
@@ -33,7 +35,24 @@
     /// - Returns: channel new values
     func changes<T>(
       of keyPath: String,
-      executor: Executor = .main,
+      observationSession: ObservationSession? = nil,
+      channelBufferSize: Int = 1
+      ) -> UpdatableProperty<T?> {
+      return changes(of: keyPath, executor: self.executor, observationSession: observationSession, channelBufferSize: channelBufferSize)
+    }
+  }
+  
+  public extension Retainer where Self: NSObject {
+    /// makes channel of changes of value for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter executor: apply changes on
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel new values
+    func changes<T>(
+      of keyPath: String,
+      executor: Executor,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
       ) -> UpdatableProperty<T?> {

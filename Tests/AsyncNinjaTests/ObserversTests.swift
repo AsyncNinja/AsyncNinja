@@ -39,7 +39,7 @@ import Dispatch
       }
 
       let myObject = MyObject()
-      let updatingValues: Updating<Int?> = myObject.changes(of: #keyPath(MyObject.myValue))
+      let updatingValues: Updating<Int?> = myObject.changes(of: #keyPath(MyObject.myValue), executor: .main)
       var detectedChanges = [Int]()
       updatingValues.onUpdate(executor: .immediate) {
         if let value = $0 {
@@ -61,9 +61,9 @@ import Dispatch
       }
       
       let myObject = MyObject()
-      let updatableProperty: UpdatableProperty<Int?> = myObject.changes(of: #keyPath(MyObject.myValue))
+      let updatableProperty: UpdatableProperty<Int?> = myObject.changes(of: #keyPath(MyObject.myValue), executor: .main)
       var detectedChanges = [Int]()
-      updatableProperty.onUpdate(executor: .immediate) {
+      updatableProperty.onUpdate(executor: .main) {
         if let value = $0 {
           detectedChanges.append(value)
         }
@@ -90,9 +90,9 @@ import Dispatch
       
       let myObject = MyObject()
       
-      let updatableProperty: UpdatableProperty<Int?> = myObject.changes(of: #keyPath(MyObject.myValue))
+      let updatableProperty: UpdatableProperty<Int?> = myObject.changes(of: #keyPath(MyObject.myValue), executor: .main)
       var detectedChanges = [Int]()
-      updatableProperty.onUpdate(executor: .immediate) {
+      updatableProperty.onUpdate(executor: .main) {
         if let value = $0 {
           detectedChanges.append(value)
         }

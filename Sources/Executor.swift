@@ -85,7 +85,7 @@ public extension Executor {
   static let primary = Executor.default
 
   /// shortcut to the main queue executor
-  static let main = Executor.queue(DispatchQueue.main)
+  static let main = Executor.queue(DispatchQueue.main, isSerial: true)
 
   // Test: ExecutorTests.testUserInteractive
   /// shortcut to the global concurrent user interactive queue executor
@@ -109,7 +109,7 @@ public extension Executor {
 
   // Test: ExecutorTests.testImmediate
   /// executes block immediately. Not suitable for long running calculations
-  static let immediate = Executor(impl: ImmediateExecutorImpl())
+  static let immediate = Executor(impl: ImmediateExecutorImpl(), isSerial: true)
 
   /// initializes executor based on specified queue
   ///

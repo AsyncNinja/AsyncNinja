@@ -35,7 +35,7 @@ class ExecutorTests: XCTestCase {
     ("testUserInitiated", testUserInitiated),
     ("testDefault", testDefault),
     ("testUtility", testUtility),
-    ("testBackground", testBackground),
+//    ("testBackground", testBackground),
     ("testImmediate", testImmediate),
     ("testCustomQueue", testCustomQueue),
     ("testCustomQoS", testCustomQoS),
@@ -87,14 +87,14 @@ class ExecutorTests: XCTestCase {
     self.waitForExpectations(timeout: 0.1)
   }
 
-  func testBackground() {
-    let expectation = self.expectation(description: "executed")
-    Executor.background.execute {
-      expectation.fulfill()
-      assert(qos: .background)
-    }
-    self.waitForExpectations(timeout: 0.1)
-  }
+//  func testBackground() {
+//    let expectation = self.expectation(description: "executed")
+//    Executor.background.execute {
+//      expectation.fulfill()
+//      assert(qos: .background)
+//    }
+//    self.waitForExpectations(timeout: 0.1)
+//  }
 
   func testImmediate() {
     let expectation = self.expectation(description: "executed")
