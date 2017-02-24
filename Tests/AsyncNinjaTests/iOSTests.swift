@@ -28,73 +28,81 @@
 
   class iOSTests: XCTestCase {
     static let allTests = [
-      ("testUIViewAlpha", testUIViewAlpha),
-      ("testUIViewIsHidden", testUIViewIsHidden),
-      ("testUIViewIsOpaque", testUIViewIsOpaque),
-      ("testUIViewIsUserInteractionEnabled", testUIViewIsUserInteractionEnabled),
-      ("testUIControlIsEnabled", testUIControlIsEnabled),
-      ("testUIControlIsSelected", testUIControlIsSelected),
-      ("testUIViewControllerTitle", testUIViewControllerTitle),
+      ("testUIView", testUIView),
+      ("testUIControl", testUIControl),
+      ("testUITextField", testUITextField),
+      ("testUIViewController", testUIViewController),
       ]
 
-    let cgFloatFixture: [CGFloat] = [0.0, 0.0, 0.3, 0.5, 0.5, 1.0, 1.0]
-    let boolFixture: [Bool] = [true, true, false, false, true]
-    let stringsAndNilsFixture: [String?] = ["1", nil, "1", "1", "2", "2", nil, nil, "3", "1", "4"]
+    static let cgFloatFixture: [CGFloat] = [0.0, 0.0, 0.3, 0.5, 0.5, 1.0, 1.0]
+    static let boolFixture: [Bool] = [true, true, false, false, true]
+    static let stringsAndNilsFixture: [String?] = ["1", nil, "1", "1", "2", "2", nil, nil, "3", "1", "4"]
+    static let stringsFixture: [String] = stringsAndNilsFixture.flatMap { $0 }
+    static let attributedStringsAndNilsFixture: [NSAttributedString?] = [
+      NSAttributedString(string: "1"),
+      nil,
+      NSAttributedString(string: "1"),
+      NSAttributedString(string: "1"),
+      NSAttributedString(string: "2"),
+      NSAttributedString(string: "2"),
+      nil,
+      nil,
+      NSAttributedString(string: "3"),
+      NSAttributedString(string: "1"),
+      NSAttributedString(string: "4")
+    ]
+    static let attributedStringsFixture: [NSAttributedString] = attributedStringsAndNilsFixture.flatMap { $0 }
 
-    func testUIViewAlpha() {
+    func testUIView() {
       let object = UIView()
       self.testUpdatableProperty(updatable: object.rp.alpha,
                                  object: object,
                                  keyPath: "alpha",
-                                 values: cgFloatFixture)
-    }
-
-    func testUIViewIsHidden() {
-      let object = UIView()
+                                 values: iOSTests.cgFloatFixture)
       self.testUpdatableProperty(updatable: object.rp.isHidden,
                                  object: object,
                                  keyPath: "hidden",
-                                 values: boolFixture)
-    }
-
-    func testUIViewIsOpaque() {
-      let object = UIView()
+                                 values: iOSTests.boolFixture)
       self.testUpdatableProperty(updatable: object.rp.isOpaque,
                                  object: object,
                                  keyPath: "opaque",
-                                 values: boolFixture)
-    }
-
-    func testUIViewIsUserInteractionEnabled() {
-      let object = UIView()
+                                 values: iOSTests.boolFixture)
       self.testUpdatableProperty(updatable: object.rp.isUserInteractionEnabled,
                                  object: object,
                                  keyPath: "userInteractionEnabled",
-                                 values: boolFixture)
+                                 values: iOSTests.boolFixture)
     }
 
-    func testUIControlIsEnabled() {
+    func testUIControl() {
       let object = UIControl()
       self.testUpdatableProperty(updatable: object.rp.isEnabled,
                                  object: object,
                                  keyPath: "enabled",
-                                 values: boolFixture)
-    }
-
-    func testUIControlIsSelected() {
-      let object = UIControl()
+                                 values: iOSTests.boolFixture)
       self.testUpdatableProperty(updatable: object.rp.isSelected,
                                  object: object,
                                  keyPath: "selected",
-                                 values: boolFixture)
+                                 values: iOSTests.boolFixture)
     }
 
-    func testUIViewControllerTitle() {
+    func testUITextField() {
+      let object = UITextField()
+      self.testUpdatableProperty(updatable: object.rp.text,
+                                 object: object,
+                                 keyPath: "text",
+                                 values: iOSTests.stringsFixture)
+//      self.testUpdatableProperty(updatable: object.rp.attributedText,
+//                                 object: object,
+//                                 keyPath: "attributedText",
+//                                 values: iOSTests.attributedStringsFixture)
+    }
+
+    func testUIViewController() {
       let object = UIViewController()
       self.testUpdatableProperty(updatable: object.rp.title,
                                  object: object,
                                  keyPath: "title",
-                                 values: stringsAndNilsFixture)
+                                 values: iOSTests.stringsAndNilsFixture)
     }
 
     private func testUpdatableProperty<T: Equatable, Object: NSObject>(
@@ -104,14 +112,14 @@
       values: [T],
       file: StaticString = #file,
       line: UInt = #line) {
-      let settingExpectation = self.expectation(description: "setting test finished")
+      let settingExpectation = self.expectation(description: "setting \(keyPath) test finished")
 
       let runLoop = RunLoop.current
 
       DispatchQueue.global().async {
         for value in values {
           updatable.update(value)
-          usleep(50_000)
+          usleep(10_000)
           DispatchQueue.main.sync {
             XCTAssertEqual(object.value(forKeyPath: keyPath) as? T, value)
           }
@@ -134,7 +142,7 @@
       file: StaticString = #file,
       line: UInt = #line
       ) {
-      let gettingExpectation = self.expectation(description: "getting test finished")
+      let gettingExpectation = self.expectation(description: "getting \(keyPath) test finished")
 
       let runLoop = RunLoop.current
 
@@ -146,7 +154,7 @@
             object.setValue(value, forKeyPath: keyPath)
           }
 
-          usleep(50_000)
+          usleep(10_000)
 
           XCTAssertEqual(updatingIterator.next(), value)
         }
@@ -165,12 +173,12 @@
       values: [T],
       file: StaticString = #file,
       line: UInt = #line) where T.AsyncNinjaWrapped: Equatable {
-      let settingExpectation = self.expectation(description: "setting test finished")
+      let settingExpectation = self.expectation(description: "setting \(keyPath) test finished")
 
       DispatchQueue.global().async {
         for value in values {
           updatable.update(value)
-          usleep(50_000)
+          usleep(10_000)
           DispatchQueue.main.sync {
             let valueWeGot = object.value(forKeyPath: keyPath) as? T
             XCTAssertEqual(valueWeGot?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue)
@@ -193,7 +201,7 @@
       file: StaticString = #file,
       line: UInt = #line)
       where T.AsyncNinjaWrapped: Equatable {
-      let gettingExpectation = self.expectation(description: "getting test finished")
+      let gettingExpectation = self.expectation(description: "getting \(keyPath) test finished")
       DispatchQueue.global().async {
         var updatingIterator = updating.makeIterator()
         let _ = updatingIterator.next() // skip an initial value
@@ -201,7 +209,7 @@
           DispatchQueue.main.sync {
             object.setValue(value, forKeyPath: keyPath)
           }
-          usleep(50_000)
+          usleep(10_000)
           XCTAssertEqual(updatingIterator.next()?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue)
         }
 

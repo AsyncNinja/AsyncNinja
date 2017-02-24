@@ -345,13 +345,13 @@ let searchResults = searchBar.rx.text.orEmpty
 
 #### AsyncNinja
 ```swift
-let searchResults = searchBar.changes(of: "text")
+let searchResults = searchField.rp.text
   .debounce(interval: 0.3)
   .distinct()
   .flatMap(behavior: .keepLatestTransform) { (query) -> Future<[SearchResult]> in
-    guard let query = query, !query.isEmpty
-      else { return .just([]) }
-    return searchGitHub(query: query).recover(with: [])
+    return query.isEmpty
+      ? .just([])
+      : searchGitHub(query: query).recover(with: [])
   }
 ```
 

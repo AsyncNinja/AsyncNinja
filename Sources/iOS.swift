@@ -119,7 +119,49 @@
       return self.object.updatable(for: "state", observationSession: self.observationSession, onNone: .drop)
     }
   }
-  
+
+  public extension ReactiveProperties where Object: UITextField {
+    var text: UpdatableProperty<String> {
+      return self.object.updatable(for: "text", observationSession: self.observationSession, onNone: .drop)
+    }
+
+    var attributedText: UpdatableProperty<NSAttributedString?> {
+      return self.object.updatable(for: "attributedText", observationSession: self.observationSession)
+    }
+
+    var textColor: UpdatableProperty<UIColor?> {
+      return self.object.updatable(for: "textColor", observationSession: self.observationSession)
+    }
+
+    var font: UpdatableProperty<NSTextAlignment> {
+      return self.object.updatable(for: "font", observationSession: self.observationSession, onNone: .drop)
+    }
+
+    var textAlignment: UpdatableProperty<NSTextAlignment> {
+      return self.object.updatable(for: "textAlignment", observationSession: self.observationSession, onNone: .drop)
+    }
+
+    var placeholder: UpdatableProperty<String?> {
+      return self.object.updatable(for: "placeholder", observationSession: self.observationSession)
+    }
+
+    var attributedPlaceholder: UpdatableProperty<NSAttributedString?> {
+      return self.object.updatable(for: "attributedPlaceholder", observationSession: self.observationSession)
+    }
+
+    var background: UpdatableProperty<UIImage?> {
+      return self.object.updatable(for: "background", observationSession: self.observationSession)
+    }
+
+    var disabledBackground: UpdatableProperty<UIImage?> {
+      return self.object.updatable(for: "disabledBackground", observationSession: self.observationSession)
+    }
+
+    var isEditing: Updating<Bool> {
+      return self.object.updatable(for: "disabledBackground", observationSession: self.observationSession, onNone: .drop)
+    }
+  }
+
   public extension ReactiveProperties where Object: UIViewController {
     var title: UpdatableProperty<String?> {
       return self.object.updatable(for: "title", observationSession: self.observationSession)
