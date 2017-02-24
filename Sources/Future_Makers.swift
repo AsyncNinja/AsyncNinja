@@ -303,7 +303,7 @@ private func promise<T>(
   executor.execute(after: timeout) { [weak promise] in
     if cancellationToken?.isCancelled ?? false {
       promise?.cancel()
-    } else {
+    } else if case .some = promise {
       let completion = fallible(block: block)
       promise?.complete(with: completion)
     }
@@ -323,7 +323,7 @@ private func flatPromise<T>(
   cancellationToken?.add(cancellable: promise)
   
   executor.execute(after: timeout) { [weak promise] in
-    guard nil != promise else { return }
+    guard case .some = promise else { return }
     if cancellationToken?.isCancelled ?? false {
       promise?.cancel()
     } else {

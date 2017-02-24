@@ -173,6 +173,8 @@ class ZipFuturesTest: XCTestCase {
     XCTAssertNil(weakFutureA)
     XCTAssertNil(weakFutureB)
     XCTAssertNil(weakFutureAB)
+
+    sleep(1)
   }
   
   func test3Lifetime() {
@@ -202,5 +204,7 @@ class ZipFuturesTest: XCTestCase {
     XCTAssertNil(weakFutureB)
     XCTAssertNil(weakFutureC)
     XCTAssertNil(weakFutureABC)
+
+    sleep(1)
   }
 }
