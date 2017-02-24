@@ -145,7 +145,7 @@ extension DispatchQueue: ExecutorImpl {
   }
 
   fileprivate func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
-    let wallDeadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000_000_000))
+    let wallDeadline = DispatchWallTime.now().adding(seconds: timeout)
     self.asyncAfter(wallDeadline: wallDeadline, execute: block)
   }
 
@@ -160,7 +160,7 @@ fileprivate class ImmediateExecutorImpl: ExecutorImpl {
   }
 
   func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
-    let deadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000_000_000))
+    let deadline = DispatchWallTime.now().adding(seconds: timeout)
     DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
       block()
     }
@@ -184,7 +184,7 @@ fileprivate class HandlerBasedExecutorImpl: ExecutorImpl {
   }
 
   func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
-    let deadline = DispatchWallTime.now() + .nanoseconds(Int(timeout * 1000_000_000))
+    let deadline = DispatchWallTime.now().adding(seconds: timeout)
     DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
       self.asyncNinja_execute(block)
     }

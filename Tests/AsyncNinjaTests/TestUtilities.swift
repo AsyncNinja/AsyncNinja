@@ -97,7 +97,7 @@ func pickInt(max: Int = 100) -> Int {
   #if os(Linux)
     return numericCast(random()) % max
   #elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-    return numericCast(arc4random()) % max
+    return numericCast(arc4random() >> 1) % max
   #else
     fatalError()
   #endif

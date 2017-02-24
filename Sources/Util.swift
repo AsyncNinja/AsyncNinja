@@ -20,6 +20,8 @@
 //  IN THE SOFTWARE.
 //
 
+import Dispatch
+
 extension Dictionary {
   mutating func value(forKey key: Key,
                       orMake makeValue: (Key) throws -> Value
@@ -102,5 +104,25 @@ extension Either where Left: Equatable, Right: Equatable {
     default:
       return false
     }
+  }
+}
+
+extension DispatchTime {
+  func adding(seconds: Double) -> DispatchTime {
+    #if arch(x86_64) || arch(arm64)
+      return self + .nanoseconds(Int(seconds * 1_000_000_000.0))
+    #else
+      return self + .milliseconds(Int(seconds * 1_000.0))
+    #endif
+  }
+}
+
+extension DispatchWallTime {
+  func adding(seconds: Double) -> DispatchWallTime {
+    #if arch(x86_64) || arch(arm64)
+      return self + .nanoseconds(Int(seconds * 1_000_000_000.0))
+    #else
+      return self + .milliseconds(Int(seconds * 1_000.0))
+    #endif
   }
 }

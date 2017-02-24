@@ -384,10 +384,26 @@ public extension Completing {
 
   /// Waits for future to complete and returns completion value
   ///
+  /// - Parameter milliseconds: to wait completion for
+  /// - Returns: completion value or nil if `Future` did not complete in specified timeout
+  func wait(milliseconds: Int) -> Fallible<Success>? {
+    return self.wait(timeout: DispatchTime.now() + .milliseconds(milliseconds))
+  }
+
+  /// Waits for future to complete and returns completion value
+  ///
+  /// - Parameter microseconds: to wait completion for
+  /// - Returns: completion value or nil if `Future` did not complete in specified timeout
+  func wait(microseconds: Int) -> Fallible<Success>? {
+    return self.wait(timeout: DispatchTime.now() + .microseconds(microseconds))
+  }
+
+  /// Waits for future to complete and returns completion value
+  ///
   /// - Parameter seconds: to wait completion for
   /// - Returns: completion value or nil if `Future` did not complete in specified timeout
   func wait(seconds: Double) -> Fallible<Success>? {
-    return self.wait(nanoseconds: Int(seconds * 1_000_000_000))
+    return self.wait(wallTimeout: DispatchWallTime.now().adding(seconds: seconds))
   }
 }
 
