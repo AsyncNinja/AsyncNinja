@@ -1,3 +1,9 @@
+# 1.0.0-beta4
+* x32 targets fixed
+* `ProducerProxy` added
+* binding `Channel` to `ProducerProxy` added
+* more generic `Channel.distinct()` added
+
 # 1.0.0-beta3
 * improvements using `OptionalAdaptor`
 * fixed locking within `CachableValue`
