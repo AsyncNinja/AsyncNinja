@@ -22,11 +22,6 @@
 
 import Dispatch
 
-public protocol Completable: BaseCompletable {
-  /// Required initializer
-  init()
-}
-
 /// A protocol for objects that can be manually completed
 public protocol BaseCompletable: Completing, Cancellable {
   associatedtype CompletingType: Completing
@@ -116,4 +111,10 @@ public extension BaseCompletable where Success: AsyncNinjaOptionalAdaptor {
     }
     self.insertHandlerToReleasePool(handler)
   }
+}
+
+/// A protocol for objects that can be manually completed
+public protocol Completable: BaseCompletable {
+  /// Required initializer
+  init()
 }

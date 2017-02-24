@@ -167,12 +167,26 @@ public extension Channel {
     }
   }
   
+  /// Binds events to a specified ProducerProxy
+  ///
+  /// - Parameters:
+  ///   - producerProxy: to bind to
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
   func bindEvents(to producerProxy: ProducerProxy<Update, Success>, cancellationToken: CancellationToken? = nil) {
     self.attach(producer: producerProxy, executor: .immediate, cancellationToken: cancellationToken) { (event, producer) in
       producer.apply(event)
     }
   }
 
+  /// Binds updates to a specified UpdatableProperty
+  ///
+  /// - Parameters:
+  ///   - updatableProperty: to bind to
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
   func bind(to updatableProperty: UpdatableProperty<Update>, cancellationToken: CancellationToken? = nil) {
     self.attach(producer: updatableProperty, executor: .immediate, cancellationToken: cancellationToken) { (event, producer) in
       switch event {

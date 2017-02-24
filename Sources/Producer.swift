@@ -25,6 +25,7 @@ import Dispatch
 public typealias Updatable<T> = Producer<T, Void>
 public typealias UpdatableProperty<T> = ProducerProxy<T, Void>
 
+/// Producer that can be manually created
 final public class Producer<Update, Success>: BaseProducer<Update, Success>, Completable {
   /// convenience initializer of Producer. Initializes Producer with default buffer size
   public init() {
@@ -373,6 +374,7 @@ public enum DerivedChannelBufferSize {
 
 // MARK: - ProducerProxy
 
+/// ProducerProxy acts like a producer but is actually a proxy for some operation, e.g. setting and oberving property
 public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
   private let _updateHandler: (ProducerProxy<Update, Success>, Event) -> Void
   private let _updateExecutor: Executor
@@ -393,12 +395,14 @@ public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
     return super.tryComplete(with: completion)
   }
 
+  /// Calls update handler insted of sending specified Update to the Producer
   override public func update(_ update: Update) {
     _updateExecutor.execute {
       self._updateHandler(self, .update(update))
     }
   }
   
+  /// Calls update handler insted of sending specified Complete to the Producer
   override public func tryComplete(with completion: Fallible<Success>) -> Bool {
     _updateExecutor.execute {
       self._updateHandler(self, .completion(completion))
