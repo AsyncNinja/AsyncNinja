@@ -25,33 +25,16 @@
 
   // MARK: - regular observation
   
-  public extension ExecutionContext where Self: NSObject {
-
-    /// makes channel of changes of value for specified key path
-    ///
-    /// - Parameter keyPath: to observe
-    /// - Parameter observationSession: is an object that helps to control observation
-    /// - Parameter channelBufferSize: size of the buffer within returned channel
-    /// - Returns: channel new values
-    func changes<T>(
-      of keyPath: String,
-      observationSession: ObservationSession? = nil,
-      channelBufferSize: Int = 1
-      ) -> UpdatableProperty<T?> {
-      return changes(of: keyPath, executor: self.executor, observationSession: observationSession, channelBufferSize: channelBufferSize)
-    }
-  }
-  
   public extension Retainer where Self: NSObject {
-    /// makes channel of changes of value for specified key path
+    /// makes an UpdatableProperty for specified key path
     ///
     /// - Parameter keyPath: to observe
     /// - Parameter executor: apply changes on
     /// - Parameter observationSession: is an object that helps to control observation
     /// - Parameter channelBufferSize: size of the buffer within returned channel
     /// - Returns: channel new values
-    func changes<T>(
-      of keyPath: String,
+    func updatable<T>(
+      for keyPath: String,
       executor: Executor,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
@@ -78,23 +61,38 @@
       
       return producer
     }
-
-    /// makes channel of changes of value for specified key path
+    
+    /// makes an UpdatableProperty for specified key path
     ///
     /// - Parameter keyPath: to observe
+    /// - Parameter executor: apply changes on
     /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter placeholder: placeholder for nil value
     /// - Parameter channelBufferSize: size of the buffer within returned channel
-    /// - Returns: channel of pairs (old, new) values
-    func changesOldAndNew<T>(
-      of keyPath: String,
+    /// - Returns: channel new values
+    func updatable<T>(
+      for keyPath: String,
+      executor: Executor,
       observationSession: ObservationSession? = nil,
+      onNone: UpdateWithNoneHandlingPolicy<T>,
       channelBufferSize: Int = 1
-      ) -> Updating<(old: T?, new: T?)> {
-      let producer = Updatable<(old: T?, new: T?)>(bufferSize: channelBufferSize)
+      ) -> UpdatableProperty<T> {
+      let producer = UpdatableProperty<T>(bufferSize: channelBufferSize, updateExecutor: executor) { [weak self] (producerProxy, event) in
+        switch event {
+        case let .update(update):
+          self?.setValue(update, forKey: keyPath)
+        case .completion:
+          nop()
+        }
+      }
       
       let observer = KeyPathObserver(object: self, keyPath: keyPath, options: [.initial, .old, .new], enabled: observationSession?.enabled ?? true) {
         [weak producer] (changes) in
-        producer?.update((old: changes[.oldKey] as? T, new: changes[.newKey] as? T))
+        if let update = changes[.newKey] as? T {
+          producer?.updateWithoutHandling(update)
+        } else if case let .replace(update) = onNone {
+          producer?.updateWithoutHandling(update)
+        }
       }
       
       observationSession?.observers.push(observer)
@@ -111,9 +109,63 @@
     /// - Parameter keyPath: to observe
     /// - Parameter observationSession: is an object that helps to control observation
     /// - Parameter channelBufferSize: size of the buffer within returned channel
-    /// - Returns: channel of changes dictionaries (see Foundation KVO for details)
-    func changesDictionary(
+    /// - Returns: channel of pairs (old, new) values
+    func updating<T>(
+      for keyPath: String,
+      observationSession: ObservationSession? = nil,
+      channelBufferSize: Int = 1
+      ) -> Updating<T?> {
+      return updatingChanges(for: keyPath, options: [.initial, .old, .new], observationSession: observationSession, channelBufferSize: channelBufferSize)
+        .map(executor: .immediate) { $0[.newKey] as? T }
+    }
+
+    /// makes channel of changes of value for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel of pairs (old, new) values
+    func updating<T>(
+      for keyPath: String,
+      observationSession: ObservationSession? = nil,
+      onNone: UpdateWithNoneHandlingPolicy<T>,
+      channelBufferSize: Int = 1
+      ) -> Updating<T> {
+      return updatingChanges(for: keyPath, options: [.initial, .old, .new], observationSession: observationSession, channelBufferSize: channelBufferSize)
+        .flatMap(executor: .immediate) { (changes) -> T? in
+          if let update = changes[.newKey] as? T {
+            return update
+          } else if case let .replace(update) = onNone {
+            return update
+          } else {
+            return nil
+          }
+      }
+    }
+
+    /// makes channel of changes of value for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel of pairs (old, new) values
+    func updatingOldAndNew<T>(
       of keyPath: String,
+      observationSession: ObservationSession? = nil,
+      channelBufferSize: Int = 1
+      ) -> Updating<(old: T?, new: T?)> {
+      return updatingChanges(for: keyPath, options: [.initial, .old, .new], observationSession: observationSession, channelBufferSize: channelBufferSize)
+        .map(executor: .immediate) { (old: $0[.oldKey] as? T, new: $0[.newKey] as? T) }
+    }
+
+    /// makes channel of changes of value for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel of changes dictionaries (see Foundation KVO for details)
+    func updatingChanges(
+      for keyPath: String,
       options: NSKeyValueObservingOptions,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
@@ -132,6 +184,45 @@
       }
 
       return producer
+    }
+  }
+
+  public enum UpdateWithNoneHandlingPolicy<T> {
+    case drop
+    case replace(T)
+  }
+
+  public extension ExecutionContext where Self: NSObject {
+
+    /// makes an UpdatableProperty for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel new values
+    func updatable<T>(
+      for keyPath: String,
+      observationSession: ObservationSession? = nil,
+      channelBufferSize: Int = 1
+      ) -> UpdatableProperty<T?> {
+      return updatable(for: keyPath, executor: self.executor, observationSession: observationSession, channelBufferSize: channelBufferSize)
+    }
+
+    /// makes an UpdatableProperty for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter executor: apply changes on
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter placeholder: placeholder for nil value
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel new values
+    func updatable<T>(
+      for keyPath: String,
+      observationSession: ObservationSession? = nil,
+      onNone: UpdateWithNoneHandlingPolicy<T>,
+      channelBufferSize: Int = 1
+      ) -> UpdatableProperty<T> {
+      return updatable(for: keyPath, executor: self.executor, observationSession: observationSession, onNone: onNone, channelBufferSize: channelBufferSize)
     }
   }
 
@@ -200,5 +291,24 @@
     public init(enabled: Bool = true) {
       self.enabled = enabled
     }
+  }
+
+  public struct ReactiveProperties<Object: NSObjectProtocol> {
+    var object: Object
+    var observationSession: ObservationSession?
+
+    init(object: Object, observationSession: ObservationSession?) {
+      self.object = object
+      self.observationSession = observationSession
+    }
+  }
+
+  public extension NSObjectProtocol {
+    func reactiveProperties(observationSession: ObservationSession? = nil) -> ReactiveProperties<Self> {
+      return ReactiveProperties(object: self, observationSession: observationSession)
+    }
+
+    var rp: ReactiveProperties<Self> { return reactiveProperties() }
+    var rx: ReactiveProperties<Self> { return reactiveProperties() }
   }
 #endif

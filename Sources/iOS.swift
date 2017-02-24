@@ -88,4 +88,41 @@
     }
   }
 
+  public extension ReactiveProperties where Object: UIView {
+    var alpha: UpdatableProperty<CGFloat> {
+      return self.object.updatable(for: "alpha", observationSession: self.observationSession, onNone: .drop)
+    }
+
+    var isHidden: UpdatableProperty<Bool> {
+      return self.object.updatable(for: "hidden", observationSession: self.observationSession, onNone: .drop)
+    }
+
+    var isOpaque: UpdatableProperty<Bool> {
+      return self.object.updatable(for: "opaque", observationSession: self.observationSession, onNone: .drop)
+    }
+
+    var isUserInteractionEnabled: UpdatableProperty<Bool> {
+      return self.object.updatable(for: "userInteractionEnabled", observationSession: self.observationSession, onNone: .drop)
+    }
+  }
+  
+  public extension ReactiveProperties where Object: UIControl {
+    var isEnabled: UpdatableProperty<Bool> {
+      return self.object.updatable(for: "enabled", observationSession: self.observationSession, onNone: .drop)
+    }
+
+    var isSelected: UpdatableProperty<Bool> {
+      return self.object.updatable(for: "selected", observationSession: self.observationSession, onNone: .drop)
+    }
+
+    var state: Updating<UIControlState> {
+      return self.object.updatable(for: "state", observationSession: self.observationSession, onNone: .drop)
+    }
+  }
+  
+  public extension ReactiveProperties where Object: UIViewController {
+    var title: UpdatableProperty<String?> {
+      return self.object.updatable(for: "title", observationSession: self.observationSession)
+    }
+  }
 #endif

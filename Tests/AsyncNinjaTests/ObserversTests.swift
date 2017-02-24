@@ -39,7 +39,7 @@ import Dispatch
       }
 
       let myObject = MyObject()
-      let updatingValues: Updating<Int?> = myObject.changes(of: #keyPath(MyObject.myValue), executor: .main)
+      let updatingValues: Updating<Int?> = myObject.updatable(for: #keyPath(MyObject.myValue), executor: .main)
       var detectedChanges = [Int]()
       updatingValues.onUpdate(executor: .immediate) {
         if let value = $0 {
@@ -61,7 +61,7 @@ import Dispatch
       }
       
       let myObject = MyObject()
-      let updatableProperty: UpdatableProperty<Int?> = myObject.changes(of: #keyPath(MyObject.myValue), executor: .main)
+      let updatableProperty: UpdatableProperty<Int?> = myObject.updatable(for: #keyPath(MyObject.myValue), executor: .main)
       var detectedChanges = [Int]()
       updatableProperty.onUpdate(executor: .main) {
         if let value = $0 {
@@ -90,7 +90,7 @@ import Dispatch
       
       let myObject = MyObject()
       
-      let updatableProperty: UpdatableProperty<Int?> = myObject.changes(of: #keyPath(MyObject.myValue), executor: .main)
+      let updatableProperty: UpdatableProperty<Int?> = myObject.updatable(for: #keyPath(MyObject.myValue), executor: .main)
       var detectedChanges = [Int]()
       updatableProperty.onUpdate(executor: .main) {
         if let value = $0 {
@@ -109,7 +109,7 @@ import Dispatch
       producer.succeed(with: "Done")
 
       let expectation = self.expectation(description: "done")
-      DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + .seconds(1)) {
+      DispatchQueue.global().asyncAfter(deadline: DispatchTime.now().adding(seconds: 1.0)) {
         XCTAssertEqual(detectedChanges, [0, 1, 2, 3, 4])
         expectation.fulfill()
       }
