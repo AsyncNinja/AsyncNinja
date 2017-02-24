@@ -170,6 +170,7 @@
       DispatchQueue.global().async {
         for value in values {
           updatable.update(value)
+          usleep(50_000)
           DispatchQueue.main.sync {
             let valueWeGot = object.value(forKeyPath: keyPath) as? T
             XCTAssertEqual(valueWeGot?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue)
@@ -200,7 +201,7 @@
           DispatchQueue.main.sync {
             object.setValue(value, forKeyPath: keyPath)
           }
-
+          usleep(50_000)
           XCTAssertEqual(updatingIterator.next()?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue)
         }
 

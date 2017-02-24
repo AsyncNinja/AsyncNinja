@@ -37,12 +37,21 @@
       for keyPath: String,
       executor: Executor,
       observationSession: ObservationSession? = nil,
+      allowSettingSameValue: Bool = false,
       channelBufferSize: Int = 1
       ) -> UpdatableProperty<T?> {
       let producer = UpdatableProperty<T?>(bufferSize: channelBufferSize, updateExecutor: executor) { [weak self] (producerProxy, event) in
         switch event {
         case let .update(update):
-          self?.setValue(update, forKey: keyPath)
+          if allowSettingSameValue {
+            self?.setValue(update, forKey: keyPath)
+          } else if let strongSelf = self {
+            let nsObjectUpdate = update.map { $0 as! NSObject }
+            let nsObjectValue = strongSelf.value(forKeyPath: keyPath).map { $0 as! NSObject }
+            if nsObjectUpdate != nsObjectValue {
+              strongSelf.setValue(update, forKey: keyPath)
+            }
+          }
         case .completion:
           nop()
         }
@@ -74,13 +83,22 @@
       for keyPath: String,
       executor: Executor,
       observationSession: ObservationSession? = nil,
+      allowSettingSameValue: Bool = false,
       onNone: UpdateWithNoneHandlingPolicy<T>,
       channelBufferSize: Int = 1
       ) -> UpdatableProperty<T> {
       let producer = UpdatableProperty<T>(bufferSize: channelBufferSize, updateExecutor: executor) { [weak self] (producerProxy, event) in
         switch event {
         case let .update(update):
-          self?.setValue(update, forKey: keyPath)
+          if allowSettingSameValue {
+            self?.setValue(update, forKey: keyPath)
+          } else if let strongSelf = self {
+            let nsObjectUpdate = update as! NSObject
+            let nsObjectValue = strongSelf.value(forKeyPath: keyPath).map { $0 as! NSObject }
+            if nsObjectUpdate != nsObjectValue {
+              strongSelf.setValue(update, forKey: keyPath)
+            }
+          }
         case .completion:
           nop()
         }
@@ -203,9 +221,13 @@
     func updatable<T>(
       for keyPath: String,
       observationSession: ObservationSession? = nil,
+      allowSettingSameValue: Bool = false,
       channelBufferSize: Int = 1
       ) -> UpdatableProperty<T?> {
-      return updatable(for: keyPath, executor: self.executor, observationSession: observationSession, channelBufferSize: channelBufferSize)
+      return updatable(for: keyPath, executor: self.executor,
+                       observationSession: observationSession,
+                       allowSettingSameValue: allowSettingSameValue,
+                       channelBufferSize: channelBufferSize)
     }
 
     /// makes an UpdatableProperty for specified key path
@@ -220,9 +242,13 @@
       for keyPath: String,
       observationSession: ObservationSession? = nil,
       onNone: UpdateWithNoneHandlingPolicy<T>,
+      allowSettingSameValue: Bool = false,
       channelBufferSize: Int = 1
       ) -> UpdatableProperty<T> {
-      return updatable(for: keyPath, executor: self.executor, observationSession: observationSession, onNone: onNone, channelBufferSize: channelBufferSize)
+      return updatable(for: keyPath, executor: self.executor,
+                       observationSession: observationSession,
+                       allowSettingSameValue: allowSettingSameValue,
+                       onNone: onNone, channelBufferSize: channelBufferSize)
     }
   }
 
