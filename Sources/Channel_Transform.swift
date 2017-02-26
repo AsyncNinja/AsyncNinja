@@ -387,7 +387,7 @@ extension Channel where Update: Collection, Update.Iterator.Element: Equatable {
   }
 }
 
-extension Channel where Update: NSObjectProtocol {
+extension Channel where Update: NSObject {
   
   /// Returns channel of distinct update values of original channel.
   /// Works only for collections of equatable values
@@ -412,7 +412,7 @@ extension Channel where Update: NSObjectProtocol {
   }
 }
 
-extension Channel where Update: Collection, Update.Iterator.Element: NSObjectProtocol {
+extension Channel where Update: Collection, Update.Iterator.Element: NSObject {
   
   /// Returns channel of distinct update values of original channel.
   /// Works only for collections of NSObjects values

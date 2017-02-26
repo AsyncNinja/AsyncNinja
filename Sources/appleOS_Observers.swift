@@ -77,6 +77,7 @@
     /// makes an UpdatableProperty for specified key path
     ///
     /// - Parameter keyPath: to observe
+    /// - Parameter onNone: is a policy of handling nil value
     /// - Parameter executor: apply changes on
     /// - Parameter observationSession: is an object that helps to control observation
     /// - Parameter placeholder: placeholder for nil value
@@ -84,11 +85,11 @@
     /// - Returns: channel new values
     func updatable<T>(
       for keyPath: String,
+      onNone: UpdateWithNoneHandlingPolicy<T>,
       executor: Executor,
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
       allowSettingSameValue: Bool = false,
-      onNone: UpdateWithNoneHandlingPolicy<T>,
       channelBufferSize: Int = 1
       ) -> UpdatableProperty<T> {
       let producer = UpdatableProperty<T>(bufferSize: channelBufferSize, updateExecutor: executor) {
@@ -159,10 +160,10 @@
     /// - Returns: channel of pairs (old, new) values
     func updating<T>(
       for keyPath: String,
+      onNone: UpdateWithNoneHandlingPolicy<T>,
       executor: Executor,
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
-      onNone: UpdateWithNoneHandlingPolicy<T>,
       channelBufferSize: Int = 1
       ) -> Updating<T> {
       return updatingChanges(for: keyPath,
@@ -277,18 +278,18 @@
     /// - Returns: channel new values
     func updatable<T>(
       for keyPath: String,
+      onNone: UpdateWithNoneHandlingPolicy<T>,
       from originalExecutor: Executor?,
       observationSession: ObservationSession? = nil,
-      onNone: UpdateWithNoneHandlingPolicy<T>,
       allowSettingSameValue: Bool = false,
       channelBufferSize: Int = 1
       ) -> UpdatableProperty<T> {
       return updatable(for: keyPath,
+                       onNone: onNone,
                        executor: executor,
                        from: originalExecutor,
                        observationSession: observationSession,
                        allowSettingSameValue: allowSettingSameValue,
-                       onNone: onNone,
                        channelBufferSize: channelBufferSize)
     }
 
@@ -319,17 +320,17 @@
     /// - Returns: channel of pairs (old, new) values
     func updating<T>(
       for keyPath: String,
+      onNone: UpdateWithNoneHandlingPolicy<T>,
       from originalExecutor: Executor?,
       observationSession: ObservationSession? = nil,
-      onNone: UpdateWithNoneHandlingPolicy<T>,
       channelBufferSize: Int = 1
       ) -> Updating<T> {
 
       return updating(for: keyPath,
+                      onNone: onNone,
                       executor: executor,
                       from: originalExecutor,
                       observationSession: observationSession,
-                      onNone: onNone,
                       channelBufferSize: channelBufferSize)
     }
   }
@@ -401,28 +402,128 @@
     }
   }
 
-  public struct ReactiveProperties<Object: NSObjectProtocol> {
+  public struct ReactiveProperties<Object: NSObject> where Object: Retainer {
     var object: Object
+    var executor: Executor
     var originalExecutor: Executor?
     var observationSession: ObservationSession?
 
-    init(object: Object, originalExecutor: Executor?, observationSession: ObservationSession?) {
+    init(object: Object, executor: Executor, originalExecutor: Executor?, observationSession: ObservationSession?) {
       self.object = object
+      self.executor = executor
       self.originalExecutor = originalExecutor
       self.observationSession = observationSession
     }
   }
 
-  public extension NSObjectProtocol {
-    func reactiveProperties(from originalExecutor: Executor?, observationSession: ObservationSession? = nil) -> ReactiveProperties<Self> {
-      return ReactiveProperties(object: self, originalExecutor: originalExecutor, observationSession: observationSession)
+  public extension ReactiveProperties {
+    /// makes an UpdatableProperty for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel new values
+    func updatable<T>(
+      for keyPath: String,
+      allowSettingSameValue: Bool = false,
+      channelBufferSize: Int = 1
+      ) -> UpdatableProperty<T?>
+    {
+      return object.updatable(for: keyPath,
+                              executor: executor,
+                              from: originalExecutor,
+                              observationSession: observationSession,
+                              allowSettingSameValue: allowSettingSameValue,
+                              channelBufferSize: channelBufferSize)
     }
 
-    func reactiveProperties(observationSession: ObservationSession? = nil) -> ReactiveProperties<Self> {
-      return reactiveProperties(from: (self as? ExecutionContext)?.executor, observationSession: observationSession)
+    /// makes an UpdatableProperty for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter executor: apply changes on
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter placeholder: placeholder for nil value
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel new values
+    func updatable<T>(
+      for keyPath: String,
+      onNone: UpdateWithNoneHandlingPolicy<T>,
+      allowSettingSameValue: Bool = false,
+      channelBufferSize: Int = 1
+      ) -> UpdatableProperty<T>
+    {
+      return object.updatable(for: keyPath,
+                              onNone: onNone,
+                              executor: executor,
+                              from: originalExecutor,
+                              observationSession: observationSession,
+                              allowSettingSameValue: allowSettingSameValue,
+                              channelBufferSize: channelBufferSize)
     }
 
-    var rp: ReactiveProperties<Self> { return reactiveProperties() }
-    var rx: ReactiveProperties<Self> { return reactiveProperties() }
+    /// makes channel of changes of value for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel of pairs (old, new) values
+    func updating<T>(
+      for keyPath: String,
+      channelBufferSize: Int = 1
+      ) -> Updating<T?>
+    {
+      return object.updating(for: keyPath,
+                             executor: executor,
+                             from: originalExecutor,
+                             observationSession: observationSession,
+                             channelBufferSize: channelBufferSize)
+    }
+
+    /// makes channel of changes of value for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel of pairs (old, new) values
+    func updating<T>(
+      for keyPath: String,
+      onNone: UpdateWithNoneHandlingPolicy<T>,
+      channelBufferSize: Int = 1
+      ) -> Updating<T>
+    {
+      return object.updating(for: keyPath,
+                             onNone: onNone,
+                             executor: executor,
+                             from: originalExecutor,
+                             observationSession: observationSession,
+                             channelBufferSize: channelBufferSize)
+    }
+  }
+
+  public extension Retainer where Self: NSObject {
+    func reactiveProperties(
+      executor: Executor,
+      from originalExecutor: Executor? = nil,
+      observationSession: ObservationSession? = nil
+      ) -> ReactiveProperties<Self> {
+      return ReactiveProperties(object: self,
+                                executor: executor,
+                                originalExecutor: originalExecutor,
+                                observationSession: observationSession)
+    }
+  }
+
+  public extension ExecutionContext where Self: NSObject {
+    func reactiveProperties(
+      from originalExecutor: Executor? = nil,
+      observationSession: ObservationSession? = nil
+      ) -> ReactiveProperties<Self> {
+      return reactiveProperties(executor: executor,
+                                from: executor,
+                                observationSession: observationSession)
+    }
+
+    var rp: ReactiveProperties<Self> { return reactiveProperties(from: executor) }
+    var rx: ReactiveProperties<Self> { return reactiveProperties(from: executor) }
   }
 #endif
