@@ -81,7 +81,7 @@
         sender: sender,
         objectValue: self.control?.objectValue
       )
-      self.producer.update(update)
+      self.producer.update(update, from: .main)
     }
   }
 

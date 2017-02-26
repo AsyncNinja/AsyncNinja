@@ -31,8 +31,10 @@ public protocol Completing: class {
   var completion: Fallible<Success>? { get }
 
   /// **internal use only**
-  func makeCompletionHandler(executor: Executor,
-                             _ block: @escaping (Fallible<Success>) -> Void) -> CompletionHandler?
+  func makeCompletionHandler(
+    executor: Executor,
+    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+    ) -> CompletionHandler?
 
   /// **internal use only**
   func insertToReleasePool(_ releasable: Releasable)
@@ -67,10 +69,11 @@ public extension Completing {
     _ transform: @escaping (Fallible<Success>) throws -> Transformed
     ) -> Future<Transformed> {
     let promise = Promise<Transformed>()
-    let handler = self.makeCompletionHandler(executor: executor) { [weak promise] (completion) -> Void in
+    let handler = self.makeCompletionHandler(executor: executor) {
+      [weak promise] (completion, originalExecutor) -> Void in
       guard case .some = promise else { return }
       let transformedValue = fallible { try transform(completion) }
-      promise?.complete(with: transformedValue )
+      promise?.complete(with: transformedValue, from: originalExecutor)
     }
     promise.insertHandlerToReleasePool(handler)
     return promise
@@ -144,20 +147,15 @@ public extension Completing {
     ) -> Future<Success> {
     let promise = Promise<Success>()
     let handler = self.makeCompletionHandler(executor: executor) {
-      [weak promise] (value) -> Void in
+      [weak promise] (completion, originalExecutor) -> Void in
       guard case .some = promise else { return }
 
-      switch value {
+      switch completion {
       case let .success(success):
-        promise?.succeed(with: success)
+        promise?.succeed(with: success, from: originalExecutor)
       case let .failure(failure):
-        do {
-          let future = try transform(failure)
-          promise?.complete(with: future)
-        }
-        catch {
-          promise?.fail(with: error)
-        }
+        do { promise?.complete(with: try transform(failure)) }
+        catch { promise?.fail(with: error, from: originalExecutor) }
       }
     }
     promise.insertHandlerToReleasePool(handler)
@@ -261,8 +259,18 @@ public extension Completing {
   func onComplete(
     executor: Executor = .primary,
     _ block: @escaping (Fallible<Success>) -> Void) {
+    _onComplete(executor: executor) {
+      (completion, originalExecutor) in
+      block(completion)
+    }
+  }
+
+  func _onComplete(
+    executor: Executor = .primary,
+    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) {
     let handler = self.makeCompletionHandler(executor: executor) {
-      block($0)
+      (completion, originalExecutor) in
+      block(completion, originalExecutor)
     }
     self.insertHandlerToReleasePool(handler)
   }
@@ -273,11 +281,11 @@ public extension Completing {
     _ block: @escaping (Success) -> Void) {
     self.onComplete(executor: executor) { $0.onSuccess(block) }
   }
-  
+
   /// Performs block when failure becomes available.
   func onFailure(
     executor: Executor = .primary,
-                 _ block: @escaping (Swift.Error) -> Void) {
+    _ block: @escaping (Swift.Error) -> Void) {
     self.onComplete(executor: executor) { $0.onFailure(block) }
   }
 }
@@ -293,11 +301,32 @@ public extension Completing {
     // Test: FutureTests.testOnCompleteContextual_ContextAlive
     // Test: FutureTests.testOnCompleteContextual_ContextDead
     let handler = self.makeCompletionHandler(executor: executor ?? context.executor) {
-      [weak context] in
+      [weak context] (completion, executor) in
       guard let context = context else { return }
-      block(context, $0)
+      block(context, completion)
     }
-    
+
+    if let handler = handler {
+      context.releaseOnDeinit(handler)
+    }
+    _onComplete(context: context, executor: executor) {
+      (context, completion, originalExecutor) in
+      block(context, completion)
+    }
+  }
+
+  func _onComplete<C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ block: @escaping (_ context: C, _ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) {
+    // Test: FutureTests.testOnCompleteContextual_ContextAlive
+    // Test: FutureTests.testOnCompleteContextual_ContextDead
+    let handler = self.makeCompletionHandler(executor: executor ?? context.executor) {
+      [weak context] (completion, originalExecutor) in
+      guard let context = context else { return }
+      block(context, completion, originalExecutor)
+    }
+
     if let handler = handler {
       context.releaseOnDeinit(handler)
     }
@@ -309,8 +338,8 @@ public extension Completing {
     executor: Executor? = nil,
     _ block: @escaping (C, Success) -> Void) {
     self.onComplete(context: context, executor: executor) {
-      (context, value) in
-      if let success = value.success {
+      (context, completion) in
+      if let success = completion.success {
         block(context, success)
       }
     }
@@ -322,8 +351,8 @@ public extension Completing {
     Executor? = nil,
     _ block: @escaping (C, Swift.Error) -> Void) {
     self.onComplete(context: context, executor: executor) {
-      (context, value) in
-      if let failure = value.failure {
+      (context, completion) in
+      if let failure = completion.failure {
         block(context, failure)
       }
     }
@@ -342,7 +371,8 @@ public extension Completing {
     var result: Fallible<Success>? = nil
 
     var handler = self.makeCompletionHandler(executor: .immediate) {
-      result = $0
+      (completion, originalExecutor) in
+      result = completion
       sema.signal()
     }
     defer { handler = nil }
@@ -410,13 +440,13 @@ public extension Completing {
 public extension Completing {
 
   /// Returns future that completes after a timeout after completion of self
-  func delayedCompletion(timeout: Double) -> Future<Success> {
+  func delayedCompletion(timeout: Double, on executor: Executor = .primary) -> Future<Success> {
     let promise = Promise<Success>()
     let handler = self.makeCompletionHandler(executor: .immediate) {
-      [weak promise] (value) in
-      Executor.primary.execute(after: timeout) { [weak promise] in
+      [weak promise] (completion, _) in
+      executor.execute(after: timeout) { [weak promise] executor in
         guard let promise = promise else { return }
-        promise.complete(with: value)
+        promise.complete(with: completion, from: executor)
       }
     }
     self.insertHandlerToReleasePool(handler)

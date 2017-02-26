@@ -27,8 +27,11 @@
   public extension Executor {
 
     /// Convenience function that makes executor from `OperationQueue`
-    static func operationQueue(_ queue: OperationQueue) -> Executor {
-      return Executor(handler: queue.addOperation)
+    static func operationQueue(
+      _ queue: OperationQueue,
+      isSerial: Bool = false,
+      alwaysAsync: Bool = false) -> Executor {
+      return Executor(isSerial: isSerial, alwaysAsync: alwaysAsync, handler: queue.addOperation)
     }
   }
 
@@ -123,15 +126,15 @@
       let task = makeTask { [weak promise] (data, response, error) in
         guard let promise = promise else { return }
         guard let error = error else {
-          promise.succeed(with: (data, response!))
+          promise.succeed(with: (data, response!), from: nil)
           return
         }
 
         if let cancellationRepresentable = error as? CancellationRepresentableError,
           cancellationRepresentable.representsCancellation {
-          promise.fail(with: AsyncNinjaError.cancelled)
+          promise.fail(with: AsyncNinjaError.cancelled, from: nil)
         } else {
-          promise.fail(with: error)
+          promise.fail(with: error, from: nil)
         }
       }
 

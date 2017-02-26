@@ -32,9 +32,9 @@ public protocol BaseCompletable: Completing, Cancellable {
   /// - Parameter completion: value to compete `Completing` with
   /// - Returns: true if this call completed future
   @discardableResult
-  func tryComplete(with completion: Fallible<Success>) -> Bool
+  func tryComplete(with completion: Fallible<Success>, from originalExecutor: Executor?) -> Bool
 
-  /// Shorthand to tryComplete that does not return value
+  /// Completes with a completion of passed `CompletingType`
   func complete(with completion: CompletingType)
 
   /// **internal use only**
@@ -42,58 +42,64 @@ public protocol BaseCompletable: Completing, Cancellable {
 }
 
 public extension BaseCompletable {
-  /// Completes promise when specified future completes.
+  /// Completes completable when specified completing completes.
   /// `self` will retain specified future until it`s completion
   func complete<T: Completing>(with completing: T) where T.Success == Success {
-    let handler = completing.makeCompletionHandler(executor: .immediate) { [weak self] in
-      self?.complete(with: $0)
+    let handler = completing.makeCompletionHandler(executor: .immediate) {
+      [weak self] (completion, originalExecutor) in
+      self?.complete(with: completion, from: originalExecutor)
     }
     self.insertHandlerToReleasePool(handler)
   }
 
   /// Shorthand to tryComplete(with:) that does not return value
-  func complete(with completion: Fallible<Success>) {
-    self.tryComplete(with: completion)
+  func complete(with completion: Fallible<Success>, from originalExecutor: Executor? = nil) {
+    self.tryComplete(with: completion, from: originalExecutor)
   }
 
   /// Tries to complete self with success vlue
   @discardableResult
-  func trySucceed(with success: Success) -> Bool {
-    return self.tryComplete(with: Fallible(success: success))
+  func trySucceed(with success: Success, from originalExecutor: Executor? = nil) -> Bool {
+    return self.tryComplete(with: Fallible(success: success), from: originalExecutor)
   }
 
   /// Shorthand to trySucceed(with:) that does not return value
-  func succeed(with success: Success) {
-    self.complete(with: Fallible(success: success))
+  func succeed(with success: Success, from originalExecutor: Executor? = nil) {
+    self.complete(with: Fallible(success: success), from: originalExecutor)
   }
 
   /// Tries to complete self with failure vlue
   @discardableResult
-  public func tryFail(with failure: Swift.Error) -> Bool {
-    return self.tryComplete(with: Fallible(failure: failure))
+  public func tryFail(with failure: Swift.Error, from originalExecutor: Executor? = nil) -> Bool {
+    return self.tryComplete(with: Fallible(failure: failure), from: originalExecutor)
   }
 
   /// Shorthand to tryFail(with:) that does not return value
-  public func fail(with failure: Swift.Error) {
-    self.complete(with: Fallible(failure: failure))
+  public func fail(with failure: Swift.Error, from originalExecutor: Executor? = nil) {
+    self.complete(with: Fallible(failure: failure), from: originalExecutor)
   }
 
   /// Completes with cancellation (AsyncNinjaError.cancelled)
   public func cancel() {
-    self.fail(with: AsyncNinjaError.cancelled)
+    self.fail(with: AsyncNinjaError.cancelled, from: nil)
+  }
+
+  /// Completes with cancellation (AsyncNinjaError.cancelled)
+  public func cancel(from originalExecutor: Executor? = nil) {
+    self.fail(with: AsyncNinjaError.cancelled, from: originalExecutor)
   }
 
   /// Completes with error of deallocated context (AsyncNinjaError.contextDeallocated)
-  func cancelBecauseOfDeallocatedContext() {
-    self.fail(with: AsyncNinjaError.contextDeallocated)
+  func cancelBecauseOfDeallocatedContext(from originalExecutor: Executor? = nil) {
+    self.fail(with: AsyncNinjaError.contextDeallocated, from: originalExecutor)
   }
 }
 
 extension BaseCompletable where Success == Void {
 
   /// Convenience method succeeds mutable with void value
-  public func succeed() {
-    self.succeed(with: ())
+  public func succeed(from originalExecutor: Executor? = nil) {
+    self.succeed(with: (), from: originalExecutor)
   }
 }
 
@@ -101,12 +107,13 @@ public extension BaseCompletable where Success: AsyncNinjaOptionalAdaptor {
   /// Completes promise when specified future completes.
   /// `self` will retain specified future until it`s completion
   func complete<T: Completing>(with completing: T) where T.Success == Success.AsyncNinjaWrapped {
-    let handler = completing.makeCompletionHandler(executor: .immediate) { [weak self] in
-      switch $0 {
+    let handler = completing.makeCompletionHandler(executor: .immediate) {
+      [weak self] (completion, originalExecutor) in
+      switch completion {
       case .success(let success):
-        self?.succeed(with: Success(asyncNinjaOptionalValue: success))
+        self?.succeed(with: Success(asyncNinjaOptionalValue: success), from: originalExecutor)
       case .failure(let failure):
-        self?.fail(with: failure)
+        self?.fail(with: failure, from: originalExecutor)
       }
     }
     self.insertHandlerToReleasePool(handler)

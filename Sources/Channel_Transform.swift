@@ -87,7 +87,7 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (value, producer) in
+      (value, producer, originalExecutor) in
       switch value {
       case let .update(update):
         locking.lock()
@@ -97,10 +97,10 @@ public extension Channel {
         
         if let previousUpdate = _previousUpdate {
           let change = (previousUpdate, update)
-          producer.update(change)
+          producer.update(change, from: originalExecutor)
         }
       case let .completion(completion):
-        producer.complete(with: completion)
+        producer.complete(with: completion, from: originalExecutor)
       }
     }
   }
@@ -129,7 +129,7 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (value, producer) in
+      (value, producer, originalExecutor) in
       locking.lock()
       
       switch value {
@@ -139,7 +139,7 @@ public extension Channel {
           let localBuffer = buffer
           buffer.removeAll(keepingCapacity: true)
           locking.unlock()
-          producer.update(localBuffer)
+          producer.update(localBuffer, from: originalExecutor)
         } else {
           locking.unlock()
         }
@@ -149,9 +149,9 @@ public extension Channel {
         locking.unlock()
         
         if !localBuffer.isEmpty {
-          producer.update(localBuffer)
+          producer.update(localBuffer, from: originalExecutor)
         }
-        producer.complete(with: completion)
+        producer.complete(with: completion, from: originalExecutor)
       }
     }
   }
@@ -168,6 +168,7 @@ public extension Channel {
   ///     an extended buffering options of returned channel
   /// - Returns: delayed channel
   func delayedUpdate(timeout: Double,
+                     delayingExecutor: Executor = .primary,
                      cancellationToken: CancellationToken? = nil,
                      bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
@@ -175,10 +176,9 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (event: Event, producer: BaseProducer<Update, Success>) -> Void in
-      Executor.primary.execute(after: timeout) { [weak producer] in
-        guard let producer = producer else { return }
-        producer.apply(event)
+      (event: Event, producer: BaseProducer<Update, Success>, originalExecutor: Executor) -> Void in
+      delayingExecutor.execute(after: timeout) { [weak producer] (originalExecutor) in
+        producer?.apply(event, from: originalExecutor)
       }
     }
   }
@@ -198,6 +198,7 @@ public extension Channel {
   func debounce(deadline: DispatchTime = DispatchTime.now(),
                 interval: Double,
                 leeway: DispatchTimeInterval? = nil,
+                qos: DispatchQoS.QoSClass = .default,
                 cancellationToken: CancellationToken? = nil,
                 bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
@@ -208,8 +209,10 @@ public extension Channel {
     var locking = makeLocking()
     var latestUpdate: Update? = nil
     var didSendFirstUpdate = false
-    
-    let timer = DispatchSource.makeTimerSource()
+
+    let queue = DispatchQueue.global(qos: qos)
+    let executor = Executor.queue(queue)
+    let timer = DispatchSource.makeTimerSource(queue: queue)
     if let leeway = leeway {
       timer.scheduleRepeating(deadline: DispatchTime.now(), interval: interval, leeway: leeway)
     } else {
@@ -221,7 +224,7 @@ public extension Channel {
       if let update = latestUpdate {
         latestUpdate = nil
         locking.unlock()
-        producer?.update(update)
+        producer?.update(update, from: executor)
       } else {
         locking.unlock()
       }
@@ -231,7 +234,7 @@ public extension Channel {
     producer.insertToReleasePool(timer)
     
     let handler = self.makeHandler(executor: .immediate) {
-      [weak producer] (event) in
+      [weak producer] (event, originalExecutor) in
       
       locking.lock()
       defer { locking.unlock() }
@@ -239,16 +242,16 @@ public extension Channel {
       switch event {
       case let .completion(completion):
         if let update = latestUpdate {
-          producer?.update(update)
+          producer?.update(update, from: originalExecutor)
           latestUpdate = nil
         }
-        producer?.complete(with: completion)
+        producer?.complete(with: completion, from: originalExecutor)
       case let .update(update):
         if didSendFirstUpdate {
           latestUpdate = update
         } else {
           didSendFirstUpdate = true
-          producer?.update(update)
+          producer?.update(update, from: originalExecutor)
         }
       }
     }
@@ -287,7 +290,7 @@ extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (value, producer) in
+      (value, producer, originalExecutor) in
       switch value {
       case let .update(update):
         locking.lock()
@@ -298,13 +301,13 @@ extension Channel {
         
         if let previousUpdate = _previousUpdate {
           if !isEqual(previousUpdate, update) {
-            producer.update(update)
+            producer.update(update, from: originalExecutor)
           }
         } else {
-          producer.update(update)
+          producer.update(update, from: originalExecutor)
         }
       case let .completion(completion):
-        producer.complete(with: completion)
+        producer.complete(with: completion, from: originalExecutor)
       }
     }
   }

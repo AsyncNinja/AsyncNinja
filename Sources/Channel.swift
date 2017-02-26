@@ -42,26 +42,35 @@ public class Channel<Update, Success>: Completing, Sequence {
   init() { }
 
   /// **internal use only**
-  final public func makeCompletionHandler(executor: Executor,
-                                          _ block: @escaping (Fallible<Success>) -> Void
+  final public func makeCompletionHandler(
+    executor: Executor,
+    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
     ) -> Handler? {
     return self.makeHandler(executor: executor) {
-      if case .completion(let value) = $0 { block(value) }
+      (event, originalExecutor) in
+      if case .completion(let completion) = event {
+        block(completion, originalExecutor)
+      }
     }
   }
 
   /// **internal use only**
-  final public func makeUpdateHandler(executor: Executor,
-                                        _ block: @escaping (Update) -> Void
+  final public func makeUpdateHandler(
+    executor: Executor,
+    _ block: @escaping (_ update: Update, _ originalExecutor: Executor) -> Void
     ) -> Handler? {
     return self.makeHandler(executor: executor) {
-      if case .update(let value) = $0 { block(value) }
+      (event, originalExecutor) in
+      if case .update(let update) = event {
+        block(update, originalExecutor)
+      }
     }
   }
 
   /// **internal use only**
-  public func makeHandler(executor: Executor,
-                          _ block: @escaping (Event) -> Void) -> Handler? {
+  public func makeHandler(
+    executor: Executor,
+    _ block: @escaping (_ event: Event, _ originalExecutor: Executor) -> Void) -> Handler? {
     assertAbstract()
   }
 
@@ -116,12 +125,15 @@ public extension Channel {
   ///   - executor: to execute block on
   ///   - block: to execute. Will be called multiple times
   ///   - event: received by the channel
-    func onEvent(
-        executor: Executor = .primary,
-        _ block: @escaping (_ event: Event) -> Void) {
-        let handler = self.makeHandler(executor: executor, block)
-        self.insertHandlerToReleasePool(handler)
+  func onEvent(
+    executor: Executor = .primary,
+    _ block: @escaping (_ event: Event) -> Void) {
+    let handler = self.makeHandler(executor: executor) {
+      (event, originalExecutor) in
+      block(event)
     }
+    self.insertHandlerToReleasePool(handler)
+  }
 
   /// Subscribes for buffered and new values (both update and completion) for the channel
   ///
@@ -137,11 +149,12 @@ public extension Channel {
     context: C,
     executor: Executor? = nil,
     _ block: @escaping (_ strongContext: C, _ event: Event) -> Void) {
-    let executor_ = executor ?? context.executor
-    let handler = self.makeHandler(executor: executor_) {
-      [weak context] (value) in
+
+    let handler = self.makeHandler(executor: executor ?? context.executor)
+    {
+      [weak context] (event, originalExecutor) in
       guard let context = context else { return }
-      block(context, value)
+      block(context, event)
     }
 
     if let handler = handler {
@@ -174,9 +187,15 @@ public extension Channel {
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
   ///     an extended cancellation options of returned channel
-  func bindEvents(to producerProxy: ProducerProxy<Update, Success>, cancellationToken: CancellationToken? = nil) {
-    self.attach(producer: producerProxy, executor: .immediate, cancellationToken: cancellationToken) { (event, producer) in
-      producer.apply(event)
+  func bindEvents(
+    to producerProxy: ProducerProxy<Update, Success>,
+    cancellationToken: CancellationToken? = nil) {
+    self.attach(producer: producerProxy,
+                executor: .immediate,
+                cancellationToken: cancellationToken)
+    {
+      (event, producer, originalExecutor) in
+      producer.apply(event, from: originalExecutor)
     }
   }
 
@@ -187,15 +206,21 @@ public extension Channel {
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
   ///     an extended cancellation options of returned channel
-  func bind(to updatableProperty: UpdatableProperty<Update>, cancellationToken: CancellationToken? = nil) {
-    self.attach(producer: updatableProperty, executor: .immediate, cancellationToken: cancellationToken) { (event, producer) in
+  func bind(
+    to updatableProperty: UpdatableProperty<Update>,
+    cancellationToken: CancellationToken? = nil) {
+    self.attach(producer: updatableProperty,
+                executor: .immediate,
+                cancellationToken: cancellationToken)
+    {
+      (event, producer, originalExecutor) in
       switch event {
       case let .update(update):
-        producer.update(update)
+        producer.update(update, from: originalExecutor)
       case let .completion(.failure(failure)):
-        producer.fail(with: failure)
+        producer.fail(with: failure, from: originalExecutor)
       case .completion(.success):
-        producer.succeed()
+        producer.succeed(from: originalExecutor)
       }
     }
   }
@@ -341,21 +366,26 @@ public enum ChannelEvent<Update, Success> {
 /// to provide required memory management behavior
 final public class ChannelHandler<Update, Success> {
   public typealias Event = ChannelEvent<Update, Success>
+  typealias Block = (_ event: Event, _ on: Executor) -> Void
 
   let executor: Executor
-  let block: (Event) -> Void
+  let block: Block
   var owner: Channel<Update, Success>?
 
   /// Designated initializer of ChannelHandler
-  public init(executor: Executor, block: @escaping (Event) -> Void, owner: Channel<Update, Success>) {
+  init(executor: Executor,
+       block: @escaping Block,
+       owner: Channel<Update, Success>) {
     self.executor = executor
     self.block = block
     self.owner = owner
   }
 
-  func handle(_ event: Event) {
-    let block = self.block
-    self.executor.execute { block(event) }
+  func handle(_ value: Event, from originalExecutor: Executor?) {
+    self.executor.execute(from: originalExecutor) {
+      (originalExecutor) in
+      self.block(value, originalExecutor)
+    }
   }
 
   func releaseOwner() {

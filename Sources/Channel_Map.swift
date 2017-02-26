@@ -30,7 +30,7 @@ extension Channel {
     executor: Executor,
     cancellationToken: CancellationToken?,
     bufferSize: DerivedChannelBufferSize,
-    _ onEvent: @escaping (Event, BaseProducer<P, S>) throws -> Void
+    _ onEvent: @escaping (_ event: Event, _ producer: BaseProducer<P, S>, _ originalExecutor: Executor) throws -> Void
     ) -> BaseProducer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<P, S>(bufferSize: bufferSize)
@@ -44,13 +44,13 @@ extension Channel {
     producer: BaseProducer<P, S>,
     executor: Executor,
     cancellationToken: CancellationToken?,
-    _ onEvent: @escaping (Event, BaseProducer<P, S>) throws -> Void)
+    _ onEvent: @escaping (_ event: Event, _ producer: BaseProducer<P, S>, _ originalExecutor: Executor) throws -> Void)
   {
     let handler = self.makeHandler(executor: executor) {
-      [weak producer] (event) in
+      [weak producer] (event, originalExecutor) in
       guard let producer = producer else { return }
-      do { try onEvent(event, producer) }
-      catch { producer.fail(with: error) }
+      do { try onEvent(event, producer, originalExecutor) }
+      catch { producer.fail(with: error, from: originalExecutor) }
     }
 
     producer.insertHandlerToReleasePool(handler)
@@ -63,7 +63,7 @@ extension Channel {
     executor: Executor?,
     cancellationToken: CancellationToken?,
     bufferSize: DerivedChannelBufferSize,
-    _ onEvent: @escaping (C, Event, BaseProducer<P, S>) throws -> Void
+    _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: BaseProducer<P, S>, _ originalExecutor: Executor) throws -> Void
     ) -> BaseProducer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = BaseProducer<P, S>(bufferSize: bufferSize)
@@ -78,14 +78,14 @@ extension Channel {
     context: C,
     executor: Executor?,
     cancellationToken: CancellationToken?,
-    _ onEvent: @escaping (C, Event, BaseProducer<P, S>) throws -> Void)
+    _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: BaseProducer<P, S>, _ originalExecutor: Executor) throws -> Void)
   {
     let executor_ = executor ?? context.executor
     self.attach(producer: producer, executor: executor_, cancellationToken: cancellationToken)
     {
-      [weak context] (event, producer) in
+      [weak context] (event, producer, originalExecutor) in
       guard let context = context else { return }
-      try onEvent(context, event, producer)
+      try onEvent(context, event, producer, originalExecutor)
     }
     
     context.addDependent(completable: producer)
@@ -125,9 +125,9 @@ public extension Channel {
                                  cancellationToken: cancellationToken,
                                  bufferSize: bufferSize)
         {
-            (context, event, producer) in
+            (context, event, producer, originalExecutor) in
             let transformedEvent = try transform(context, event)
-            producer.apply(transformedEvent)
+            producer.apply(transformedEvent, from: originalExecutor)
         }
     }
 
@@ -155,9 +155,9 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (event, producer) in
+      (event, producer, originalExecutor) in
       let transformedEvent = try transform(event)
-      producer.apply(transformedEvent)
+      producer.apply(transformedEvent, from: originalExecutor)
     }
   }
 }
@@ -197,13 +197,13 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (context, value, producer) in
+      (context, value, producer, originalExecutor) in
       switch value {
       case .update(let update):
         let transformedValue = try transform(context, update)
-        producer.update(transformedValue)
+        producer.update(transformedValue, from: originalExecutor)
       case .completion(let completion):
-        producer.complete(with: completion)
+        producer.complete(with: completion, from: originalExecutor)
       }
     }
   }
@@ -236,13 +236,13 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (value, producer) in
+      (value, producer, originalExecutor) in
       switch value {
       case .update(let update):
         let transformedValue = try transform(update)
-        producer.update(transformedValue)
+        producer.update(transformedValue, from: originalExecutor)
       case .completion(let completion):
-        producer.complete(with: completion)
+        producer.complete(with: completion, from: originalExecutor)
       }
     }
   }
@@ -281,14 +281,14 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (context, value, producer) in
+      (context, value, producer, originalExecutor) in
       switch value {
       case .update(let update):
         if let transformedValue = try transform(context, update) {
-          producer.update(transformedValue)
+          producer.update(transformedValue, from: originalExecutor)
         }
       case .completion(let completion):
-        producer.complete(with: completion)
+        producer.complete(with: completion, from: originalExecutor)
       }
     }
   }
@@ -316,14 +316,14 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (value, producer) in
+      (value, producer, originalExecutor) in
       switch value {
       case .update(let update):
         if let transformedValue = try transform(update) {
-          producer.update(transformedValue)
+          producer.update(transformedValue, from: originalExecutor)
         }
       case .completion(let completion):
-        producer.complete(with: completion)
+        producer.complete(with: completion, from: originalExecutor)
       }
     }
   }
@@ -358,12 +358,12 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (context, value, producer) in
+      (context, value, producer, originalExecutor) in
       switch value {
       case .update(let update):
-        try transform(context, update).forEach(producer.update)
+        producer.update(try transform(context, update), from: originalExecutor)
       case .completion(let completion):
-        producer.complete(with: completion)
+        producer.complete(with: completion, from: originalExecutor)
       }
     }
   }
@@ -392,12 +392,12 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (value, producer) in
+      (value, producer, originalExecutor) in
       switch value {
       case .update(let update):
-        try transform(update).forEach(producer.update)
+        producer.update(try transform(update), from: originalExecutor)
       case .completion(let completion):
-        producer.complete(with: completion)
+        producer.complete(with: completion, from: originalExecutor)
       }
     }
   }
@@ -429,16 +429,16 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (context, value, producer) in
+      (context, value, producer, originalExecutor) in
       switch value {
       case .update(let update):
         do {
           if try predicate(context, update) {
-            producer.update(update)
+            producer.update(update, from: originalExecutor)
           }
-        } catch { producer.fail(with: error) }
+        } catch { producer.fail(with: error, from: originalExecutor) }
       case .completion(let completion):
-        producer.complete(with: completion)
+        producer.complete(with: completion, from: originalExecutor)
       }
     }
   }
@@ -468,16 +468,16 @@ public extension Channel {
                              cancellationToken: cancellationToken,
                              bufferSize: bufferSize)
     {
-      (value, producer) in
+      (value, producer, originalExecutor) in
       switch value {
       case .update(let update):
         do {
           if try predicate(update) {
-            producer.update(update)
+            producer.update(update, from: originalExecutor)
           }
-        } catch { producer.fail(with: error) }
+        } catch { producer.fail(with: error, from: originalExecutor) }
       case .completion(let completion):
-        producer.complete(with: completion)
+        producer.complete(with: completion, from: originalExecutor)
       }
     }
   }

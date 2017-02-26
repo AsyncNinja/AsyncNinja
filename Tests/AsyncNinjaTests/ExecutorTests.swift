@@ -44,7 +44,7 @@ class ExecutorTests: XCTestCase {
 
   func testPrimary() {
     let expectation = self.expectation(description: "executed")
-    Executor.primary.execute {
+    Executor.primary.execute(from: nil) { _ in
       expectation.fulfill()
       assert(qos: .default)
     }
@@ -53,7 +53,7 @@ class ExecutorTests: XCTestCase {
 
   func testUserInteractive() {
     let expectation = self.expectation(description: "executed")
-    Executor.userInteractive.execute {
+    Executor.userInteractive.execute(from: nil) { _ in
       expectation.fulfill()
       assert(qos: .userInteractive)
     }
@@ -62,7 +62,7 @@ class ExecutorTests: XCTestCase {
 
   func testUserInitiated() {
     let expectation = self.expectation(description: "executed")
-    Executor.userInitiated.execute {
+    Executor.userInitiated.execute(from: nil) { _ in
       expectation.fulfill()
       assert(qos: .userInitiated)
     }
@@ -71,7 +71,7 @@ class ExecutorTests: XCTestCase {
 
   func testDefault() {
     let expectation = self.expectation(description: "executed")
-    Executor.default.execute {
+    Executor.default.execute(from: nil) { _ in
       expectation.fulfill()
       assert(qos: .default)
     }
@@ -80,7 +80,7 @@ class ExecutorTests: XCTestCase {
 
   func testUtility() {
     let expectation = self.expectation(description: "executed")
-    Executor.utility.execute {
+    Executor.utility.execute(from: nil) { _ in
       expectation.fulfill()
       assert(qos: .utility)
     }
@@ -98,7 +98,7 @@ class ExecutorTests: XCTestCase {
 
   func testImmediate() {
     let expectation = self.expectation(description: "executed")
-    Executor.immediate.execute {
+    Executor.immediate.execute(from: nil) { _ in
       expectation.fulfill()
       assert(on: .main)
     }
@@ -108,7 +108,7 @@ class ExecutorTests: XCTestCase {
   func testCustomQueue() {
     let queue = DispatchQueue(label: "test")
     let expectation = self.expectation(description: "executed")
-    Executor.queue(queue).execute {
+    Executor.queue(queue).execute(from: nil) { _ in
       expectation.fulfill()
       assert(on: queue)
     }
@@ -118,7 +118,7 @@ class ExecutorTests: XCTestCase {
   func testCustomQoS() {
     let qos = pickQoS()
     let expectation = self.expectation(description: "executed")
-    Executor.queue(qos).execute {
+    Executor.queue(qos).execute(from: nil) { _ in
       expectation.fulfill()
       assert(qos: qos)
     }
@@ -131,7 +131,7 @@ class ExecutorTests: XCTestCase {
     }
 
     let expectation = self.expectation(description: "executed")
-    Executor(handler: execute).execute {
+    Executor(handler: execute).execute(from: nil) { _ in
       expectation.fulfill()
       assert(on: .main)
     }

@@ -41,7 +41,7 @@ public class Future<Success>: Completing {
   /// **Internal use only**.
   public func makeCompletionHandler(
     executor: Executor,
-    _ block: @escaping (Fallible<Success>) -> Void) -> CompletionHandler? {
+    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) -> CompletionHandler? {
     assertAbstract()
   }
 
@@ -182,17 +182,17 @@ public extension Future where Success: Completing {
     // Test: FutureTests.testFlatten_InnerFailure
     let promise = Promise<Success.Success>()
     let handler = self.makeCompletionHandler(executor: .immediate) {
-      [weak promise] (failure) in
+      [weak promise] (failure, originalExecutor) in
       guard let promise = promise else { return }
       switch failure {
       case .success(let future):
         let handler = future.makeCompletionHandler(executor: .immediate) {
-          [weak promise] (completion) -> Void in
-          promise?.complete(with: completion)
+          [weak promise] (completion, originalExecutor) -> Void in
+          promise?.complete(with: completion, from: originalExecutor)
         }
         promise.insertHandlerToReleasePool(handler)
       case .failure(let error):
-        promise.fail(with: error)
+        promise.fail(with: error, from: originalExecutor)
       }
     }
 
@@ -207,13 +207,18 @@ public extension DispatchGroup {
   /// Makes future from of `DispatchGroups`'s notify after balancing all enters and leaves
   var completionFuture: Future<Void> {
     // Test: FutureTests.testGroupCompletionFuture
+    return completionFuture(executor: .primary)
+  }
+
+  func completionFuture(executor: Executor = .primary) -> Future<Void> {
     let promise = Promise<Void>()
-    self.notify(queue: DispatchQueue.global()) { [weak promise] in
-      promise?.succeed(with: Void())
+    let executor_ = executor.isDispatchQueueExecutor ? executor : .primary
+    self.notify(queue: executor_.dispatchQueue!) { [weak promise] in
+      promise?.succeed(with: (), from: executor_)
     }
     return promise
   }
-  
+
   /// Convenience method that leaves group on completion of provided Future or Channel
   func leaveOnComplete<T: Completing>(of completable: T) {
     completable.onComplete(executor: .immediate) { _ in self.leave() }
@@ -225,12 +230,13 @@ public extension DispatchGroup {
 /// Each subscription to a future value will be expressed in such handler.
 /// Future will accumulate handlers until completion or deallocacion.
 public class FutureHandler<Success> {
+  typealias Block = (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
   let executor: Executor
-  let block: (Fallible<Success>) -> Void
+  let block: Block
   var owner: Future<Success>?
 
   init(executor: Executor,
-       block: @escaping (Fallible<Success>) -> Void,
+       block: @escaping Block,
        owner: Future<Success>)
   {
     self.executor = executor
@@ -238,8 +244,11 @@ public class FutureHandler<Success> {
     self.owner = owner
   }
 
-  func handle(_ value: Fallible<Success>) {
-    self.executor.execute { self.block(value) }
+  func handle(_ value: Fallible<Success>, from originalExecutor: Executor?) {
+    self.executor.execute(from: originalExecutor) {
+      (originalExecutor) in
+      self.block(value, originalExecutor)
+    }
   }
 
   func releaseOwner() {

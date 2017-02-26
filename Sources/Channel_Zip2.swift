@@ -39,30 +39,30 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   func makeHandlerBlock<Update, Success>(
     updateHandler: @escaping (Update) -> (PA, PB)?,
     successHandler: @escaping (Success) -> (SA, SB)?
-    ) -> (ChannelEvent<Update, Success>) -> Void {
+    ) -> (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void {
     return {
-      [weak producer] (event) in
+      [weak producer] (event, originalExecutor) in
       switch event {
       case let .update(update):
         locking.lock()
         defer { locking.unlock() }
         if let updateAB = updateHandler(update) {
-          producer?.update(updateAB)
+          producer?.update(updateAB, from: originalExecutor)
         }
       case let .completion(.failure(error)):
-        producer?.fail(with: error)
+        producer?.fail(with: error, from: originalExecutor)
       case let .completion(.success(localSuccess)):
         locking.lock()
         defer { locking.unlock() }
         if let success = successHandler(localSuccess) {
-          producer?.succeed(with: success)
+          producer?.succeed(with: success, from: originalExecutor)
         }
       }
     }
   }
 
   do {
-    let handlerBlockA: (ChannelEvent<PA, SA>) -> Void = makeHandlerBlock(
+    let handlerBlockA: (_ event: ChannelEvent<PA, SA>, _ originalExecutor: Executor) -> Void = makeHandlerBlock(
       updateHandler: {
         if let updateB = queueOfUpdates.first?.right {
           let _ = queueOfUpdates.pop()
@@ -82,7 +82,7 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   }
 
   do {
-    let handlerBlockB: (ChannelEvent<PB, SB>) -> Void = makeHandlerBlock(
+    let handlerBlockB: (_ event: ChannelEvent<PB, SB>, _ originalExecutor: Executor) -> Void = makeHandlerBlock(
       updateHandler: {
         if let updateA = queueOfUpdates.first?.left {
           let _ = queueOfUpdates.pop()

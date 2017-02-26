@@ -56,10 +56,13 @@ public class Cache<Key: Hashable, T: Completable, Context: ExecutionContext> {
   ///   - mustStartHandlingMiss: `true` if handling miss is allowed. `false` is useful if you want to use value if there is one and do not want to handle miss.
   ///   - mustInvalidateOldValue: `true` if previous value may not be used.
   /// - Returns: `Future` of `Channel`
-  public func value(forKey key: Key, mustStartHandlingMiss: Bool = true, mustInvalidateOldValue: Bool = false) -> T.CompletingType {
+  public func value(forKey key: Key,
+                    mustStartHandlingMiss: Bool = true,
+                    mustInvalidateOldValue: Bool = false,
+                    from originalExecutor: Executor? = nil) -> T.CompletingType {
     guard let context = _context else {
       let completing = T()
-      completing.fail(with: AsyncNinjaError.contextDeallocated)
+      completing.fail(with: AsyncNinjaError.contextDeallocated, from: originalExecutor)
       return completing as! T.CompletingType
     }
 
@@ -74,7 +77,9 @@ public class Cache<Key: Hashable, T: Completable, Context: ExecutionContext> {
     }
     return _cachedValuesByKey
       .value(forKey: key, orMake: makeCachableValue)
-      .value(mustStartHandlingMiss: mustStartHandlingMiss, mustInvalidateOldValue: mustInvalidateOldValue)
+      .value(mustStartHandlingMiss: mustStartHandlingMiss,
+             mustInvalidateOldValue: mustInvalidateOldValue,
+             from: originalExecutor)
   }
 
   /// Invalidates cached value for specified key

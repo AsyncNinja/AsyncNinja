@@ -50,7 +50,7 @@ public extension Channel {
 
     do {
       let handler = makeHandler(executor: .immediate) {
-        [weak producer] (event) in
+        [weak producer] (event, originalExecutor) in
         locking.lock()
         defer { locking.unlock() }
 
@@ -62,12 +62,12 @@ public extension Channel {
           case let .success(localLeftSuccess):
             if let localRightSuccess = rightSuccess {
               let success = (localLeftSuccess, localRightSuccess)
-              producer?.succeed(with: success)
+              producer?.succeed(with: success, from: originalExecutor)
             } else {
               leftSuccess = localLeftSuccess
             }
           case let .failure(error):
-            producer?.fail(with: error)
+            producer?.fail(with: error, from: originalExecutor)
           }
         }
       }
@@ -77,14 +77,14 @@ public extension Channel {
 
     do {
       let handler = samplerChannel.makeHandler(executor: .immediate) {
-        [weak producer] (value) in
+        [weak producer] (event, originalExecutor) in
         locking.lock()
         defer { locking.unlock() }
 
-        switch value {
+        switch event {
         case let .update(localRightUpdate):
           if let localLeftUpdate = latestLeftUpdate {
-            producer?.update((localLeftUpdate, localRightUpdate))
+            producer?.update((localLeftUpdate, localRightUpdate), from: originalExecutor)
             latestLeftUpdate = nil
           }
         case let .completion(rightCompletion):
@@ -92,12 +92,12 @@ public extension Channel {
           case let .success(localRightSuccess):
             if let localLeftSuccess = leftSuccess {
               let success = (localLeftSuccess, localRightSuccess)
-              producer?.succeed(with: success)
+              producer?.succeed(with: success, from: originalExecutor)
             } else {
               rightSuccess = localRightSuccess
             }
           case let .failure(error):
-            producer?.fail(with: error)
+            producer?.fail(with: error, from: originalExecutor)
           }
         }
       }

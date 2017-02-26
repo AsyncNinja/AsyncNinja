@@ -73,7 +73,7 @@ public extension ExecutionContext {
   ///   - strongSelf: is `ExecutionContext` restored from weak reference of self
   func async(cancellationToken: CancellationToken? = nil,
              block: @escaping (_ strongContext: Self) -> Void) {
-    self.executor.execute { [weak self] in
+    self.executor.execute(from: nil) { [weak self] (originalExecutor) in
       guard let strongSelf = self else { return }
       block(strongSelf)
     }
@@ -88,7 +88,7 @@ public extension ExecutionContext {
   ///   - strongSelf: is `ExecutionContext` restored from weak reference of self
   func after(_ timeout: Double, cancellationToken: CancellationToken? = nil,
              block: @escaping (_ strongContext: Self) -> Void) {
-    self.executor.execute(after: timeout) { [weak self] in
+    self.executor.execute(after: timeout) { [weak self] (originalExecutor) in
       if cancellationToken?.isCancelled ?? false { return }
       guard let strongSelf = self else { return }
       block(strongSelf)
@@ -107,7 +107,7 @@ public extension ExecutionContext {
   /// referenced and cancelled because of deallocated context on deinit
   func addDependent<T: BaseCompletable>(completable: T) {
     self.notifyDeinit { [weak completable] in
-      completable?.cancelBecauseOfDeallocatedContext()
+      completable?.cancelBecauseOfDeallocatedContext(from: nil)
     }
   }
 }

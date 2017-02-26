@@ -40,14 +40,14 @@ final public class Promise<Success>: Future<Success>, Completable {
   /// **internal use only**
   override public func makeCompletionHandler(
     executor: Executor,
-    _ block: @escaping (Fallible<Success>) -> Void
+    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
     ) -> CompletionHandler? {
     let handler = Handler(executor: executor, block: block, owner: self)
     
     _container.updateHead {
       switch $0 {
       case let completedState as CompletedPromiseState<Success>:
-        handler.handle(completedState.value)
+        handler.handle(completedState.value, from: nil)
         return $0
       case let incompleteState as SubscribedPromiseState<Success>:
         return SubscribedPromiseState(handler: handler, next: incompleteState)
@@ -66,7 +66,10 @@ final public class Promise<Success>: Future<Success>, Completable {
   ///
   /// - Parameter completion: value to complete future with
   /// - Returns: true if `Promise` was completed with specified value
-  public func tryComplete(with completion: Fallible<Success>) -> Bool {
+  public func tryComplete(
+    with completion: Fallible<Success>,
+    from originalExecutor: Executor? = nil
+    ) -> Bool {
     let completedItem = CompletedPromiseState(value: completion)
     let (oldHead, newHead) = _container.updateHead {
       switch $0 {
@@ -82,15 +85,15 @@ final public class Promise<Success>: Future<Success>, Completable {
     }
     let didComplete = (completedItem === newHead)
     guard didComplete else { return false }
-    
+
     var nextItem = oldHead
     while let currentItem = nextItem as? SubscribedPromiseState<Success> {
-      currentItem.handler?.handle(completion)
+      currentItem.handler?.handle(completion, from: originalExecutor)
       currentItem.releaseOwner()
       nextItem = currentItem.next
     }
     _releasePool.drain()
-    
+
     return true
   }
 

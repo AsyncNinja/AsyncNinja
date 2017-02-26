@@ -71,7 +71,7 @@ import Dispatch
       
       let range = 1..<5
       for index in range {
-        updatableProperty.update(index)
+        updatableProperty.update(index, from: .main)
       }
       
       let expectation = self.expectation(description: "done")

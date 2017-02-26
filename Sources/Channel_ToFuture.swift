@@ -35,20 +35,20 @@ public extension Channel {
     let promise = Promise<Update?>()
     let executor_ = executor.makeDerivedSerialExecutor()
     let handler = self.makeHandler(executor: executor_) {
-      [weak promise] in
-      switch $0 {
+      [weak promise] (event, originalExecutor) in
+      switch event {
       case let .update(update):
         do {
           if try predicate(update) {
-            promise?.succeed(with: update)
+            promise?.succeed(with: update, from: originalExecutor)
           }
         } catch {
-          promise?.fail(with: error)
+          promise?.fail(with: error, from: originalExecutor)
         }
       case .completion(.success):
-        promise?.succeed(with: nil)
+        promise?.succeed(with: nil, from: originalExecutor)
       case let .completion(.failure(failure)):
-        promise?.fail(with: failure)
+        promise?.fail(with: failure, from: originalExecutor)
       }
     }
 
@@ -132,23 +132,24 @@ public extension Channel {
 
     let promise = Promise<Update?>()
     let executor_ = executor.makeDerivedSerialExecutor()
-    let handler = self.makeHandler(executor: executor_) { [weak promise] in
-      switch $0 {
+    let handler = self.makeHandler(executor: executor_) {
+      [weak promise] (event, originalExecutor) in
+      switch event {
       case let .update(update):
         do {
           if try predicate(update) {
             latestMatchingUpdate = update
           }
         } catch {
-          promise?.fail(with: error)
+          promise?.fail(with: error, from: originalExecutor)
         }
       case .completion(.success):
-        promise?.succeed(with: latestMatchingUpdate)
+        promise?.succeed(with: latestMatchingUpdate, from: originalExecutor)
       case let .completion(.failure(failure)):
         if let latestMatchingUpdate = latestMatchingUpdate {
-          promise?.succeed(with: latestMatchingUpdate)
+          promise?.succeed(with: latestMatchingUpdate, from: originalExecutor)
         } else {
-          promise?.fail(with: failure)
+          promise?.fail(with: failure, from: originalExecutor)
         }
       }
     }
@@ -231,18 +232,18 @@ public extension Channel {
     var result = initialResult
     let _executor = executor.makeDerivedSerialExecutor()
     let promise = Promise<(Result, Success)>()
-    let handler = self.makeHandler(executor: _executor) { [weak promise] in
-      switch $0 {
+    let handler = self.makeHandler(executor: _executor) { [weak promise] (event, originalExecutor) in
+      switch event {
       case let .update(update):
         do {
           result = try nextPartialResult(result, update)
         } catch {
-          promise?.fail(with: error)
+          promise?.fail(with: error, from: originalExecutor)
         }
       case .completion(.success(let successValue)):
-        promise?.succeed(with: (result, successValue))
+        promise?.succeed(with: (result, successValue), from: originalExecutor)
       case let .completion(.failure(failure)):
-        promise?.fail(with: failure)
+        promise?.fail(with: failure, from: originalExecutor)
       }
     }
 

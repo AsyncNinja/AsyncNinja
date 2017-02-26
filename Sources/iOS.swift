@@ -47,7 +47,7 @@
                      action: #selector(ActionReceiver.asyncNinjaAction(sender:forEvent:)),
                      for: events)
       self.notifyDeinit {
-        actionReceiver.producer.cancelBecauseOfDeallocatedContext()
+        actionReceiver.producer.cancelBecauseOfDeallocatedContext(from: nil)
       }
       
       return actionReceiver.producer
@@ -84,7 +84,7 @@
         sender: sender,
         event: event
       )
-      self.producer.update(update)
+      self.producer.update(update, from: .main)
     }
   }
 

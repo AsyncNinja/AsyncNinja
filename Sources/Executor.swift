@@ -28,13 +28,18 @@ public struct Executor {
   public typealias Handler = (@escaping (Void) -> Void) -> Void
   private let _impl: ExecutorImpl
   private let _isSerial: Bool
+  private let _alwaysAsync: Bool
+  var isDispatchQueueExecutor: Bool { return _impl is DispatchQueue }
+  var dispatchQueue: DispatchQueue? { return _impl as? DispatchQueue }
+  var dispatchQueueOrDefault: DispatchQueue { return dispatchQueue ?? DispatchQueue.global() }
 
   /// Initializes executor with specified implementation
   ///
   /// - Parameter impl: implementation of executor
-  fileprivate init(impl: ExecutorImpl, isSerial: Bool = false) {
+  fileprivate init(impl: ExecutorImpl, isSerial: Bool = false, alwaysAsync: Bool = false) {
     _impl = impl
     _isSerial = isSerial
+    _alwaysAsync = alwaysAsync
   }
 
   /// Initialiaes executor with custom handler
@@ -43,17 +48,31 @@ public struct Executor {
   ///   - isSerial: specifies if blocks submitted to the handler will
   ///     be executed serialy. Keep default value otherwise.
   ///   - handler: encapsulates asynchrounous way of execution escaped block
-  public init(isSerial: Bool = false, handler: @escaping Handler) {
+  public init(isSerial: Bool = false, alwaysAsync: Bool = false, handler: @escaping Handler) {
     // Test: ExecutorTests.testCustomHandler
     _impl = HandlerBasedExecutorImpl(handler: handler)
     _isSerial = isSerial
+    _alwaysAsync = alwaysAsync
   }
 
   /// Schedules specified block for execution
   ///
   /// - Parameter block: to execute
-  func execute(_ block: @escaping (Void) -> Void) {
-    _impl.asyncNinja_execute(block)
+  func execute(from original: Executor?, _ block: @escaping (_ original: Executor) -> Void) {
+    guard let original = original else {
+      _impl.asyncNinja_execute { block(self) }
+      return;
+    }
+
+    if _alwaysAsync {
+      _impl.asyncNinja_execute { block(self) }
+    } else if _impl is ImmediateExecutorImpl {
+      block(original)
+    } else if _impl === original._impl {
+      block(self)
+    } else {
+      _impl.asyncNinja_execute { block(self) }
+    }
   }
 
   /// Schedules specified block for execution after timeout
@@ -61,8 +80,8 @@ public struct Executor {
   /// - Parameters:
   ///   - timeout: to schedule execution of the block after
   ///   - block: to execute
-  func execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
-    _impl.asyncNinja_execute(after: timeout, block)
+  func execute(after timeout: Double, _ block: @escaping (_ original: Executor) -> Void) {
+    _impl.asyncNinja_execute(after: timeout) { block(self) }
   }
 
   /// Makes serial executor. Retured executor will
@@ -82,10 +101,10 @@ public extension Executor {
   // Test: ExecutorTests.testPrimary
   /// primary executor is primary because it will be used
   /// as default value when executor argument is ommited
-  static let primary = Executor.default
+  static let primary = Executor.queue(.global(qos: .default), isSerial: false, alwaysAsync: false)
 
   /// shortcut to the main queue executor
-  static let main = Executor.queue(DispatchQueue.main, isSerial: true)
+  static let main = Executor.queue(DispatchQueue.main, isSerial: true, alwaysAsync: false)
 
   // Test: ExecutorTests.testUserInteractive
   /// shortcut to the global concurrent user interactive queue executor
@@ -109,15 +128,15 @@ public extension Executor {
 
   // Test: ExecutorTests.testImmediate
   /// executes block immediately. Not suitable for long running calculations
-  static let immediate = Executor(impl: ImmediateExecutorImpl(), isSerial: true)
+  static let immediate = Executor(impl: ImmediateExecutorImpl(), isSerial: true, alwaysAsync: false)
 
   /// initializes executor based on specified queue
   ///
   /// - Parameter queue: to execute submitted blocks on
   /// - Returns: executor
-  static func queue(_ queue: DispatchQueue, isSerial: Bool = false) -> Executor {
+  static func queue(_ queue: DispatchQueue, isSerial: Bool = false, alwaysAsync: Bool = false) -> Executor {
     // Test: ExecutorTests.testCustomQueue
-    return Executor(impl: queue, isSerial: isSerial)
+    return Executor(impl: queue, isSerial: isSerial, alwaysAsync: alwaysAsync)
   }
 
   // Test: ExecutorTests.testCustomQoS
@@ -125,15 +144,15 @@ public extension Executor {
   ///
   /// - Parameter qos: quality of service for submitted blocks
   /// - Returns: executor
-  static func queue(_ qos: DispatchQoS.QoSClass) -> Executor {
-    return Executor.queue(DispatchQueue.global(qos: qos))
+  static func queue(_ qos: DispatchQoS.QoSClass, alwaysAsync: Bool = true) -> Executor {
+    return Executor.queue(.global(qos: qos), isSerial: false, alwaysAsync: alwaysAsync)
   }
 }
 
 // MARK: implementations
 
 /// **internal use only**
-fileprivate protocol ExecutorImpl {
+fileprivate protocol ExecutorImpl: class {
   func asyncNinja_execute(_ block: @escaping (Void) -> Void)
   func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void)
   func asyncNinja_makeDerivedSerialExecutor() -> ExecutorImpl

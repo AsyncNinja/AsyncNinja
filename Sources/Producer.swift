@@ -87,28 +87,29 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseComple
   /// **internal use only**
   override public func makeHandler(
     executor: Executor,
-    _ block: @escaping (Event) -> Void
+    _ block: @escaping (_ event: Event, _ originalExecutor: Executor) -> Void
     ) -> Handler? {
     return _makeHandler(executor: executor, avoidLocking: false, block)
   }
 
   fileprivate func _makeHandler(
-    executor: Executor, avoidLocking: Bool,
-    _ block: @escaping (Event) -> Void
+    executor: Executor,
+    avoidLocking: Bool,
+    _ block: @escaping (_ event: Event, _ originalExecutor: Executor) -> Void
     ) -> Handler? {
     if !avoidLocking {
       _locking.lock()
     }
     
     for update_ in _bufferedUpdates {
-      executor.execute {
-        block(.update(update_))
+      executor.execute(from: nil) { (originalExecutor) in
+        block(.update(update_), originalExecutor)
       }
     }
     
     let handler = Handler(executor: executor, block: block, owner: self)
     if let completion = _completion {
-      handler.handle(.completion(completion))
+      handler.handle(.completion(completion), from: nil)
     } else {
       _handlers.push(handler)
     }
@@ -122,12 +123,13 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseComple
 
   /// Applies specified ChannelValue to the Producer
   /// Value will not be applied for completed Producer
-    public func apply(_ event: Event) {
+  public func apply(_ event: Event,
+                    from originalExecutor: Executor? = nil) {
     switch event {
     case let .update(update):
-      self.update(update)
+      self.update(update, from: originalExecutor)
     case let .completion(completion):
-      self.complete(with: completion)
+      self.complete(with: completion, from: originalExecutor)
     }
   }
 
@@ -140,7 +142,8 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseComple
 
   /// Sends specified Update to the Producer
   /// Value will not be sent for completed Producer
-  public func update(_ update: Update) {
+  public func update(_ update: Update,
+                     from originalExecutor: Executor? = nil) {
 
     _locking.lock()
     defer { _locking.unlock() }
@@ -152,12 +155,13 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseComple
     }
 
     let event = Event.update(update)
-    _handlers.forEach { $0.handle(event) }
+    _handlers.forEach { $0.handle(event, from: originalExecutor) }
   }
 
   /// Sends specified sequence of Update to the Producer
   /// Values will not be sent for completed Producer
-  public func update<S: Sequence>(_ updates: S)
+  public func update<S: Sequence>(_ updates: S,
+                     from originalExecutor: Executor? = nil)
     where S.Iterator.Element == Update {
 
       _locking.lock()
@@ -171,7 +175,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseComple
 
       _handlers.forEach {
         for update in updates {
-          $0.handle(.update(update))
+          $0.handle(.update(update), from: originalExecutor)
         }
       }
   }
@@ -182,7 +186,8 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseComple
   /// - Returns: true if Producer was completed with this call,
   ///   false if it was completed before
   @discardableResult
-  public func tryComplete(with completion: Fallible<Success>) -> Bool {
+  public func tryComplete(with completion: Fallible<Success>,
+                          from originalExecutor: Executor? = nil) -> Bool {
     _locking.lock()
     defer { _locking.unlock() }
 
@@ -191,7 +196,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseComple
 
     _completion = completion
     _handlers.forEach(andReset: true) { handler in
-      handler.handle(.completion(completion))
+      handler.handle(.completion(completion), from: originalExecutor)
       handler.releaseOwner()
     }
 
@@ -200,8 +205,9 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseComple
 
   /// Completes the channel with a competion of specified Future or Channel
   public func complete(with completable: CompletingType) {
-    let handler = completable.makeHandler(executor: .immediate) { [weak self] in
-      self?.apply($0)
+    let handler = completable.makeHandler(executor: .immediate) {
+      [weak self] (completion, originalExecutor) in
+      self?.apply(completion, from: originalExecutor)
     }
 
     self.insertHandlerToReleasePool(handler)
@@ -250,9 +256,12 @@ public func channel<Update, Success>(
 
   cancellationToken?.add(cancellable: producer)
 
-  executor.execute { [weak producer] in
-    let fallibleCompletion = fallible { try block { producer?.update($0) } }
-    producer?.complete(with: fallibleCompletion)
+  executor.execute(from: nil) {
+    [weak producer] (originalExecutor) in
+    let fallibleCompletion = fallible {
+      try block { producer?.update($0, from: originalExecutor) }
+    }
+    producer?.complete(with: fallibleCompletion, from: originalExecutor)
   }
 
   return producer
@@ -272,14 +281,19 @@ public func channel<U: ExecutionContext, Update, Success>(
   context.addDependent(completable: producer)
   cancellationToken?.add(cancellable: producer)
 
-  (executor ?? context.executor).execute { [weak context, weak producer] in
+  (executor ?? context.executor).execute(from: nil) {
+    [weak context, weak producer] (originalExecutor) in
     guard nil != producer else { return }
     guard let context = context else {
-      producer?.cancelBecauseOfDeallocatedContext()
+      producer?.cancelBecauseOfDeallocatedContext(from: originalExecutor)
       return
     }
-    let fallibleCompleting = fallible { try block(context) { producer?.update($0) } }
-    producer?.complete(with: fallibleCompleting)
+    let fallibleCompleting = fallible {
+      try block(context) {
+        producer?.update($0, from: originalExecutor)
+      }
+    }
+    producer?.complete(with: fallibleCompleting, from: originalExecutor)
   }
 
   return producer
@@ -290,7 +304,7 @@ public func channel<C: Collection, Success>(updates: C, completion: Fallible<Suc
   ) -> Channel<C.Iterator.Element, Success>
   where C.IndexDistance: Integer {
     let producer = Producer<C.Iterator.Element, Success>(bufferedUpdates: updates)
-    producer.complete(with: completion)
+    producer.complete(with: completion, from: nil)
     return producer
 }
 
@@ -376,36 +390,48 @@ public enum DerivedChannelBufferSize {
 
 /// ProducerProxy acts like a producer but is actually a proxy for some operation, e.g. setting and oberving property
 public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
-  private let _updateHandler: (ProducerProxy<Update, Success>, Event) -> Void
+  typealias UpdateHandler = (_ producer: ProducerProxy<Update, Success>, _ event: Event, _ originalExecutor: Executor?) -> Void
+  private let _updateHandler: UpdateHandler
   private let _updateExecutor: Executor
   
   /// designated initializer of Producer. Initializes Producer with specified buffer size
-  init(bufferSize: Int, updateExecutor: Executor, updateHandler: @escaping (ProducerProxy<Update, Success>, Event) -> Void) {
+  init(bufferSize: Int,
+       updateExecutor: Executor,
+       updateHandler: @escaping UpdateHandler) {
     _updateHandler = updateHandler
     _updateExecutor = updateExecutor
     super.init(bufferSize: bufferSize)
   }
   
-  func updateWithoutHandling(_ update: Update) {
-    super.update(update)
+  func updateWithoutHandling(_ update: Update,
+                             from originalExecutor: Executor?) {
+    super.update(update, from: originalExecutor)
   }
 
   @discardableResult
-  func tryCompleteWithoutHandling(with completion: Fallible<Success>) -> Bool {
-    return super.tryComplete(with: completion)
+  func tryCompleteWithoutHandling(
+    with completion: Fallible<Success>,
+    from originalExecutor: Executor?) -> Bool {
+    return super.tryComplete(with: completion, from: originalExecutor)
   }
 
   /// Calls update handler insted of sending specified Update to the Producer
-  override public func update(_ update: Update) {
-    _updateExecutor.execute {
-      self._updateHandler(self, .update(update))
+  override public func update(
+    _ update: Update,
+    from originalExecutor: Executor? = nil) {
+    _updateExecutor.execute(from: originalExecutor) {
+      (originalExecutor) in
+      self._updateHandler(self, .update(update), originalExecutor)
     }
   }
   
   /// Calls update handler insted of sending specified Complete to the Producer
-  override public func tryComplete(with completion: Fallible<Success>) -> Bool {
-    _updateExecutor.execute {
-      self._updateHandler(self, .completion(completion))
+  override public func tryComplete(
+    with completion: Fallible<Success>,
+    from originalExecutor: Executor? = nil) -> Bool {
+    _updateExecutor.execute(from: originalExecutor) {
+      (originalExecutor) in
+      self._updateHandler(self, .completion(completion), originalExecutor)
     }
     return true
   }
@@ -433,8 +459,10 @@ fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Upd
       _sema.signal()
     }
     super.init()
-    _handler = channel._makeHandler(executor: .immediate, avoidLocking: true) { [weak self] (event) in
-      self?.handle(event)
+    _handler = channel._makeHandler(executor: .immediate, avoidLocking: true)
+    {
+      [weak self] (event, originalExecutor) in
+      self?.handle(event, from: originalExecutor)
     }
   }
 
@@ -456,7 +484,8 @@ fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Upd
     return ProducerIteratorImpl(channel: _producer, bufferedUpdates: _bufferedUpdates.clone())
   }
 
-  func handle(_ value: ChannelEvent<Update, Success>) {
+  func handle(_ value: ChannelEvent<Update, Success>,
+              from originalExecutor: Executor?) {
     _locking.lock()
     defer { _locking.unlock() }
 

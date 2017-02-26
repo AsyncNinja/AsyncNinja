@@ -54,20 +54,20 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
       var unknownSubvaluesCount = count
 
       for future in self {
-        let handler = future.makeCompletionHandler(executor: executor_) {
-          [weak promise] (fallibleValue) -> Void in
-          guard let promise = promise else { return }
-          guard canContinue else { return }
+        let handler = future.makeCompletionHandler(executor: executor_)
+        {
+          [weak promise] (completion, originalExecutor) -> Void in
+          guard let promise = promise, canContinue else { return }
 
           do {
-            accumulator = try nextPartialResult(accumulator, try fallibleValue.liftSuccess())
+            accumulator = try nextPartialResult(accumulator, try completion.liftSuccess())
             unknownSubvaluesCount -= 1
             if 0 == unknownSubvaluesCount {
-              promise.succeed(with: accumulator)
+              promise.succeed(with: accumulator, from: originalExecutor)
               canContinue = false
             }
           } catch {
-            promise.fail(with: error)
+            promise.fail(with: error, from: originalExecutor)
             canContinue = false
           }
         }
@@ -96,13 +96,14 @@ public extension Collection where Self.IndexDistance == Int {
     var unknownSubvaluesCount = count
     
     for (index, value) in self.enumerated() {
-      executor.execute { [weak promise] in
+      executor.execute(from: nil) {
+        [weak promise] (originalExecutor) in
         guard let promise = promise, canContinue else { return }
         
         let subvalue: T
         do { subvalue = try transform(value) }
         catch {
-          promise.fail(with: error)
+          promise.fail(with: error, from: originalExecutor)
           canContinue = false
           return
         }
@@ -112,7 +113,8 @@ public extension Collection where Self.IndexDistance == Int {
         subvalues[index] = subvalue
         unknownSubvaluesCount -= 1
         if 0 == unknownSubvaluesCount {
-          promise.succeed(with: subvalues.map { $0! })
+          promise.succeed(with: subvalues.map { $0! },
+                          from: originalExecutor)
         }
       }
     }
@@ -137,39 +139,43 @@ public extension Collection where Self.IndexDistance == Int {
     var unknownSubvaluesCount = count
     
     for (index, value) in self.enumerated() {
-      executor.execute { [weak promise] in
+      executor.execute(from: nil) {
+        [weak promise] (originalExecutor) in
         guard let promise = promise, canContinue else { return }
         
         let futureSubvalue: Future<T>
         do { futureSubvalue = try transform(value) }
         catch { futureSubvalue = .failed(error) }
         
-        let handler = futureSubvalue.makeCompletionHandler(executor: .immediate) { [weak promise] subvalue in
+        let handler = futureSubvalue.makeCompletionHandler(executor: .immediate)
+        {
+          [weak promise] (subvalue, originalExecutor) in
           guard let promise = promise else { return }
-          
+
           locking.lock()
           defer { locking.unlock() }
-          
+
           guard canContinue else { return }
           subvalue.onSuccess {
             subvalues[index] = $0
             unknownSubvaluesCount -= 1
             assert(unknownSubvaluesCount >= 0)
             if 0 == unknownSubvaluesCount {
-              promise.succeed(with: subvalues.map { $0! })
+              promise.succeed(with: subvalues.map { $0! },
+                              from: originalExecutor)
             }
           }
-          
+
           subvalue.onFailure {
-            promise.fail(with: $0)
+            promise.fail(with: $0, from: originalExecutor)
             canContinue = false
           }
         }
-        
+
         promise.insertHandlerToReleasePool(handler)
       }
     }
-    
+
     promise.notifyDrain {
       canContinue = false
     }

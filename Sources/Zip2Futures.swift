@@ -40,33 +40,42 @@ public func zip<A, B>(_ futureA: Future<A>,
   var subvalueA: A? = nil
   var subvalueB: B? = nil
   
-  let handlerA = futureA.makeCompletionHandler(executor: .immediate) {
-    [weak promise] (localSubvalueA) in
+  let handlerA = futureA.makeCompletionHandler(executor: .immediate)
+  {
+    [weak promise] (localSubvalueA, originalExecutor) in
     guard let promise = promise else { return }
     locking.lock()
     defer { locking.unlock() }
 
-    localSubvalueA.onFailure(promise.fail(with:))
+    localSubvalueA.onFailure {
+      promise.fail(with: $0, from: originalExecutor)
+    }
     localSubvalueA.onSuccess { localSubvalueA in
       subvalueA = localSubvalueA
       if let localSubvalueB = subvalueB {
-        promise.succeed(with: (localSubvalueA, localSubvalueB))
+        promise.succeed(with: (localSubvalueA, localSubvalueB),
+                        from: originalExecutor)
       }
     }
   }
 
   promise.insertHandlerToReleasePool(handlerA)
 
-  let handlerB = futureB.makeCompletionHandler(executor: .immediate) { [weak promise] (localSubvalueB) in
+  let handlerB = futureB.makeCompletionHandler(executor: .immediate)
+  {
+    [weak promise] (localSubvalueB, originalExecutor) in
     guard let promise = promise else { return }
     locking.lock()
     defer { locking.unlock() }
     
-    localSubvalueB.onFailure(promise.fail(with:))
+    localSubvalueB.onFailure {
+      promise.fail(with: $0, from: originalExecutor)
+    }
     localSubvalueB.onSuccess { localSubvalueB in
       subvalueB = localSubvalueB
       if let localSubvalueA = subvalueA {
-        promise.succeed(with: (localSubvalueA, localSubvalueB))
+        promise.succeed(with: (localSubvalueA, localSubvalueB),
+                        from: originalExecutor)
       }
     }
   }

@@ -40,7 +40,7 @@
       allowSettingSameValue: Bool = false,
       channelBufferSize: Int = 1
       ) -> UpdatableProperty<T?> {
-      let producer = UpdatableProperty<T?>(bufferSize: channelBufferSize, updateExecutor: executor) { [weak self] (producerProxy, event) in
+      let producer = UpdatableProperty<T?>(bufferSize: channelBufferSize, updateExecutor: executor) { [weak self] (producerProxy, event, originalExecutor) in
         switch event {
         case let .update(update):
           if allowSettingSameValue {
@@ -59,12 +59,12 @@
       
       let observer = KeyPathObserver(object: self, keyPath: keyPath, options: [.initial, .old, .new], enabled: observationSession?.enabled ?? true) {
         [weak producer] (changes) in
-        producer?.updateWithoutHandling(changes[.newKey] as? T)
+        producer?.updateWithoutHandling(changes[.newKey] as? T, from: executor)
       }
       
       observationSession?.observers.push(observer)
       notifyDeinit { [weak producer] in
-        producer?.cancelBecauseOfDeallocatedContext()
+        producer?.cancelBecauseOfDeallocatedContext(from: nil)
         observer.enabled = false
       }
       
@@ -87,7 +87,8 @@
       onNone: UpdateWithNoneHandlingPolicy<T>,
       channelBufferSize: Int = 1
       ) -> UpdatableProperty<T> {
-      let producer = UpdatableProperty<T>(bufferSize: channelBufferSize, updateExecutor: executor) { [weak self] (producerProxy, event) in
+      let producer = UpdatableProperty<T>(bufferSize: channelBufferSize, updateExecutor: executor) {
+        [weak self] (producerProxy, event, originalExecutor) in
         switch event {
         case let .update(update):
           if allowSettingSameValue {
@@ -107,15 +108,15 @@
       let observer = KeyPathObserver(object: self, keyPath: keyPath, options: [.initial, .old, .new], enabled: observationSession?.enabled ?? true) {
         [weak producer] (changes) in
         if let update = changes[.newKey] as? T {
-          producer?.updateWithoutHandling(update)
+          producer?.updateWithoutHandling(update, from: executor)
         } else if case let .replace(update) = onNone {
-          producer?.updateWithoutHandling(update)
+          producer?.updateWithoutHandling(update, from: executor)
         }
       }
       
       observationSession?.observers.push(observer)
       notifyDeinit { [weak producer] in
-        producer?.cancelBecauseOfDeallocatedContext()
+        producer?.cancelBecauseOfDeallocatedContext(from: nil)
         observer.enabled = false
       }
       
@@ -130,10 +131,15 @@
     /// - Returns: channel of pairs (old, new) values
     func updating<T>(
       for keyPath: String,
+      executor: Executor,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
       ) -> Updating<T?> {
-      return updatingChanges(for: keyPath, options: [.initial, .old, .new], observationSession: observationSession, channelBufferSize: channelBufferSize)
+      return updatingChanges(for: keyPath,
+                             executor: executor,
+                             options: [.initial, .old, .new],
+                             observationSession: observationSession,
+                             channelBufferSize: channelBufferSize)
         .map(executor: .immediate) { $0[.newKey] as? T }
     }
 
@@ -145,11 +151,16 @@
     /// - Returns: channel of pairs (old, new) values
     func updating<T>(
       for keyPath: String,
+      executor: Executor,
       observationSession: ObservationSession? = nil,
       onNone: UpdateWithNoneHandlingPolicy<T>,
       channelBufferSize: Int = 1
       ) -> Updating<T> {
-      return updatingChanges(for: keyPath, options: [.initial, .old, .new], observationSession: observationSession, channelBufferSize: channelBufferSize)
+      return updatingChanges(for: keyPath,
+                             executor: executor,
+                             options: [.initial, .old, .new],
+                             observationSession: observationSession,
+                             channelBufferSize: channelBufferSize)
         .flatMap(executor: .immediate) { (changes) -> T? in
           if let update = changes[.newKey] as? T {
             return update
@@ -169,10 +180,15 @@
     /// - Returns: channel of pairs (old, new) values
     func updatingOldAndNew<T>(
       of keyPath: String,
+      executor: Executor,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
       ) -> Updating<(old: T?, new: T?)> {
-      return updatingChanges(for: keyPath, options: [.initial, .old, .new], observationSession: observationSession, channelBufferSize: channelBufferSize)
+      return updatingChanges(for: keyPath,
+                             executor: executor,
+                             options: [.initial, .old, .new],
+                             observationSession: observationSession,
+                             channelBufferSize: channelBufferSize)
         .map(executor: .immediate) { (old: $0[.oldKey] as? T, new: $0[.newKey] as? T) }
     }
 
@@ -184,20 +200,25 @@
     /// - Returns: channel of changes dictionaries (see Foundation KVO for details)
     func updatingChanges(
       for keyPath: String,
+      executor: Executor,
       options: NSKeyValueObservingOptions,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
       ) -> Updating<[NSKeyValueChangeKey: Any]> {
       let producer = Updatable<[NSKeyValueChangeKey: Any]>(bufferSize: channelBufferSize)
 
-      let observer = KeyPathObserver(object: self, keyPath: keyPath, options: options, enabled: observationSession?.enabled ?? true) {
+      let observer = KeyPathObserver(object: self,
+                                     keyPath: keyPath,
+                                     options: options,
+                                     enabled: observationSession?.enabled ?? true)
+      {
         [weak producer] (changes) in
-        producer?.update(changes)
+        producer?.update(changes, from: executor)
       }
 
       observationSession?.observers.push(observer)
       notifyDeinit { [weak producer] in
-        producer?.cancelBecauseOfDeallocatedContext()
+        producer?.cancelBecauseOfDeallocatedContext(from: nil)
         observer.enabled = false
       }
 
@@ -249,6 +270,42 @@
                        observationSession: observationSession,
                        allowSettingSameValue: allowSettingSameValue,
                        onNone: onNone, channelBufferSize: channelBufferSize)
+    }
+
+    /// makes channel of changes of value for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel of pairs (old, new) values
+    func updating<T>(
+      for keyPath: String,
+      observationSession: ObservationSession? = nil,
+      channelBufferSize: Int = 1
+      ) -> Updating<T?> {
+      return updating(for: keyPath,
+                      executor: executor,
+                      observationSession: observationSession,
+                      channelBufferSize: channelBufferSize)
+    }
+
+    /// makes channel of changes of value for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel of pairs (old, new) values
+    func updating<T>(
+      for keyPath: String,
+      observationSession: ObservationSession? = nil,
+      onNone: UpdateWithNoneHandlingPolicy<T>,
+      channelBufferSize: Int = 1
+      ) -> Updating<T> {
+      return updating(for: keyPath,
+                      executor: executor,
+                      observationSession: observationSession,
+                      onNone: onNone,
+                      channelBufferSize: channelBufferSize)
     }
   }
 

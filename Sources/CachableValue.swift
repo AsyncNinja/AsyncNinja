@@ -90,12 +90,13 @@ class CachableValueImpl<T: Completable, Context: ExecutionContext> {
   }
 
   func value(mustStartHandlingMiss: Bool,
-             mustInvalidateOldValue: Bool
+             mustInvalidateOldValue: Bool,
+             from originalExecutor: Executor? = nil
     ) -> T.CompletingType {
     switch _state {
     case .initial:
       if mustStartHandlingMiss {
-        _handleMiss()
+        _handleMiss(from: originalExecutor)
       }
     case .handling:
       nop()
@@ -104,52 +105,52 @@ class CachableValueImpl<T: Completable, Context: ExecutionContext> {
         _completing = T()
         _state = .initial
         if mustStartHandlingMiss {
-          _handleMiss()
+          _handleMiss(from: originalExecutor)
         }
       }
     }
     return _completing as! T.CompletingType
   }
 
-  private func _handleMiss() {
+  private func _handleMiss(from originalExecutor: Executor?) {
     _state = .handling
 
     guard let context = _context else {
-      _completing.fail(with: AsyncNinjaError.contextDeallocated)
+      _completing.fail(with: AsyncNinjaError.contextDeallocated, from: originalExecutor)
       return
     }
 
-    context.executor.execute { [weak self] in
-      self?._handleMissOnExecutor()
+    context.executor.execute(from: originalExecutor) { [weak self] (originalExecutor) in
+      self?._handleMissOnExecutor(from: originalExecutor)
     }
   }
 
-  private func _handleMissOnExecutor() {
+  private func _handleMissOnExecutor(from originalExecutor: Executor?) {
     guard let context = self._context else {
-      _completing.fail(with: AsyncNinjaError.contextDeallocated)
+      _completing.fail(with: AsyncNinjaError.contextDeallocated, from: originalExecutor)
       return
     }
 
     do {
       let completable = try _missHandler(context)
-      completable.onComplete(executor: .immediate) {
-        [weak self] (completion) in
-        self?._handle(completion: completion)
+      completable._onComplete(executor: .immediate) {
+        [weak self] (completion, originalExecutor) in
+        self?._handle(completion: completion, from: originalExecutor)
       }
     } catch {
       _state = .finished
-      _completing.fail(with: error)
+      _completing.fail(with: error, from: originalExecutor)
     }
   }
 
-  private func _handle(completion: Fallible<T.CompletingType.Success>) {
+  private func _handle(completion: Fallible<T.CompletingType.Success>, from originalExecutor: Executor) {
     _locker {
       _state = .finished
       switch completion {
       case .success(let success):
-        _completing.succeed(with: success as! T.Success)
+        _completing.succeed(with: success as! T.Success, from: originalExecutor)
       case .failure(let failure):
-        _completing.fail(with: failure)
+        _completing.fail(with: failure, from: originalExecutor)
       }
     }
   }
