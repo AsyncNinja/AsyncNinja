@@ -270,26 +270,6 @@
     /// makes an UpdatableProperty for specified key path
     ///
     /// - Parameter keyPath: to observe
-    /// - Parameter observationSession: is an object that helps to control observation
-    /// - Parameter channelBufferSize: size of the buffer within returned channel
-    /// - Returns: channel new values
-    func updatable<T>(
-      for keyPath: String,
-      observationSession: ObservationSession? = nil,
-      allowSettingSameValue: Bool = false,
-      channelBufferSize: Int = 1
-      ) -> UpdatableProperty<T?> {
-      return updatable(for: keyPath,
-                       executor: self.executor,
-                       from: self.executor,
-                       observationSession: observationSession,
-                       allowSettingSameValue: allowSettingSameValue,
-                       channelBufferSize: channelBufferSize)
-    }
-
-    /// makes an UpdatableProperty for specified key path
-    ///
-    /// - Parameter keyPath: to observe
     /// - Parameter executor: apply changes on
     /// - Parameter observationSession: is an object that helps to control observation
     /// - Parameter placeholder: placeholder for nil value
@@ -312,48 +292,6 @@
                        channelBufferSize: channelBufferSize)
     }
 
-    /// makes an UpdatableProperty for specified key path
-    ///
-    /// - Parameter keyPath: to observe
-    /// - Parameter executor: apply changes on
-    /// - Parameter observationSession: is an object that helps to control observation
-    /// - Parameter placeholder: placeholder for nil value
-    /// - Parameter channelBufferSize: size of the buffer within returned channel
-    /// - Returns: channel new values
-    func updatable<T>(
-      for keyPath: String,
-      observationSession: ObservationSession? = nil,
-      onNone: UpdateWithNoneHandlingPolicy<T>,
-      allowSettingSameValue: Bool = false,
-      channelBufferSize: Int = 1
-      ) -> UpdatableProperty<T> {
-      return updatable(for: keyPath,
-                       executor: executor,
-                       from: executor,
-                       observationSession: observationSession,
-                       allowSettingSameValue: allowSettingSameValue,
-                       onNone: onNone,
-                       channelBufferSize: channelBufferSize)
-    }
-
-    /// makes channel of changes of value for specified key path
-    ///
-    /// - Parameter keyPath: to observe
-    /// - Parameter observationSession: is an object that helps to control observation
-    /// - Parameter channelBufferSize: size of the buffer within returned channel
-    /// - Returns: channel of pairs (old, new) values
-    func updating<T>(
-      for keyPath: String,
-      observationSession: ObservationSession? = nil,
-      channelBufferSize: Int = 1
-      ) -> Updating<T?> {
-      return updating(for: keyPath,
-                      executor: executor,
-                      from: executor,
-                      observationSession: observationSession,
-                      channelBufferSize: channelBufferSize)
-    }
-
     /// makes channel of changes of value for specified key path
     ///
     /// - Parameter keyPath: to observe
@@ -370,27 +308,6 @@
                       executor: executor,
                       from: originalExecutor,
                       observationSession: observationSession,
-                      channelBufferSize: channelBufferSize)
-    }
-
-    /// makes channel of changes of value for specified key path
-    ///
-    /// - Parameter keyPath: to observe
-    /// - Parameter observationSession: is an object that helps to control observation
-    /// - Parameter channelBufferSize: size of the buffer within returned channel
-    /// - Returns: channel of pairs (old, new) values
-    func updating<T>(
-      for keyPath: String,
-      observationSession: ObservationSession? = nil,
-      onNone: UpdateWithNoneHandlingPolicy<T>,
-      channelBufferSize: Int = 1
-      ) -> Updating<T> {
-
-      return updating(for: keyPath,
-                      executor: executor,
-                      from: executor,
-                      observationSession: observationSession,
-                      onNone: onNone,
                       channelBufferSize: channelBufferSize)
     }
 
@@ -486,17 +403,23 @@
 
   public struct ReactiveProperties<Object: NSObjectProtocol> {
     var object: Object
+    var originalExecutor: Executor?
     var observationSession: ObservationSession?
 
-    init(object: Object, observationSession: ObservationSession?) {
+    init(object: Object, originalExecutor: Executor?, observationSession: ObservationSession?) {
       self.object = object
+      self.originalExecutor = originalExecutor
       self.observationSession = observationSession
     }
   }
 
   public extension NSObjectProtocol {
+    func reactiveProperties(from originalExecutor: Executor?, observationSession: ObservationSession? = nil) -> ReactiveProperties<Self> {
+      return ReactiveProperties(object: self, originalExecutor: originalExecutor, observationSession: observationSession)
+    }
+
     func reactiveProperties(observationSession: ObservationSession? = nil) -> ReactiveProperties<Self> {
-      return ReactiveProperties(object: self, observationSession: observationSession)
+      return reactiveProperties(from: (self as? ExecutionContext)?.executor, observationSession: observationSession)
     }
 
     var rp: ReactiveProperties<Self> { return reactiveProperties() }

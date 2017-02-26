@@ -90,81 +90,127 @@
 
   public extension ReactiveProperties where Object: UIView {
     var alpha: UpdatableProperty<CGFloat> {
-      return self.object.updatable(for: "alpha", observationSession: self.observationSession, onNone: .drop)
+      return object.updatable(for: "alpha",
+                              from: originalExecutor,
+                              observationSession: observationSession,
+                              onNone: .drop)
     }
 
     var isHidden: UpdatableProperty<Bool> {
-      return self.object.updatable(for: "hidden", observationSession: self.observationSession, onNone: .drop)
+      return object.updatable(for: "hidden",
+                              from: originalExecutor,
+                              observationSession: observationSession, onNone: .drop)
     }
 
     var isOpaque: UpdatableProperty<Bool> {
-      return self.object.updatable(for: "opaque", observationSession: self.observationSession, onNone: .drop)
+      return object.updatable(for: "opaque",
+                              from: originalExecutor,
+                              observationSession: observationSession,
+                              onNone: .drop)
     }
 
     var isUserInteractionEnabled: UpdatableProperty<Bool> {
-      return self.object.updatable(for: "userInteractionEnabled", observationSession: self.observationSession, onNone: .drop)
+      return object.updatable(for: "userInteractionEnabled",
+                              from: originalExecutor,
+                              observationSession: observationSession,
+                              onNone: .drop)
     }
   }
   
   public extension ReactiveProperties where Object: UIControl {
     var isEnabled: UpdatableProperty<Bool> {
-      return self.object.updatable(for: "enabled", observationSession: self.observationSession, onNone: .drop)
+      return object.updatable(for: "enabled",
+                              from: originalExecutor,
+                              observationSession: self.observationSession,
+                              onNone: .drop)
     }
 
     var isSelected: UpdatableProperty<Bool> {
-      return self.object.updatable(for: "selected", observationSession: self.observationSession, onNone: .drop)
+      return object.updatable(for: "selected",
+                              from: originalExecutor,
+                              observationSession: observationSession,
+                              onNone: .drop)
     }
 
     var state: Updating<UIControlState> {
-      return self.object.updatable(for: "state", observationSession: self.observationSession, onNone: .drop)
+      return object.updatable(for: "state",
+                              from: originalExecutor,
+                              observationSession: observationSession,
+                              onNone: .drop)
     }
   }
 
   public extension ReactiveProperties where Object: UITextField {
     var text: UpdatableProperty<String> {
-      return self.object.updatable(for: "text", observationSession: self.observationSession, onNone: .drop)
+      return object.updatable(for: "text",
+                              from: originalExecutor,
+                              observationSession: observationSession,
+                              onNone: .drop)
     }
 
     var attributedText: UpdatableProperty<NSAttributedString?> {
-      return self.object.updatable(for: "attributedText", observationSession: self.observationSession)
+      return object.updatable(for: "attributedText",
+                              from: originalExecutor,
+                              observationSession: observationSession)
     }
 
     var textColor: UpdatableProperty<UIColor?> {
-      return self.object.updatable(for: "textColor", observationSession: self.observationSession)
+      return object.updatable(for: "textColor",
+                              from: originalExecutor,
+                              observationSession: observationSession)
     }
 
     var font: UpdatableProperty<NSTextAlignment> {
-      return self.object.updatable(for: "font", observationSession: self.observationSession, onNone: .drop)
+      return object.updatable(for: "font",
+                              from: originalExecutor,
+                              observationSession: observationSession,
+                              onNone: .drop)
     }
 
     var textAlignment: UpdatableProperty<NSTextAlignment> {
-      return self.object.updatable(for: "textAlignment", observationSession: self.observationSession, onNone: .drop)
+      return object.updatable(for: "textAlignment",
+                              from: originalExecutor,
+                              observationSession: observationSession,
+                              onNone: .drop)
     }
 
     var placeholder: UpdatableProperty<String?> {
-      return self.object.updatable(for: "placeholder", observationSession: self.observationSession)
+      return object.updatable(for: "placeholder",
+                              from: originalExecutor,
+                              observationSession: observationSession)
     }
 
     var attributedPlaceholder: UpdatableProperty<NSAttributedString?> {
-      return self.object.updatable(for: "attributedPlaceholder", observationSession: self.observationSession)
+      return object.updatable(for: "attributedPlaceholder",
+                              from: originalExecutor,
+                              observationSession: observationSession)
     }
 
     var background: UpdatableProperty<UIImage?> {
-      return self.object.updatable(for: "background", observationSession: self.observationSession)
+      return object.updatable(for: "background",
+                              from: originalExecutor,
+                              observationSession: observationSession)
     }
 
     var disabledBackground: UpdatableProperty<UIImage?> {
-      return self.object.updatable(for: "disabledBackground", observationSession: self.observationSession)
+      return object.updatable(for: "disabledBackground",
+                              from: originalExecutor,
+                              observationSession: observationSession)
     }
 
     var isEditing: Updating<Bool> {
-      return self.object.updatable(for: "disabledBackground", observationSession: self.observationSession, onNone: .drop)
+      return object.updating(for: "disabledBackground",
+                             from: originalExecutor,
+                             observationSession: observationSession,
+                             onNone: .drop)
     }
   }
 
   public extension ReactiveProperties where Object: UIViewController {
     var title: UpdatableProperty<String?> {
-      return self.object.updatable(for: "title", observationSession: self.observationSession)
+      return object.updatable(for: "title",
+                              from: originalExecutor,
+                              observationSession: observationSession)
     }
   }
 #endif
