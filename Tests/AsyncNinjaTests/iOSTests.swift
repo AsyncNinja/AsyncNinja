@@ -34,7 +34,7 @@
       ("testUIViewController", testUIViewController),
       ]
 
-    static let cgFloatFixture: [CGFloat] = [0.0, 0.0, 0.3, 0.5, 0.5, 1.0, 1.0]
+    static let cgFloatFixture: [CGFloat] = [0.0, 0.0, 0.25, 0.5, 0.5, 1.0, 1.0]
     static let boolFixture: [Bool] = [true, true, false, false, true]
     static let stringsAndNilsFixture: [String?] = ["1", nil, "1", "1", "2", "2", nil, nil, "3", "1", "4"]
     static let stringsFixture: [String] = stringsAndNilsFixture.flatMap { $0 }
