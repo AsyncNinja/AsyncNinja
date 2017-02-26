@@ -101,13 +101,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseComple
       _locking.lock()
     }
     
-    for update_ in _bufferedUpdates {
-      executor.execute(from: nil) { (originalExecutor) in
-        block(.update(update_), originalExecutor)
-      }
-    }
-    
-    let handler = Handler(executor: executor, block: block, owner: self)
+    let handler = Handler(executor: executor, bufferedUpdates: _bufferedUpdates.clone(), owner: self, block: block)
     if let completion = _completion {
       handler.handle(.completion(completion), from: nil)
     } else {

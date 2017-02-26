@@ -370,20 +370,42 @@ final public class ChannelHandler<Update, Success> {
 
   let executor: Executor
   let block: Block
+  var locking = makeLocking()
+  var bufferedUpdates: Queue<Update>?
   var owner: Channel<Update, Success>?
 
   /// Designated initializer of ChannelHandler
   init(executor: Executor,
-       block: @escaping Block,
-       owner: Channel<Update, Success>) {
+       bufferedUpdates: Queue<Update>,
+       owner: Channel<Update, Success>,
+       block: @escaping Block) {
     self.executor = executor
     self.block = block
+    self.bufferedUpdates = bufferedUpdates
     self.owner = owner
+
+    executor.execute(from: nil) { (originalExecutor) in
+      self.handleBufferedUpdatesIfNeeded(from: originalExecutor)
+    }
+  }
+
+  func handleBufferedUpdatesIfNeeded(from originalExecutor: Executor) {
+    locking.lock()
+    let bufferedUpdates = self.bufferedUpdates
+    self.bufferedUpdates = nil
+    locking.unlock()
+
+    if let bufferedUpdates = bufferedUpdates {
+      for update in bufferedUpdates {
+        handle(.update(update), from: originalExecutor)
+      }
+    }
   }
 
   func handle(_ value: Event, from originalExecutor: Executor?) {
     self.executor.execute(from: originalExecutor) {
       (originalExecutor) in
+      self.handleBufferedUpdatesIfNeeded(from: originalExecutor)
       self.block(value, originalExecutor)
     }
   }
