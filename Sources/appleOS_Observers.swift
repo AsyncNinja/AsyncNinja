@@ -23,6 +23,11 @@
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
   import Foundation
 
+  public enum UpdateWithNoneHandlingPolicy<T> {
+    case drop
+    case replace(T)
+  }
+
   // MARK: - regular observation
   
   public extension Retainer where Self: NSObject {
@@ -190,7 +195,7 @@
     /// - Parameter channelBufferSize: size of the buffer within returned channel
     /// - Returns: channel of pairs (old, new) values
     func updatingOldAndNew<T>(
-      of keyPath: String,
+      for keyPath: String,
       executor: Executor,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
@@ -238,11 +243,6 @@
 
       return producer
     }
-  }
-
-  public enum UpdateWithNoneHandlingPolicy<T> {
-    case drop
-    case replace(T)
   }
 
   public extension ExecutionContext where Self: NSObject {
@@ -332,6 +332,44 @@
                       from: originalExecutor,
                       observationSession: observationSession,
                       channelBufferSize: channelBufferSize)
+    }
+
+    /// makes channel of changes of value for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel of pairs (old, new) values
+    func updatingOldAndNew<T>(
+      for keyPath: String,
+      observationSession: ObservationSession? = nil,
+      channelBufferSize: Int = 1
+      ) -> Updating<(old: T?, new: T?)> {
+      return updatingOldAndNew(for: keyPath,
+                               executor: executor,
+                               observationSession: observationSession,
+                               channelBufferSize: channelBufferSize)
+    }
+
+    /// makes channel of changes of value for specified key path
+    ///
+    /// - Parameter keyPath: to observe
+    /// - Parameter observationSession: is an object that helps to control observation
+    /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Returns: channel of changes dictionaries (see Foundation KVO for details)
+    func updatingChanges(
+      for keyPath: String,
+      from originalExecutor: Executor? = nil,
+      options: NSKeyValueObservingOptions,
+      observationSession: ObservationSession? = nil,
+      channelBufferSize: Int = 1
+      ) -> Updating<[NSKeyValueChangeKey: Any]> {
+      return updatingChanges(for: keyPath,
+                             executor: executor,
+                             from: originalExecutor,
+                             options: options,
+                             observationSession: observationSession,
+                             channelBufferSize: channelBufferSize)
     }
   }
 
