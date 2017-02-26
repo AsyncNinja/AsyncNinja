@@ -300,15 +300,6 @@ public extension Completing {
     _ block: @escaping (C, Fallible<Success>) -> Void) {
     // Test: FutureTests.testOnCompleteContextual_ContextAlive
     // Test: FutureTests.testOnCompleteContextual_ContextDead
-    let handler = self.makeCompletionHandler(executor: executor ?? context.executor) {
-      [weak context] (completion, executor) in
-      guard let context = context else { return }
-      block(context, completion)
-    }
-
-    if let handler = handler {
-      context.releaseOnDeinit(handler)
-    }
     _onComplete(context: context, executor: executor) {
       (context, completion, originalExecutor) in
       block(context, completion)
