@@ -91,10 +91,10 @@
                                  object: object,
                                  keyPath: "text",
                                  values: iOSTests.stringsFixture)
-//      self.testUpdatableProperty(updatable: object.rp.attributedText,
-//                                 object: object,
-//                                 keyPath: "attributedText",
-//                                 values: iOSTests.attributedStringsFixture)
+      //      self.testUpdatableProperty(updatable: object.rp.attributedText,
+      //                                 object: object,
+      //                                 keyPath: "attributedText",
+      //                                 values: iOSTests.attributedStringsFixture)
     }
 
     func testUIViewController() {
@@ -111,26 +111,12 @@
       keyPath: String,
       values: [T],
       file: StaticString = #file,
-      line: UInt = #line) {
-      let settingExpectation = self.expectation(description: "setting \(keyPath) test finished")
-
-      let runLoop = RunLoop.current
-
-      DispatchQueue.global().async {
-        for value in values {
-          updatable.update(value)
-          usleep(10_000)
-          DispatchQueue.main.sync {
-            XCTAssertEqual(object.value(forKeyPath: keyPath) as? T, value)
-          }
-        }
-
-        settingExpectation.fulfill()
+      line: UInt = #line)
+    {
+      for value in values {
+        updatable.update(value, from: .main)
+        XCTAssertEqual(object.value(forKeyPath: keyPath) as? T, value)
       }
-
-      runLoop.run(until: Date().addingTimeInterval(1.0))
-      self.waitForExpectations(timeout: 0.0)
-
       self.testUpdating(updating: updatable, object: object, keyPath: keyPath, values: values, file: file, line: line)
     }
 
@@ -140,30 +126,15 @@
       keyPath: String,
       values: [T],
       file: StaticString = #file,
-      line: UInt = #line
-      ) {
-      let gettingExpectation = self.expectation(description: "getting \(keyPath) test finished")
+      line: UInt = #line)
+    {
+      var updatingIterator = updating.makeIterator()
+      let _ = updatingIterator.next() // skip an initial value
+      for value in values {
+        object.setValue(value, forKeyPath: keyPath)
 
-      let runLoop = RunLoop.current
-
-      DispatchQueue.global().async {
-        var updatingIterator = updating.makeIterator()
-        let _ = updatingIterator.next() // skip an initial value
-        for value in values {
-          DispatchQueue.main.sync {
-            object.setValue(value, forKeyPath: keyPath)
-          }
-
-          usleep(10_000)
-
-          XCTAssertEqual(updatingIterator.next(), value)
-        }
-
-        gettingExpectation.fulfill()
+        XCTAssertEqual(updatingIterator.next(), value)
       }
-
-      runLoop.run(until: Date().addingTimeInterval(1.0))
-      self.waitForExpectations(timeout: 0.0)
     }
 
     private func testUpdatableProperty<T: AsyncNinjaOptionalAdaptor, Object: NSObject>(
@@ -172,25 +143,13 @@
       keyPath: String,
       values: [T],
       file: StaticString = #file,
-      line: UInt = #line) where T.AsyncNinjaWrapped: Equatable {
-      let settingExpectation = self.expectation(description: "setting \(keyPath) test finished")
-
-      DispatchQueue.global().async {
-        for value in values {
-          updatable.update(value)
-          usleep(10_000)
-          DispatchQueue.main.sync {
-            let valueWeGot = object.value(forKeyPath: keyPath) as? T
-            XCTAssertEqual(valueWeGot?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue)
-          }
-        }
-
-        settingExpectation.fulfill()
+      line: UInt = #line) where T.AsyncNinjaWrapped: Equatable
+    {
+      for value in values {
+        updatable.update(value, from: .main)
+        let valueWeGot = object.value(forKeyPath: keyPath) as? T
+        XCTAssertEqual(valueWeGot?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue)
       }
-
-      self.waitForExpectations(timeout: 1.0)
-
-      self.testUpdating(updating: updatable, object: object, keyPath: keyPath, values: values, file: file, line: line)
     }
 
     private func testUpdating<T: AsyncNinjaOptionalAdaptor, Object: NSObject>(
@@ -200,24 +159,15 @@
       values: [T],
       file: StaticString = #file,
       line: UInt = #line)
-      where T.AsyncNinjaWrapped: Equatable {
-      let gettingExpectation = self.expectation(description: "getting \(keyPath) test finished")
-      DispatchQueue.global().async {
-        var updatingIterator = updating.makeIterator()
-        let _ = updatingIterator.next() // skip an initial value
-        for value in values {
-          DispatchQueue.main.sync {
-            object.setValue(value, forKeyPath: keyPath)
-          }
-          usleep(10_000)
-          XCTAssertEqual(updatingIterator.next()?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue)
-        }
-
-        gettingExpectation.fulfill()
+      where T.AsyncNinjaWrapped: Equatable
+    {
+      var updatingIterator = updating.makeIterator()
+      let _ = updatingIterator.next() // skip an initial value
+      for value in values {
+        object.setValue(value, forKeyPath: keyPath)
+        XCTAssertEqual(updatingIterator.next()?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue)
       }
-
-      self.waitForExpectations(timeout: 1.0)
     }
-}
+  }
   
 #endif
