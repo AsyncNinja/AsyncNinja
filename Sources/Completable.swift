@@ -30,7 +30,12 @@ public protocol BaseCompletable: Completing, Cancellable {
   /// Returns false if promise was completed before.
   ///
   /// - Parameter completion: value to compete `Completing` with
-  /// - Returns: true if this call completed future
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
+  /// - Returns: true if this call completed `Completable`
   @discardableResult
   func tryComplete(with completion: Fallible<Success>, from originalExecutor: Executor?) -> Bool
 
@@ -53,28 +58,65 @@ public extension BaseCompletable {
   }
 
   /// Shorthand to tryComplete(with:) that does not return value
+  ///
+  /// - Parameter completion: value to compete `Completing` with
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
   func complete(with completion: Fallible<Success>, from originalExecutor: Executor? = nil) {
     self.tryComplete(with: completion, from: originalExecutor)
   }
 
-  /// Tries to complete self with success vlue
+  /// Tries to complete self with success
+  ///
+  /// - Parameter success: value to succeed `Completing` with
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
+  /// - Returns: true if this call completed `Completable`
   @discardableResult
   func trySucceed(with success: Success, from originalExecutor: Executor? = nil) -> Bool {
     return self.tryComplete(with: Fallible(success: success), from: originalExecutor)
   }
 
   /// Shorthand to trySucceed(with:) that does not return value
+  ///
+  /// - Parameter success: value to succeed `Completing` with
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
   func succeed(with success: Success, from originalExecutor: Executor? = nil) {
     self.complete(with: Fallible(success: success), from: originalExecutor)
   }
 
   /// Tries to complete self with failure vlue
+  ///
+  /// - Parameter failure: error to fail `Completing` with
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
+  /// - Returns: true if this call completed `Completable`
   @discardableResult
   public func tryFail(with failure: Swift.Error, from originalExecutor: Executor? = nil) -> Bool {
     return self.tryComplete(with: Fallible(failure: failure), from: originalExecutor)
   }
 
   /// Shorthand to tryFail(with:) that does not return value
+  ///
+  /// - Parameter failure: error to fail `Completing` with
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
   public func fail(with failure: Swift.Error, from originalExecutor: Executor? = nil) {
     self.complete(with: Fallible(failure: failure), from: originalExecutor)
   }
@@ -85,11 +127,23 @@ public extension BaseCompletable {
   }
 
   /// Completes with cancellation (AsyncNinjaError.cancelled)
-  public func cancel(from originalExecutor: Executor? = nil) {
+  ///
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
+  public func cancel(from originalExecutor: Executor?) {
     self.fail(with: AsyncNinjaError.cancelled, from: originalExecutor)
   }
 
   /// Completes with error of deallocated context (AsyncNinjaError.contextDeallocated)
+  ///
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
   func cancelBecauseOfDeallocatedContext(from originalExecutor: Executor? = nil) {
     self.fail(with: AsyncNinjaError.contextDeallocated, from: originalExecutor)
   }
@@ -98,6 +152,12 @@ public extension BaseCompletable {
 extension BaseCompletable where Success == Void {
 
   /// Convenience method succeeds mutable with void value
+  ///
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
   public func succeed(from originalExecutor: Executor? = nil) {
     self.succeed(with: (), from: originalExecutor)
   }

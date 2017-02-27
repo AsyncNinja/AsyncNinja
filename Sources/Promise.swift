@@ -65,6 +65,11 @@ final public class Promise<Success>: Future<Success>, Completable {
   /// Returns false if promise was completed before.
   ///
   /// - Parameter completion: value to complete future with
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
   /// - Returns: true if `Promise` was completed with specified value
   public func tryComplete(
     with completion: Fallible<Success>,

@@ -210,7 +210,12 @@ public extension DispatchGroup {
     return completionFuture(executor: .primary)
   }
 
-  func completionFuture(executor: Executor = .primary) -> Future<Void> {
+  /// Makes future from of `DispatchGroups`'s notify after balancing all enters and leaves
+  /// *Property `DispatchGroup.completionFuture` most cover most of your cases*
+  ///
+  /// - Parameter executor: to notify on
+  /// - Returns: `Future` that completes with balancing enters and leaves of the `DispatchGroup`
+  func completionFuture(executor: Executor) -> Future<Void> {
     let promise = Promise<Void>()
     let executor_ = executor.isDispatchQueueExecutor ? executor : .primary
     self.notify(queue: executor_.dispatchQueue!) { [weak promise] in

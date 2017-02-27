@@ -117,6 +117,13 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseComple
 
   /// Applies specified ChannelValue to the Producer
   /// Value will not be applied for completed Producer
+  ///
+  /// - Parameter event: `Event` to apply.
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
   public func apply(_ event: Event,
                     from originalExecutor: Executor? = nil) {
     switch event {
@@ -136,6 +143,13 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseComple
 
   /// Sends specified Update to the Producer
   /// Value will not be sent for completed Producer
+  ///
+  /// - Parameter update: value to update with
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
   public func update(_ update: Update,
                      from originalExecutor: Executor? = nil) {
 
@@ -154,6 +168,13 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseComple
 
   /// Sends specified sequence of Update to the Producer
   /// Values will not be sent for completed Producer
+  ///
+  /// - Parameter updates: values to update with
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
   public func update<S: Sequence>(_ updates: S,
                      from originalExecutor: Executor? = nil)
     where S.Iterator.Element == Update {
@@ -177,6 +198,11 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseComple
   /// Tries to complete the Producer
   ///
   /// - Parameter completion: value to complete Producer with
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
   /// - Returns: true if Producer was completed with this call,
   ///   false if it was completed before
   @discardableResult

@@ -254,8 +254,11 @@ public extension Completing {
 
 public extension Completing {
   /// Performs block when completion value.
+  /// *This method is method is less preferable then `onComplete(context: ...)`.*
   ///
-  /// This method is method is less preferable then onComplete(context: ...).
+  /// - Parameters:
+  ///   - executor: to call block on
+  ///   - block: block to call on completion
   func onComplete(
     executor: Executor = .primary,
     _ block: @escaping (Fallible<Success>) -> Void) {
@@ -265,7 +268,7 @@ public extension Completing {
     }
   }
 
-  func _onComplete(
+  internal func _onComplete(
     executor: Executor = .primary,
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) {
     let handler = self.makeCompletionHandler(executor: executor) {
@@ -292,8 +295,12 @@ public extension Completing {
 
 public extension Completing {
   /// Performs block when completion value.
+  /// This method is suitable for applying completion to context.
   ///
-  /// This method is suitable for applying completion of future to context.
+  /// - Parameters:
+  ///   - context: to complete on
+  ///   - executor: override of `ExecutionContext`s executor. Keep default value of the argument unless you need to override an executor provided by the context
+  ///   - block: block to call on completion
   func onComplete<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
@@ -306,7 +313,7 @@ public extension Completing {
     }
   }
 
-  func _onComplete<C: ExecutionContext>(
+  internal func _onComplete<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     _ block: @escaping (_ context: C, _ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) {

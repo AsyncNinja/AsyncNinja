@@ -23,23 +23,34 @@
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 
   import Foundation
-
+  
   public extension Executor {
-
+    
     /// Convenience function that makes executor from `OperationQueue`
+    
+    /// makes an `Executor` from `OperationQueue`
+    ///
+    /// - Parameters:
+    ///   - queue: an `OperationQueue` to make executor from
+    ///   - isSerial: true if `maxOperationsCount` is going to be 1 all the time
+    ///     Using serial queue might give a tiny performance benefit in reare cases
+    ///     Keep default value if you are not sure about the queue
+    ///   - strictAsync: `true` if the `Executor` must execute blocks strictly asynchronously.
+    ///     `false` will relax requirements to increase performance
+    /// - Returns: constructed `Executor`
     static func operationQueue(
       _ queue: OperationQueue,
       isSerial: Bool = false,
-      alwaysAsync: Bool = false) -> Executor {
-      return Executor(isSerial: isSerial, alwaysAsync: alwaysAsync, handler: queue.addOperation)
+      strictAsync: Bool = false) -> Executor {
+      return Executor(isSerial: isSerial, strictAsync: strictAsync, handler: queue.addOperation)
     }
   }
 
   /// A protocol that automatically adds implementation of methods
   /// of `Retainer` for Objective-C runtime compatible objects
-  public protocol ObjCInjectedRetainer: Retainer, NSObjectProtocol {
-  }
+  public protocol ObjCInjectedRetainer: Retainer, NSObjectProtocol { }
 
+  /// **Internal use only** An object that calls specified block on deinit
   private class DeinitNotifier {
     let _block: () -> Void
 
@@ -91,9 +102,7 @@
 
     /// returns an executor that executes block on private queue of NSManagedObjectContext
     public var executor: Executor {
-      return Executor(isSerial: true) {
-        [weak self] in
-        self?.perform($0) }
+      return Executor(isSerial: true, strictAsync: true, handler: self.perform)
     }
   }
 
@@ -102,17 +111,12 @@
 
     /// returns an executor that executes block on private queue of NSPersistentStoreCoordinator
     public var executor: Executor {
-      return Executor(isSerial: true) {
-        [weak self] in
-        self?.perform($0)
-      }
+      return Executor(isSerial: true, strictAsync: true, handler: self.perform)
     }
   }
 
   /// Conformance URLSessionTask to Cancellable
-  extension URLSessionTask: Cancellable {
-
-  }
+  extension URLSessionTask: Cancellable { }
 
   /// URLSession improved with AsyncNinja
   public extension URLSession {

@@ -89,33 +89,64 @@
   }
 
   public extension ReactiveProperties where Object: UIView {
+    /// An `UpdatableProperty` that refers to read-write property `UIView.alpha`
     var alpha: UpdatableProperty<CGFloat> { return updatable(for: "alpha", onNone: .drop) }
+   
+    /// An `UpdatableProperty` that refers to read-write property `UIView.isHidden`
     var isHidden: UpdatableProperty<Bool> { return updatable(for: "hidden", onNone: .drop) }
+
+    /// An `UpdatableProperty` that refers to read-write property `UIView.isOpaque`
     var isOpaque: UpdatableProperty<Bool> { return updatable(for: "opaque", onNone: .drop) }
+
+    /// An `UpdatableProperty` that refers to read-write property `UIView.isUserInteractionEnabled`
     var isUserInteractionEnabled: UpdatableProperty<Bool> { return updatable(for: "userInteractionEnabled", onNone: .drop) }
   }
   
   public extension ReactiveProperties where Object: UIControl {
+    /// An `UpdatableProperty` that refers to read-write property `UIControl.isEnabled`
     var isEnabled: UpdatableProperty<Bool> { return updatable(for: "enabled", onNone: .drop) }
+
+    /// An `UpdatableProperty` that refers to read-write property `UIControl.isSelected`
     var isSelected: UpdatableProperty<Bool> { return updatable(for: "selected", onNone: .drop) }
+
+    /// An `Updating` that refers to read-only property `UIControl.state`
     var state: Updating<UIControlState> { return updatable(for: "state", onNone: .drop) }
   }
 
   public extension ReactiveProperties where Object: UITextField {
+    /// An `UpdatableProperty` that refers to read-write property `UITextField.text`
     var text: UpdatableProperty<String> { return updatable(for: "text", onNone: .drop) }
+
+    /// An `UpdatableProperty` that refers to read-write property `UITextField.attributedText`
     var attributedText: UpdatableProperty<NSAttributedString?> { return updatable(for: "attributedText") }
+    
+    /// An `UpdatableProperty` that refers to read-write property `UITextField.textColor`
     var textColor: UpdatableProperty<UIColor?> { return updatable(for: "textColor") }
-    var font: UpdatableProperty<NSTextAlignment> { return updatable(for: "font", onNone: .drop) }
+
+    /// An `UpdatableProperty` that refers to read-write property `UITextField.font`
+    var font: UpdatableProperty<UIFont> { return updatable(for: "font", onNone: .drop) }
+
+    /// An `UpdatableProperty` that refers to read-write property `UITextField.textAlignment`
     var textAlignment: UpdatableProperty<NSTextAlignment> { return updatable(for: "textAlignment", onNone: .drop) }
+
+    /// An `UpdatableProperty` that refers to read-write property `UITextField.placeholder`
     var placeholder: UpdatableProperty<String?> { return updatable(for: "placeholder") }
+
+    /// An `UpdatableProperty` that refers to read-write property `UITextField.attributedPlaceholder`
     var attributedPlaceholder: UpdatableProperty<NSAttributedString?> { return updatable(for: "attributedPlaceholder") }
+
+    /// An `UpdatableProperty` that refers to read-write property `UITextField.background`
     var background: UpdatableProperty<UIImage?> { return updatable(for: "background") }
+    
+    /// An `UpdatableProperty` that refers to read-write property `UITextField.disabledBackground`
     var disabledBackground: UpdatableProperty<UIImage?> { return updatable(for: "disabledBackground") }
+
+    /// An `Updating` that refers to read-only property `UITextField.isEditing`
     var isEditing: Updating<Bool> { return updating(for: "disabledBackground", onNone: .drop) }
   }
 
   public extension ReactiveProperties where Object: UIViewController {
-    var title: UpdatableProperty<String?> { return updatable(for: "title")
-    }
+    /// An `UpdatableProperty` that refers to read-write property `UIViewController.title`
+    var title: UpdatableProperty<String?> { return updatable(for: "title") }
   }
 #endif

@@ -1,0 +1,102 @@
+//
+//  Copyright (c) 2016-2017 Anton Mironov
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom
+//  the Software is furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+//  IN THE SOFTWARE.
+//
+
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+  import Foundation
+
+  /// A policy for handling `None` (or `nil`) update of `Channel<Update?, Success>`
+  public enum UpdateWithNoneHandlingPolicy<T> {
+    
+    /// drop `None` (or `nil`) update
+    case drop
+    
+    /// replace `None` (or `nil`) with a specified value
+    case replace(T)
+  }
+
+  /// **Internal use only** `KeyPathObserver` is an object for managing KVO.
+  final class KeyPathObserver: NSObject {
+    let object: Unmanaged<NSObject>
+    let keyPath: String
+    let options: NSKeyValueObservingOptions
+    let observationBlock: ([NSKeyValueChangeKey: Any]) -> Void
+    var enabled: Bool {
+      didSet {
+        if enabled == oldValue {
+          return
+        } else if enabled {
+          object.takeUnretainedValue().addObserver(self, forKeyPath: keyPath, options: options, context: nil)
+        } else {
+          object.takeUnretainedValue().removeObserver(self, forKeyPath: keyPath)
+        }
+      }
+    }
+
+    init(object: NSObject, keyPath: String, options: NSKeyValueObservingOptions, enabled: Bool, observationBlock: @escaping ([NSKeyValueChangeKey: Any]) -> Void) {
+      self.object = Unmanaged.passUnretained(object)
+      self.keyPath = keyPath
+      self.options = options
+      self.observationBlock = observationBlock
+      self.enabled = enabled
+      super.init()
+      if enabled {
+        object.addObserver(self, forKeyPath: keyPath, options: options, context: nil)
+      }
+    }
+
+    deinit {
+      self.enabled = false
+    }
+
+    override func observeValue(forKeyPath keyPath: String?,
+                               of object: Any?,
+                               change: [NSKeyValueChangeKey: Any]?,
+                               context: UnsafeMutableRawPointer?) {
+      assert(keyPath == self.keyPath)
+      if let change = change {
+        observationBlock(change)
+      }
+    }
+  }
+  
+  /// An object that is able to control (enable and disable) observation-related channel constructors
+  public class ObservationSession {
+
+    /// enables or disables observation
+    public var enabled: Bool {
+      didSet {
+        if enabled != oldValue {
+          observers.forEach {
+            $0.enabled = enabled
+          }
+        }
+      }
+    }
+
+    var observers = QueueOfWeakElements<KeyPathObserver>()
+
+    /// designated initializer
+    public init(enabled: Bool = true) {
+      self.enabled = enabled
+    }
+  }
+#endif
