@@ -62,11 +62,12 @@ public class ReleasePool {
   /// Causes release of all retained objects
   public func drain() {
     _locking.lock()
-    defer { _locking.unlock() }
     _objectsContainer.removeAll()
-    for block in _blocksContainer {
+    let blocksContainer = _blocksContainer
+    _blocksContainer.removeAll()
+    _locking.unlock()
+    for block in blocksContainer {
       block()
     }
-    _blocksContainer.removeAll()
   }
 }
