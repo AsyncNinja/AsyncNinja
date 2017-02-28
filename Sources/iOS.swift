@@ -183,9 +183,7 @@
     var isSearchResultsButtonSelected: UpdatableProperty<Bool> { return updatable(forKeyPath: "searchResultsButtonSelected", onNone: .drop) }
 
     /// An `UpdatableProperty` that refers to read-write property `UISearchBar.barTintColor`
-    var barTintColor: UpdatableProperty<UIColor> {
-      return updatable(forKeyPath: "barTintColor", onNone: .drop)
-    }
+    var barTintColor: UpdatableProperty<UIColor> { return updatable(forKeyPath: "barTintColor", onNone: .drop) }
     
     /// An `UpdatableProperty` that refers to read-write property `UISearchBar.searchBarStyle`
     var searchBarStyle: UpdatableProperty<UISearchBarStyle> {

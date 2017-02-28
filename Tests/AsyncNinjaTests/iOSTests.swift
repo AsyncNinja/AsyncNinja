@@ -31,6 +31,7 @@
       ("testUIView", testUIView),
       ("testUIControl", testUIControl),
       ("testUITextField", testUITextField),
+      ("testUISearchBar", testUISearchBar),
       ("testUIViewController", testUIViewController),
       ]
 
