@@ -81,19 +81,20 @@ class Future_MakersTests: XCTestCase {
     let expectation = self.expectation(description: "block called")
     let startTime = DispatchTime.now()
 
-    let futureValue = future(executor: .queue(qos), after: 0.2) { () -> Int in
+    let futureValue = future(executor: .queue(qos), after: 0.5) { () -> Int in
       assert(qos: qos)
       let finishTime = DispatchTime.now()
-      XCTAssert(startTime + 0.2 < finishTime)
-      XCTAssert(startTime + 0.4 > finishTime)
+      XCTAssert(startTime + 0.3 < finishTime)
+      XCTAssert(startTime + 0.7 > finishTime)
       expectation.fulfill()
       return try square_success(value)
     }
 
-    usleep(150_000)
+    usleep(250_000)
     XCTAssertNil(futureValue.value)
 
-    self.waitForExpectations(timeout: 0.5)
+    self.waitForExpectations(timeout: 1.0)
+    usleep(100_000)
     XCTAssertEqual(futureValue.success, square(value))
   }
 

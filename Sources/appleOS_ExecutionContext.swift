@@ -24,6 +24,8 @@
   import Foundation
 
   public extension ExecutionContext where Self: NSObject {
+    public typealias CustomGetter<T> = (Self) -> T?
+    public typealias CustomSetter<T> = (Self, T?) -> Void
 
     /// makes an `UpdatableProperty<T?>` for specified key path.
     ///
@@ -48,20 +50,26 @@
     /// - Parameter allowSettingSameValue: set to true if you want
     ///   to set a new value event if it is equal to an old one
     /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
+    /// - Parameter customSetter: provides a custom getter to use instead of setValue(_: forKeyPath:) call
     /// - Returns: an `UpdatableProperty<T?>` bound to observe and update specified keyPath
     func updatable<T>(
-      for keyPath: String,
+      forKeyPath keyPath: String,
       from originalExecutor: Executor?,
       observationSession: ObservationSession? = nil,
       allowSettingSameValue: Bool = false,
-      channelBufferSize: Int = 1
+      channelBufferSize: Int = 1,
+      customGetter: CustomGetter<T>? = nil,
+      customSetter: CustomSetter<T>? = nil
       ) -> UpdatableProperty<T?> {
-      return updatable(for: keyPath,
+      return updatable(forKeyPath: keyPath,
                        executor: executor,
                        from: originalExecutor,
                        observationSession: observationSession,
                        allowSettingSameValue: allowSettingSameValue,
-                       channelBufferSize: channelBufferSize)
+                       channelBufferSize: channelBufferSize,
+                       customGetter: customGetter,
+                       customSetter: customSetter)
     }
 
     /// makes an `UpdatableProperty<T>` for specified key path.
@@ -90,22 +98,28 @@
     /// - Parameter allowSettingSameValue: set to true if you want
     ///   to set a new value event if it is equal to an old one
     /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
+    /// - Parameter customSetter: provides a custom getter to use instead of setValue(_: forKeyPath:) call
     /// - Returns: an `UpdatableProperty<T>` bound to observe and update specified keyPath
     func updatable<T>(
-      for keyPath: String,
+      forKeyPath keyPath: String,
       onNone: UpdateWithNoneHandlingPolicy<T>,
       from originalExecutor: Executor?,
       observationSession: ObservationSession? = nil,
       allowSettingSameValue: Bool = false,
-      channelBufferSize: Int = 1
+      channelBufferSize: Int = 1,
+      customGetter: CustomGetter<T>? = nil,
+      customSetter: CustomSetter<T>? = nil
       ) -> UpdatableProperty<T> {
-      return updatable(for: keyPath,
+      return updatable(forKeyPath: keyPath,
                        onNone: onNone,
                        executor: executor,
                        from: originalExecutor,
                        observationSession: observationSession,
                        allowSettingSameValue: allowSettingSameValue,
-                       channelBufferSize: channelBufferSize)
+                       channelBufferSize: channelBufferSize,
+                       customGetter: customGetter,
+                       customSetter: customSetter)
     }
 
     /// makes an `Updating<T?>` for specified key path.
@@ -127,18 +141,21 @@
     ///   you calling this method on.
     /// - Parameter observationSession: is an object that helps to control observation
     /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
     /// - Returns: an `Updating<T?>` bound to observe and update specified keyPath
     func updating<T>(
-      for keyPath: String,
+      forKeyPath keyPath: String,
       from originalExecutor: Executor?,
       observationSession: ObservationSession? = nil,
-      channelBufferSize: Int = 1
+      channelBufferSize: Int = 1,
+      customGetter: CustomGetter<T>? = nil
       ) -> Updating<T?> {
-      return updating(for: keyPath,
+      return updating(forKeyPath: keyPath,
                       executor: executor,
                       from: originalExecutor,
                       observationSession: observationSession,
-                      channelBufferSize: channelBufferSize)
+                      channelBufferSize: channelBufferSize,
+                      customGetter: customGetter)
     }
 
     /// makes an `Updating<T>` for specified key path.
@@ -162,21 +179,24 @@
     ///   you calling this method on.
     /// - Parameter observationSession: is an object that helps to control observation
     /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
     /// - Returns: an `Updating<T>` bound to observe and update specified keyPath
     func updating<T>(
-      for keyPath: String,
+      forKeyPath keyPath: String,
       onNone: UpdateWithNoneHandlingPolicy<T>,
       from originalExecutor: Executor?,
       observationSession: ObservationSession? = nil,
-      channelBufferSize: Int = 1
+      channelBufferSize: Int = 1,
+      customGetter: CustomGetter<T>? = nil
       ) -> Updating<T> {
 
-      return updating(for: keyPath,
+      return updating(forKeyPath: keyPath,
                       onNone: onNone,
                       executor: executor,
                       from: originalExecutor,
                       observationSession: observationSession,
-                      channelBufferSize: channelBufferSize)
+                      channelBufferSize: channelBufferSize,
+                      customGetter: customGetter)
     }
 
     /// makes an `Updating<(old: T?, new: T?)>` for specified key path.
@@ -199,12 +219,12 @@
     /// - Parameter channelBufferSize: size of the buffer within returned channel
     /// - Returns: an `Updating<(old: T?, new: T?)>` bound to observe and update specified keyPath
     func updatingOldAndNew<T>(
-      for keyPath: String,
+      forKeyPath keyPath: String,
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
       ) -> Updating<(old: T?, new: T?)> {
-      return updatingOldAndNew(for: keyPath,
+      return updatingOldAndNew(forKeyPath: keyPath,
                                executor: executor,
                                observationSession: observationSession,
                                channelBufferSize: channelBufferSize)
@@ -230,13 +250,13 @@
     /// - Parameter channelBufferSize: size of the buffer within returned channel
     /// - Returns: an `Updating<[NSKeyValueChangeKey: Any]>` bound to observe and update specified keyPath
     func updatingChanges(
-      for keyPath: String,
+      forKeyPath keyPath: String,
       from originalExecutor: Executor? = nil,
       options: NSKeyValueObservingOptions,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
       ) -> Updating<[NSKeyValueChangeKey: Any]> {
-      return updatingChanges(for: keyPath,
+      return updatingChanges(forKeyPath: keyPath,
                              executor: executor,
                              from: originalExecutor,
                              options: options,

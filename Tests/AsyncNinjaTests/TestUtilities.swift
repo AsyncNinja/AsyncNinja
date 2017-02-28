@@ -136,6 +136,6 @@ class TestObjCActor: NSObject, Actor, ObjCInjectedRetainer {
     var executor: Executor { return .queue(self.internalQueue, isSerial: true) }
 }
 
-func eval<Result>(invoking body: () throws -> Result) rethrows -> Result {
+func eval<Result>(_ body: () throws -> Result) rethrows -> Result {
   return try body()
 }

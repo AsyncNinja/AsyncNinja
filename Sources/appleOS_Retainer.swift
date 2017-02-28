@@ -24,6 +24,9 @@
   import Foundation
 
   public extension Retainer where Self: NSObject {
+    public typealias CustomGetter<T> = (Self) -> T?
+    public typealias CustomSetter<T> = (Self, T?) -> Void
+    
     /// makes an `UpdatableProperty<T?>` for specified key path.
     ///
     /// `UpdatableProperty` is a kind of `Producer` so you can:
@@ -48,37 +51,44 @@
     /// - Parameter allowSettingSameValue: set to true if you want
     ///   to set a new value event if it is equal to an old one
     /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
+    /// - Parameter customSetter: provides a custom getter to use instead of setValue(_: forKeyPath:) call
     /// - Returns: an `UpdatableProperty<T?>` bound to observe and update specified keyPath
     func updatable<T>(
-      for keyPath: String,
+      forKeyPath keyPath: String,
       executor: Executor,
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
       allowSettingSameValue: Bool = false,
-      channelBufferSize: Int = 1
+      channelBufferSize: Int = 1,
+      customGetter: CustomGetter<T>? = nil,
+      customSetter: CustomSetter<T>? = nil
       ) -> UpdatableProperty<T?> {
       let producer = UpdatableProperty<T?>(bufferSize: channelBufferSize, updateExecutor: executor) {
         [weak self] (producerProxy, event, originalExecutor) in
         switch event {
         case let .update(update):
-          if allowSettingSameValue {
-            self?.setValue(update, forKey: keyPath)
-          } else if let strongSelf = self {
-            let nsObjectUpdate = update.map { $0 as! NSObject }
-            let nsObjectValue = strongSelf.value(forKeyPath: keyPath).map { $0 as! NSObject }
-            if nsObjectUpdate != nsObjectValue {
-              strongSelf.setValue(update, forKey: keyPath)
-            }
-          }
+          self?.setValue(update,
+                         forKeyPath: keyPath,
+                         allowSettingSameValue: allowSettingSameValue,
+                         customSetter: customSetter)
         case .completion:
           nop()
         }
       }
 
       executor.execute(from: originalExecutor) { (originalExecutor) in
-        let observer = KeyPathObserver(object: self, keyPath: keyPath, options: [.initial, .old, .new], enabled: observationSession?.enabled ?? true) {
-          [weak producer] (changes) in
-          producer?.updateWithoutHandling(changes[.newKey] as? T, from: executor)
+        let observer = KeyPathObserver(object: self,
+                                       keyPath: keyPath,
+                                       options: [.initial, .new],
+                                       enabled: observationSession?.enabled ?? true) {
+          [weak producer] (maybeSelf, changes) in
+          guard let strongSelf = maybeSelf as? Self,
+            let producer = producer
+            else { return }
+          
+          let newValue = strongSelf.getValue(forKeyPath: keyPath, changes: changes, customGetter: customGetter)
+          producer.updateWithoutHandling(newValue, from: executor)
         }
 
         observationSession?.observers.push(observer)
@@ -117,41 +127,45 @@
     /// - Parameter allowSettingSameValue: set to true if you want
     ///   to set a new value event if it is equal to an old one
     /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
+    /// - Parameter customSetter: provides a custom getter to use instead of setValue(_: forKeyPath:) call
     /// - Returns: an `UpdatableProperty<T>` bound to observe and update specified keyPath
     func updatable<T>(
-      for keyPath: String,
+      forKeyPath keyPath: String,
       onNone: UpdateWithNoneHandlingPolicy<T>,
       executor: Executor,
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
       allowSettingSameValue: Bool = false,
-      channelBufferSize: Int = 1
+      channelBufferSize: Int = 1,
+      customGetter: CustomGetter<T>? = nil,
+      customSetter: CustomSetter<T>? = nil
       ) -> UpdatableProperty<T> {
       let producer = UpdatableProperty<T>(bufferSize: channelBufferSize, updateExecutor: executor) {
         [weak self] (producerProxy, event, originalExecutor) in
         switch event {
         case let .update(update):
-          if allowSettingSameValue {
-            self?.setValue(update, forKey: keyPath)
-          } else if let strongSelf = self {
-            let nsObjectUpdate = update as! NSObject
-            let nsObjectValue = strongSelf.value(forKeyPath: keyPath).map { $0 as! NSObject }
-            if nsObjectUpdate != nsObjectValue {
-              strongSelf.setValue(update, forKey: keyPath)
-            }
-          }
+          self?.setValue(update, forKeyPath: keyPath, allowSettingSameValue: allowSettingSameValue, customSetter: customSetter)
         case .completion:
           nop()
         }
       }
       
       executor.execute(from: originalExecutor) { (originalExecutor) in
-        let observer = KeyPathObserver(object: self, keyPath: keyPath, options: [.initial, .old, .new], enabled: observationSession?.enabled ?? true) {
-          [weak producer] (changes) in
-          if let update = changes[.newKey] as? T {
-            producer?.updateWithoutHandling(update, from: executor)
+        let observer = KeyPathObserver(object: self,
+                                       keyPath: keyPath,
+                                       options: [.initial, .new],
+                                       enabled: observationSession?.enabled ?? true)
+        {
+          [weak producer] (maybeSelf, changes) in
+          guard
+            let strongSelf = maybeSelf as? Self,
+            let producer = producer
+            else { return }
+          if let update = strongSelf.getValue(forKeyPath: keyPath, changes: changes, customGetter: customGetter) {
+            producer.updateWithoutHandling(update, from: executor)
           } else if case let .replace(update) = onNone {
-            producer?.updateWithoutHandling(update, from: executor)
+            producer.updateWithoutHandling(update, from: executor)
           }
         }
         
@@ -185,21 +199,42 @@
     ///   you calling this method on.
     /// - Parameter observationSession: is an object that helps to control observation
     /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
     /// - Returns: an `Updating<T?>` bound to observe and update specified keyPath
     func updating<T>(
-      for keyPath: String,
+      forKeyPath keyPath: String,
       executor: Executor,
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
-      channelBufferSize: Int = 1
+      channelBufferSize: Int = 1,
+      customGetter: CustomGetter<T>? = nil
       ) -> Updating<T?> {
-      return updatingChanges(for: keyPath,
-                             executor: executor,
-                             from: originalExecutor,
-                             options: [.initial, .old, .new],
-                             observationSession: observationSession,
-                             channelBufferSize: channelBufferSize)
-        .map(executor: .immediate) { $0[.newKey] as? T }
+
+      let producer = Updatable<T?>(bufferSize: channelBufferSize)
+      
+      executor.execute(from: originalExecutor) { (originalExecutor) in
+        let observer = KeyPathObserver(object: self,
+                                       keyPath: keyPath,
+                                       options: [.initial, .new],
+                                       enabled: observationSession?.enabled ?? true)
+        {
+          [weak producer] (maybeSelf, changes) in
+          guard
+            let strongSelf = maybeSelf as? Self,
+            let producer = producer
+            else { return }
+          let update = strongSelf.getValue(forKeyPath: keyPath, changes: changes, customGetter: customGetter)
+          producer.update(update, from: executor)
+        }
+        
+        observationSession?.observers.push(observer)
+        self.notifyDeinit { [weak producer] in
+          producer?.cancelBecauseOfDeallocatedContext(from: nil)
+          observer.enabled = false
+        }
+      }
+      
+      return producer
     }
 
     /// makes an `Updating<T>` for specified key path.
@@ -224,30 +259,45 @@
     ///   you calling this method on.
     /// - Parameter observationSession: is an object that helps to control observation
     /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
     /// - Returns: an `Updating<T>` bound to observe and update specified keyPath
     func updating<T>(
-      for keyPath: String,
+      forKeyPath keyPath: String,
       onNone: UpdateWithNoneHandlingPolicy<T>,
       executor: Executor,
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
-      channelBufferSize: Int = 1
+      channelBufferSize: Int = 1,
+      customGetter: CustomGetter<T>? = nil
       ) -> Updating<T> {
-      return updatingChanges(for: keyPath,
-                             executor: executor,
-                             from: originalExecutor,
-                             options: [.initial, .old, .new],
-                             observationSession: observationSession,
-                             channelBufferSize: channelBufferSize)
-        .flatMap(executor: .immediate) { (changes) -> T? in
-          if let update = changes[.newKey] as? T {
-            return update
+      let producer = Updatable<T>(bufferSize: channelBufferSize)
+      
+      executor.execute(from: originalExecutor) { (originalExecutor) in
+        let observer = KeyPathObserver(object: self,
+                                       keyPath: keyPath,
+                                       options: [.initial, .new],
+                                       enabled: observationSession?.enabled ?? true)
+        {
+          [weak producer] (maybeSelf, changes) in
+          guard
+            let strongSelf = maybeSelf as? Self,
+            let producer = producer
+            else { return }
+          if let update = strongSelf.getValue(forKeyPath: keyPath, changes: changes, customGetter: customGetter) {
+            producer.update(update, from: executor)
           } else if case let .replace(update) = onNone {
-            return update
-          } else {
-            return nil
+            producer.update(update, from: executor)
           }
+        }
+        
+        observationSession?.observers.push(observer)
+        self.notifyDeinit { [weak producer] in
+          producer?.cancelBecauseOfDeallocatedContext(from: nil)
+          observer.enabled = false
+        }
       }
+      
+      return producer
     }
 
     /// makes an `Updating<(old: T?, new: T?)>` for specified key path.
@@ -269,15 +319,16 @@
     ///   you calling this method on.
     /// - Parameter observationSession: is an object that helps to control observation
     /// - Parameter channelBufferSize: size of the buffer within returned channel
+    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
     /// - Returns: an `Updating<(old: T?, new: T?)>` bound to observe and update specified keyPath
     func updatingOldAndNew<T>(
-      for keyPath: String,
+      forKeyPath keyPath: String,
       executor: Executor,
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
       ) -> Updating<(old: T?, new: T?)> {
-      return updatingChanges(for: keyPath,
+      return updatingChanges(forKeyPath: keyPath,
                              executor: executor,
                              from: originalExecutor,
                              options: [.initial, .old, .new],
@@ -307,7 +358,7 @@
     /// - Parameter channelBufferSize: size of the buffer within returned channel
     /// - Returns: an `Updating<[NSKeyValueChangeKey: Any]>` bound to observe and update specified keyPath
     func updatingChanges(
-      for keyPath: String,
+      forKeyPath keyPath: String,
       executor: Executor,
       from originalExecutor: Executor? = nil,
       options: NSKeyValueObservingOptions,
@@ -322,7 +373,7 @@
                                        options: options,
                                        enabled: observationSession?.enabled ?? true)
         {
-          [weak producer] (changes) in
+          [weak producer] (maybeSelf, changes) in
           producer?.update(changes, from: executor)
         }
 
@@ -334,6 +385,37 @@
       }
 
       return producer
+    }
+
+    func setValue<T>(_ newValue: T?, forKeyPath keyPath: String, allowSettingSameValue: Bool, customSetter: CustomSetter<T>?) {
+      let nsNewObjectValue: NSObject?
+      if let customSetter = customSetter {
+        customSetter(self, newValue)
+      } else {
+        let mustSet: Bool
+        nsNewObjectValue = newValue as? NSObject
+
+        if allowSettingSameValue {
+          mustSet = true
+        } else {
+          let nsOldObjectValue = self
+            .value(forKeyPath: keyPath)
+            .map { $0 as! NSObject }
+          mustSet = (nsNewObjectValue != nsOldObjectValue)
+        }
+
+        if mustSet {
+          self.setValue(nsNewObjectValue, forKeyPath: keyPath)
+        }
+      }
+    }
+    
+    func getValue<T>(forKeyPath keyPath: String, changes: [NSKeyValueChangeKey: Any], customGetter: CustomGetter<T>?) -> T? {
+        if let customGetter = customGetter {
+            return customGetter(self)
+        } else {
+            return changes[.newKey] as? T
+        }
     }
   }
 #endif

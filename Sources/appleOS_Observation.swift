@@ -35,10 +35,12 @@
 
   /// **Internal use only** `KeyPathObserver` is an object for managing KVO.
   final class KeyPathObserver: NSObject {
+    typealias ObservationBlock = (_ object: Any?, _ changes: [NSKeyValueChangeKey: Any]) -> Void
+    
     let object: Unmanaged<NSObject>
     let keyPath: String
     let options: NSKeyValueObservingOptions
-    let observationBlock: ([NSKeyValueChangeKey: Any]) -> Void
+    let observationBlock: ObservationBlock
     var enabled: Bool {
       didSet {
         if enabled == oldValue {
@@ -51,7 +53,7 @@
       }
     }
 
-    init(object: NSObject, keyPath: String, options: NSKeyValueObservingOptions, enabled: Bool, observationBlock: @escaping ([NSKeyValueChangeKey: Any]) -> Void) {
+    init(object: NSObject, keyPath: String, options: NSKeyValueObservingOptions, enabled: Bool, observationBlock: @escaping ObservationBlock) {
       self.object = Unmanaged.passUnretained(object)
       self.keyPath = keyPath
       self.options = options
@@ -73,7 +75,7 @@
                                context: UnsafeMutableRawPointer?) {
       assert(keyPath == self.keyPath)
       if let change = change {
-        observationBlock(change)
+        observationBlock(object, change)
       }
     }
   }
