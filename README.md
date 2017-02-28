@@ -345,7 +345,7 @@ let searchResults = searchBar.rx.text.orEmpty
 
 #### AsyncNinja
 ```swift
-let searchResults = searchField.rp.text
+let searchResults = searchBar.rp.text
   .debounce(interval: 0.3)
   .distinct()
   .flatMap(behavior: .keepLatestTransform) { (query) -> Future<[SearchResult]> in

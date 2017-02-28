@@ -91,7 +91,10 @@
   public extension ReactiveProperties where Object: UIView {
     /// An `UpdatableProperty` that refers to read-write property `UIView.alpha`
     var alpha: UpdatableProperty<CGFloat> { return updatable(forKeyPath: "alpha", onNone: .drop) }
-   
+
+    /// An `UpdatableProperty` that refers to read-write property `UIView.tintColor`
+    var tintColor: UpdatableProperty<UIColor> { return updatable(forKeyPath: "tintColor", onNone: .drop) }
+
     /// An `UpdatableProperty` that refers to read-write property `UIView.isHidden`
     var isHidden: UpdatableProperty<Bool> { return updatable(forKeyPath: "hidden", onNone: .drop) }
 
@@ -130,11 +133,7 @@
     var textAlignment: UpdatableProperty<NSTextAlignment> {
       return updatable(forKeyPath: "textAlignment", onNone: .drop,
                        customGetter: { $0.textAlignment },
-                       customSetter: {
-                        if let newValue = $1 {
-                          $0.textAlignment = newValue
-                        }
-      })
+                       customSetter: { if let newValue = $1 { $0.textAlignment = newValue } })
     }
 
     /// An `UpdatableProperty` that refers to read-write property `UITextField.placeholder`
@@ -150,7 +149,51 @@
     var disabledBackground: UpdatableProperty<UIImage?> { return updatable(forKeyPath: "disabledBackground") }
 
     /// An `Updating` that refers to read-only property `UITextField.isEditing`
-    var isEditing: Updating<Bool> { return updating(forKeyPath: "disabledBackground", onNone: .drop) }
+    var isEditing: Updating<Bool> { return updating(forKeyPath: "isEditing", onNone: .drop) }
+  }
+
+  public extension ReactiveProperties where Object: UISearchBar {
+    /// An `UpdatableProperty` that refers to read-write property `UISearchBar.barStyle`
+    var barStyle: UpdatableProperty<UIBarStyle> {
+      return updatable(forKeyPath: "barStyle",
+                       onNone: .drop,
+                       customGetter: { $0.barStyle },
+                       customSetter: { if let newValue = $1 { $0.barStyle = newValue } })
+    }
+
+    /// An `UpdatableProperty` that refers to read-write property `UISearchBar.text`
+    var text: UpdatableProperty<String> { return updatable(forKeyPath: "text", onNone: .drop) }
+    
+    /// An `UpdatableProperty` that refers to read-write property `UISearchBar.prompt`
+    var prompt: UpdatableProperty<String?> { return updatable(forKeyPath: "prompt") }
+    
+    /// An `UpdatableProperty` that refers to read-write property `UISearchBar.placeholder`
+    var placeholder: UpdatableProperty<String?> { return updatable(forKeyPath: "placeholder") }
+
+    /// An `UpdatableProperty` that refers to read-write property `UISearchBar.showsBookmarkButton`
+    var showsBookmarkButton: UpdatableProperty<Bool> { return updatable(forKeyPath: "showsBookmarkButton", onNone: .drop) }
+    
+    /// An `UpdatableProperty` that refers to read-write property `UISearchBar.showsCancelButton`
+    var showsCancelButton: UpdatableProperty<Bool> { return updatable(forKeyPath: "showsCancelButton", onNone: .drop) }
+    
+    /// An `UpdatableProperty` that refers to read-write property `UISearchBar.showsSearchResultsButton`
+    var showsSearchResultsButton: UpdatableProperty<Bool> { return updatable(forKeyPath: "showsSearchResultsButton", onNone: .drop) }
+    
+    /// An `UpdatableProperty` that refers to read-write property `UISearchBar.isSearchResultsButtonSelected`
+    var isSearchResultsButtonSelected: UpdatableProperty<Bool> { return updatable(forKeyPath: "searchResultsButtonSelected", onNone: .drop) }
+
+    /// An `UpdatableProperty` that refers to read-write property `UISearchBar.barTintColor`
+    var barTintColor: UpdatableProperty<UIColor> {
+      return updatable(forKeyPath: "barTintColor", onNone: .drop)
+    }
+    
+    /// An `UpdatableProperty` that refers to read-write property `UISearchBar.searchBarStyle`
+    var searchBarStyle: UpdatableProperty<UISearchBarStyle> {
+      return updatable(forKeyPath: "searchBarStyle",
+                       onNone: .drop,
+                       customGetter: { $0.searchBarStyle },
+                       customSetter: { if let newValue = $1 { $0.searchBarStyle = newValue } })
+    }
   }
 
   public extension ReactiveProperties where Object: UIViewController {

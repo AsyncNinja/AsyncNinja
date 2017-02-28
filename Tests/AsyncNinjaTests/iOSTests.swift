@@ -65,6 +65,10 @@
                                  object: object,
                                  keyPath: "alpha",
                                  values: iOSTests.cgFloatFixture)
+      self.testUpdatableProperty(updatable: object.rp.tintColor,
+                                 object: object,
+                                 keyPath: "tintColor",
+                                 values: iOSTests.colorsFiture)
       self.testUpdatableProperty(updatable: object.rp.isHidden,
                                  object: object,
                                  keyPath: "hidden",
@@ -120,7 +124,7 @@
       self.testUpdatableProperty(updatable: object.rp.placeholder,
                                  object: object,
                                  keyPath: "placeholder",
-                                 values: iOSTests.stringsFixture)
+                                 values: iOSTests.stringsAndNilsFixture)
       self.testUpdatableProperty(updatable: object.rp.attributedPlaceholder,
                                  object: object,
                                  keyPath: "attributedPlaceholder",
@@ -133,6 +137,55 @@
                                  object: object,
                                  keyPath: "disabledBackground",
                                  values: iOSTests.imagesAndNilsFixture)
+    }
+
+    func testUISearchBar() {
+      let object = UISearchBar()
+      
+      self.testUpdatableProperty(updatable: object.rp.barStyle,
+                                 object: object,
+                                 keyPath: "barStyle",
+                                 values: [.default, .default, .black, .black, .default, .black],
+                                 customGetter: { $0.barStyle },
+                                 customSetter: { $0.barStyle = $1! })
+      self.testUpdatableProperty(updatable: object.rp.text,
+                                 object: object,
+                                 keyPath: "text",
+                                 values: iOSTests.stringsFixture)
+      self.testUpdatableProperty(updatable: object.rp.prompt,
+                                 object: object,
+                                 keyPath: "prompt",
+                                 values: iOSTests.stringsAndNilsFixture)
+      self.testUpdatableProperty(updatable: object.rp.placeholder,
+                                 object: object,
+                                 keyPath: "placeholder",
+                                 values: iOSTests.stringsAndNilsFixture)
+      self.testUpdatableProperty(updatable: object.rp.showsBookmarkButton,
+                                 object: object,
+                                 keyPath: "showsBookmarkButton",
+                                 values: iOSTests.boolFixture)
+      self.testUpdatableProperty(updatable: object.rp.showsCancelButton,
+                                 object: object,
+                                 keyPath: "showsCancelButton",
+                                 values: iOSTests.boolFixture)
+      self.testUpdatableProperty(updatable: object.rp.showsSearchResultsButton,
+                                 object: object,
+                                 keyPath: "showsSearchResultsButton",
+                                 values: iOSTests.boolFixture)
+      self.testUpdatableProperty(updatable: object.rp.isSearchResultsButtonSelected,
+                                 object: object,
+                                 keyPath: "searchResultsButtonSelected",
+                                 values: iOSTests.boolFixture)
+      self.testUpdatableProperty(updatable: object.rp.barTintColor,
+                                 object: object,
+                                 keyPath: "barTintColor",
+                                 values: iOSTests.colorsFiture)
+      self.testUpdatableProperty(updatable: object.rp.searchBarStyle,
+                                 object: object,
+                                 keyPath: "searchBarStyle",
+                                 values: [.default, .default, .prominent, .minimal, .minimal, .default],
+                                 customGetter: { $0.searchBarStyle },
+                                 customSetter: { $0.searchBarStyle = $1! })
     }
 
     func testUIViewController() {
