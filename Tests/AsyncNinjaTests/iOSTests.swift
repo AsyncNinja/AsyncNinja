@@ -32,9 +32,12 @@
       ("testUIControl", testUIControl),
       ("testUITextField", testUITextField),
       ("testUISearchBar", testUISearchBar),
+      ("testUIImageView", testUIImageView),
       ("testUIViewController", testUIViewController),
       ]
 
+    static let intFixture: [Int] = [1, 1, 2, 2, 3, 1, 4]
+    static let timeIntervalFixture: [TimeInterval] = [0.125, 0.125, 0.25, 0.5, 0.5, 1.0, 1.0]
     static let cgFloatFixture: [CGFloat] = [0.0, 0.0, 0.25, 0.5, 0.5, 1.0, 1.0]
     static let boolFixture: [Bool] = [true, true, false, false, true]
     static let stringsAndNilsFixture: [String?] = ["1", nil, "1", "1", "2", "2", nil, nil, "3", "1", "4"]
@@ -59,6 +62,8 @@
                                                    imageOne, imageTwo, imageTwo,
                                                    nil, nil, imageThree,
                                                    imageOne, imageFour]
+    static let arraysOfImagesAndNilsFixture: [[UIImage]?] = iOSTests.imagesAndNilsFixture
+      .map { $0.map { [$0] } }
 
     func testUIView() {
       let object = UIView()
@@ -188,6 +193,54 @@
                                  customGetter: { $0.searchBarStyle },
                                  customSetter: { $0.searchBarStyle = $1! })
     }
+    
+    func testUIImageView() {
+      let object = UIImageView()
+      
+      self.testUpdatableProperty(updatable: object.rp.image,
+                                 object: object,
+                                 keyPath: "image",
+                                 values: iOSTests.imagesAndNilsFixture)
+      self.testUpdatableProperty(updatable: object.rp.highlightedImage,
+                                 object: object,
+                                 keyPath: "highlightedImage",
+                                 values: iOSTests.imagesAndNilsFixture)
+      self.testUpdatableProperty(updatable: object.rp.isHighlighted,
+                                 object: object,
+                                 keyPath: "highlighted",
+                                 values: iOSTests.boolFixture)
+//      self.testUpdatableProperty(updatable: object.rp.animationImages,
+//                                 object: object,
+//                                 keyPath: "animationImages",
+//                                 values: iOSTests.arraysOfImagesAndNilsFixture)
+//      self.testUpdatableProperty(updatable: object.rp.highlightedAnimationImages,
+//                                 object: object,
+//                                 keyPath: "highlightedAnimationImages",
+//                                 values: iOSTests.arraysOfImagesAndNilsFixture)
+      self.testUpdatableProperty(updatable: object.rp.animationDuration,
+                                 object: object,
+                                 keyPath: "animationDuration",
+                                 values: iOSTests.timeIntervalFixture)
+      self.testUpdatableProperty(updatable: object.rp.animationRepeatCount,
+                                 object: object,
+                                 keyPath: "animationRepeatCount",
+                                 values: iOSTests.intFixture)
+//      self.testUpdatableProperty(updatable: object.rp.isAnimating,
+//                                 object: object,
+//                                 keyPath: "animating",
+//                                 values: iOSTests.boolFixture,
+//                                 customGetter: { $0.isAnimating },
+//                                 customSetter:
+//        {
+//          if let newValue = $1 {
+//            if newValue {
+//              $0.startAnimating()
+//            } else {
+//              $0.stopAnimating()
+//            }
+//          }
+//      })
+    }
 
     func testUIViewController() {
       let object = UIViewController()
@@ -215,7 +268,7 @@
         } else {
           objectValue = object.value(forKeyPath: keyPath) as? T
         }
-        XCTAssertEqual(objectValue, value)
+        XCTAssertEqual(objectValue, value, file: file, line: line)
       }
       self.testUpdating(updating: updatable, object: object, keyPath: keyPath, values: values, file: file, line: line, customSetter: customSetter)
     }
@@ -238,7 +291,7 @@
           object.setValue(value, forKeyPath: keyPath)
         }
 
-        XCTAssertEqual(updatingIterator.next(), value)
+        XCTAssertEqual(updatingIterator.next(), value, file: file, line: line)
       }
     }
 
@@ -248,29 +301,46 @@
       keyPath: String,
       values: [T],
       file: StaticString = #file,
-      line: UInt = #line) where T.AsyncNinjaWrapped: Equatable
+      line: UInt = #line,
+      customGetter: ((Object) -> T?)? = nil,
+      customSetter: ((Object, T?) -> Void)? = nil)
+      where T.AsyncNinjaWrapped: Equatable
     {
       for value in values {
         updatable.update(value, from: .main)
-        let valueWeGot = object.value(forKeyPath: keyPath) as? T
-        XCTAssertEqual(valueWeGot?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue)
+        
+        let objectValue: T?
+        if let customGetter = customGetter {
+          objectValue = customGetter(object)
+        } else {
+          objectValue = object.value(forKeyPath: keyPath) as? T
+        }
+        XCTAssertEqual(objectValue?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue, file: file, line: line)
       }
-    }
 
+      self.testUpdating(updating: updatable, object: object, keyPath: keyPath, values: values, file: file, line: line, customSetter: customSetter)
+    }
+    
     private func testUpdating<T: AsyncNinjaOptionalAdaptor, Object: NSObject>(
       updating: Updating<T>,
       object: Object,
       keyPath: String,
       values: [T],
       file: StaticString = #file,
-      line: UInt = #line)
+      line: UInt = #line,
+      customSetter: ((Object, T?) -> Void)? = nil)
       where T.AsyncNinjaWrapped: Equatable
     {
       var updatingIterator = updating.makeIterator()
       let _ = updatingIterator.next() // skip an initial value
       for value in values {
-        object.setValue(value, forKeyPath: keyPath)
-        XCTAssertEqual(updatingIterator.next()?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue)
+        if let customSetter = customSetter {
+          customSetter(object, value)
+        } else {
+          object.setValue(value.asyncNinjaOptionalValue, forKeyPath: keyPath)
+        }
+        
+        XCTAssertEqual(updatingIterator.next()?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue, file: file, line: line)
       }
     }
   }

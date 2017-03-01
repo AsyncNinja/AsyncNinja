@@ -194,6 +194,46 @@
     }
   }
 
+  public extension ReactiveProperties where Object: UIImageView {
+    /// An `UpdatableProperty` that refers to read-write property `UIImageView.image`
+    var image: UpdatableProperty<UIImage?> { return updatable(forKeyPath: "image") }
+    
+    /// An `UpdatableProperty` that refers to read-write property `UIImageView.highlightedImage`
+    var highlightedImage: UpdatableProperty<UIImage?> { return updatable(forKeyPath: "highlightedImage") }
+    
+    /// An `UpdatableProperty` that refers to read-write property `UIImageView.isHighlighted`
+    var isHighlighted: UpdatableProperty<Bool> { return updatable(forKeyPath: "highlighted", onNone: .drop) }
+
+    /// An `UpdatableProperty` that refers to read-write property `UIImageView.animationImages`
+    var animationImages: UpdatableProperty<[UIImage]?> { return updatable(forKeyPath: "animationImages") }
+    
+    /// An `UpdatableProperty` that refers to read-write property `UIImageView.highlightedAnimationImages`
+    var highlightedAnimationImages: UpdatableProperty<[UIImage]?> { return updatable(forKeyPath: "highlightedAnimationImages") }
+    
+    /// An `UpdatableProperty` that refers to read-write property `UIImageView.animationDuration`
+    var animationDuration: UpdatableProperty<TimeInterval> { return updatable(forKeyPath: "animationDuration", onNone: .drop) }
+
+    /// An `UpdatableProperty` that refers to read-write property `UIImageView.animationRepeatCount`
+    var animationRepeatCount: UpdatableProperty<Int> { return updatable(forKeyPath: "animationRepeatCount", onNone: .drop) }
+    
+    /// An `UpdatableProperty` that refers to read-write property `UIImageView.isAnimating`
+    var isAnimating: UpdatableProperty<Bool> {
+      return updatable(forKeyPath: "animating",
+                       onNone: .drop,
+                       customGetter: { $0.isAnimating },
+                       customSetter:
+        {
+          if let newValue = $1 {
+            if newValue {
+              $0.startAnimating()
+            } else {
+              $0.stopAnimating()
+            }
+          }
+      })
+    }
+  }
+
   public extension ReactiveProperties where Object: UIViewController {
     /// An `UpdatableProperty` that refers to read-write property `UIViewController.title`
     var title: UpdatableProperty<String?> { return updatable(forKeyPath: "title") }
