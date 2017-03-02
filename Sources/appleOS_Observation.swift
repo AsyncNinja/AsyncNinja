@@ -34,18 +34,18 @@
   }
 
   /// **Internal use only** `KeyPathObserver` is an object for managing KVO.
-  final class KeyPathObserver: NSObject {
+  final class KeyPathObserver: NSObject, ObservationSessionItem {
     typealias ObservationBlock = (_ object: Any?, _ changes: [NSKeyValueChangeKey: Any]) -> Void
     
     let object: Unmanaged<NSObject>
     let keyPath: String
     let options: NSKeyValueObservingOptions
     let observationBlock: ObservationBlock
-    var enabled: Bool {
+    var isEnabled: Bool {
       didSet {
-        if enabled == oldValue {
+        if isEnabled == oldValue {
           return
-        } else if enabled {
+        } else if isEnabled {
           object.takeUnretainedValue().addObserver(self, forKeyPath: keyPath, options: options, context: nil)
         } else {
           object.takeUnretainedValue().removeObserver(self, forKeyPath: keyPath)
@@ -53,20 +53,20 @@
       }
     }
 
-    init(object: NSObject, keyPath: String, options: NSKeyValueObservingOptions, enabled: Bool, observationBlock: @escaping ObservationBlock) {
+    init(object: NSObject, keyPath: String, options: NSKeyValueObservingOptions, isEnabled: Bool, observationBlock: @escaping ObservationBlock) {
       self.object = Unmanaged.passUnretained(object)
       self.keyPath = keyPath
       self.options = options
       self.observationBlock = observationBlock
-      self.enabled = enabled
+      self.isEnabled = isEnabled
       super.init()
-      if enabled {
+      if isEnabled {
         object.addObserver(self, forKeyPath: keyPath, options: options, context: nil)
       }
     }
 
     deinit {
-      self.enabled = false
+      self.isEnabled = false
     }
 
     override func observeValue(forKeyPath keyPath: String?,
@@ -80,25 +80,33 @@
     }
   }
   
+  @objc protocol ObservationSessionItem: AnyObject {
+    var isEnabled: Bool { get set }
+  }
+
   /// An object that is able to control (enable and disable) observation-related channel constructors
   public class ObservationSession {
 
     /// enables or disables observation
-    public var enabled: Bool {
+    public var isEnabled: Bool {
       didSet {
-        if enabled != oldValue {
-          observers.forEach {
-            $0.enabled = enabled
+        if isEnabled != oldValue {
+          for item in items {
+            item.isEnabled = isEnabled
           }
         }
       }
     }
 
-    var observers = QueueOfWeakElements<KeyPathObserver>()
+    private var items = QueueOfWeakElements<ObservationSessionItem>()
 
     /// designated initializer
-    public init(enabled: Bool = true) {
-      self.enabled = enabled
+    public init(isEnabled: Bool = true) {
+      self.isEnabled = isEnabled
+    }
+    
+    func insert(item: ObservationSessionItem) {
+      items.push(item)
     }
   }
 #endif

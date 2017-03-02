@@ -81,7 +81,7 @@
         let observer = KeyPathObserver(object: self,
                                        keyPath: keyPath,
                                        options: [.initial, .new],
-                                       enabled: observationSession?.enabled ?? true) {
+                                       isEnabled: observationSession?.isEnabled ?? true) {
           [weak producer] (maybeSelf, changes) in
           guard let strongSelf = maybeSelf as? Self,
             let producer = producer
@@ -91,10 +91,10 @@
           producer.updateWithoutHandling(newValue, from: executor)
         }
 
-        observationSession?.observers.push(observer)
+        observationSession?.insert(item: observer)
         self.notifyDeinit { [weak producer] in
           producer?.cancelBecauseOfDeallocatedContext(from: nil)
-          observer.enabled = false
+          observer.isEnabled = false
         }
       }
 
@@ -155,7 +155,7 @@
         let observer = KeyPathObserver(object: self,
                                        keyPath: keyPath,
                                        options: [.initial, .new],
-                                       enabled: observationSession?.enabled ?? true)
+                                       isEnabled: observationSession?.isEnabled ?? true)
         {
           [weak producer] (maybeSelf, changes) in
           guard
@@ -169,10 +169,10 @@
           }
         }
         
-        observationSession?.observers.push(observer)
+        observationSession?.insert(item: observer)
         self.notifyDeinit { [weak producer] in
           producer?.cancelBecauseOfDeallocatedContext(from: nil)
-          observer.enabled = false
+          observer.isEnabled = false
         }
       }
       
@@ -216,7 +216,7 @@
         let observer = KeyPathObserver(object: self,
                                        keyPath: keyPath,
                                        options: [.initial, .new],
-                                       enabled: observationSession?.enabled ?? true)
+                                       isEnabled: observationSession?.isEnabled ?? true)
         {
           [weak producer] (maybeSelf, changes) in
           guard
@@ -227,10 +227,10 @@
           producer.update(update, from: executor)
         }
         
-        observationSession?.observers.push(observer)
+        observationSession?.insert(item: observer)
         self.notifyDeinit { [weak producer] in
           producer?.cancelBecauseOfDeallocatedContext(from: nil)
-          observer.enabled = false
+          observer.isEnabled = false
         }
       }
       
@@ -276,7 +276,7 @@
         let observer = KeyPathObserver(object: self,
                                        keyPath: keyPath,
                                        options: [.initial, .new],
-                                       enabled: observationSession?.enabled ?? true)
+                                       isEnabled: observationSession?.isEnabled ?? true)
         {
           [weak producer] (maybeSelf, changes) in
           guard
@@ -290,10 +290,10 @@
           }
         }
         
-        observationSession?.observers.push(observer)
+        observationSession?.insert(item: observer)
         self.notifyDeinit { [weak producer] in
           producer?.cancelBecauseOfDeallocatedContext(from: nil)
-          observer.enabled = false
+          observer.isEnabled = false
         }
       }
       
@@ -371,16 +371,16 @@
         let observer = KeyPathObserver(object: self,
                                        keyPath: keyPath,
                                        options: options,
-                                       enabled: observationSession?.enabled ?? true)
+                                       isEnabled: observationSession?.isEnabled ?? true)
         {
           [weak producer] (maybeSelf, changes) in
           producer?.update(changes, from: executor)
         }
 
-        observationSession?.observers.push(observer)
+        observationSession?.insert(item: observer)
         self.notifyDeinit { [weak producer] in
           producer?.cancelBecauseOfDeallocatedContext(from: nil)
-          observer.enabled = false
+          observer.isEnabled = false
         }
       }
 
