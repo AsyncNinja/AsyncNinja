@@ -26,7 +26,7 @@ public typealias Updatable<T> = Producer<T, Void>
 public typealias UpdatableProperty<T> = ProducerProxy<T, Void>
 
 /// Producer that can be manually created
-final public class Producer<Update, Success>: BaseProducer<Update, Success>, Completable {
+final public class Producer<Update, Success>: BaseProducer<Update, Success>, HasSimpleInit {
   /// convenience initializer of Producer. Initializes Producer with default buffer size
   public init() {
     super.init(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
@@ -53,7 +53,7 @@ final public class Producer<Update, Success>: BaseProducer<Update, Success>, Com
 /// Mutable subclass of channel
 /// You can update and complete producer manually
 /// **internal use only**
-public class BaseProducer<Update, Success>: Channel<Update, Success>, BaseCompletable {
+public class BaseProducer<Update, Success>: Channel<Update, Success>, Completable {
   public typealias CompletingType = Channel<Update, Success>
 
   private let _maxBufferSize: Int

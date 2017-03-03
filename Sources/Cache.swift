@@ -28,7 +28,7 @@ import Dispatch
 /// `Future` or `Channel` and Context. That gives an opportunity to make
 /// cache that can report of status of completion updateally
 /// (e.g. download persentage).
-public class Cache<Key: Hashable, T: Completable, Context: ExecutionContext> {
+public class Cache<Key: Hashable, T: Completable&HasSimpleInit, Context: ExecutionContext> {
   typealias _CachableValue = CachableValueImpl<T, Context>
 
   /// Block that resolves miss

@@ -23,7 +23,7 @@
 import Dispatch
 
 /// Promise is a future that may be manually completed by owner
-final public class Promise<Success>: Future<Success>, Completable {
+final public class Promise<Success>: Future<Success>, Completable, HasSimpleInit {
   public typealias CompletingType = Future<Success>
 
   private var _container = makeThreadSafeContainer()

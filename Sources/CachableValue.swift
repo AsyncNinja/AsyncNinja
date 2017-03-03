@@ -27,7 +27,7 @@ import Dispatch
 /// that can be either `Future` or `Channel` and Context. That gives
 /// an opportunity to make cache that can report of status of completion
 /// updateally (e.g. download persentage).
-public class CachableValue<T: Completable, Context: ExecutionContext> {
+public class CachableValue<T: Completable&HasSimpleInit, Context: ExecutionContext> {
 
   /// Function that resolves cache misses. `strongContext` is a context restored from weak reference
   public typealias MissHandler = (_ strongContext: Context) throws -> T.CompletingType
@@ -75,7 +75,7 @@ public class CachableValue<T: Completable, Context: ExecutionContext> {
 }
 
 /// **Internal use only** Implementation of CachableValue.
-class CachableValueImpl<T: Completable, Context: ExecutionContext> {
+class CachableValueImpl<T: Completable&HasSimpleInit, Context: ExecutionContext> {
   typealias MissHandler = CachableValue<T, Context>.MissHandler
   private weak var _context: Context?
   private let _locker: (() -> Void) -> Void
