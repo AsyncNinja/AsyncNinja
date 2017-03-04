@@ -66,7 +66,7 @@ public enum ChannelFlatteningBehavior {
 }
 
 // MARK: - updates only flattening transformations with futures
-public extension Channel {
+public extension Streaming {
   /// Applies transformation to update values of the channel.
   ///
   /// - Parameters:
@@ -148,7 +148,7 @@ public extension Channel {
 }
 
 // MARK: - updates only flattening transformations with futures
-public extension Channel {
+public extension Streaming {
   /// Applies transformation to update values of the channel.
   ///
   /// - Parameters:

@@ -50,7 +50,7 @@ final public class Producer<Update, Success>: BaseProducer<Update, Success>, Has
 /// Mutable subclass of channel
 /// You can update and complete producer manually
 /// **internal use only**
-public class BaseProducer<Update, Success>: Channel<Update, Success>, Completable {
+public class BaseProducer<Update, Success>: Channel<Update, Success>, Streamable {
   public typealias CompletingType = Channel<Update, Success>
 
   private let _maxBufferSize: Int
@@ -84,51 +84,25 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, Completabl
   /// **internal use only**
   override public func makeHandler(
     executor: Executor,
-    _ block: @escaping (_ event: Event, _ originalExecutor: Executor) -> Void
-    ) -> Handler? {
-    return _makeHandler(executor: executor, avoidLocking: false, block)
+    _ block: @escaping (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void
+    ) -> AnyObject? {
+    return _locking.locker {
+      return _makeHandler(executor: executor, block)
+    }
   }
 
   fileprivate func _makeHandler(
     executor: Executor,
-    avoidLocking: Bool,
-    _ block: @escaping (_ event: Event, _ originalExecutor: Executor) -> Void
+    _ block: @escaping (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void
     ) -> Handler? {
-    if !avoidLocking {
-      _locking.lock()
-    }
-    
     let handler = Handler(executor: executor, bufferedUpdates: _bufferedUpdates.clone(), owner: self, block: block)
     if let completion = _completion {
       handler.handle(.completion(completion), from: nil)
+      return nil
     } else {
       _handlers.push(handler)
     }
-    
-    if !avoidLocking {
-      _locking.unlock()
-    }
-    
     return handler
-  }
-
-  /// Applies specified ChannelValue to the Producer
-  /// Value will not be applied for completed Producer
-  ///
-  /// - Parameter event: `Event` to apply.
-  /// - Parameter originalExecutor: `Executor` you calling this method on.
-  ///   Specifying this argument will allow to perform syncronous executions
-  ///   on `strictAsync: false` `Executor`s.
-  ///   Use default value or nil if you are not sure about an `Executor`
-  ///   you calling this method on.
-  public func apply(_ event: Event,
-                    from originalExecutor: Executor? = nil) {
-    switch event {
-    case let .update(update):
-      self.update(update, from: originalExecutor)
-    case let .completion(completion):
-      self.complete(with: completion, from: originalExecutor)
-    }
   }
 
   private func _pushUpdateToBuffer(_ update: Update) {
@@ -382,46 +356,11 @@ public extension Channel {
   }
 }
 
-/// Specifies strategy of selecting buffer size of channel derived
-/// from another channel, e.g through transformations
-public enum DerivedChannelBufferSize {
-
-  /// Specifies strategy to use as default value for arguments of methods
-  case `default`
-
-  /// Buffer size is defined by the buffer size of original channel
-  case inherited
-
-  /// Buffer size is defined by specified value
-  case specific(Int)
-
-  /// **internal use only**
-  func bufferSize<T, U>(_ parentChannel: Channel<T, U>) -> Int {
-    switch self {
-    case .default: return AsyncNinjaConstants.defaultChannelBufferSize
-    case .inherited: return parentChannel.maxBufferSize
-    case let .specific(value): return value
-    }
-  }
-
-  /// **internal use only**
-  func bufferSize<UpdateA, SuccessA, UpdateB, SuccessB>(
-    _ parentChannelA: Channel<UpdateA, SuccessA>,
-    _ parentChannelB: Channel<UpdateB, SuccessB>
-    ) -> Int {
-    switch self {
-    case .default: return AsyncNinjaConstants.defaultChannelBufferSize
-    case .inherited: return max(parentChannelA.maxBufferSize, parentChannelB.maxBufferSize)
-    case let .specific(value): return value
-    }
-  }
-}
-
 // MARK: - ProducerProxy
 
 /// ProducerProxy acts like a producer but is actually a proxy for some operation, e.g. setting and oberving property
 public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
-  typealias UpdateHandler = (_ producer: ProducerProxy<Update, Success>, _ event: Event, _ originalExecutor: Executor?) -> Void
+  typealias UpdateHandler = (_ producer: ProducerProxy<Update, Success>, _ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor?) -> Void
   private let _updateHandler: UpdateHandler
   private let _updateExecutor: Executor
   
@@ -490,8 +429,7 @@ fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Upd
       _sema.signal()
     }
     super.init()
-    _handler = channel._makeHandler(executor: .immediate, avoidLocking: true)
-    {
+    _handler = channel._makeHandler(executor: .immediate) {
       [weak self] (event, originalExecutor) in
       self?.handle(event, from: originalExecutor)
     }

@@ -23,24 +23,25 @@
 import Dispatch
 
 /// Merges channels with completely unrelated types into one
-public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
-                  _ channelB: Channel<PB, SB>,
-                  cancellationToken: CancellationToken? = nil,
-                  bufferSize: DerivedChannelBufferSize = .default
-  ) -> Channel<Either<PA, PB>, (SA, SB)> {
+public func merge<T: Streaming, U: Streaming>(
+  _ channelA: T,
+  _ channelB: U,
+  cancellationToken: CancellationToken? = nil,
+  bufferSize: DerivedChannelBufferSize = .default
+  ) -> Channel<Either<T.Update, U.Update>, (T.Success, U.Success)> {
 
   // Tests: Channel_Merge2Tests.testMergeIntsAndStrings
 
   let bufferSize_ = bufferSize.bufferSize(channelA, channelB)
-  let producer = Producer<Either<PA, PB>, (SA, SB)>(bufferSize: bufferSize_)
+  let producer = Producer<Either<T.Update, U.Update>, (T.Success, U.Success)>(bufferSize: bufferSize_)
 
   var locking = makeLocking()
-  var successA: SA?
-  var successB: SB?
+  var successA: T.Success?
+  var successB: U.Success?
 
   func makeHandlerBlock<Update, Success>(
     updateHandler: @escaping (_ update: Update, _ originalExecutor: Executor) -> Void,
-    successHandler: @escaping (_ success: Success) -> (SA, SB)?
+    successHandler: @escaping (_ success: Success) -> (T.Success, U.Success)?
     ) -> (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void {
     return {
       [weak producer] (event, originalExecutor) in
@@ -60,7 +61,7 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   }
 
   let handlerBlockA = makeHandlerBlock(updateHandler: { [weak producer] (update, originalExecutor) in producer?.update(.left(update), from: originalExecutor) },
-                                       successHandler: { (success: SA) in
+                                       successHandler: { (success: T.Success) in
                                         successA = success
                                         return successB.map { (success, $0) }
   })
@@ -69,7 +70,7 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   producer.insertHandlerToReleasePool(handlerA)
 
   let handlerBlockB = makeHandlerBlock(updateHandler: { [weak producer] (update, originalExecutor) in producer?.update(.right(update), from: originalExecutor) },
-                                       successHandler: { (success: SB) in
+                                       successHandler: { (success: U.Success) in
                                         successB = success
                                         return successA.map { ($0, success) }
   })
@@ -82,23 +83,24 @@ public func merge<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
 }
 
 /// Merges channels into one
-public func merge<P, SA, SB>(_ channelA: Channel<P, SA>,
-                  _ channelB: Channel<P, SB>,
-                  cancellationToken: CancellationToken? = nil,
-                  bufferSize: DerivedChannelBufferSize = .default
-  ) -> Channel<P, (SA, SB)> {
+public func merge<T: Streaming, U: Streaming>(
+  _ channelA: T,
+  _ channelB: U,
+  cancellationToken: CancellationToken? = nil,
+  bufferSize: DerivedChannelBufferSize = .default
+) -> Channel<T.Update, (T.Success, U.Success)> where T.Update == U.Update {
 
   // Tests: Channel_Merge2Tests.testMergeInts
 
   let bufferSize_ = bufferSize.bufferSize(channelA, channelB)
-  let producer = Producer<P, (SA, SB)>(bufferSize: bufferSize_)
+  let producer = Producer<T.Update, (T.Success, U.Success)>(bufferSize: bufferSize_)
 
   var locking = makeLocking()
-  var successA: SA?
-  var successB: SB?
+  var successA: T.Success?
+  var successB: U.Success?
 
-  func makeHandlerBlock<T>(_ successHandler: @escaping (T) -> (SA, SB)?
-    ) -> (_ event: ChannelEvent<P, T>, _ originalExecutor: Executor) -> Void {
+  func makeHandlerBlock<V>(_ successHandler: @escaping (V) -> (T.Success, U.Success)?
+    ) -> (_ event: ChannelEvent<T.Update, V>, _ originalExecutor: Executor) -> Void {
     return {
       [weak producer] (event, originalExecutor) in
       switch event {
@@ -117,7 +119,7 @@ public func merge<P, SA, SB>(_ channelA: Channel<P, SA>,
   }
 
   let handlerA = channelA.makeHandler(executor: .immediate,
-                                      makeHandlerBlock { (success: SA) in
+                                      makeHandlerBlock { (success: T.Success) in
                                         successA = success
                                         return successB.map { (success, $0) }
   })
@@ -125,7 +127,7 @@ public func merge<P, SA, SB>(_ channelA: Channel<P, SA>,
   
   
   let handlerB = channelB.makeHandler(executor: .immediate,
-                                      makeHandlerBlock { (success: SB) in
+                                      makeHandlerBlock { (success: U.Success) in
                                         successB = success
                                         return successA.map { ($0, success) }
   })

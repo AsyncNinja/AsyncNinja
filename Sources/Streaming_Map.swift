@@ -22,78 +22,8 @@
 
 import Dispatch
 
-// MARK: - internal methods that produce derived producers and channels
-extension Channel {
-
-  /// **internal use only**
-  func makeProducer<P, S>(
-    executor: Executor,
-    cancellationToken: CancellationToken?,
-    bufferSize: DerivedChannelBufferSize,
-    _ onEvent: @escaping (_ event: Event, _ producer: BaseProducer<P, S>, _ originalExecutor: Executor) throws -> Void
-    ) -> BaseProducer<P, S> {
-    let bufferSize = bufferSize.bufferSize(self)
-    let producer = Producer<P, S>(bufferSize: bufferSize)
-    self.attach(producer: producer, executor: executor,
-                cancellationToken: cancellationToken, onEvent)
-    return producer
-  }
-
-  /// **internal use only**
-  func attach<P, S>(
-    producer: BaseProducer<P, S>,
-    executor: Executor,
-    cancellationToken: CancellationToken?,
-    _ onEvent: @escaping (_ event: Event, _ producer: BaseProducer<P, S>, _ originalExecutor: Executor) throws -> Void)
-  {
-    let handler = self.makeHandler(executor: executor) {
-      [weak producer] (event, originalExecutor) in
-      guard let producer = producer else { return }
-      do { try onEvent(event, producer, originalExecutor) }
-      catch { producer.fail(with: error, from: originalExecutor) }
-    }
-
-    producer.insertHandlerToReleasePool(handler)
-    cancellationToken?.add(cancellable: producer)
-  }
-
-  /// **internal use only**
-  func makeProducer<P, S, C: ExecutionContext>(
-    context: C,
-    executor: Executor?,
-    cancellationToken: CancellationToken?,
-    bufferSize: DerivedChannelBufferSize,
-    _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: BaseProducer<P, S>, _ originalExecutor: Executor) throws -> Void
-    ) -> BaseProducer<P, S> {
-    let bufferSize = bufferSize.bufferSize(self)
-    let producer = BaseProducer<P, S>(bufferSize: bufferSize)
-    self.attach(producer: producer, context: context, executor: executor,
-                cancellationToken: cancellationToken, onEvent)
-    return producer
-  }
-
-  /// **internal use only**
-  func attach<P, S, C: ExecutionContext>(
-    producer: BaseProducer<P, S>,
-    context: C,
-    executor: Executor?,
-    cancellationToken: CancellationToken?,
-    _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: BaseProducer<P, S>, _ originalExecutor: Executor) throws -> Void)
-  {
-    let executor_ = executor ?? context.executor
-    self.attach(producer: producer, executor: executor_, cancellationToken: cancellationToken)
-    {
-      [weak context] (event, producer, originalExecutor) in
-      guard let context = context else { return }
-      try onEvent(context, event, producer, originalExecutor)
-    }
-    
-    context.addDependent(completable: producer)
-  }
-}
-
 // MARK: - whole channel transformations
-public extension Channel {
+public extension Streaming {
 
   /// Applies transformation to the whole channel. `map` methods
   /// are more convenient if you want to transform updates values only.
@@ -164,7 +94,7 @@ public extension Channel {
 
 // MARK: - updates only transformations
 
-public extension Channel {
+public extension Streaming {
 
   /// Applies transformation to update values of the channel.
   /// `map` methods are more convenient if you want to transform
@@ -250,7 +180,7 @@ public extension Channel {
 
 // MARK: - updates only flattening transformations
 
-public extension Channel {
+public extension Streaming {
 
   /// Applies transformation to update values of the channel.
   ///
@@ -405,7 +335,7 @@ public extension Channel {
 
 // MARK: convenient transformations
 
-public extension Channel {
+public extension Streaming {
 
   /// Filters update values of the channel
   ///
@@ -483,7 +413,7 @@ public extension Channel {
   }
 }
 
-public extension Channel where Update: _Fallible {
+public extension Streaming where Update: _Fallible {
   /// makes channel of unsafely unwrapped optional Updates
   var unsafelyUnwrapped: Channel<Update.Success, Success> {
     return map(executor: .immediate) { $0.unsafeSuccess }

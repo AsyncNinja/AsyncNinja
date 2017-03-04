@@ -41,7 +41,7 @@ public class Future<Success>: Completing {
   /// **Internal use only**.
   public func makeCompletionHandler(
     executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) -> CompletionHandler? {
+    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) -> AnyObject? {
     assertAbstract()
   }
 

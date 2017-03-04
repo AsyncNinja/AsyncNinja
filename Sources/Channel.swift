@@ -23,8 +23,9 @@
 import Dispatch
 
 /// represents values that updateally arrive followed by failure of completion that completes Channel. Channel oftenly represents result of long running task that is not yet arrived and flow of some intermediate results.
-public class Channel<Update, Success>: Completing, Sequence {
-  public typealias Event = ChannelEvent<Update, Success>
+public class Channel<U, S>: Streaming, Sequence {
+  public typealias Update = U
+  public typealias Success = S
   public typealias Handler = ChannelHandler<Update, Success>
   public typealias Iterator = ChannelIterator<Update, Success>
 
@@ -40,35 +41,9 @@ public class Channel<Update, Success>: Completing, Sequence {
   init() { }
 
   /// **internal use only**
-  final public func makeCompletionHandler(
-    executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
-    ) -> Handler? {
-    return self.makeHandler(executor: executor) {
-      (event, originalExecutor) in
-      if case .completion(let completion) = event {
-        block(completion, originalExecutor)
-      }
-    }
-  }
-
-  /// **internal use only**
-  final public func makeUpdateHandler(
-    executor: Executor,
-    _ block: @escaping (_ update: Update, _ originalExecutor: Executor) -> Void
-    ) -> Handler? {
-    return self.makeHandler(executor: executor) {
-      (event, originalExecutor) in
-      if case .update(let update) = event {
-        block(update, originalExecutor)
-      }
-    }
-  }
-
-  /// **internal use only**
   public func makeHandler(
     executor: Executor,
-    _ block: @escaping (_ event: Event, _ originalExecutor: Executor) -> Void) -> Handler? {
+    _ block: @escaping (_ event: Event, _ originalExecutor: Executor) -> Void) -> AnyObject? {
     assertAbstract()
   }
 
@@ -117,184 +92,6 @@ extension Channel: CustomStringConvertible, CustomDebugStringConvertible {
 // MARK: - Subscriptions
 
 public extension Channel {
-  /// Subscribes for buffered and new values (both update and completion) for the channel
-  ///
-  /// - Parameters:
-  ///   - executor: to execute block on
-  ///   - block: to execute. Will be called multiple times
-  ///   - event: received by the channel
-  func onEvent(
-    executor: Executor = .primary,
-    _ block: @escaping (_ event: Event) -> Void) {
-    let handler = self.makeHandler(executor: executor) {
-      (event, originalExecutor) in
-      block(event)
-    }
-    self.insertHandlerToReleasePool(handler)
-  }
-
-  /// Subscribes for buffered and new values (both update and completion) for the channel
-  ///
-  /// - Parameters:
-  ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor.
-  ///     Keep default value of the argument unless you need
-  ///     to override an executor provided by the context
-  ///   - block: to execute. Will be called multiple times
-  ///   - strongContext: context restored from weak reference to specified context
-  ///   - event: received by the channel
-  func onEvent<C: ExecutionContext>(
-    context: C,
-    executor: Executor? = nil,
-    _ block: @escaping (_ strongContext: C, _ event: Event) -> Void) {
-
-    let handler = self.makeHandler(executor: executor ?? context.executor)
-    {
-      [weak context] (event, originalExecutor) in
-      guard let context = context else { return }
-      block(context, event)
-    }
-
-    if let handler = handler {
-      context.releaseOnDeinit(handler)
-    }
-  }
-  
-  /// Subscribes for buffered and new update values for the channel
-  ///
-  /// - Parameters:
-  ///   - executor: to execute block on
-  ///   - block: to execute. Will be called multiple times
-  ///   - update: received by the channel
-  func onUpdate(
-    executor: Executor = .primary,
-    _ block: @escaping (_ update: Update) -> Void) {
-    self.onEvent(executor: executor) { (event) in
-      switch event {
-      case let .update(update):
-        block(update)
-      case .completion: nop()
-      }
-    }
-  }
-  
-  /// Binds events to a specified ProducerProxy
-  ///
-  /// - Parameters:
-  ///   - producerProxy: to bind to
-  ///   - cancellationToken: `CancellationToken` to use.
-  ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
-  func bindEvents(
-    to producerProxy: ProducerProxy<Update, Success>,
-    cancellationToken: CancellationToken? = nil) {
-    self.attach(producer: producerProxy,
-                executor: .immediate,
-                cancellationToken: cancellationToken)
-    {
-      (event, producer, originalExecutor) in
-      producer.apply(event, from: originalExecutor)
-    }
-  }
-
-  /// Binds updates to a specified UpdatableProperty
-  ///
-  /// - Parameters:
-  ///   - updatableProperty: to bind to
-  ///   - cancellationToken: `CancellationToken` to use.
-  ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
-  func bind(
-    to updatableProperty: ProducerProxy<Update, Void>,
-    cancellationToken: CancellationToken? = nil) {
-    self.attach(producer: updatableProperty,
-                executor: .immediate,
-                cancellationToken: cancellationToken)
-    {
-      (event, producer, originalExecutor) in
-      switch event {
-      case let .update(update):
-        producer.update(update, from: originalExecutor)
-      case let .completion(.failure(failure)):
-        producer.fail(with: failure, from: originalExecutor)
-      case .completion(.success):
-        producer.succeed(from: originalExecutor)
-      }
-    }
-  }
-
-  /// Subscribes for buffered and new update values for the channel
-  ///
-  /// - Parameters:
-  ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor.
-  ///     Keep default value of the argument unless you need
-  ///     to override an executor provided by the context
-  ///   - block: to execute. Will be called multiple times
-  ///   - strongContext: context restored from weak reference to specified context
-  ///   - update: received by the channel
-  func onUpdate<C: ExecutionContext>(
-    context: C,
-    executor: Executor? = nil,
-    _ block: @escaping (_ strongContext: C, _ update: Update) -> Void) {
-    self.onEvent(context: context, executor: executor) { (context, value) in
-      switch value {
-      case let .update(update):
-        block(context, update)
-      case .completion: nop()
-      }
-    }
-  }
-
-  /// Subscribes for all buffered and new values (both update and completion) for the channel
-  ///
-  /// - Parameters:
-  ///   - executor: to execute block on
-  ///   - block: to execute. Will be called once with all values
-  ///   - updates: all received by the channel
-  ///   - completion: received by the channel
-  func extractAll(
-    executor: Executor = .primary,
-    _ block: @escaping (_ updates: [Update], _ completion: Fallible<Success>) -> Void) {
-    var updates = [Update]()
-    let executor_ = executor.makeDerivedSerialExecutor()
-    self.onEvent(executor: executor_) { (event) in
-      switch event {
-      case let .update(update):
-        updates.append(update)
-      case let .completion(completion):
-        block(updates, completion)
-      }
-    }
-  }
-
-  /// Subscribes for all buffered and new values (both update and completion) for the channel
-  ///
-  /// - Parameters:
-  ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor.
-  ///     Keep default value of the argument unless you need
-  ///     to override an executor provided by the context
-  ///   - block: to execute. Will be called once with all values
-  ///   - strongContext: context restored from weak reference to specified context
-  ///   - updates: all received by the channel
-  ///   - completion: received by the channel
-  func extractAll<C: ExecutionContext>(
-    context: C,
-    executor: Executor? = nil,
-    _ block: @escaping (_ strongContext: C, _ updates: [Update], _ completion: Fallible<Success>) -> Void) {
-    var updates = [Update]()
-    let executor_ = (executor ?? context.executor).makeDerivedSerialExecutor()
-    self.onEvent(context: context, executor: executor_) { (context, value) in
-      switch value {
-      case let .update(update):
-        updates.append(update)
-      case let .completion(completion):
-        block(context, updates, completion)
-      }
-    }
-  }
-
   /// Synchronously waits for channel to complete. Returns all updates and completion
   func waitForAll() -> (updates: [Update], completion: Fallible<Success>) {
     return (self.map { $0 }, self.completion!)

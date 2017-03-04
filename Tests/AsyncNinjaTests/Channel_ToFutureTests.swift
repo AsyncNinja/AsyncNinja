@@ -436,7 +436,7 @@ class Channel_ToFutureTests: XCTestCase {
       let producer = Producer<String, Int>()
       let sema = DispatchSemaphore(value: 0)
 
-      let future = producer.reduce("A") { (accumulator, value) -> String in
+      let future: Future<(String, Int)> = producer.reduce("A") { (accumulator, value) -> String in
         return accumulator + value
       }
       

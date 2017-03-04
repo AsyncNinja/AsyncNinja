@@ -23,22 +23,23 @@
 import Dispatch
 
 /// Zips two channels into channels of tuples
-public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
-                _ channelB: Channel<PB, SB>,
-                cancellationToken: CancellationToken? = nil,
-                bufferSize: DerivedChannelBufferSize = .default
-  ) -> Channel<(PA, PB), (SA, SB)> {
+public func zip<T: Streaming, U: Streaming>(
+  _ channelA: T,
+  _ channelB: U,
+  cancellationToken: CancellationToken? = nil,
+  bufferSize: DerivedChannelBufferSize = .default
+  ) -> Channel<(T.Update, U.Update), (T.Success, U.Success)> {
   let bufferSize_ = bufferSize.bufferSize(channelA, channelB)
-  let producer = Producer<(PA, PB), (SA, SB)>(bufferSize: bufferSize_)
+  let producer = Producer<(T.Update, U.Update), (T.Success, U.Success)>(bufferSize: bufferSize_)
 
   var locking = makeLocking()
-  let queueOfUpdates = Queue<Either<PA, PB>>()
-  var successA: SA?
-  var successB: SB?
+  let queueOfUpdates = Queue<Either<T.Update, U.Update>>()
+  var successA: T.Success?
+  var successB: U.Success?
 
   func makeHandlerBlock<Update, Success>(
-    updateHandler: @escaping (Update) -> (PA, PB)?,
-    successHandler: @escaping (Success) -> (SA, SB)?
+    updateHandler: @escaping (Update) -> (T.Update, U.Update)?,
+    successHandler: @escaping (Success) -> (T.Success, U.Success)?
     ) -> (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void {
     return {
       [weak producer] (event, originalExecutor) in
@@ -62,7 +63,7 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   }
 
   do {
-    let handlerBlockA: (_ event: ChannelEvent<PA, SA>, _ originalExecutor: Executor) -> Void = makeHandlerBlock(
+    let handlerBlockA: (_ event: T.Event, _ originalExecutor: Executor) -> Void = makeHandlerBlock(
       updateHandler: {
         if let updateB = queueOfUpdates.first?.right {
           let _ = queueOfUpdates.pop()
@@ -72,7 +73,7 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
           return nil
         }
     }, successHandler: {
-      (success: SA) in
+      (success: T.Success) in
       successA = success
       return successB.map { (success, $0) }
     })
@@ -82,7 +83,7 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
   }
 
   do {
-    let handlerBlockB: (_ event: ChannelEvent<PB, SB>, _ originalExecutor: Executor) -> Void = makeHandlerBlock(
+    let handlerBlockB: (_ event: U.Event, _ originalExecutor: Executor) -> Void = makeHandlerBlock(
       updateHandler: {
         if let updateA = queueOfUpdates.first?.left {
           let _ = queueOfUpdates.pop()
@@ -92,7 +93,7 @@ public func zip<PA, PB, SA, SB>(_ channelA: Channel<PA, SA>,
           return nil
         }
     }, successHandler: {
-      (success: SB) in
+      (success: U.Success) in
       successB = success
       return successA.map { ($0, success) }
     })

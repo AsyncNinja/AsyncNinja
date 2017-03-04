@@ -24,7 +24,7 @@ import Dispatch
 
 // MARK: - channel first(where:)
 
-public extension Channel {
+public extension Streaming {
 
   /// **internal use only**
   private func _first(executor: Executor,
@@ -120,7 +120,7 @@ public extension Channel {
 
 // MARK: - channel last(where:)
 
-public extension Channel {
+public extension Streaming {
 
   /// **internal use only**
   private func _last(executor: Executor,
@@ -221,7 +221,7 @@ public extension Channel {
 
 // MARK: - channel reduce
 
-public extension Channel {
+public extension Streaming {
 
   /// **internal use only**
   private func _reduce<Result>(_ initialResult: Result,

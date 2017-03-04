@@ -41,7 +41,7 @@ final public class Promise<Success>: Future<Success>, Completable, HasSimpleInit
   override public func makeCompletionHandler(
     executor: Executor,
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
-    ) -> CompletionHandler? {
+    ) -> AnyObject? {
     let handler = Handler(executor: executor, block: block, owner: self)
     
     _container.updateHead {

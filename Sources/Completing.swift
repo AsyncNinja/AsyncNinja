@@ -23,10 +23,9 @@
 import Dispatch
 
 /// A protocol for objects that can eventually complete with value
-public protocol Completing: class {
+public protocol Completing: LifetimeExtender {
   associatedtype Success
-  associatedtype CompletionHandler: AnyObject
-  
+
   /// Returns either completion value for complete `Completing` or nil otherwise
   var completion: Fallible<Success>? { get }
 
@@ -34,10 +33,7 @@ public protocol Completing: class {
   func makeCompletionHandler(
     executor: Executor,
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
-    ) -> CompletionHandler?
-
-  /// **internal use only**
-  func insertToReleasePool(_ releasable: Releasable)
+    ) -> AnyObject?
 }
 
 public extension Completing {
@@ -453,13 +449,16 @@ public extension Completing {
   }
 }
 
-extension Completing {
-  
+public protocol LifetimeExtender: class {
+  /// **Internal use only**.
+  func insertToReleasePool(_ releasable: Releasable)
+}
+
+public extension LifetimeExtender {
   /// **internal use only**
   func insertHandlerToReleasePool(_ handler: AnyObject?) {
     if let handler = handler {
       self.insertToReleasePool(handler)
     }
   }
-  
 }

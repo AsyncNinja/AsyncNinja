@@ -22,7 +22,7 @@
 
 import Dispatch
 
-public extension Channel {
+public extension Streaming {
   
   /// Adds indexes to update values of the channel
   ///
@@ -265,7 +265,7 @@ public extension Channel {
 
 // MARK: - Distinct
 
-extension Channel {
+extension Streaming {
   /// Returns channel of distinct update values of original channel.
   /// Requires dedicated equality checking closure
   ///
@@ -313,7 +313,7 @@ extension Channel {
   }
 }
 
-extension Channel where Update: Equatable {
+extension Streaming where Update: Equatable {
   
   /// Returns channel of distinct update values of original channel.
   /// Works only for equatable update values
@@ -336,7 +336,7 @@ extension Channel where Update: Equatable {
   }
 }
 
-extension Channel where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrapped: Equatable {
+extension Streaming where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrapped: Equatable {
   
   /// Returns channel of distinct update values of original channel.
   /// Works only for equatable wrapped in optionals
@@ -361,7 +361,7 @@ extension Channel where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrap
   }
 }
 
-extension Channel where Update: Collection, Update.Iterator.Element: Equatable {
+extension Streaming where Update: Collection, Update.Iterator.Element: Equatable {
   
   /// Returns channel of distinct update values of original channel.
   /// Works only for collections of equatable values
@@ -387,7 +387,7 @@ extension Channel where Update: Collection, Update.Iterator.Element: Equatable {
   }
 }
 
-extension Channel where Update: NSObject {
+extension Streaming where Update: NSObject {
   
   /// Returns channel of distinct update values of original channel.
   /// Works only for collections of equatable values
@@ -412,7 +412,7 @@ extension Channel where Update: NSObject {
   }
 }
 
-extension Channel where Update: Collection, Update.Iterator.Element: NSObject {
+extension Streaming where Update: Collection, Update.Iterator.Element: NSObject {
   
   /// Returns channel of distinct update values of original channel.
   /// Works only for collections of NSObjects values
