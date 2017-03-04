@@ -79,9 +79,9 @@
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
-      ) -> UpdatableProperty<Notification> {
+      ) -> ProducerProxy<Notification, Void> {
       
-      let producer = UpdatableProperty<Notification>(bufferSize: channelBufferSize, updateExecutor: .immediate) {
+      let producer = ProducerProxy<Notification, Void>(bufferSize: channelBufferSize, updateExecutor: .immediate) {
         [weak self] (producerProxy, event, originalExecutor) in
         switch event {
         case let .update(update):

@@ -22,9 +22,6 @@
 
 import Dispatch
 
-public typealias Updatable<T> = Producer<T, Void>
-public typealias UpdatableProperty<T> = ProducerProxy<T, Void>
-
 /// Producer that can be manually created
 final public class Producer<Update, Success>: BaseProducer<Update, Success>, HasSimpleInit {
   /// convenience initializer of Producer. Initializes Producer with default buffer size

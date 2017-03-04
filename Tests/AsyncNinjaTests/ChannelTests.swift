@@ -190,7 +190,7 @@ class ChannelTests: XCTestCase {
   func _testBuffering(bufferSize: Int, file: StaticString = #file, line: UInt = #line) {
     let fixture = pickInts(count: 100)
     let queue = DispatchQueue(label: "testing queue", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
-    let updatable = Updatable<Int>(bufferSize: bufferSize)
+    let updatable = Producer<Int, Void>(bufferSize: bufferSize)
 
     updatable.update(pickInts())
     updatable.update(fixture.prefix(upTo: bufferSize))

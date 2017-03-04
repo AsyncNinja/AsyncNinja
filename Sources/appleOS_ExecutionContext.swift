@@ -61,7 +61,7 @@
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil,
       customSetter: CustomSetter<T>? = nil
-      ) -> UpdatableProperty<T?> {
+      ) -> ProducerProxy<T?, Void> {
       return updatable(forKeyPath: keyPath,
                        executor: executor,
                        from: originalExecutor,
@@ -110,7 +110,7 @@
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil,
       customSetter: CustomSetter<T>? = nil
-      ) -> UpdatableProperty<T> {
+      ) -> ProducerProxy<T, Void> {
       return updatable(forKeyPath: keyPath,
                        onNone: onNone,
                        executor: executor,
@@ -149,7 +149,7 @@
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil
-      ) -> Updating<T?> {
+      ) -> Channel<T?, Void> {
       return updating(forKeyPath: keyPath,
                       executor: executor,
                       from: originalExecutor,
@@ -188,7 +188,7 @@
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil
-      ) -> Updating<T> {
+      ) -> Channel<T, Void> {
 
       return updating(forKeyPath: keyPath,
                       onNone: onNone,
@@ -223,7 +223,7 @@
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
-      ) -> Updating<(old: T?, new: T?)> {
+      ) -> Channel<(old: T?, new: T?), Void> {
       return updatingOldAndNew(forKeyPath: keyPath,
                                executor: executor,
                                observationSession: observationSession,
@@ -255,7 +255,7 @@
       options: NSKeyValueObservingOptions,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
-      ) -> Updating<[NSKeyValueChangeKey: Any]> {
+      ) -> Channel<[NSKeyValueChangeKey: Any], Void> {
       return updatingChanges(forKeyPath: keyPath,
                              executor: executor,
                              from: originalExecutor,

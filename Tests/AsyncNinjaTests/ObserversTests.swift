@@ -41,7 +41,7 @@ import Dispatch
       }
 
       let myObject = MyObject()
-      let updatingValues: Updating<Int?> = myObject
+      let updatingValues: Channel<Int?, Void> = myObject
         .updatable(forKeyPath: #keyPath(MyObject.myValue), executor: .main, from: .main)
       var detectedChanges = [Int]()
       updatingValues.onUpdate(executor: .immediate) {
@@ -64,7 +64,7 @@ import Dispatch
       }
       
       let myObject = MyObject()
-      let updatableProperty: UpdatableProperty<Int?> = myObject
+      let updatableProperty: ProducerProxy<Int?, Void> = myObject
         .updatable(forKeyPath: #keyPath(MyObject.myValue), executor: .main, from: .main)
       var detectedChanges = [Int]()
       updatableProperty.onUpdate(executor: .main) {
@@ -94,7 +94,7 @@ import Dispatch
       
       let myObject = MyObject()
       
-      let updatableProperty: UpdatableProperty<Int?> = myObject.updatable(forKeyPath: #keyPath(MyObject.myValue), executor: .main, from: .main)
+      let updatableProperty: ProducerProxy<Int?, Void> = myObject.updatable(forKeyPath: #keyPath(MyObject.myValue), executor: .main, from: .main)
       var detectedChanges = [Int]()
       updatableProperty.onUpdate(executor: .main) {
         if let value = $0 {

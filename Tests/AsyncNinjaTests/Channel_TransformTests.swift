@@ -74,7 +74,7 @@ class Channel_TransformTests: XCTestCase {
   }
 
   func testDistinctInts() {
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "completion of producer")
 
     updatable.distinct().extractAll { (updates, completion) in
@@ -92,7 +92,7 @@ class Channel_TransformTests: XCTestCase {
   }
 
   func testDistinctOptionalInts() {
-    let updatable = Updatable<Int?>()
+    let updatable = Producer<Int?, Void>()
     let expectation = self.expectation(description: "completion of producer")
 
     updatable.distinct().extractAll { (updates, completion) in
@@ -114,7 +114,7 @@ class Channel_TransformTests: XCTestCase {
   }
 
   func testDistinctArrays() {
-    let updatable = Updatable<[Int]>()
+    let updatable = Producer<[Int], Void>()
     let expectation = self.expectation(description: "completion of producer")
     
     updatable.distinct().extractAll { (updates, completion) in
@@ -137,7 +137,7 @@ class Channel_TransformTests: XCTestCase {
 
   func testDistinctNSObjects() {
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-      let updatable = Updatable<NSString>()
+      let updatable = Producer<NSString, Void>()
       let expectation = self.expectation(description: "completion of producer")
       
       updatable.distinctNSObjects().extractAll { (updates, completion) in
@@ -161,7 +161,7 @@ class Channel_TransformTests: XCTestCase {
 
   func testDistinctArrayNSObjects() {
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-      let updatable = Updatable<[NSString]>()
+      let updatable = Producer<[NSString], Void>()
       let expectation = self.expectation(description: "completion of producer")
       
       let objectA: NSString = "objectA"

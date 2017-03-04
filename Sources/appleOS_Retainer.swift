@@ -63,8 +63,8 @@
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil,
       customSetter: CustomSetter<T>? = nil
-      ) -> UpdatableProperty<T?> {
-      let producer = UpdatableProperty<T?>(bufferSize: channelBufferSize, updateExecutor: executor) {
+      ) -> ProducerProxy<T?, Void> {
+      let producer = ProducerProxy<T?, Void>(bufferSize: channelBufferSize, updateExecutor: executor) {
         [weak self] (producerProxy, event, originalExecutor) in
         switch event {
         case let .update(update):
@@ -140,8 +140,8 @@
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil,
       customSetter: CustomSetter<T>? = nil
-      ) -> UpdatableProperty<T> {
-      let producer = UpdatableProperty<T>(bufferSize: channelBufferSize, updateExecutor: executor) {
+      ) -> ProducerProxy<T, Void> {
+      let producer = ProducerProxy<T, Void>(bufferSize: channelBufferSize, updateExecutor: executor) {
         [weak self] (producerProxy, event, originalExecutor) in
         switch event {
         case let .update(update):
@@ -208,9 +208,9 @@
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil
-      ) -> Updating<T?> {
+      ) -> Channel<T?, Void> {
 
-      let producer = Updatable<T?>(bufferSize: channelBufferSize)
+      let producer = Producer<T?, Void>(bufferSize: channelBufferSize)
       
       executor.execute(from: originalExecutor) { (originalExecutor) in
         let observer = KeyPathObserver(object: self,
@@ -269,8 +269,8 @@
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil
-      ) -> Updating<T> {
-      let producer = Updatable<T>(bufferSize: channelBufferSize)
+      ) -> Channel<T, Void> {
+      let producer = Producer<T, Void>(bufferSize: channelBufferSize)
       
       executor.execute(from: originalExecutor) { (originalExecutor) in
         let observer = KeyPathObserver(object: self,
@@ -327,7 +327,7 @@
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
-      ) -> Updating<(old: T?, new: T?)> {
+      ) -> Channel<(old: T?, new: T?), Void> {
       return updatingChanges(forKeyPath: keyPath,
                              executor: executor,
                              from: originalExecutor,
@@ -364,8 +364,8 @@
       options: NSKeyValueObservingOptions,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1
-      ) -> Updating<[NSKeyValueChangeKey: Any]> {
-      let producer = Updatable<[NSKeyValueChangeKey: Any]>(bufferSize: channelBufferSize)
+      ) -> Channel<[NSKeyValueChangeKey: Any], Void> {
+      let producer = Producer<[NSKeyValueChangeKey: Any], Void>(bufferSize: channelBufferSize)
 
       executor.execute(from: originalExecutor) { (originalExecutor) in
         let observer = KeyPathObserver(object: self,

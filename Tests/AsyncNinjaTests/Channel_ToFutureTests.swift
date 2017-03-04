@@ -49,7 +49,7 @@ class Channel_ToFutureTests: XCTestCase {
     ]
 
   func testFirstSuccessIncomplete() {
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
     let qos = pickQoS()
 
@@ -75,7 +75,7 @@ class Channel_ToFutureTests: XCTestCase {
   }
 
   func testFirstNotFound() {
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
     let qos = pickQoS()
 
@@ -100,7 +100,7 @@ class Channel_ToFutureTests: XCTestCase {
   }
 
   func testFirstFailure() {
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
     let qos = pickQoS()
 
@@ -126,7 +126,7 @@ class Channel_ToFutureTests: XCTestCase {
 
   func testFirstSuccessIncompleteContextual() {
     let actor = TestActor()
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
 
     updatable.first(context: actor) { (actor, value) in
@@ -152,7 +152,7 @@ class Channel_ToFutureTests: XCTestCase {
 
   func testFirstNotFoundContextual() {
     let actor = TestActor()
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
 
     updatable.first(context: actor) { (actor, value) in
@@ -177,7 +177,7 @@ class Channel_ToFutureTests: XCTestCase {
 
   func testFirstFailureContextual() {
     let actor = TestActor()
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
 
     updatable.first(context: actor) { (actor, value) in
@@ -202,7 +202,7 @@ class Channel_ToFutureTests: XCTestCase {
 
   func testFirstDeadContextual() {
     var actor: TestActor? = TestActor()
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
 
     let future = updatable.first(context: actor!) { (actor, value) in
@@ -227,7 +227,7 @@ class Channel_ToFutureTests: XCTestCase {
   }
 
   func testLastSuccess() {
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
     let qos = pickQoS()
 
@@ -254,7 +254,7 @@ class Channel_ToFutureTests: XCTestCase {
   }
 
   func testLastNotFound() {
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
     let qos = pickQoS()
 
@@ -279,7 +279,7 @@ class Channel_ToFutureTests: XCTestCase {
   }
 
   func testLastFailure() {
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
     let qos = pickQoS()
 
@@ -305,7 +305,7 @@ class Channel_ToFutureTests: XCTestCase {
 
   func testLastSuccessContextual() {
     let actor = TestActor()
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
 
     updatable.last(context: actor) { (actor, value) in
@@ -332,7 +332,7 @@ class Channel_ToFutureTests: XCTestCase {
 
   func testLastNotFoundContextual() {
     let actor = TestActor()
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
 
     updatable.last(context: actor) { (actor, value) in
@@ -357,7 +357,7 @@ class Channel_ToFutureTests: XCTestCase {
 
   func testLastFailureContextual() {
     let actor = TestActor()
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
 
     updatable.last(context: actor) { (actor, value) in
@@ -382,7 +382,7 @@ class Channel_ToFutureTests: XCTestCase {
 
   func testLastDeadContextual() {
     var actor: TestActor? = TestActor()
-    let updatable = Updatable<Int>()
+    let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "future to finish")
 
     let future = updatable.last(context: actor!) { (actor, value) in

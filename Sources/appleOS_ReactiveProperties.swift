@@ -69,7 +69,7 @@
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil,
       customSetter: CustomSetter<T>? = nil
-      ) -> UpdatableProperty<T?>
+      ) -> ProducerProxy<T?, Void>
     {
       return object.updatable(forKeyPath: keyPath,
                               executor: executor,
@@ -110,7 +110,7 @@
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil,
       customSetter: CustomSetter<T>? = nil
-      ) -> UpdatableProperty<T>
+      ) -> ProducerProxy<T, Void>
     {
       return object.updatable(forKeyPath: keyPath,
                               onNone: onNone,
@@ -142,7 +142,7 @@
       forKeyPath keyPath: String,
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil
-      ) -> Updating<T?>
+      ) -> Channel<T?, Void>
     {
       return object.updating(forKeyPath: keyPath,
                              executor: executor,
@@ -174,7 +174,7 @@
       onNone: UpdateWithNoneHandlingPolicy<T>,
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil
-      ) -> Updating<T>
+      ) -> Channel<T, Void>
     {
       return object.updating(forKeyPath: keyPath,
                              onNone: onNone,

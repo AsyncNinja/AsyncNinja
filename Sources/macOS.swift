@@ -35,7 +35,7 @@
     typealias ActionChannelUpdate = (sender: AnyObject?, objectValue: Any?)
     
     /// Channel that contains actions sent by the control
-    typealias ActionChannel = Updating<ActionChannelUpdate>
+    typealias ActionChannel = Channel<ActionChannelUpdate, Void>
     
     /// Makes or returns cached channel. The channel that will have update on each triggering of action
     func actionChannel() -> ActionChannel {
@@ -70,7 +70,7 @@
   
   private class ActionReceiver: NSObject {
     weak var control: NSControl?
-    let producer = Updatable<NSControl.ActionChannelUpdate>(bufferSize: 0)
+    let producer = Producer<NSControl.ActionChannelUpdate, Void>(bufferSize: 0)
     
     init(control: NSControl) {
       self.control = control
