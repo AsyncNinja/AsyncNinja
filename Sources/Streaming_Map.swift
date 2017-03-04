@@ -133,7 +133,7 @@ public extension Streaming {
         let transformedValue = try transform(context, update)
         producer.update(transformedValue, from: originalExecutor)
       case .completion(let completion):
-        producer.complete(with: completion, from: originalExecutor)
+        producer.complete(completion, from: originalExecutor)
       }
     }
   }
@@ -172,7 +172,7 @@ public extension Streaming {
         let transformedValue = try transform(update)
         producer.update(transformedValue, from: originalExecutor)
       case .completion(let completion):
-        producer.complete(with: completion, from: originalExecutor)
+        producer.complete(completion, from: originalExecutor)
       }
     }
   }
@@ -218,7 +218,7 @@ public extension Streaming {
           producer.update(transformedValue, from: originalExecutor)
         }
       case .completion(let completion):
-        producer.complete(with: completion, from: originalExecutor)
+        producer.complete(completion, from: originalExecutor)
       }
     }
   }
@@ -253,7 +253,7 @@ public extension Streaming {
           producer.update(transformedValue, from: originalExecutor)
         }
       case .completion(let completion):
-        producer.complete(with: completion, from: originalExecutor)
+        producer.complete(completion, from: originalExecutor)
       }
     }
   }
@@ -293,7 +293,7 @@ public extension Streaming {
       case .update(let update):
         producer.update(try transform(context, update), from: originalExecutor)
       case .completion(let completion):
-        producer.complete(with: completion, from: originalExecutor)
+        producer.complete(completion, from: originalExecutor)
       }
     }
   }
@@ -327,7 +327,7 @@ public extension Streaming {
       case .update(let update):
         producer.update(try transform(update), from: originalExecutor)
       case .completion(let completion):
-        producer.complete(with: completion, from: originalExecutor)
+        producer.complete(completion, from: originalExecutor)
       }
     }
   }
@@ -366,9 +366,9 @@ public extension Streaming {
           if try predicate(context, update) {
             producer.update(update, from: originalExecutor)
           }
-        } catch { producer.fail(with: error, from: originalExecutor) }
+        } catch { producer.fail(error, from: originalExecutor) }
       case .completion(let completion):
-        producer.complete(with: completion, from: originalExecutor)
+        producer.complete(completion, from: originalExecutor)
       }
     }
   }
@@ -405,9 +405,9 @@ public extension Streaming {
           if try predicate(update) {
             producer.update(update, from: originalExecutor)
           }
-        } catch { producer.fail(with: error, from: originalExecutor) }
+        } catch { producer.fail(error, from: originalExecutor) }
       case .completion(let completion):
-        producer.complete(with: completion, from: originalExecutor)
+        producer.complete(completion, from: originalExecutor)
       }
     }
   }

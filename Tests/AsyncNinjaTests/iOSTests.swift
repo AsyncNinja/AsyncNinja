@@ -251,7 +251,7 @@
     }
     
     private func testUpdatableProperty<T: Equatable, Object: NSObject>(
-      updatable: UpdatableProperty<T>,
+      updatable: ProducerProxy<T, Void>,
       object: Object,
       keyPath: String,
       values: [T],
@@ -274,7 +274,7 @@
     }
     
     private func testUpdating<T: Equatable, Object: NSObject>(
-      updating: Updating<T>,
+      updating: Channel<T, Void>,
       object: Object,
       keyPath: String,
       values: [T],
@@ -296,7 +296,7 @@
     }
 
     private func testUpdatableProperty<T: AsyncNinjaOptionalAdaptor, Object: NSObject>(
-      updatable: UpdatableProperty<T>,
+      updatable: ProducerProxy<T, Void>,
       object: Object,
       keyPath: String,
       values: [T],
@@ -322,7 +322,7 @@
     }
     
     private func testUpdating<T: AsyncNinjaOptionalAdaptor, Object: NSObject>(
-      updating: Updating<T>,
+      updating: Channel<T, Void>,
       object: Object,
       keyPath: String,
       values: [T],

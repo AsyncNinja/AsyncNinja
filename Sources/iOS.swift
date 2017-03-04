@@ -35,7 +35,7 @@
     typealias ActionChannelUpdate = (sender: AnyObject?, event: UIEvent)
     
     /// Channel that contains actions sent by the control
-    typealias ActionChannel = Updating<ActionChannelUpdate>
+    typealias ActionChannel = Channel<ActionChannelUpdate, Void>
     
     /// Makes channel that will have update value on each triggering of action
     ///
@@ -73,7 +73,7 @@
   
   private class ActionReceiver: NSObject {
     weak var control: UIControl?
-    let producer = Updatable<UIControl.ActionChannelUpdate>(bufferSize: 0)
+    let producer = Producer<UIControl.ActionChannelUpdate, Void>(bufferSize: 0)
     
     init(control: UIControl) {
       self.control = control
@@ -90,71 +90,71 @@
 
   public extension ReactiveProperties where Object: UIView {
     /// An `UpdatableProperty` that refers to read-write property `UIView.alpha`
-    var alpha: UpdatableProperty<CGFloat> { return updatable(forKeyPath: "alpha", onNone: .drop) }
+    var alpha: ProducerProxy<CGFloat, Void> { return updatable(forKeyPath: "alpha", onNone: .drop) }
 
     /// An `UpdatableProperty` that refers to read-write property `UIView.tintColor`
-    var tintColor: UpdatableProperty<UIColor> { return updatable(forKeyPath: "tintColor", onNone: .drop) }
+    var tintColor: ProducerProxy<UIColor, Void> { return updatable(forKeyPath: "tintColor", onNone: .drop) }
 
     /// An `UpdatableProperty` that refers to read-write property `UIView.isHidden`
-    var isHidden: UpdatableProperty<Bool> { return updatable(forKeyPath: "hidden", onNone: .drop) }
+    var isHidden: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "hidden", onNone: .drop) }
 
     /// An `UpdatableProperty` that refers to read-write property `UIView.isOpaque`
-    var isOpaque: UpdatableProperty<Bool> { return updatable(forKeyPath: "opaque", onNone: .drop) }
+    var isOpaque: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "opaque", onNone: .drop) }
 
     /// An `UpdatableProperty` that refers to read-write property `UIView.isUserInteractionEnabled`
-    var isUserInteractionEnabled: UpdatableProperty<Bool> { return updatable(forKeyPath: "userInteractionEnabled", onNone: .drop) }
+    var isUserInteractionEnabled: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "userInteractionEnabled", onNone: .drop) }
   }
   
   public extension ReactiveProperties where Object: UIControl {
     /// An `UpdatableProperty` that refers to read-write property `UIControl.isEnabled`
-    var isEnabled: UpdatableProperty<Bool> { return updatable(forKeyPath: "enabled", onNone: .drop) }
+    var isEnabled: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "enabled", onNone: .drop) }
 
     /// An `UpdatableProperty` that refers to read-write property `UIControl.isSelected`
-    var isSelected: UpdatableProperty<Bool> { return updatable(forKeyPath: "selected", onNone: .drop) }
+    var isSelected: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "selected", onNone: .drop) }
 
     /// An `Updating` that refers to read-only property `UIControl.state`
-    var state: Updating<UIControlState> { return updatable(forKeyPath: "state", onNone: .drop) }
+    var state: ProducerProxy<UIControlState, Void> { return updatable(forKeyPath: "state", onNone: .drop) }
   }
 
   public extension ReactiveProperties where Object: UITextField {
     /// An `UpdatableProperty` that refers to read-write property `UITextField.text`
-    var text: UpdatableProperty<String> { return updatable(forKeyPath: "text", onNone: .drop) }
+    var text: ProducerProxy<String, Void> { return updatable(forKeyPath: "text", onNone: .drop) }
 
     /// An `UpdatableProperty` that refers to read-write property `UITextField.attributedText`
-    var attributedText: UpdatableProperty<NSAttributedString?> { return updatable(forKeyPath: "attributedText") }
+    var attributedText: ProducerProxy<NSAttributedString?, Void> { return updatable(forKeyPath: "attributedText") }
     
     /// An `UpdatableProperty` that refers to read-write property `UITextField.textColor`
-    var textColor: UpdatableProperty<UIColor?> { return updatable(forKeyPath: "textColor") }
+    var textColor: ProducerProxy<UIColor?, Void> { return updatable(forKeyPath: "textColor") }
 
     /// An `UpdatableProperty` that refers to read-write property `UITextField.font`
-    var font: UpdatableProperty<UIFont> { return updatable(forKeyPath: "font", onNone: .drop) }
+    var font: ProducerProxy<UIFont, Void> { return updatable(forKeyPath: "font", onNone: .drop) }
 
     /// An `UpdatableProperty` that refers to read-write property `UITextField.textAlignment`
-    var textAlignment: UpdatableProperty<NSTextAlignment> {
+    var textAlignment: ProducerProxy<NSTextAlignment, Void> {
       return updatable(forKeyPath: "textAlignment", onNone: .drop,
                        customGetter: { $0.textAlignment },
                        customSetter: { if let newValue = $1 { $0.textAlignment = newValue } })
     }
 
     /// An `UpdatableProperty` that refers to read-write property `UITextField.placeholder`
-    var placeholder: UpdatableProperty<String?> { return updatable(forKeyPath: "placeholder") }
+    var placeholder: ProducerProxy<String?, Void> { return updatable(forKeyPath: "placeholder") }
 
     /// An `UpdatableProperty` that refers to read-write property `UITextField.attributedPlaceholder`
-    var attributedPlaceholder: UpdatableProperty<NSAttributedString?> { return updatable(forKeyPath: "attributedPlaceholder") }
+    var attributedPlaceholder: ProducerProxy<NSAttributedString?, Void> { return updatable(forKeyPath: "attributedPlaceholder") }
 
     /// An `UpdatableProperty` that refers to read-write property `UITextField.background`
-    var background: UpdatableProperty<UIImage?> { return updatable(forKeyPath: "background") }
+    var background: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "background") }
     
     /// An `UpdatableProperty` that refers to read-write property `UITextField.disabledBackground`
-    var disabledBackground: UpdatableProperty<UIImage?> { return updatable(forKeyPath: "disabledBackground") }
+    var disabledBackground: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "disabledBackground") }
 
     /// An `Updating` that refers to read-only property `UITextField.isEditing`
-    var isEditing: Updating<Bool> { return updating(forKeyPath: "isEditing", onNone: .drop) }
+    var isEditing: Channel<Bool, Void> { return updating(forKeyPath: "isEditing", onNone: .drop) }
   }
 
   public extension ReactiveProperties where Object: UISearchBar {
     /// An `UpdatableProperty` that refers to read-write property `UISearchBar.barStyle`
-    var barStyle: UpdatableProperty<UIBarStyle> {
+    var barStyle: ProducerProxy<UIBarStyle, Void> {
       return updatable(forKeyPath: "barStyle",
                        onNone: .drop,
                        customGetter: { $0.barStyle },
@@ -162,31 +162,31 @@
     }
 
     /// An `UpdatableProperty` that refers to read-write property `UISearchBar.text`
-    var text: UpdatableProperty<String> { return updatable(forKeyPath: "text", onNone: .drop) }
+    var text: ProducerProxy<String, Void> { return updatable(forKeyPath: "text", onNone: .drop) }
     
     /// An `UpdatableProperty` that refers to read-write property `UISearchBar.prompt`
-    var prompt: UpdatableProperty<String?> { return updatable(forKeyPath: "prompt") }
+    var prompt: ProducerProxy<String?, Void> { return updatable(forKeyPath: "prompt") }
     
     /// An `UpdatableProperty` that refers to read-write property `UISearchBar.placeholder`
-    var placeholder: UpdatableProperty<String?> { return updatable(forKeyPath: "placeholder") }
+    var placeholder: ProducerProxy<String?, Void> { return updatable(forKeyPath: "placeholder") }
 
     /// An `UpdatableProperty` that refers to read-write property `UISearchBar.showsBookmarkButton`
-    var showsBookmarkButton: UpdatableProperty<Bool> { return updatable(forKeyPath: "showsBookmarkButton", onNone: .drop) }
+    var showsBookmarkButton: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "showsBookmarkButton", onNone: .drop) }
     
     /// An `UpdatableProperty` that refers to read-write property `UISearchBar.showsCancelButton`
-    var showsCancelButton: UpdatableProperty<Bool> { return updatable(forKeyPath: "showsCancelButton", onNone: .drop) }
+    var showsCancelButton: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "showsCancelButton", onNone: .drop) }
     
     /// An `UpdatableProperty` that refers to read-write property `UISearchBar.showsSearchResultsButton`
-    var showsSearchResultsButton: UpdatableProperty<Bool> { return updatable(forKeyPath: "showsSearchResultsButton", onNone: .drop) }
+    var showsSearchResultsButton: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "showsSearchResultsButton", onNone: .drop) }
     
     /// An `UpdatableProperty` that refers to read-write property `UISearchBar.isSearchResultsButtonSelected`
-    var isSearchResultsButtonSelected: UpdatableProperty<Bool> { return updatable(forKeyPath: "searchResultsButtonSelected", onNone: .drop) }
+    var isSearchResultsButtonSelected: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "searchResultsButtonSelected", onNone: .drop) }
 
     /// An `UpdatableProperty` that refers to read-write property `UISearchBar.barTintColor`
-    var barTintColor: UpdatableProperty<UIColor> { return updatable(forKeyPath: "barTintColor", onNone: .drop) }
+    var barTintColor: ProducerProxy<UIColor, Void> { return updatable(forKeyPath: "barTintColor", onNone: .drop) }
     
     /// An `UpdatableProperty` that refers to read-write property `UISearchBar.searchBarStyle`
-    var searchBarStyle: UpdatableProperty<UISearchBarStyle> {
+    var searchBarStyle: ProducerProxy<UISearchBarStyle, Void> {
       return updatable(forKeyPath: "searchBarStyle",
                        onNone: .drop,
                        customGetter: { $0.searchBarStyle },
@@ -196,28 +196,28 @@
 
   public extension ReactiveProperties where Object: UIImageView {
     /// An `UpdatableProperty` that refers to read-write property `UIImageView.image`
-    var image: UpdatableProperty<UIImage?> { return updatable(forKeyPath: "image") }
+    var image: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "image") }
     
     /// An `UpdatableProperty` that refers to read-write property `UIImageView.highlightedImage`
-    var highlightedImage: UpdatableProperty<UIImage?> { return updatable(forKeyPath: "highlightedImage") }
+    var highlightedImage: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "highlightedImage") }
     
     /// An `UpdatableProperty` that refers to read-write property `UIImageView.isHighlighted`
-    var isHighlighted: UpdatableProperty<Bool> { return updatable(forKeyPath: "highlighted", onNone: .drop) }
+    var isHighlighted: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "highlighted", onNone: .drop) }
 
     /// An `UpdatableProperty` that refers to read-write property `UIImageView.animationImages`
-    var animationImages: UpdatableProperty<[UIImage]?> { return updatable(forKeyPath: "animationImages") }
+    var animationImages: ProducerProxy<[UIImage]?, Void> { return updatable(forKeyPath: "animationImages") }
     
     /// An `UpdatableProperty` that refers to read-write property `UIImageView.highlightedAnimationImages`
-    var highlightedAnimationImages: UpdatableProperty<[UIImage]?> { return updatable(forKeyPath: "highlightedAnimationImages") }
+    var highlightedAnimationImages: ProducerProxy<[UIImage]?, Void> { return updatable(forKeyPath: "highlightedAnimationImages") }
     
     /// An `UpdatableProperty` that refers to read-write property `UIImageView.animationDuration`
-    var animationDuration: UpdatableProperty<TimeInterval> { return updatable(forKeyPath: "animationDuration", onNone: .drop) }
+    var animationDuration: ProducerProxy<TimeInterval, Void> { return updatable(forKeyPath: "animationDuration", onNone: .drop) }
 
     /// An `UpdatableProperty` that refers to read-write property `UIImageView.animationRepeatCount`
-    var animationRepeatCount: UpdatableProperty<Int> { return updatable(forKeyPath: "animationRepeatCount", onNone: .drop) }
+    var animationRepeatCount: ProducerProxy<Int, Void> { return updatable(forKeyPath: "animationRepeatCount", onNone: .drop) }
     
     /// An `UpdatableProperty` that refers to read-write property `UIImageView.isAnimating`
-    var isAnimating: UpdatableProperty<Bool> {
+    var isAnimating: ProducerProxy<Bool, Void> {
       return updatable(forKeyPath: "animating",
                        onNone: .drop,
                        customGetter: { $0.isAnimating },
@@ -236,6 +236,6 @@
 
   public extension ReactiveProperties where Object: UIViewController {
     /// An `UpdatableProperty` that refers to read-write property `UIViewController.title`
-    var title: UpdatableProperty<String?> { return updatable(forKeyPath: "title") }
+    var title: ProducerProxy<String?, Void> { return updatable(forKeyPath: "title") }
   }
 #endif

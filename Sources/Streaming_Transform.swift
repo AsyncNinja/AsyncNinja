@@ -100,7 +100,7 @@ public extension Streaming {
           producer.update(change, from: originalExecutor)
         }
       case let .completion(completion):
-        producer.complete(with: completion, from: originalExecutor)
+        producer.complete(completion, from: originalExecutor)
       }
     }
   }
@@ -151,7 +151,7 @@ public extension Streaming {
         if !localBuffer.isEmpty {
           producer.update(localBuffer, from: originalExecutor)
         }
-        producer.complete(with: completion, from: originalExecutor)
+        producer.complete(completion, from: originalExecutor)
       }
     }
   }
@@ -245,7 +245,7 @@ public extension Streaming {
           producer?.update(update, from: originalExecutor)
           latestUpdate = nil
         }
-        producer?.complete(with: completion, from: originalExecutor)
+        producer?.complete(completion, from: originalExecutor)
       case let .update(update):
         if didSendFirstUpdate {
           latestUpdate = update
@@ -307,7 +307,7 @@ extension Streaming {
           producer.update(update, from: originalExecutor)
         }
       case let .completion(completion):
-        producer.complete(with: completion, from: originalExecutor)
+        producer.complete(completion, from: originalExecutor)
       }
     }
   }

@@ -186,7 +186,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, Streamable
   /// - Returns: true if Producer was completed with this call,
   ///   false if it was completed before
   @discardableResult
-  public func tryComplete(with completion: Fallible<Success>,
+  public func tryComplete(_ completion: Fallible<Success>,
                           from originalExecutor: Executor? = nil) -> Bool {
     _locking.lock()
 
@@ -209,10 +209,10 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, Streamable
   }
 
   /// Completes the channel with a competion of specified Future or Channel
-  public func complete(with completable: CompletingType) {
-    let handler = completable.makeHandler(executor: .immediate) {
+  public func complete<T: Completing>(with completable: T) where T.Success == Success {
+    let handler = completable.makeCompletionHandler(executor: .immediate) {
       [weak self] (completion, originalExecutor) in
-      self?.apply(completion, from: originalExecutor)
+      self?.complete(completion, from: originalExecutor)
     }
 
     self.insertHandlerToReleasePool(handler)
@@ -266,7 +266,7 @@ public func channel<Update, Success>(
     let fallibleCompletion = fallible {
       try block { producer?.update($0, from: originalExecutor) }
     }
-    producer?.complete(with: fallibleCompletion, from: originalExecutor)
+    producer?.complete(fallibleCompletion, from: originalExecutor)
   }
 
   return producer
@@ -298,7 +298,7 @@ public func channel<U: ExecutionContext, Update, Success>(
         producer?.update($0, from: originalExecutor)
       }
     }
-    producer?.complete(with: fallibleCompleting, from: originalExecutor)
+    producer?.complete(fallibleCompleting, from: originalExecutor)
   }
 
   return producer
@@ -309,7 +309,7 @@ public func channel<C: Collection, Success>(updates: C, completion: Fallible<Suc
   ) -> Channel<C.Iterator.Element, Success>
   where C.IndexDistance: Integer {
     let producer = Producer<C.Iterator.Element, Success>(bufferedUpdates: updates)
-    producer.complete(with: completion, from: nil)
+    producer.complete(completion, from: nil)
     return producer
 }
 
@@ -382,7 +382,7 @@ public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
   func tryCompleteWithoutHandling(
     with completion: Fallible<Success>,
     from originalExecutor: Executor?) -> Bool {
-    return super.tryComplete(with: completion, from: originalExecutor)
+    return super.tryComplete(completion, from: originalExecutor)
   }
 
   /// Calls update handler insted of sending specified Update to the Producer
@@ -397,7 +397,7 @@ public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
   
   /// Calls update handler insted of sending specified Complete to the Producer
   override public func tryComplete(
-    with completion: Fallible<Success>,
+    _ completion: Fallible<Success>,
     from originalExecutor: Executor? = nil) -> Bool {
     _updateExecutor.execute(from: originalExecutor) {
       (originalExecutor) in

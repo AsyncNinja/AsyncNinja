@@ -50,7 +50,7 @@ public extension Streamable {
     case let .update(update):
       self.update(update, from: originalExecutor)
     case let .completion(completion):
-      self.complete(with: completion, from: originalExecutor)
+      self.complete(completion, from: originalExecutor)
     }
   }
 }

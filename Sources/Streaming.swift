@@ -91,7 +91,7 @@ extension Streaming {
       [weak producer] (event, originalExecutor) in
       guard let producer = producer else { return }
       do { try onEvent(event, producer, originalExecutor) }
-      catch { producer.fail(with: error, from: originalExecutor) }
+      catch { producer.fail(error, from: originalExecutor) }
     }
 
     producer.insertHandlerToReleasePool(handler)
@@ -243,9 +243,9 @@ extension Streaming {
       case let .update(update):
         producer.update(update, from: originalExecutor)
       case let .completion(.failure(failure)):
-        producer.fail(with: failure, from: originalExecutor)
+        producer.fail(failure, from: originalExecutor)
       case let .completion(.success(success)):
-        producer.succeed(with: success, from: originalExecutor)
+        producer.succeed(success, from: originalExecutor)
       }
     }
   }
@@ -269,7 +269,7 @@ extension Streaming {
       case let .update(update):
         producer.update(update, from: originalExecutor)
       case let .completion(.failure(failure)):
-        producer.fail(with: failure, from: originalExecutor)
+        producer.fail(failure, from: originalExecutor)
       case .completion(.success):
         producer.succeed(from: originalExecutor)
       }

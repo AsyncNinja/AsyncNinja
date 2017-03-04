@@ -116,7 +116,7 @@ class CachableValueImpl<T: Completable&HasSimpleInit, Context: ExecutionContext>
     _state = .handling
 
     guard let context = _context else {
-      _completing.fail(with: AsyncNinjaError.contextDeallocated, from: originalExecutor)
+      _completing.fail(AsyncNinjaError.contextDeallocated, from: originalExecutor)
       return
     }
 
@@ -127,7 +127,7 @@ class CachableValueImpl<T: Completable&HasSimpleInit, Context: ExecutionContext>
 
   private func _handleMissOnExecutor(from originalExecutor: Executor?) {
     guard let context = self._context else {
-      _completing.fail(with: AsyncNinjaError.contextDeallocated, from: originalExecutor)
+      _completing.fail(AsyncNinjaError.contextDeallocated, from: originalExecutor)
       return
     }
 
@@ -139,7 +139,7 @@ class CachableValueImpl<T: Completable&HasSimpleInit, Context: ExecutionContext>
       }
     } catch {
       _state = .finished
-      _completing.fail(with: error, from: originalExecutor)
+      _completing.fail(error, from: originalExecutor)
     }
   }
 
@@ -148,9 +148,9 @@ class CachableValueImpl<T: Completable&HasSimpleInit, Context: ExecutionContext>
       _state = .finished
       switch completion {
       case .success(let success):
-        _completing.succeed(with: success as! T.Success, from: originalExecutor)
+        _completing.succeed(success as! T.Success, from: originalExecutor)
       case .failure(let failure):
-        _completing.fail(with: failure, from: originalExecutor)
+        _completing.fail(failure, from: originalExecutor)
       }
     }
   }

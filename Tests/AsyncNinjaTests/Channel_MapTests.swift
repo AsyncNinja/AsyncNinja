@@ -39,7 +39,7 @@ class Channel_MapTests: XCTestCase {
 
     DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
       producer.update(updates)
-      producer.succeed(with: success)
+      producer.succeed(success)
     }
 
     return producer

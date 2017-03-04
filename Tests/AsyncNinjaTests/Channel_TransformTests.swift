@@ -67,7 +67,7 @@ class Channel_TransformTests: XCTestCase {
       initalProducer.update(11)
       initalProducer.update(12)
       usleep(200_000)
-      initalProducer.succeed(with: "Finished!")
+      initalProducer.succeed("Finished!")
     }
 
     self.waitForExpectations(timeout: 5.0)

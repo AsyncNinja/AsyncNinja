@@ -110,7 +110,7 @@ import Dispatch
         producer.update(index)
       }
       
-      producer.succeed(with: "Done")
+      producer.succeed("Done")
 
       let expectation = self.expectation(description: "done")
       DispatchQueue.global().asyncAfter(deadline: DispatchTime.now().adding(seconds: 1.0)) {

@@ -49,7 +49,7 @@ public func future<T>(
     [weak promise] (originalExecutor) in
     guard case .some = promise else { return }
     let value = fallible(block: block)
-    promise?.complete(with: value, from: originalExecutor)
+    promise?.complete(value, from: originalExecutor)
   }
   return promise
 }
@@ -68,7 +68,7 @@ public func flatFuture<T>(
     [weak promise] (originalExecutor) in
     guard case .some = promise else { return }
     do { promise?.complete(with: try block()) }
-    catch { promise?.fail(with: error, from: originalExecutor) }
+    catch { promise?.fail(error, from: originalExecutor) }
   }
   return promise
 }
@@ -106,7 +106,7 @@ public func future<T, U: ExecutionContext>(
 
       if let context = context {
         let value = fallible { try block(context) }
-        promise?.complete(with: value, from: originalExecutor)
+        promise?.complete(value, from: originalExecutor)
       } else {
         promise?.cancelBecauseOfDeallocatedContext(from: originalExecutor)
       }
@@ -142,7 +142,7 @@ public func flatFuture<T, C: ExecutionContext>(
 
       if let context = context {
         do { promise?.complete(with: try block(context)) }
-        catch { promise?.fail(with: error, from: originalExecutor) }
+        catch { promise?.fail(error, from: originalExecutor) }
       } else {
         promise?.cancelBecauseOfDeallocatedContext(from: originalExecutor)
       }
@@ -315,7 +315,7 @@ private func promise<T>(
       promise?.cancel(from: originalExecutor)
     } else if case .some = promise {
       let completion = fallible(block: block)
-      promise?.complete(with: completion, from: originalExecutor)
+      promise?.complete(completion, from: originalExecutor)
     }
   }
 
@@ -340,7 +340,7 @@ private func flatPromise<T>(
       promise?.cancel(from: originalExecutor)
     } else {
       do { promise?.complete(with: try block()) }
-      catch { promise?.fail(with: error, from: originalExecutor) }
+      catch { promise?.fail(error, from: originalExecutor) }
     }
   }
 

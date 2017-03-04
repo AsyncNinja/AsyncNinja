@@ -66,9 +66,9 @@ class Channel_CombineTests: XCTestCase {
       producerOfOdds.update(5)
       producerOfEvents.update(6)
       producerOfOdds.update(7)
-      producerOfOdds.succeed(with: "Hello")
+      producerOfOdds.succeed("Hello")
       producerOfEvents.update(8)
-      producerOfEvents.succeed(with: "World")
+      producerOfEvents.succeed("World")
     }
 
     self.waitForExpectations(timeout: 1.0, handler: nil)

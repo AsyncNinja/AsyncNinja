@@ -60,10 +60,10 @@ class Channel_Zip2: XCTestCase {
       producerOfOdds.update(5)
       producerOfEvents.update(6)
       producerOfOdds.update(7)
-      producerOfOdds.succeed(with: "Hello")
+      producerOfOdds.succeed("Hello")
       producerOfEvents.update(8)
       producerOfEvents.update(10)
-      producerOfEvents.succeed(with: "World")
+      producerOfEvents.succeed("World")
     }
 
     self.waitForExpectations(timeout: 1.0)

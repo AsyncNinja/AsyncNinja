@@ -72,7 +72,7 @@ final public class Promise<Success>: Future<Success>, Completable, HasSimpleInit
   ///   you calling this method on.
   /// - Returns: true if `Promise` was completed with specified value
   public func tryComplete(
-    with completion: Fallible<Success>,
+    _ completion: Fallible<Success>,
     from originalExecutor: Executor? = nil
     ) -> Bool {
     let completedItem = CompletedPromiseState(value: completion)

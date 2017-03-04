@@ -62,7 +62,7 @@ public class Cache<Key: Hashable, T: Completable&HasSimpleInit, Context: Executi
                     from originalExecutor: Executor? = nil) -> T.CompletingType {
     guard let context = _context else {
       let completing = T()
-      completing.fail(with: AsyncNinjaError.contextDeallocated, from: originalExecutor)
+      completing.fail(AsyncNinjaError.contextDeallocated, from: originalExecutor)
       return completing as! T.CompletingType
     }
 

@@ -48,12 +48,12 @@ public func zip<A, B>(_ futureA: Future<A>,
     defer { locking.unlock() }
 
     localSubvalueA.onFailure {
-      promise.fail(with: $0, from: originalExecutor)
+      promise.fail($0, from: originalExecutor)
     }
     localSubvalueA.onSuccess { localSubvalueA in
       subvalueA = localSubvalueA
       if let localSubvalueB = subvalueB {
-        promise.succeed(with: (localSubvalueA, localSubvalueB),
+        promise.succeed((localSubvalueA, localSubvalueB),
                         from: originalExecutor)
       }
     }
@@ -69,12 +69,12 @@ public func zip<A, B>(_ futureA: Future<A>,
     defer { locking.unlock() }
     
     localSubvalueB.onFailure {
-      promise.fail(with: $0, from: originalExecutor)
+      promise.fail($0, from: originalExecutor)
     }
     localSubvalueB.onSuccess { localSubvalueB in
       subvalueB = localSubvalueB
       if let localSubvalueA = subvalueA {
-        promise.succeed(with: (localSubvalueA, localSubvalueB),
+        promise.succeed((localSubvalueA, localSubvalueB),
                         from: originalExecutor)
       }
     }

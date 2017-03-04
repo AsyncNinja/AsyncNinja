@@ -38,9 +38,8 @@ class Channel_Merge2Tests: XCTestCase {
     multiTest {
       let producerOfOdds = Producer<Int, String>()
       let producerOfEvents = Producer<Int, String>()
-      let channelOfNumbers = merge(producerOfOdds, producerOfEvents)
+      let channelOfNumbers: Channel = merge(producerOfOdds, producerOfEvents)
       let sema = DispatchSemaphore(value: 0)
-
 
       channelOfNumbers.extractAll { (numbers, stringsOfError) in
         XCTAssertEqual(numbers, [1, 3, 2, 4, 5, 6, 7, 8])
@@ -58,9 +57,9 @@ class Channel_Merge2Tests: XCTestCase {
         producerOfOdds.update(5)
         producerOfEvents.update(6)
         producerOfOdds.update(7)
-        producerOfOdds.succeed(with: "Hello")
+        producerOfOdds.succeed("Hello")
         producerOfEvents.update(8)
-        producerOfEvents.succeed(with: "World")
+        producerOfEvents.succeed("World")
       }
 
       sema.wait()
@@ -95,9 +94,9 @@ class Channel_Merge2Tests: XCTestCase {
         producerOfOdds.update(5)
         producerOfEvents.update("six")
         producerOfOdds.update(7)
-        producerOfOdds.succeed(with: "Hello")
+        producerOfOdds.succeed("Hello")
         producerOfEvents.update("eight")
-        producerOfEvents.succeed(with: "World")
+        producerOfEvents.succeed("World")
       }
 
       sema.wait()

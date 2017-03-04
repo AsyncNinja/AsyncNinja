@@ -160,9 +160,9 @@ extension MyService {
     self.fetchPerson(withID: personID) { (person, error) in
       switch (person, error) {
       case let (.some(person), .none):
-        promise.succeed(with: person)
+        promise.succeed(person)
       case let (.none, .some(error)):
-        promise.fail(with: error)
+        promise.fail(error)
       default:
         fatalError("callback must return either person or error")
       }

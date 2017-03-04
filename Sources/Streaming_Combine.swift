@@ -62,12 +62,12 @@ public extension Streaming {
           case let .success(localLeftSuccess):
             if let localRightSuccess = rightSuccess {
               let success = (localLeftSuccess, localRightSuccess)
-              producer?.succeed(with: success, from: originalExecutor)
+              producer?.succeed(success, from: originalExecutor)
             } else {
               leftSuccess = localLeftSuccess
             }
           case let .failure(error):
-            producer?.fail(with: error, from: originalExecutor)
+            producer?.fail(error, from: originalExecutor)
           }
         }
       }
@@ -92,12 +92,12 @@ public extension Streaming {
           case let .success(localRightSuccess):
             if let localLeftSuccess = leftSuccess {
               let success = (localLeftSuccess, localRightSuccess)
-              producer?.succeed(with: success, from: originalExecutor)
+              producer?.succeed(success, from: originalExecutor)
             } else {
               rightSuccess = localRightSuccess
             }
           case let .failure(error):
-            producer?.fail(with: error, from: originalExecutor)
+            producer?.fail(error, from: originalExecutor)
           }
         }
       }

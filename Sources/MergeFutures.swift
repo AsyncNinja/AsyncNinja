@@ -29,11 +29,11 @@ import Dispatch
 ///   - futureB: second
 /// - Returns: future of combined results.
 ///   The future will complete right after completion of both futureA and futureB
-public func merge<T>(
-  _ futureA: Future<T>,
-  _ futureB: Future<T>
-  ) -> Future<T> {
-  let promise = Promise<T>()
+public func merge<T: Completing, U: Completing>(
+  _ futureA: T,
+  _ futureB: U
+  ) -> Future<T.Success> where T.Success == U.Success {
+  let promise = Promise<T.Success>()
   promise.complete(with: futureA)
   promise.complete(with: futureB)
   return promise
@@ -47,12 +47,12 @@ public func merge<T>(
 ///   - futureC: third
 /// - Returns: future of combined results.
 ///   The future will complete right after completion of both futureA and futureB
-public func merge<T>(
-  _ futureA: Future<T>,
-  _ futureB: Future<T>,
-  _ futureC: Future<T>
-  ) -> Future<T> {
-  let promise = Promise<T>()
+public func merge<T: Completing, U: Completing, V: Completing>(
+  _ futureA: T,
+  _ futureB: U,
+  _ futureC: V
+  ) -> Future<T.Success> where T.Success == U.Success, T.Success == V.Success {
+  let promise = Promise<T.Success>()
   promise.complete(with: futureA)
   promise.complete(with: futureB)
   promise.complete(with: futureC)

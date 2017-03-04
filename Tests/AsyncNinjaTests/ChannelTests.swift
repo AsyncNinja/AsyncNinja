@@ -45,7 +45,7 @@ class ChannelTests: XCTestCase {
     let producer = Producer<Int, String>(bufferSize: 5)
     var iteratorA = producer.makeIterator()
     producer.update(0..<10)
-    producer.succeed(with: "finished")
+    producer.succeed("finished")
     var iteratorB = producer.makeIterator()
 
     for index in 0..<10 {
@@ -116,7 +116,7 @@ class ChannelTests: XCTestCase {
           fatalError()
         }
         producer.update(updatesFixture)
-        producer.succeed(with: successValueFixture)
+        producer.succeed(successValueFixture)
       }
     }
 
@@ -156,7 +156,7 @@ class ChannelTests: XCTestCase {
           fatalError()
         }
         producer.update(updatesFixture)
-        producer.succeed(with: successValueFixture)
+        producer.succeed(successValueFixture)
       }
     }
 

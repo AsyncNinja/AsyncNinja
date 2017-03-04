@@ -188,11 +188,11 @@ public extension Future where Success: Completing {
       case .success(let future):
         let handler = future.makeCompletionHandler(executor: .immediate) {
           [weak promise] (completion, originalExecutor) -> Void in
-          promise?.complete(with: completion, from: originalExecutor)
+          promise?.complete(completion, from: originalExecutor)
         }
         promise.insertHandlerToReleasePool(handler)
       case .failure(let error):
-        promise.fail(with: error, from: originalExecutor)
+        promise.fail(error, from: originalExecutor)
       }
     }
 
@@ -219,7 +219,7 @@ public extension DispatchGroup {
     let promise = Promise<Void>()
     let executor_ = executor.isDispatchQueueExecutor ? executor : .primary
     self.notify(queue: executor_.dispatchQueue!) { [weak promise] in
-      promise?.succeed(with: (), from: executor_)
+      promise?.succeed((), from: executor_)
     }
     return promise
   }

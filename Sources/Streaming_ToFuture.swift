@@ -40,15 +40,15 @@ public extension Streaming {
       case let .update(update):
         do {
           if try predicate(update) {
-            promise?.succeed(with: update, from: originalExecutor)
+            promise?.succeed(update, from: originalExecutor)
           }
         } catch {
-          promise?.fail(with: error, from: originalExecutor)
+          promise?.fail(error, from: originalExecutor)
         }
       case .completion(.success):
-        promise?.succeed(with: nil, from: originalExecutor)
+        promise?.succeed(nil, from: originalExecutor)
       case let .completion(.failure(failure)):
-        promise?.fail(with: failure, from: originalExecutor)
+        promise?.fail(failure, from: originalExecutor)
       }
     }
 
@@ -141,15 +141,15 @@ public extension Streaming {
             latestMatchingUpdate = update
           }
         } catch {
-          promise?.fail(with: error, from: originalExecutor)
+          promise?.fail(error, from: originalExecutor)
         }
       case .completion(.success):
-        promise?.succeed(with: latestMatchingUpdate, from: originalExecutor)
+        promise?.succeed(latestMatchingUpdate, from: originalExecutor)
       case let .completion(.failure(failure)):
         if let latestMatchingUpdate = latestMatchingUpdate {
-          promise?.succeed(with: latestMatchingUpdate, from: originalExecutor)
+          promise?.succeed(latestMatchingUpdate, from: originalExecutor)
         } else {
-          promise?.fail(with: failure, from: originalExecutor)
+          promise?.fail(failure, from: originalExecutor)
         }
       }
     }
@@ -238,12 +238,12 @@ public extension Streaming {
         do {
           result = try nextPartialResult(result, update)
         } catch {
-          promise?.fail(with: error, from: originalExecutor)
+          promise?.fail(error, from: originalExecutor)
         }
       case .completion(.success(let successValue)):
-        promise?.succeed(with: (result, successValue), from: originalExecutor)
+        promise?.succeed((result, successValue), from: originalExecutor)
       case let .completion(.failure(failure)):
-        promise?.fail(with: failure, from: originalExecutor)
+        promise?.fail(failure, from: originalExecutor)
       }
     }
 

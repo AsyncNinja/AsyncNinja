@@ -233,7 +233,7 @@ private class KeepUnorderedChannelFlatteningBehaviorStorage<P, S, T>: BaseChanne
         producer.insertHandlerToReleasePool(handler)
       }
     case .completion(let completion):
-      producer.complete(with: completion, from: originalExecutor)
+      producer.complete(completion, from: originalExecutor)
     }
   }
 }
@@ -273,14 +273,14 @@ private class KeepLatestTransformChannelFlatteningBehaviorStorage<P, S, T>: Base
           if let future = try self.transform(update) {
             promise.complete(with: future.map(executor: .immediate) { $0 } )
           } else {
-            promise.succeed(with: nil, from: originalExecutor)
+            promise.succeed(nil, from: originalExecutor)
           }
         } catch {
-          promise.fail(with: error, from: originalExecutor)
+          promise.fail(error, from: originalExecutor)
         }
       }
     case .completion(let completion):
-      producer.complete(with: completion, from: originalExecutor)
+      producer.complete(completion, from: originalExecutor)
     }
   }
 }
@@ -335,15 +335,15 @@ private class DropResultsOutOfOrderChannelFlatteningBehaviorStorage<P, S, T>: Ba
           if let future = (try self.transform(update)) {
             promise.complete(with: future.map(executor: .immediate) { $0 } )
           } else {
-            promise.succeed(with: nil, from: originalExecutor)
+            promise.succeed(nil, from: originalExecutor)
           }
         } catch {
-          promise.fail(with: error, from: originalExecutor)
+          promise.fail(error, from: originalExecutor)
         }
       }
       
     case .completion(let completion):
-      producer.complete(with: completion, from: originalExecutor)
+      producer.complete(completion, from: originalExecutor)
     }
   }
 }
@@ -367,16 +367,16 @@ private class OrderResultsChannelFlatteningBehaviorStorage<P, S, T>: BaseChannel
           if let future = try self.transform(update) {
             promise.complete(with: future.map(executor: .immediate) { $0 } )
           } else {
-            promise.succeed(with: nil, from: originalExecutor)
+            promise.succeed(nil, from: originalExecutor)
           }
         } catch {
-          promise.fail(with: error, from: originalExecutor)
+          promise.fail(error, from: originalExecutor)
         }
       }
       
       self.waitForTheNextFutureIfNeeded(producer: producer)
     case .completion(let completion):
-      producer.complete(with: completion, from: originalExecutor)
+      producer.complete(completion, from: originalExecutor)
     }
   }
   
@@ -430,7 +430,7 @@ private class TransformSeriallyChannelFlatteningBehaviorStorage<P, S, T>: BaseCh
       updatesQueue.push(update)
       self.launchNextTransformIfNeeded(producer: producer, from: originalExecutor)
     case .completion(let completion):
-      producer.complete(with: completion, from: originalExecutor)
+      producer.complete(completion, from: originalExecutor)
     }
   }
   
@@ -447,10 +447,10 @@ private class TransformSeriallyChannelFlatteningBehaviorStorage<P, S, T>: BaseCh
         if let future = try self.transform(update) {
           promise.complete(with: future.map(executor: .immediate) { $0 } )
         } else {
-          promise.succeed(with: nil, from: originalExecutor)
+          promise.succeed(nil, from: originalExecutor)
         }
       } catch {
-        promise.fail(with: error, from: originalExecutor)
+        promise.fail(error, from: originalExecutor)
       }
     }
     

@@ -69,7 +69,7 @@ public extension Completing {
       [weak promise] (completion, originalExecutor) -> Void in
       guard case .some = promise else { return }
       let transformedValue = fallible { try transform(completion) }
-      promise?.complete(with: transformedValue, from: originalExecutor)
+      promise?.complete(transformedValue, from: originalExecutor)
     }
     promise.insertHandlerToReleasePool(handler)
     return promise
@@ -148,10 +148,10 @@ public extension Completing {
 
       switch completion {
       case let .success(success):
-        promise?.succeed(with: success, from: originalExecutor)
+        promise?.succeed(success, from: originalExecutor)
       case let .failure(failure):
         do { promise?.complete(with: try transform(failure)) }
-        catch { promise?.fail(with: error, from: originalExecutor) }
+        catch { promise?.fail(error, from: originalExecutor) }
       }
     }
     promise.insertHandlerToReleasePool(handler)
@@ -440,7 +440,7 @@ public extension Completing {
       [weak promise] (completion, _) in
       executor.execute(after: timeout) { [weak promise] executor in
         guard let promise = promise else { return }
-        promise.complete(with: completion, from: executor)
+        promise.complete(completion, from: executor)
       }
     }
     self.insertHandlerToReleasePool(handler)

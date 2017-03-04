@@ -119,7 +119,7 @@ class Channel_ToFutureTests: XCTestCase {
     updatable.update(5)
     updatable.update(7)
     updatable.update(9)
-    updatable.fail(with: TestError.testCode)
+    updatable.fail(TestError.testCode)
 
     self.waitForExpectations(timeout: 1.0)
   }
@@ -195,7 +195,7 @@ class Channel_ToFutureTests: XCTestCase {
     updatable.update(5)
     updatable.update(7)
     updatable.update(9)
-    updatable.fail(with: TestError.testCode)
+    updatable.fail(TestError.testCode)
 
     self.waitForExpectations(timeout: 1.0)
   }
@@ -221,7 +221,7 @@ class Channel_ToFutureTests: XCTestCase {
     updatable.update(8)
     updatable.update(7)
     updatable.update(9)
-    updatable.fail(with: TestError.testCode)
+    updatable.fail(TestError.testCode)
 
     self.waitForExpectations(timeout: 1.0)
   }
@@ -298,7 +298,7 @@ class Channel_ToFutureTests: XCTestCase {
     updatable.update(5)
     updatable.update(7)
     updatable.update(9)
-    updatable.fail(with: TestError.testCode)
+    updatable.fail(TestError.testCode)
 
     self.waitForExpectations(timeout: 1.0)
   }
@@ -375,7 +375,7 @@ class Channel_ToFutureTests: XCTestCase {
     updatable.update(5)
     updatable.update(7)
     updatable.update(9)
-    updatable.fail(with: TestError.testCode)
+    updatable.fail(TestError.testCode)
 
     self.waitForExpectations(timeout: 1.0)
   }
@@ -401,7 +401,7 @@ class Channel_ToFutureTests: XCTestCase {
     updatable.update(8)
     updatable.update(7)
     updatable.update(9)
-    updatable.fail(with: TestError.testCode)
+    updatable.fail(TestError.testCode)
 
     self.waitForExpectations(timeout: 1.0)
   }
@@ -427,7 +427,7 @@ class Channel_ToFutureTests: XCTestCase {
     producer.update("D")
     producer.update("E")
     producer.update("F")
-    producer.succeed(with: 7)
+    producer.succeed(7)
     self.waitForExpectations(timeout: 1.0)
   }
 
@@ -451,7 +451,7 @@ class Channel_ToFutureTests: XCTestCase {
       producer.update("D")
       producer.update("E")
       producer.update("F")
-      producer.succeed(with: 7)
+      producer.succeed(7)
       sema.wait()
     }
   }

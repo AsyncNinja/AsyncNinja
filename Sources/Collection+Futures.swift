@@ -63,11 +63,11 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
             accumulator = try nextPartialResult(accumulator, try completion.liftSuccess())
             unknownSubvaluesCount -= 1
             if 0 == unknownSubvaluesCount {
-              promise.succeed(with: accumulator, from: originalExecutor)
+              promise.succeed(accumulator, from: originalExecutor)
               canContinue = false
             }
           } catch {
-            promise.fail(with: error, from: originalExecutor)
+            promise.fail(error, from: originalExecutor)
             canContinue = false
           }
         }
@@ -103,7 +103,7 @@ public extension Collection where Self.IndexDistance == Int {
         let subvalue: T
         do { subvalue = try transform(value) }
         catch {
-          promise.fail(with: error, from: originalExecutor)
+          promise.fail(error, from: originalExecutor)
           canContinue = false
           return
         }
@@ -113,7 +113,7 @@ public extension Collection where Self.IndexDistance == Int {
         subvalues[index] = subvalue
         unknownSubvaluesCount -= 1
         if 0 == unknownSubvaluesCount {
-          promise.succeed(with: subvalues.map { $0! },
+          promise.succeed(subvalues.map { $0! },
                           from: originalExecutor)
         }
       }
@@ -161,13 +161,13 @@ public extension Collection where Self.IndexDistance == Int {
             unknownSubvaluesCount -= 1
             assert(unknownSubvaluesCount >= 0)
             if 0 == unknownSubvaluesCount {
-              promise.succeed(with: subvalues.map { $0! },
+              promise.succeed(subvalues.map { $0! },
                               from: originalExecutor)
             }
           }
 
           subvalue.onFailure {
-            promise.fail(with: $0, from: originalExecutor)
+            promise.fail($0, from: originalExecutor)
             canContinue = false
           }
         }

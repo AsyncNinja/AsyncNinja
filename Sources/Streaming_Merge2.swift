@@ -49,12 +49,12 @@ public func merge<T: Streaming, U: Streaming>(
       case let .update(update):
         updateHandler(update, originalExecutor)
       case let .completion(.failure(error)):
-        producer?.fail(with: error, from: originalExecutor)
+        producer?.fail(error, from: originalExecutor)
       case let .completion(.success(localSuccess)):
         locking.lock()
         defer { locking.unlock() }
         if let success = successHandler(localSuccess) {
-          producer?.succeed(with: success, from: originalExecutor)
+          producer?.succeed(success, from: originalExecutor)
         }
       }
     }
@@ -107,12 +107,12 @@ public func merge<T: Streaming, U: Streaming>(
       case let .update(update):
         producer?.update(update, from: originalExecutor)
       case let .completion(.failure(error)):
-        producer?.fail(with: error, from: originalExecutor)
+        producer?.fail(error, from: originalExecutor)
       case let .completion(.success(localSuccess)):
         locking.lock()
         defer { locking.unlock() }
         if let success = successHandler(localSuccess) {
-            producer?.succeed(with: success, from: originalExecutor)
+            producer?.succeed(success, from: originalExecutor)
         }
       }
     }
