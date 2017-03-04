@@ -146,15 +146,6 @@ class ChannelIteratorImpl<Update, Success>  {
   }
 }
 
-/// Value reveived by channel
-public enum ChannelEvent<Update, Success> {
-  /// A kind of value that can be received multiple times be for the completion one
-  case update(Update)
-
-  /// A kind of value that can be received once and completes the channel
-  case completion(Fallible<Success>)
-}
-
 // MARK: - Handlers
 
 /// **internal use only** Wraps each block submitted to the channel

@@ -22,56 +22,56 @@
 
 import Dispatch
 
-/// Merges two futures. Future that completes first completes the result
+/// Merges two `Completing`s (e.g. `Future`s). `Completing` that completes first completes the result
 ///
 /// - Parameters:
-///   - futureA: first
-///   - futureB: second
-/// - Returns: future of combined results.
-///   The future will complete right after completion of both futureA and futureB
-public func merge<T: Completing, U: Completing>(
-  _ futureA: T,
-  _ futureB: U
-  ) -> Future<T.Success> where T.Success == U.Success {
-  let promise = Promise<T.Success>()
-  promise.complete(with: futureA)
-  promise.complete(with: futureB)
-  return promise
+///   - a: first `Completing`
+///   - b: second `Completing`
+/// - Returns: future of merged arguments.
+public func merge<A: Completing, B: Completing>(_ a: A, _ b: B) -> Future<A.Success>
+  where A.Success == B.Success {
+    let promise = Promise<A.Success>()
+    promise.complete(with: a)
+    promise.complete(with: b)
+    return promise
 }
 
-/// Merges three futures. Future that completes first completes the result
+/// Merges three `Completing`s (e.g. `Future`s). `Completing` that completes first completes the result
 ///
 /// - Parameters:
-///   - futureA: first
-///   - futureB: second
-///   - futureC: third
-/// - Returns: future of combined results.
-///   The future will complete right after completion of both futureA and futureB
-public func merge<T: Completing, U: Completing, V: Completing>(
-  _ futureA: T,
-  _ futureB: U,
-  _ futureC: V
-  ) -> Future<T.Success> where T.Success == U.Success, T.Success == V.Success {
-  let promise = Promise<T.Success>()
-  promise.complete(with: futureA)
-  promise.complete(with: futureB)
-  promise.complete(with: futureC)
-  return promise
+///   - a: first
+///   - b: second
+///   - c: third
+/// - Returns: future of merged arguments.
+public func merge<A: Completing, B: Completing, C: Completing>(_ a: A, _ b: B, _ c: C) -> Future<A.Success>
+  where A.Success == B.Success, A.Success == C.Success {
+    let promise = Promise<A.Success>()
+    promise.complete(with: a)
+    promise.complete(with: b)
+    promise.complete(with: c)
+    return promise
 }
 
-/// Merges two futures. Future that completes first completes the result
+/// Merges two `Completing`s (e.g. `Future`s). `Completing` that completes first completes the result
 ///
 /// - Parameters:
-///   - futureA: first
-///   - futureB: second
-/// - Returns: future of combined results.
-///   The future will complete right after completion of both futureA and futureB
-public func merge<A, B>(
-  _ futureA: Future<A>,
-  _ futureB: Future<B>
-  ) -> Future<Either<A, B>> {
-  let promise = Promise<Either<A, B>>()
-  promise.complete(with: futureA.map(executor: .immediate) { .left($0) })
-  promise.complete(with: futureB.map(executor: .immediate) { .right($0) })
+///   - a: first
+///   - b: second
+/// - Returns: future of merged arguments.
+public func merge<A: Completing, B: Completing>(_ a: A, _ b: B) -> Future<Either<A.Success, B.Success>> {
+  let promise = Promise<Either<A.Success, B.Success>>()
+
+  let handlerA = a.makeCompletionHandler(executor: .immediate) {
+    [weak promise] (completion, originalExecutor) in
+    promise?.complete(completion.map(Either.left), from: originalExecutor)
+  }
+  promise.insertHandlerToReleasePool(handlerA)
+
+  let handlerB = b.makeCompletionHandler(executor: .immediate) {
+    [weak promise] (completion, originalExecutor) in
+    promise?.complete(completion.map(Either.right), from: originalExecutor)
+  }
+
+  promise.insertHandlerToReleasePool(handlerB)
   return promise
 }

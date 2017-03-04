@@ -276,38 +276,3 @@ extension Streaming {
     }
   }
 }
-
-/// Specifies strategy of selecting buffer size of channel derived
-/// from another channel, e.g through transformations
-public enum DerivedChannelBufferSize {
-
-  /// Specifies strategy to use as default value for arguments of methods
-  case `default`
-
-  /// Buffer size is defined by the buffer size of original channel
-  case inherited
-
-  /// Buffer size is defined by specified value
-  case specific(Int)
-
-  /// **internal use only**
-  func bufferSize<T: Streaming>(_ updating: T) -> Int {
-    switch self {
-    case .default: return AsyncNinjaConstants.defaultChannelBufferSize
-    case .inherited: return updating.maxBufferSize
-    case let .specific(value): return value
-    }
-  }
-
-  /// **internal use only**
-  func bufferSize<T: Streaming, U: Streaming>(
-    _ leftUpdating: T,
-    _ rightUpdating: U
-    ) -> Int {
-    switch self {
-    case .default: return AsyncNinjaConstants.defaultChannelBufferSize
-    case .inherited: return max(leftUpdating.maxBufferSize, rightUpdating.maxBufferSize)
-    case let .specific(value): return value
-    }
-  }
-}

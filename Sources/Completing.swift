@@ -448,17 +448,3 @@ public extension Completing {
     return promise
   }
 }
-
-public protocol LifetimeExtender: class {
-  /// **Internal use only**.
-  func insertToReleasePool(_ releasable: Releasable)
-}
-
-public extension LifetimeExtender {
-  /// **internal use only**
-  func insertHandlerToReleasePool(_ handler: AnyObject?) {
-    if let handler = handler {
-      self.insertToReleasePool(handler)
-    }
-  }
-}
