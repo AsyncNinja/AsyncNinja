@@ -263,5 +263,9 @@
                              observationSession: observationSession,
                              channelBufferSize: channelBufferSize)
     }
+
+    func sink<T>(setter: @escaping (Self, T) -> Void) -> Sink<T, Void> {
+      return sink(executor: executor, setter: setter)
+    }
   }
 #endif

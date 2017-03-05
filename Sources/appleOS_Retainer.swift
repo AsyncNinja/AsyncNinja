@@ -300,6 +300,19 @@
       return producer
     }
 
+    func sink<T>(executor: Executor, setter: @escaping (Self, T) -> Void) -> Sink<T, Void> {
+      let sink = Sink<T, Void>(updateExecutor: executor) {
+        [weak self] (sink, event, originalExecutor) in
+        if let strongSelf = self, case let .update(update) = event {
+          setter(strongSelf, update)
+        }
+      }
+      self.notifyDeinit { [weak sink] in
+        sink?.cancelBecauseOfDeallocatedContext(from: nil)
+      }
+      return sink
+    }
+
     /// makes an `Updating<(old: T?, new: T?)>` for specified key path.
     /// With an `Updating` you can
     /// * subscribe for updates

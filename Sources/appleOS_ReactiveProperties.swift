@@ -184,6 +184,10 @@
                              channelBufferSize: channelBufferSize,
                              customGetter: customGetter)
     }
+
+    func sink<T>(setter: @escaping (Object, T) -> Void) -> Sink<T, Void> {
+      return object.sink(executor: executor, setter: setter)
+    }
   }
 
   public extension Retainer where Self: NSObject {

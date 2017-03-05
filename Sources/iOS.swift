@@ -234,6 +234,14 @@
     }
   }
 
+  public extension ReactiveProperties where Object: UIButton {
+    func title(state: UIControlState) -> Sink<String?, Void> {
+      return sink { (object, update) in
+        object.setTitle(update, for: state)
+      }
+    }
+  }
+
   public extension ReactiveProperties where Object: UIViewController {
     /// An `UpdatableProperty` that refers to read-write property `UIViewController.title`
     var title: ProducerProxy<String?, Void> { return updatable(forKeyPath: "title") }

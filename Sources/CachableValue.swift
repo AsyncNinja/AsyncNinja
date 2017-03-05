@@ -22,12 +22,19 @@
 
 import Dispatch
 
+public protocol CachableCompletable: Completable {
+  associatedtype CompletingType: Completing
+
+  /// Required initializer
+  init()
+}
+
 /// Is a simple cache that can contain single value. Does not invalidate
 /// cached values automatically. Parametrised with Completable
 /// that can be either `Future` or `Channel` and Context. That gives
 /// an opportunity to make cache that can report of status of completion
 /// updateally (e.g. download persentage).
-public class CachableValue<T: Completable&HasSimpleInit, Context: ExecutionContext> {
+public class CachableValue<T: CachableCompletable, Context: ExecutionContext> {
 
   /// Function that resolves cache misses. `strongContext` is a context restored from weak reference
   public typealias MissHandler = (_ strongContext: Context) throws -> T.CompletingType
@@ -75,7 +82,7 @@ public class CachableValue<T: Completable&HasSimpleInit, Context: ExecutionConte
 }
 
 /// **Internal use only** Implementation of CachableValue.
-class CachableValueImpl<T: Completable&HasSimpleInit, Context: ExecutionContext> {
+class CachableValueImpl<T: CachableCompletable, Context: ExecutionContext> {
   typealias MissHandler = CachableValue<T, Context>.MissHandler
   private weak var _context: Context?
   private let _locker: (() -> Void) -> Void

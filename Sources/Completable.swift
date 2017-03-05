@@ -23,8 +23,8 @@
 import Dispatch
 
 /// A protocol for objects that can be manually completed
-public protocol Completable: Completing, Cancellable {
-  associatedtype CompletingType: Completing
+public protocol Completable: LifetimeExtender, Cancellable {
+  associatedtype Success
 
   /// Completes `Completing` with value and returns true.
   /// Returns false if promise was completed before.
@@ -175,10 +175,4 @@ public extension Completable where Success: AsyncNinjaOptionalAdaptor {
     }
     self.insertHandlerToReleasePool(handler)
   }
-}
-
-/// A protocol for objects that can be manually completed
-public protocol HasSimpleInit {
-  /// Required initializer
-  init()
 }

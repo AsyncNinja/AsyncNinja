@@ -22,7 +22,9 @@
 
 import Dispatch
 
-public protocol Streaming: Completing, Updating {
+public protocol Streaming: Completing, Updating, Sequence {
+
+  associatedtype Iterator: IteratorProtocol = ChannelIterator<Update, Success>
 
   /// amount of currently stored updates
   var bufferSize: Int { get }

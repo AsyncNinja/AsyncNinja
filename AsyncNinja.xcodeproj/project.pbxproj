@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F8A0093E1E6B757300787BC1 /* Sink.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8A0093D1E6B757300787BC1 /* Sink.swift */; };
 		OBJ_100 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_20 /* Common.swift */; };
 		OBJ_101 /* Completable.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_21 /* Completable.swift */; };
 		OBJ_102 /* Completing.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_22 /* Completing.swift */; };
@@ -90,6 +91,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F8A0093D1E6B757300787BC1 /* Sink.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sink.swift; sourceTree = "<group>"; };
 		OBJ_10 /* appleOS_Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Notifications.swift; sourceTree = "<group>"; };
 		OBJ_11 /* appleOS_Observation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Observation.swift; sourceTree = "<group>"; };
 		OBJ_12 /* appleOS_ReactiveProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_ReactiveProperties.swift; sourceTree = "<group>"; };
@@ -184,7 +186,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -193,7 +195,6 @@
 				OBJ_79 /* Documentation */,
 				OBJ_80 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_55 /* Tests */ = {
@@ -252,6 +253,7 @@
 				OBJ_20 /* Common.swift */,
 				OBJ_21 /* Completable.swift */,
 				OBJ_22 /* Completing.swift */,
+				F8A0093D1E6B757300787BC1 /* Sink.swift */,
 				OBJ_23 /* ConstantFuture.swift */,
 				OBJ_24 /* ExecutionContext.swift */,
 				OBJ_25 /* Executor.swift */,
@@ -348,7 +350,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_80 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -419,6 +421,7 @@
 				OBJ_111 /* Locking.swift in Sources */,
 				OBJ_112 /* macOS.swift in Sources */,
 				OBJ_113 /* MergeFutures.swift in Sources */,
+				F8A0093E1E6B757300787BC1 /* Sink.swift in Sources */,
 				OBJ_114 /* OptionalAdaptor.swift in Sources */,
 				OBJ_115 /* Producer.swift in Sources */,
 				OBJ_116 /* Promise.swift in Sources */,

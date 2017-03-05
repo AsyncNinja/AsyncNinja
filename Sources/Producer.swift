@@ -23,7 +23,9 @@
 import Dispatch
 
 /// Producer that can be manually created
-final public class Producer<Update, Success>: BaseProducer<Update, Success>, HasSimpleInit {
+final public class Producer<Update, Success>: BaseProducer<Update, Success>, CachableCompletable {
+  public typealias CompletingType = Channel<Update, Success>
+
   /// convenience initializer of Producer. Initializes Producer with default buffer size
   public init() {
     super.init(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
@@ -51,8 +53,6 @@ final public class Producer<Update, Success>: BaseProducer<Update, Success>, Has
 /// You can update and complete producer manually
 /// **internal use only**
 public class BaseProducer<Update, Success>: Channel<Update, Success>, Streamable {
-  public typealias CompletingType = Channel<Update, Success>
-
   private let _maxBufferSize: Int
   fileprivate let _bufferedUpdates = Queue<Update>()
   private let _releasePool = ReleasePool(locking: PlaceholderLocking())
@@ -364,7 +364,7 @@ public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
   private let _updateHandler: UpdateHandler
   private let _updateExecutor: Executor
   
-  /// designated initializer of Producer. Initializes Producer with specified buffer size
+  /// designated initializer
   init(bufferSize: Int,
        updateExecutor: Executor,
        updateHandler: @escaping UpdateHandler) {
@@ -385,7 +385,7 @@ public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
     return super.tryComplete(completion, from: originalExecutor)
   }
 
-  /// Calls update handler insted of sending specified Update to the Producer
+  /// Calls update handler instead of sending specified Update to the Producer
   override public func update(
     _ update: Update,
     from originalExecutor: Executor? = nil) {
@@ -395,7 +395,7 @@ public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
     }
   }
   
-  /// Calls update handler insted of sending specified Complete to the Producer
+  /// Calls update handler instead of sending specified Complete to the Producer
   override public func tryComplete(
     _ completion: Fallible<Success>,
     from originalExecutor: Executor? = nil) -> Bool {
