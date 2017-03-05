@@ -25,7 +25,7 @@
 
   public extension ExecutionContext where Self: NSObject {
     public typealias CustomGetter<T> = (Self) -> T?
-    public typealias CustomSetter<T> = (Self, T?) -> Void
+    public typealias CustomSetter<T> = (Self, T) -> Void
 
     /// makes an `UpdatableProperty<T?>` for specified key path.
     ///
@@ -59,8 +59,8 @@
       observationSession: ObservationSession? = nil,
       allowSettingSameValue: Bool = false,
       channelBufferSize: Int = 1,
-      customGetter: CustomGetter<T>? = nil,
-      customSetter: CustomSetter<T>? = nil
+      customGetter: CustomGetter<T?>? = nil,
+      customSetter: CustomSetter<T?>? = nil
       ) -> ProducerProxy<T?, Void> {
       return updatable(forKeyPath: keyPath,
                        executor: executor,
@@ -148,7 +148,7 @@
       from originalExecutor: Executor?,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1,
-      customGetter: CustomGetter<T>? = nil
+      customGetter: CustomGetter<T?>? = nil
       ) -> Channel<T?, Void> {
       return updating(forKeyPath: keyPath,
                       executor: executor,
@@ -264,7 +264,7 @@
                              channelBufferSize: channelBufferSize)
     }
 
-    func sink<T>(setter: @escaping (Self, T) -> Void) -> Sink<T, Void> {
+    func sink<T>(setter: @escaping CustomSetter<T>) -> Sink<T, Void> {
       return sink(executor: executor, setter: setter)
     }
   }

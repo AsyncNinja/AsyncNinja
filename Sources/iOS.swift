@@ -133,7 +133,7 @@
     var textAlignment: ProducerProxy<NSTextAlignment, Void> {
       return updatable(forKeyPath: "textAlignment", onNone: .drop,
                        customGetter: { $0.textAlignment },
-                       customSetter: { if let newValue = $1 { $0.textAlignment = newValue } })
+                       customSetter: { $0.textAlignment = $1 })
     }
 
     /// An `UpdatableProperty` that refers to read-write property `UITextField.placeholder`
@@ -158,7 +158,7 @@
       return updatable(forKeyPath: "barStyle",
                        onNone: .drop,
                        customGetter: { $0.barStyle },
-                       customSetter: { if let newValue = $1 { $0.barStyle = newValue } })
+                       customSetter: { $0.barStyle = $1 })
     }
 
     /// An `UpdatableProperty` that refers to read-write property `UISearchBar.text`
@@ -190,7 +190,7 @@
       return updatable(forKeyPath: "searchBarStyle",
                        onNone: .drop,
                        customGetter: { $0.searchBarStyle },
-                       customSetter: { if let newValue = $1 { $0.searchBarStyle = newValue } })
+                       customSetter: { $0.searchBarStyle = $1 })
     }
   }
 
@@ -223,12 +223,10 @@
                        customGetter: { $0.isAnimating },
                        customSetter:
         {
-          if let newValue = $1 {
-            if newValue {
-              $0.startAnimating()
-            } else {
-              $0.stopAnimating()
-            }
+          if $1 {
+            $0.startAnimating()
+          } else {
+            $0.stopAnimating()
           }
       })
     }

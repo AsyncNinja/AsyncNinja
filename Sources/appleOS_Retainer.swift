@@ -25,7 +25,7 @@
 
   public extension Retainer where Self: NSObject {
     public typealias CustomGetter<T> = (Self) -> T?
-    public typealias CustomSetter<T> = (Self, T?) -> Void
+    public typealias CustomSetter<T> = (Self, T) -> Void
     
     /// makes an `UpdatableProperty<T?>` for specified key path.
     ///
@@ -61,8 +61,8 @@
       observationSession: ObservationSession? = nil,
       allowSettingSameValue: Bool = false,
       channelBufferSize: Int = 1,
-      customGetter: CustomGetter<T>? = nil,
-      customSetter: CustomSetter<T>? = nil
+      customGetter: CustomGetter<T?>? = nil,
+      customSetter: CustomSetter<T?>? = nil
       ) -> ProducerProxy<T?, Void> {
       let producer = ProducerProxy<T?, Void>(bufferSize: channelBufferSize, updateExecutor: executor) {
         [weak self] (producerProxy, event, originalExecutor) in
@@ -207,7 +207,7 @@
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1,
-      customGetter: CustomGetter<T>? = nil
+      customGetter: CustomGetter<T?>? = nil
       ) -> Channel<T?, Void> {
 
       let producer = Producer<T?, Void>(bufferSize: channelBufferSize)
@@ -300,7 +300,7 @@
       return producer
     }
 
-    func sink<T>(executor: Executor, setter: @escaping (Self, T) -> Void) -> Sink<T, Void> {
+    func sink<T>(executor: Executor, setter: @escaping CustomSetter<T>) -> Sink<T, Void> {
       let sink = Sink<T, Void>(updateExecutor: executor) {
         [weak self] (sink, event, originalExecutor) in
         if let strongSelf = self, case let .update(update) = event {
@@ -400,7 +400,7 @@
       return producer
     }
 
-    func setValue<T>(_ newValue: T?, forKeyPath keyPath: String, allowSettingSameValue: Bool, customSetter: CustomSetter<T>?) {
+    func setValue<T>(_ newValue: T, forKeyPath keyPath: String, allowSettingSameValue: Bool, customSetter: CustomSetter<T>?) {
       let nsNewObjectValue: NSObject?
       if let customSetter = customSetter {
         customSetter(self, newValue)
@@ -429,6 +429,14 @@
         } else {
             return changes[.newKey] as? T
         }
+    }
+
+    func getValue<T>(forKeyPath keyPath: String, changes: [NSKeyValueChangeKey: Any], customGetter: CustomGetter<T?>?) -> T? {
+      if let customGetter = customGetter {
+        return customGetter(self).flatMap { $0 }
+      } else {
+        return changes[.newKey] as? T
+      }
     }
   }
 #endif

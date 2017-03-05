@@ -27,7 +27,7 @@
   /// `ReactiveProperties` is an adaptor for reactive properties.
   public struct ReactiveProperties<Object: NSObject> where Object: Retainer {
     public typealias CustomGetter<T> = (Object) -> T?
-    public typealias CustomSetter<T> = (Object, T?) -> Void
+    public typealias CustomSetter<T> = (Object, T) -> Void
 
     var object: Object
     var executor: Executor
@@ -67,8 +67,8 @@
       forKeyPath keyPath: String,
       allowSettingSameValue: Bool = false,
       channelBufferSize: Int = 1,
-      customGetter: CustomGetter<T>? = nil,
-      customSetter: CustomSetter<T>? = nil
+      customGetter: CustomGetter<T?>? = nil,
+      customSetter: CustomSetter<T?>? = nil
       ) -> ProducerProxy<T?, Void>
     {
       return object.updatable(forKeyPath: keyPath,
@@ -185,7 +185,7 @@
                              customGetter: customGetter)
     }
 
-    func sink<T>(setter: @escaping (Object, T) -> Void) -> Sink<T, Void> {
+    func sink<T>(setter: @escaping CustomSetter<T>) -> Sink<T, Void> {
       return object.sink(executor: executor, setter: setter)
     }
   }
