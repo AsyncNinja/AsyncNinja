@@ -253,50 +253,54 @@
 
   // MARK: - T: Equatable
   extension iOSTests {
-    func testBoth<T: Equatable, Object: NSObject>(
-      _ stream: ProducerProxy<T, Void>,
+    func testBoth<T: Streamable&Streaming, Object: NSObject>(
+      _ stream: T,
       object: Object,
       keyPath: String,
-      values: [T],
+      values: [T.Update],
       file: StaticString = #file,
       line: UInt = #line,
-      customGetter: ((Object) -> T?)? = nil,
-      customSetter: ((Object, T?) -> Void)? = nil)
+      customGetter: ((Object) -> T.Update?)? = nil,
+      customSetter: ((Object, T.Update?) -> Void)? = nil
+    ) where T.Update: Equatable
     {
       testStreamable(stream, object: object, keyPath: keyPath, values: values,
                      file: file, line: line, customGetter: customGetter)
-      testStreaming(stream, object: object, keyPath: keyPath, values: values, file: file, line: line, customSetter: customSetter)
+      testStreaming(stream, object: object, keyPath: keyPath, values: values,
+                    file: file, line: line, customSetter: customSetter)
     }
 
-    func testStreamable<T: Equatable, Object: NSObject>(
-      _ streamable: ProducerProxy<T, Void>,
+    func testStreamable<T: Streamable, Object: NSObject>(
+      _ streamable: T,
       object: Object,
       keyPath: String,
-      values: [T],
+      values: [T.Update],
       file: StaticString = #file,
       line: UInt = #line,
-      customGetter: ((Object) -> T?)? = nil)
+      customGetter: ((Object) -> T.Update?)? = nil
+    ) where T.Update: Equatable
     {
       for value in values {
         streamable.update(value, from: .main)
-        let objectValue: T?
+        let objectValue: T.Update?
         if let customGetter = customGetter {
           objectValue = customGetter(object)
         } else {
-          objectValue = object.value(forKeyPath: keyPath) as? T
+          objectValue = object.value(forKeyPath: keyPath) as? T.Update
         }
         XCTAssertEqual(objectValue, value, file: file, line: line)
       }
     }
 
-    func testStreaming<T: Equatable, Object: NSObject>(
-      _ streaming: Channel<T, Void>,
+    func testStreaming<T: Streaming, Object: NSObject>(
+      _ streaming: T,
       object: Object,
       keyPath: String,
-      values: [T],
+      values: [T.Update],
       file: StaticString = #file,
       line: UInt = #line,
-      customSetter: ((Object, T?) -> Void)? = nil)
+      customSetter: ((Object, T.Update?) -> Void)? = nil
+      ) where T.Update: Equatable
     {
       var updatingIterator = streaming.makeIterator()
       let _ = updatingIterator.next() // skip an initial value
@@ -307,7 +311,7 @@
           object.setValue(value, forKeyPath: keyPath)
         }
 
-        XCTAssertEqual(updatingIterator.next(), value, file: file, line: line)
+        XCTAssertEqual(updatingIterator.next() as! T.Update?, value, file: file, line: line)
       }
     }
 
@@ -315,16 +319,16 @@
 
   // MARK: - T: Optional<Equatable>
   extension iOSTests {
-    func testBoth<T: AsyncNinjaOptionalAdaptor, Object: NSObject>(
-      _ stream: ProducerProxy<T, Void>,
+    func testBoth<T: Streamable&Streaming, Object: NSObject>(
+      _ stream: T,
       object: Object,
       keyPath: String,
-      values: [T],
+      values: [T.Update],
       file: StaticString = #file,
       line: UInt = #line,
-      customGetter: ((Object) -> T?)? = nil,
-      customSetter: ((Object, T?) -> Void)? = nil)
-      where T.AsyncNinjaWrapped: Equatable
+      customGetter: ((Object) -> T.Update?)? = nil,
+      customSetter: ((Object, T.Update?) -> Void)? = nil
+      ) where T.Update: AsyncNinjaOptionalAdaptor, T.Update.AsyncNinjaWrapped: Equatable
     {
       testStreamable(stream, object: object, keyPath: keyPath, values: values,
                      file: file, line: line, customGetter: customGetter)
@@ -332,38 +336,38 @@
                     file: file, line: line, customSetter: customSetter)
     }
 
-    func testStreamable<T: AsyncNinjaOptionalAdaptor, Object: NSObject>(
-      _ streamable: ProducerProxy<T, Void>,
+    func testStreamable<T: Streamable, Object: NSObject>(
+      _ streamable: T,
       object: Object,
       keyPath: String,
-      values: [T],
+      values: [T.Update],
       file: StaticString = #file,
       line: UInt = #line,
-      customGetter: ((Object) -> T?)? = nil)
-      where T.AsyncNinjaWrapped: Equatable
+      customGetter: ((Object) -> T.Update?)? = nil
+      ) where T.Update: AsyncNinjaOptionalAdaptor, T.Update.AsyncNinjaWrapped: Equatable
     {
       for value in values {
         streamable.update(value, from: .main)
 
-        let objectValue: T?
+        let objectValue: T.Update?
         if let customGetter = customGetter {
           objectValue = customGetter(object)
         } else {
-          objectValue = object.value(forKeyPath: keyPath) as? T
+          objectValue = object.value(forKeyPath: keyPath) as? T.Update
         }
         XCTAssertEqual(objectValue?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue, file: file, line: line)
       }
     }
 
-    func testStreaming<T: AsyncNinjaOptionalAdaptor, Object: NSObject>(
-      _ streaming: Channel<T, Void>,
+    func testStreaming<T: Streaming, Object: NSObject>(
+      _ streaming: T,
       object: Object,
       keyPath: String,
-      values: [T],
+      values: [T.Update],
       file: StaticString = #file,
       line: UInt = #line,
-      customSetter: ((Object, T?) -> Void)? = nil)
-      where T.AsyncNinjaWrapped: Equatable
+      customSetter: ((Object, T.Update?) -> Void)? = nil
+    ) where T.Update: AsyncNinjaOptionalAdaptor, T.Update.AsyncNinjaWrapped: Equatable
     {
       var updatingIterator = streaming.makeIterator()
       let _ = updatingIterator.next() // skip an initial value
@@ -374,7 +378,7 @@
           object.setValue(value.asyncNinjaOptionalValue, forKeyPath: keyPath)
         }
 
-        XCTAssertEqual(updatingIterator.next()?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue, file: file, line: line)
+        XCTAssertEqual((updatingIterator.next() as! T.Update?)?.asyncNinjaOptionalValue , value.asyncNinjaOptionalValue, file: file, line: line)
       }
     }
   }
