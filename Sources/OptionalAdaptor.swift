@@ -46,7 +46,7 @@ extension Optional: AsyncNinjaOptionalAdaptor {
 }
 
 /// Adds convenience members to the channel that who's Update is optional
-public extension Channel where Update: AsyncNinjaOptionalAdaptor {
+public extension Channel where U: AsyncNinjaOptionalAdaptor {
   typealias UnwrappedUpdate = Update.AsyncNinjaWrapped
 
   /// makes channel of unsafely unwrapped optional Updates
