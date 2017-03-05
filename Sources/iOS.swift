@@ -233,10 +233,24 @@
   }
 
   public extension ReactiveProperties where Object: UIButton {
-    func title(state: UIControlState) -> Sink<String?, Void> {
-      return sink { (object, update) in
-        object.setTitle(update, for: state)
-      }
+    func title(for state: UIControlState) -> Sink<String?, Void> {
+      return sink { $0.setTitle($1, for: state) }
+    }
+
+    func titleShadowColor(for state: UIControlState) -> Sink<UIColor?, Void> {
+      return sink { $0.setTitleShadowColor($1, for: state) }
+    }
+
+    func image(for state: UIControlState) -> Sink<UIImage?, Void> {
+      return sink { $0.setImage($1, for: state) }
+    }
+
+    func backgroundImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+      return sink { $0.setBackgroundImage($1, for: state) }
+    }
+
+    func attributedTitle(for state: UIControlState) -> Sink<NSAttributedString?, Void> {
+      return sink { $0.setAttributedTitle($1, for: state) }
     }
   }
 

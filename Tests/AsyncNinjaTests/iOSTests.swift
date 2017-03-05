@@ -236,6 +236,36 @@
 //      })
     }
 
+    func testUIButton() {
+      var states: [UIControlState] = [.normal, .highlighted, .disabled, .selected]
+      if #available(iOS 9.0, *) {
+        states.append(.focused)
+      }
+
+      for state in states {
+        let object = UIButton()
+        let attributedStringsFixture = iOSTests.stringsFixture
+          .map { NSAttributedString(string: $0, attributes: nil) }
+
+        testStreamable(object.rp.title(for: state),
+                       object: object,
+                       keyPathOrGet: .right({ $0.title(for: state) }),
+                       values: iOSTests.stringsAndNilsFixture)
+        testStreamable(object.rp.image(for: state),
+                       object: object,
+                       keyPathOrGet: .right({ $0.image(for: state) }),
+                       values: iOSTests.imagesAndNilsFixture)
+        testStreamable(object.rp.backgroundImage(for: state),
+                       object: object,
+                       keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
+                       values: iOSTests.imagesAndNilsFixture)
+        testStreamable(object.rp.attributedTitle(for: state),
+                       object: object,
+                       keyPathOrGet: .right({ $0.attributedTitle(for: state) }),
+                       values: attributedStringsFixture)
+      }
+    }
+
     func testUIViewController() {
       let object = UIViewController()
       testBoth(object.rp.title,
