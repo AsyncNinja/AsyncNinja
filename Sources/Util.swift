@@ -66,6 +66,24 @@ public enum Either<Left, Right> {
     if case let .right(value) = self { return value }
     else { return nil }
   }
+
+  public func mapLeft<T>(_ transform: (Left) throws -> T) rethrows -> Either<T, Right> {
+    switch self {
+    case let .left(left):
+      return .left(try(transform(left)))
+    case let .right(right):
+      return .right(right)
+    }
+  }
+
+  public func mapRight<T>(_ transform: (Right) throws -> T) rethrows -> Either<Left, T> {
+    switch self {
+    case let .left(left):
+      return .left(left)
+    case let .right(right):
+      return .right(try(transform(right)))
+    }
+  }
 }
 
 // MARK: - Description

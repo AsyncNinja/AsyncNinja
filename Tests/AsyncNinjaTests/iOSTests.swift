@@ -69,23 +69,23 @@
       let object = UIView()
       testBoth(object.rp.alpha,
                object: object,
-               keyPath: "alpha",
+               keyPathOrGetSet: .left("alpha"),
                values: iOSTests.cgFloatFixture)
       testBoth(object.rp.tintColor,
                object: object,
-               keyPath: "tintColor",
+               keyPathOrGetSet: .left("tintColor"),
                values: iOSTests.colorsFiture)
       testBoth(object.rp.isHidden,
                object: object,
-               keyPath: "hidden",
+               keyPathOrGetSet: .left("hidden"),
                values: iOSTests.boolFixture)
       testBoth(object.rp.isOpaque,
                object: object,
-               keyPath: "opaque",
+               keyPathOrGetSet: .left("opaque"),
                values: iOSTests.boolFixture)
       testBoth(object.rp.isUserInteractionEnabled,
                object: object,
-               keyPath: "userInteractionEnabled",
+               keyPathOrGetSet: .left("userInteractionEnabled"),
                values: iOSTests.boolFixture)
     }
 
@@ -93,11 +93,11 @@
       let object = UIControl()
       testBoth(object.rp.isEnabled,
                object: object,
-               keyPath: "enabled",
+               keyPathOrGetSet: .left("enabled"),
                values: iOSTests.boolFixture)
       testBoth(object.rp.isSelected,
                object: object,
-               keyPath: "selected",
+               keyPathOrGetSet: .left("selected"),
                values: iOSTests.boolFixture)
     }
 
@@ -107,41 +107,39 @@
         .map { NSAttributedString(string: $0, attributes: object.defaultTextAttributes) }
       testBoth(object.rp.text,
                object: object,
-               keyPath: "text",
+               keyPathOrGetSet: .left("text"),
                values: iOSTests.stringsFixture)
       testBoth(object.rp.attributedText,
                object: object,
-               keyPath: "attributedText",
+               keyPathOrGetSet: .left("attributedText"),
                values: attributedStringsFixture)
       testBoth(object.rp.textColor,
                object: object,
-               keyPath: "textColor",
+               keyPathOrGetSet: .left("textColor"),
                values: iOSTests.colorsFiture)
       testBoth(object.rp.font,
                object: object,
-               keyPath: "font",
+               keyPathOrGetSet: .left("font"),
                values: iOSTests.fontsFiture)
       testBoth(object.rp.textAlignment,
                object: object,
-               keyPath: "textAlignment",
-               values: iOSTests.textAlignementFixture,
-               customGetter: { $0.textAlignment },
-               customSetter: { $0.textAlignment = $1! })
+               keyPathOrGetSet: .right(getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! }),
+               values: iOSTests.textAlignementFixture)
       testBoth(object.rp.placeholder,
                object: object,
-               keyPath: "placeholder",
+               keyPathOrGetSet: .left("placeholder"),
                values: iOSTests.stringsAndNilsFixture)
       testBoth(object.rp.attributedPlaceholder,
                object: object,
-               keyPath: "attributedPlaceholder",
+               keyPathOrGetSet: .left("attributedPlaceholder"),
                values: attributedStringsFixture)
       testBoth(object.rp.background,
                object: object,
-               keyPath: "background",
+               keyPathOrGetSet: .left("background"),
                values: iOSTests.imagesAndNilsFixture)
       testBoth(object.rp.disabledBackground,
                object: object,
-               keyPath: "disabledBackground",
+               keyPathOrGetSet: .left("disabledBackground"),
                values: iOSTests.imagesAndNilsFixture)
     }
 
@@ -150,48 +148,44 @@
 
       testBoth(object.rp.barStyle,
                object: object,
-               keyPath: "barStyle",
-               values: [.default, .default, .black, .black, .default, .black],
-               customGetter: { $0.barStyle },
-               customSetter: { $0.barStyle = $1! })
+               keyPathOrGetSet: .right(getter: { $0.barStyle }, setter: { $0.barStyle = $1! }),
+               values: [.default, .default, .black, .black, .default, .black])
       testBoth(object.rp.text,
                object: object,
-               keyPath: "text",
+               keyPathOrGetSet: .left("text"),
                values: iOSTests.stringsFixture)
       testBoth(object.rp.prompt,
                object: object,
-               keyPath: "prompt",
+               keyPathOrGetSet: .left("prompt"),
                values: iOSTests.stringsAndNilsFixture)
       testBoth(object.rp.placeholder,
                object: object,
-               keyPath: "placeholder",
+               keyPathOrGetSet: .left("placeholder"),
                values: iOSTests.stringsAndNilsFixture)
       testBoth(object.rp.showsBookmarkButton,
                object: object,
-               keyPath: "showsBookmarkButton",
+               keyPathOrGetSet: .left("showsBookmarkButton"),
                values: iOSTests.boolFixture)
       testBoth(object.rp.showsCancelButton,
                object: object,
-               keyPath: "showsCancelButton",
+               keyPathOrGetSet: .left("showsCancelButton"),
                values: iOSTests.boolFixture)
       testBoth(object.rp.showsSearchResultsButton,
                object: object,
-               keyPath: "showsSearchResultsButton",
+               keyPathOrGetSet: .left("showsSearchResultsButton"),
                values: iOSTests.boolFixture)
       testBoth(object.rp.isSearchResultsButtonSelected,
                object: object,
-               keyPath: "searchResultsButtonSelected",
+               keyPathOrGetSet: .left("searchResultsButtonSelected"),
                values: iOSTests.boolFixture)
       testBoth(object.rp.barTintColor,
                object: object,
-               keyPath: "barTintColor",
+               keyPathOrGetSet: .left("barTintColor"),
                values: iOSTests.colorsFiture)
       testBoth(object.rp.searchBarStyle,
                object: object,
-               keyPath: "searchBarStyle",
-               values: [.default, .default, .prominent, .minimal, .minimal, .default],
-               customGetter: { $0.searchBarStyle },
-               customSetter: { $0.searchBarStyle = $1! })
+               keyPathOrGetSet: .right(getter: { $0.searchBarStyle }, setter: { $0.searchBarStyle = $1! }),
+               values: [.default, .default, .prominent, .minimal, .minimal, .default])
     }
 
     func testUIImageView() {
@@ -199,15 +193,15 @@
 
       testBoth(object.rp.image,
                object: object,
-               keyPath: "image",
+               keyPathOrGetSet: .left("image"),
                values: iOSTests.imagesAndNilsFixture)
       testBoth(object.rp.highlightedImage,
                object: object,
-               keyPath: "highlightedImage",
+               keyPathOrGetSet: .left("highlightedImage"),
                values: iOSTests.imagesAndNilsFixture)
       testBoth(object.rp.isHighlighted,
                object: object,
-               keyPath: "highlighted",
+               keyPathOrGetSet: .left("highlighted"),
                values: iOSTests.boolFixture)
 //      self.testStreamable(updatable: object.rp.animationImages,
 //                                 object: object,
@@ -219,11 +213,11 @@
 //                                 values: iOSTests.arraysOfImagesAndNilsFixture)
       testBoth(object.rp.animationDuration,
                object: object,
-               keyPath: "animationDuration",
+               keyPathOrGetSet: .left("animationDuration"),
                values: iOSTests.timeIntervalFixture)
       testBoth(object.rp.animationRepeatCount,
                object: object,
-               keyPath: "animationRepeatCount",
+               keyPathOrGetSet: .left("animationRepeatCount"),
                values: iOSTests.intFixture)
 //      self.testStreamable(updatable: object.rp.isAnimating,
 //                                 object: object,
@@ -246,7 +240,7 @@
       let object = UIViewController()
       testBoth(object.rp.title,
                object: object,
-               keyPath: "title",
+               keyPathOrGetSet: .left("title"),
                values: iOSTests.stringsAndNilsFixture)
     }
   }
@@ -256,37 +250,36 @@
     func testBoth<T: Streamable&Streaming, Object: NSObject>(
       _ stream: T,
       object: Object,
-      keyPath: String,
+      keyPathOrGetSet: Either<String, (getter: (Object) -> T.Update?, setter: (Object, T.Update?) -> Void)>,
       values: [T.Update],
       file: StaticString = #file,
-      line: UInt = #line,
-      customGetter: ((Object) -> T.Update?)? = nil,
-      customSetter: ((Object, T.Update?) -> Void)? = nil
+      line: UInt = #line
     ) where T.Update: Equatable
     {
-      testStreamable(stream, object: object, keyPath: keyPath, values: values,
-                     file: file, line: line, customGetter: customGetter)
-      testStreaming(stream, object: object, keyPath: keyPath, values: values,
-                    file: file, line: line, customSetter: customSetter)
+      testStreamable(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
+                     values: values, file: file, line: line)
+      testStreaming(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
+                    values: values, file: file, line: line)
     }
 
     func testStreamable<T: Streamable, Object: NSObject>(
       _ streamable: T,
       object: Object,
-      keyPath: String,
+      keyPathOrGet: Either<String, (Object) -> T.Update?>,
       values: [T.Update],
       file: StaticString = #file,
-      line: UInt = #line,
-      customGetter: ((Object) -> T.Update?)? = nil
+      line: UInt = #line
     ) where T.Update: Equatable
     {
       for value in values {
         streamable.update(value, from: .main)
-        let objectValue: T.Update?
-        if let customGetter = customGetter {
-          objectValue = customGetter(object)
-        } else {
-          objectValue = object.value(forKeyPath: keyPath) as? T.Update
+        let objectValue: T.Update? = eval {
+          switch keyPathOrGet {
+          case let .left(keyPath):
+            return object.value(forKeyPath: keyPath) as? T.Update
+          case let .right(getter):
+            return getter(object)
+          }
         }
         XCTAssertEqual(objectValue, value, file: file, line: line)
       }
@@ -295,20 +288,20 @@
     func testStreaming<T: Streaming, Object: NSObject>(
       _ streaming: T,
       object: Object,
-      keyPath: String,
+      keyPathOrSet: Either<String, (Object, T.Update?) -> Void>,
       values: [T.Update],
       file: StaticString = #file,
-      line: UInt = #line,
-      customSetter: ((Object, T.Update?) -> Void)? = nil
+      line: UInt = #line
       ) where T.Update: Equatable
     {
       var updatingIterator = streaming.makeIterator()
       let _ = updatingIterator.next() // skip an initial value
       for value in values {
-        if let customSetter = customSetter {
-          customSetter(object, value)
-        } else {
+        switch keyPathOrSet {
+        case let .left(keyPath):
           object.setValue(value, forKeyPath: keyPath)
+        case let .right(setter):
+          setter(object, value)
         }
 
         XCTAssertEqual(updatingIterator.next() as! T.Update?, value, file: file, line: line)
@@ -322,24 +315,22 @@
     func testBoth<T: Streamable&Streaming, Object: NSObject>(
       _ stream: T,
       object: Object,
-      keyPath: String,
+      keyPathOrGetSet: Either<String, (getter: (Object) -> T.Update?, setter: (Object, T.Update?) -> Void)>,
       values: [T.Update],
       file: StaticString = #file,
-      line: UInt = #line,
-      customGetter: ((Object) -> T.Update?)? = nil,
-      customSetter: ((Object, T.Update?) -> Void)? = nil
+      line: UInt = #line
       ) where T.Update: AsyncNinjaOptionalAdaptor, T.Update.AsyncNinjaWrapped: Equatable
     {
-      testStreamable(stream, object: object, keyPath: keyPath, values: values,
-                     file: file, line: line, customGetter: customGetter)
-      testStreaming(stream, object: object, keyPath: keyPath, values: values,
-                    file: file, line: line, customSetter: customSetter)
+      testStreamable(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
+                     values: values, file: file, line: line)
+      testStreaming(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
+                    values: values, file: file, line: line)
     }
 
     func testStreamable<T: Streamable, Object: NSObject>(
       _ streamable: T,
       object: Object,
-      keyPath: String,
+      keyPathOrGet: Either<String, (Object) -> T.Update?>,
       values: [T.Update],
       file: StaticString = #file,
       line: UInt = #line,
@@ -348,12 +339,13 @@
     {
       for value in values {
         streamable.update(value, from: .main)
-
-        let objectValue: T.Update?
-        if let customGetter = customGetter {
-          objectValue = customGetter(object)
-        } else {
-          objectValue = object.value(forKeyPath: keyPath) as? T.Update
+        let objectValue: T.Update? = eval {
+          switch keyPathOrGet {
+          case let .left(keyPath):
+            return object.value(forKeyPath: keyPath) as? T.Update
+          case let .right(getter):
+            return getter(object)
+          }
         }
         XCTAssertEqual(objectValue?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue, file: file, line: line)
       }
@@ -362,20 +354,20 @@
     func testStreaming<T: Streaming, Object: NSObject>(
       _ streaming: T,
       object: Object,
-      keyPath: String,
+      keyPathOrSet: Either<String, (Object, T.Update?) -> Void>,
       values: [T.Update],
       file: StaticString = #file,
-      line: UInt = #line,
-      customSetter: ((Object, T.Update?) -> Void)? = nil
-    ) where T.Update: AsyncNinjaOptionalAdaptor, T.Update.AsyncNinjaWrapped: Equatable
+      line: UInt = #line
+      ) where T.Update: AsyncNinjaOptionalAdaptor, T.Update.AsyncNinjaWrapped: Equatable
     {
       var updatingIterator = streaming.makeIterator()
       let _ = updatingIterator.next() // skip an initial value
       for value in values {
-        if let customSetter = customSetter {
-          customSetter(object, value)
-        } else {
+        switch keyPathOrSet {
+        case let .left(keyPath):
           object.setValue(value.asyncNinjaOptionalValue, forKeyPath: keyPath)
+        case let .right(setter):
+          setter(object, value)
         }
 
         XCTAssertEqual((updatingIterator.next() as! T.Update?)?.asyncNinjaOptionalValue , value.asyncNinjaOptionalValue, file: file, line: line)
