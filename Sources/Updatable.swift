@@ -25,6 +25,14 @@ import Dispatch
 public protocol Updatable: LifetimeExtender {
   associatedtype Update
 
+  /// Sends specified Update to the Updatable
+  ///
+  /// - Parameter update: value to update with
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
   func update(_ update: Update,
               from originalExecutor: Executor?)
 }

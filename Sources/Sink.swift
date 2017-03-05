@@ -59,6 +59,7 @@ public class Sink<U, S>: Streamable {
     return true
   }
 
+  /// **Internal use only**.
   public func insertToReleasePool(_ releasable: Releasable) {
     _releasePool.insert(releasable)
   }
