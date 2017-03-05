@@ -67,165 +67,165 @@
 
     func testUIView() {
       let object = UIView()
-      self.testUpdatableProperty(updatable: object.rp.alpha,
-                                 object: object,
-                                 keyPath: "alpha",
-                                 values: iOSTests.cgFloatFixture)
-      self.testUpdatableProperty(updatable: object.rp.tintColor,
-                                 object: object,
-                                 keyPath: "tintColor",
-                                 values: iOSTests.colorsFiture)
-      self.testUpdatableProperty(updatable: object.rp.isHidden,
-                                 object: object,
-                                 keyPath: "hidden",
-                                 values: iOSTests.boolFixture)
-      self.testUpdatableProperty(updatable: object.rp.isOpaque,
-                                 object: object,
-                                 keyPath: "opaque",
-                                 values: iOSTests.boolFixture)
-      self.testUpdatableProperty(updatable: object.rp.isUserInteractionEnabled,
-                                 object: object,
-                                 keyPath: "userInteractionEnabled",
-                                 values: iOSTests.boolFixture)
+      testBoth(object.rp.alpha,
+               object: object,
+               keyPath: "alpha",
+               values: iOSTests.cgFloatFixture)
+      testBoth(object.rp.tintColor,
+               object: object,
+               keyPath: "tintColor",
+               values: iOSTests.colorsFiture)
+      testBoth(object.rp.isHidden,
+               object: object,
+               keyPath: "hidden",
+               values: iOSTests.boolFixture)
+      testBoth(object.rp.isOpaque,
+               object: object,
+               keyPath: "opaque",
+               values: iOSTests.boolFixture)
+      testBoth(object.rp.isUserInteractionEnabled,
+               object: object,
+               keyPath: "userInteractionEnabled",
+               values: iOSTests.boolFixture)
     }
 
     func testUIControl() {
       let object = UIControl()
-      self.testUpdatableProperty(updatable: object.rp.isEnabled,
-                                 object: object,
-                                 keyPath: "enabled",
-                                 values: iOSTests.boolFixture)
-      self.testUpdatableProperty(updatable: object.rp.isSelected,
-                                 object: object,
-                                 keyPath: "selected",
-                                 values: iOSTests.boolFixture)
+      testBoth(object.rp.isEnabled,
+               object: object,
+               keyPath: "enabled",
+               values: iOSTests.boolFixture)
+      testBoth(object.rp.isSelected,
+               object: object,
+               keyPath: "selected",
+               values: iOSTests.boolFixture)
     }
 
     func testUITextField() {
       let object = UITextField()
       let attributedStringsFixture = iOSTests.stringsFixture
         .map { NSAttributedString(string: $0, attributes: object.defaultTextAttributes) }
-      self.testUpdatableProperty(updatable: object.rp.text,
-                                 object: object,
-                                 keyPath: "text",
-                                 values: iOSTests.stringsFixture)
-      self.testUpdatableProperty(updatable: object.rp.attributedText,
-                                 object: object,
-                                 keyPath: "attributedText",
-                                 values: attributedStringsFixture)
-      self.testUpdatableProperty(updatable: object.rp.textColor,
-                                 object: object,
-                                 keyPath: "textColor",
-                                 values: iOSTests.colorsFiture)
-      self.testUpdatableProperty(updatable: object.rp.font,
-                                 object: object,
-                                 keyPath: "font",
-                                 values: iOSTests.fontsFiture)
-      self.testUpdatableProperty(updatable: object.rp.textAlignment,
-                                 object: object,
-                                 keyPath: "textAlignment",
-                                 values: iOSTests.textAlignementFixture,
-                                 customGetter: { $0.textAlignment },
-                                 customSetter: { $0.textAlignment = $1! })
-      self.testUpdatableProperty(updatable: object.rp.placeholder,
-                                 object: object,
-                                 keyPath: "placeholder",
-                                 values: iOSTests.stringsAndNilsFixture)
-      self.testUpdatableProperty(updatable: object.rp.attributedPlaceholder,
-                                 object: object,
-                                 keyPath: "attributedPlaceholder",
-                                 values: attributedStringsFixture)
-      self.testUpdatableProperty(updatable: object.rp.background,
-                                 object: object,
-                                 keyPath: "background",
-                                 values: iOSTests.imagesAndNilsFixture)
-      self.testUpdatableProperty(updatable: object.rp.disabledBackground,
-                                 object: object,
-                                 keyPath: "disabledBackground",
-                                 values: iOSTests.imagesAndNilsFixture)
+      testBoth(object.rp.text,
+               object: object,
+               keyPath: "text",
+               values: iOSTests.stringsFixture)
+      testBoth(object.rp.attributedText,
+               object: object,
+               keyPath: "attributedText",
+               values: attributedStringsFixture)
+      testBoth(object.rp.textColor,
+               object: object,
+               keyPath: "textColor",
+               values: iOSTests.colorsFiture)
+      testBoth(object.rp.font,
+               object: object,
+               keyPath: "font",
+               values: iOSTests.fontsFiture)
+      testBoth(object.rp.textAlignment,
+               object: object,
+               keyPath: "textAlignment",
+               values: iOSTests.textAlignementFixture,
+               customGetter: { $0.textAlignment },
+               customSetter: { $0.textAlignment = $1! })
+      testBoth(object.rp.placeholder,
+               object: object,
+               keyPath: "placeholder",
+               values: iOSTests.stringsAndNilsFixture)
+      testBoth(object.rp.attributedPlaceholder,
+               object: object,
+               keyPath: "attributedPlaceholder",
+               values: attributedStringsFixture)
+      testBoth(object.rp.background,
+               object: object,
+               keyPath: "background",
+               values: iOSTests.imagesAndNilsFixture)
+      testBoth(object.rp.disabledBackground,
+               object: object,
+               keyPath: "disabledBackground",
+               values: iOSTests.imagesAndNilsFixture)
     }
 
     func testUISearchBar() {
       let object = UISearchBar()
-      
-      self.testUpdatableProperty(updatable: object.rp.barStyle,
-                                 object: object,
-                                 keyPath: "barStyle",
-                                 values: [.default, .default, .black, .black, .default, .black],
-                                 customGetter: { $0.barStyle },
-                                 customSetter: { $0.barStyle = $1! })
-      self.testUpdatableProperty(updatable: object.rp.text,
-                                 object: object,
-                                 keyPath: "text",
-                                 values: iOSTests.stringsFixture)
-      self.testUpdatableProperty(updatable: object.rp.prompt,
-                                 object: object,
-                                 keyPath: "prompt",
-                                 values: iOSTests.stringsAndNilsFixture)
-      self.testUpdatableProperty(updatable: object.rp.placeholder,
-                                 object: object,
-                                 keyPath: "placeholder",
-                                 values: iOSTests.stringsAndNilsFixture)
-      self.testUpdatableProperty(updatable: object.rp.showsBookmarkButton,
-                                 object: object,
-                                 keyPath: "showsBookmarkButton",
-                                 values: iOSTests.boolFixture)
-      self.testUpdatableProperty(updatable: object.rp.showsCancelButton,
-                                 object: object,
-                                 keyPath: "showsCancelButton",
-                                 values: iOSTests.boolFixture)
-      self.testUpdatableProperty(updatable: object.rp.showsSearchResultsButton,
-                                 object: object,
-                                 keyPath: "showsSearchResultsButton",
-                                 values: iOSTests.boolFixture)
-      self.testUpdatableProperty(updatable: object.rp.isSearchResultsButtonSelected,
-                                 object: object,
-                                 keyPath: "searchResultsButtonSelected",
-                                 values: iOSTests.boolFixture)
-      self.testUpdatableProperty(updatable: object.rp.barTintColor,
-                                 object: object,
-                                 keyPath: "barTintColor",
-                                 values: iOSTests.colorsFiture)
-      self.testUpdatableProperty(updatable: object.rp.searchBarStyle,
-                                 object: object,
-                                 keyPath: "searchBarStyle",
-                                 values: [.default, .default, .prominent, .minimal, .minimal, .default],
-                                 customGetter: { $0.searchBarStyle },
-                                 customSetter: { $0.searchBarStyle = $1! })
+
+      testBoth(object.rp.barStyle,
+               object: object,
+               keyPath: "barStyle",
+               values: [.default, .default, .black, .black, .default, .black],
+               customGetter: { $0.barStyle },
+               customSetter: { $0.barStyle = $1! })
+      testBoth(object.rp.text,
+               object: object,
+               keyPath: "text",
+               values: iOSTests.stringsFixture)
+      testBoth(object.rp.prompt,
+               object: object,
+               keyPath: "prompt",
+               values: iOSTests.stringsAndNilsFixture)
+      testBoth(object.rp.placeholder,
+               object: object,
+               keyPath: "placeholder",
+               values: iOSTests.stringsAndNilsFixture)
+      testBoth(object.rp.showsBookmarkButton,
+               object: object,
+               keyPath: "showsBookmarkButton",
+               values: iOSTests.boolFixture)
+      testBoth(object.rp.showsCancelButton,
+               object: object,
+               keyPath: "showsCancelButton",
+               values: iOSTests.boolFixture)
+      testBoth(object.rp.showsSearchResultsButton,
+               object: object,
+               keyPath: "showsSearchResultsButton",
+               values: iOSTests.boolFixture)
+      testBoth(object.rp.isSearchResultsButtonSelected,
+               object: object,
+               keyPath: "searchResultsButtonSelected",
+               values: iOSTests.boolFixture)
+      testBoth(object.rp.barTintColor,
+               object: object,
+               keyPath: "barTintColor",
+               values: iOSTests.colorsFiture)
+      testBoth(object.rp.searchBarStyle,
+               object: object,
+               keyPath: "searchBarStyle",
+               values: [.default, .default, .prominent, .minimal, .minimal, .default],
+               customGetter: { $0.searchBarStyle },
+               customSetter: { $0.searchBarStyle = $1! })
     }
-    
+
     func testUIImageView() {
       let object = UIImageView()
-      
-      self.testUpdatableProperty(updatable: object.rp.image,
-                                 object: object,
-                                 keyPath: "image",
-                                 values: iOSTests.imagesAndNilsFixture)
-      self.testUpdatableProperty(updatable: object.rp.highlightedImage,
-                                 object: object,
-                                 keyPath: "highlightedImage",
-                                 values: iOSTests.imagesAndNilsFixture)
-      self.testUpdatableProperty(updatable: object.rp.isHighlighted,
-                                 object: object,
-                                 keyPath: "highlighted",
-                                 values: iOSTests.boolFixture)
-//      self.testUpdatableProperty(updatable: object.rp.animationImages,
+
+      testBoth(object.rp.image,
+               object: object,
+               keyPath: "image",
+               values: iOSTests.imagesAndNilsFixture)
+      testBoth(object.rp.highlightedImage,
+               object: object,
+               keyPath: "highlightedImage",
+               values: iOSTests.imagesAndNilsFixture)
+      testBoth(object.rp.isHighlighted,
+               object: object,
+               keyPath: "highlighted",
+               values: iOSTests.boolFixture)
+//      self.testStreamable(updatable: object.rp.animationImages,
 //                                 object: object,
 //                                 keyPath: "animationImages",
 //                                 values: iOSTests.arraysOfImagesAndNilsFixture)
-//      self.testUpdatableProperty(updatable: object.rp.highlightedAnimationImages,
+//      self.testStreamable(updatable: object.rp.highlightedAnimationImages,
 //                                 object: object,
 //                                 keyPath: "highlightedAnimationImages",
 //                                 values: iOSTests.arraysOfImagesAndNilsFixture)
-      self.testUpdatableProperty(updatable: object.rp.animationDuration,
-                                 object: object,
-                                 keyPath: "animationDuration",
-                                 values: iOSTests.timeIntervalFixture)
-      self.testUpdatableProperty(updatable: object.rp.animationRepeatCount,
-                                 object: object,
-                                 keyPath: "animationRepeatCount",
-                                 values: iOSTests.intFixture)
-//      self.testUpdatableProperty(updatable: object.rp.isAnimating,
+      testBoth(object.rp.animationDuration,
+               object: object,
+               keyPath: "animationDuration",
+               values: iOSTests.timeIntervalFixture)
+      testBoth(object.rp.animationRepeatCount,
+               object: object,
+               keyPath: "animationRepeatCount",
+               values: iOSTests.intFixture)
+//      self.testStreamable(updatable: object.rp.isAnimating,
 //                                 object: object,
 //                                 keyPath: "animating",
 //                                 values: iOSTests.boolFixture,
@@ -244,14 +244,17 @@
 
     func testUIViewController() {
       let object = UIViewController()
-      self.testUpdatableProperty(updatable: object.rp.title,
-                                 object: object,
-                                 keyPath: "title",
-                                 values: iOSTests.stringsAndNilsFixture)
+      testBoth(object.rp.title,
+               object: object,
+               keyPath: "title",
+               values: iOSTests.stringsAndNilsFixture)
     }
-    
-    private func testUpdatableProperty<T: Equatable, Object: NSObject>(
-      updatable: ProducerProxy<T, Void>,
+  }
+
+  // MARK: - T: Equatable
+  extension iOSTests {
+    func testBoth<T: Equatable, Object: NSObject>(
+      _ stream: ProducerProxy<T, Void>,
       object: Object,
       keyPath: String,
       values: [T],
@@ -260,8 +263,22 @@
       customGetter: ((Object) -> T?)? = nil,
       customSetter: ((Object, T?) -> Void)? = nil)
     {
+      testStreamable(stream, object: object, keyPath: keyPath, values: values,
+                     file: file, line: line, customGetter: customGetter)
+      testStreaming(stream, object: object, keyPath: keyPath, values: values, file: file, line: line, customSetter: customSetter)
+    }
+
+    func testStreamable<T: Equatable, Object: NSObject>(
+      _ streamable: ProducerProxy<T, Void>,
+      object: Object,
+      keyPath: String,
+      values: [T],
+      file: StaticString = #file,
+      line: UInt = #line,
+      customGetter: ((Object) -> T?)? = nil)
+    {
       for value in values {
-        updatable.update(value, from: .main)
+        streamable.update(value, from: .main)
         let objectValue: T?
         if let customGetter = customGetter {
           objectValue = customGetter(object)
@@ -270,11 +287,10 @@
         }
         XCTAssertEqual(objectValue, value, file: file, line: line)
       }
-      self.testUpdating(updating: updatable, object: object, keyPath: keyPath, values: values, file: file, line: line, customSetter: customSetter)
     }
-    
-    private func testUpdating<T: Equatable, Object: NSObject>(
-      updating: Channel<T, Void>,
+
+    func testStreaming<T: Equatable, Object: NSObject>(
+      _ streaming: Channel<T, Void>,
       object: Object,
       keyPath: String,
       values: [T],
@@ -282,7 +298,7 @@
       line: UInt = #line,
       customSetter: ((Object, T?) -> Void)? = nil)
     {
-      var updatingIterator = updating.makeIterator()
+      var updatingIterator = streaming.makeIterator()
       let _ = updatingIterator.next() // skip an initial value
       for value in values {
         if let customSetter = customSetter {
@@ -295,8 +311,12 @@
       }
     }
 
-    private func testUpdatableProperty<T: AsyncNinjaOptionalAdaptor, Object: NSObject>(
-      updatable: ProducerProxy<T, Void>,
+  }
+
+  // MARK: - T: Optional<Equatable>
+  extension iOSTests {
+    func testBoth<T: AsyncNinjaOptionalAdaptor, Object: NSObject>(
+      _ stream: ProducerProxy<T, Void>,
       object: Object,
       keyPath: String,
       values: [T],
@@ -306,9 +326,25 @@
       customSetter: ((Object, T?) -> Void)? = nil)
       where T.AsyncNinjaWrapped: Equatable
     {
+      testStreamable(stream, object: object, keyPath: keyPath, values: values,
+                     file: file, line: line, customGetter: customGetter)
+      testStreaming(stream, object: object, keyPath: keyPath, values: values,
+                    file: file, line: line, customSetter: customSetter)
+    }
+
+    func testStreamable<T: AsyncNinjaOptionalAdaptor, Object: NSObject>(
+      _ streamable: ProducerProxy<T, Void>,
+      object: Object,
+      keyPath: String,
+      values: [T],
+      file: StaticString = #file,
+      line: UInt = #line,
+      customGetter: ((Object) -> T?)? = nil)
+      where T.AsyncNinjaWrapped: Equatable
+    {
       for value in values {
-        updatable.update(value, from: .main)
-        
+        streamable.update(value, from: .main)
+
         let objectValue: T?
         if let customGetter = customGetter {
           objectValue = customGetter(object)
@@ -317,12 +353,10 @@
         }
         XCTAssertEqual(objectValue?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue, file: file, line: line)
       }
-
-      self.testUpdating(updating: updatable, object: object, keyPath: keyPath, values: values, file: file, line: line, customSetter: customSetter)
     }
-    
-    private func testUpdating<T: AsyncNinjaOptionalAdaptor, Object: NSObject>(
-      updating: Channel<T, Void>,
+
+    func testStreaming<T: AsyncNinjaOptionalAdaptor, Object: NSObject>(
+      _ streaming: Channel<T, Void>,
       object: Object,
       keyPath: String,
       values: [T],
@@ -331,7 +365,7 @@
       customSetter: ((Object, T?) -> Void)? = nil)
       where T.AsyncNinjaWrapped: Equatable
     {
-      var updatingIterator = updating.makeIterator()
+      var updatingIterator = streaming.makeIterator()
       let _ = updatingIterator.next() // skip an initial value
       for value in values {
         if let customSetter = customSetter {
@@ -339,7 +373,7 @@
         } else {
           object.setValue(value.asyncNinjaOptionalValue, forKeyPath: keyPath)
         }
-        
+
         XCTAssertEqual(updatingIterator.next()?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue, file: file, line: line)
       }
     }
