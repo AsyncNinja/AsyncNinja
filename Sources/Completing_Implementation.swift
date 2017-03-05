@@ -22,20 +22,6 @@
 
 import Dispatch
 
-/// A protocol for objects that can eventually complete with value
-public protocol Completing: LifetimeExtender {
-  associatedtype Success
-
-  /// Returns either completion value for complete `Completing` or nil otherwise
-  var completion: Fallible<Success>? { get }
-
-  /// **internal use only**
-  func makeCompletionHandler(
-    executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
-    ) -> AnyObject?
-}
-
 public extension Completing {
 
   /// Shorthand property that returns true if `Completing` is complete

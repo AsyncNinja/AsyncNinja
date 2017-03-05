@@ -145,29 +145,6 @@ extension DispatchWallTime {
   }
 }
 
-public protocol LifetimeExtender: class {
-  /// **Internal use only**.
-  func insertToReleasePool(_ releasable: Releasable)
-}
-
-public extension LifetimeExtender {
-  /// **internal use only**
-  func insertHandlerToReleasePool(_ handler: AnyObject?) {
-    if let handler = handler {
-      self.insertToReleasePool(handler)
-    }
-  }
-}
-
-/// Value reveived by channel
-public enum ChannelEvent<Update, Success> {
-  /// A kind of value that can be received multiple times be for the completion one
-  case update(Update)
-
-  /// A kind of value that can be received once and completes the channel
-  case completion(Fallible<Success>)
-}
-
 /// Specifies strategy of selecting buffer size of channel derived
 /// from another channel, e.g through transformations
 public enum DerivedChannelBufferSize {

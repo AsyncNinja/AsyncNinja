@@ -63,7 +63,7 @@ public extension Channel where U: AsyncNinjaOptionalAdaptor {
 }
 
 /// Adds convenience members to the future that who's Success is optional
-public extension Future where Success: AsyncNinjaOptionalAdaptor {
+public extension Future where S: AsyncNinjaOptionalAdaptor {
   typealias UnwrappedSuccess = Success.AsyncNinjaWrapped
 
   /// makes channel of unsafely unwrapped optional Updates

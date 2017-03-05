@@ -23,7 +23,8 @@
 import Dispatch
 
 /// Future is a proxy of value that will be available at some point in the future.
-public class Future<Success>: Completing {
+public class Future<S>: Completing {
+  public typealias Success = S
   public typealias Handler = FutureHandler<Success>
   public typealias CompletionHandler = Handler
 
@@ -172,7 +173,7 @@ public extension Future {
 }
 
 // MARK: - Flattening
-public extension Future where Success: Completing {
+public extension Future where S: Completing {
   /// Flattens two nested futures
   ///
   /// - Returns: flattened future

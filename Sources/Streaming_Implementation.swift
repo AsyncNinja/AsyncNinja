@@ -22,26 +22,8 @@
 
 import Dispatch
 
-public protocol Streaming: Completing, Updating, Sequence {
-
-  associatedtype Iterator: IteratorProtocol = ChannelIterator<Update, Success>
-
-  /// amount of currently stored updates
-  var bufferSize: Int { get }
-
-  /// maximal amount of updates store
-  var maxBufferSize: Int { get }
-
-  /// **internal use only**
-  func makeHandler(
-    executor: Executor,
-    _ block: @escaping (_ event: Event, _ originalExecutor: Executor) -> Void) -> AnyObject?
-}
-
 // MARK: - internal methods
 extension Streaming {
-  public typealias Event = ChannelEvent<Update, Success>
-
   /// **internal use only**
   final public func makeCompletionHandler(
     executor: Executor,

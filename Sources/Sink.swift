@@ -22,17 +22,19 @@
 
 import Dispatch
 
+/// Is a `Streamable` you an only apply values to.
+/// Very useful for write-only reactive properties (you can write to, but they are not observable) 
 public class Sink<U, S>: Streamable {
 
   public typealias Update = U
   public typealias Success = S
-  typealias UpdateHandler = (_ sink: Sink<U, S>, _ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor?) -> Void
+  public typealias UpdateHandler = (_ sink: Sink<U, S>, _ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor?) -> Void
   private let _updateHandler: UpdateHandler
   private let _updateExecutor: Executor
   private let _releasePool = ReleasePool()
 
   /// designated initializer
-  init(updateExecutor: Executor,
+  public init(updateExecutor: Executor,
        updateHandler: @escaping UpdateHandler) {
     _updateHandler = updateHandler
     _updateExecutor = updateExecutor

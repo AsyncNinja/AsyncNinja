@@ -22,27 +22,6 @@
 
 import Dispatch
 
-/// A protocol for objects that can be manually completed
-public protocol Completable: LifetimeExtender, Cancellable {
-  associatedtype Success
-
-  /// Completes `Completing` with value and returns true.
-  /// Returns false if promise was completed before.
-  ///
-  /// - Parameter completion: value to compete `Completing` with
-  /// - Parameter originalExecutor: `Executor` you calling this method on.
-  ///   Specifying this argument will allow to perform syncronous executions
-  ///   on `strictAsync: false` `Executor`s.
-  ///   Use default value or nil if you are not sure about an `Executor`
-  ///   you calling this method on.
-  /// - Returns: true if this call completed `Completable`
-  @discardableResult
-  func tryComplete(_ completion: Fallible<Success>, from originalExecutor: Executor?) -> Bool
-
-  /// **internal use only**
-  func insertToReleasePool(_ releasable: Releasable)
-}
-
 public extension Completable {
   /// Completes completable when specified completing completes.
   /// `self` will retain specified future until it`s completion
