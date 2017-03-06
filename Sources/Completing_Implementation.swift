@@ -99,11 +99,22 @@ public extension Completing {
 
   /// Recovers failure of this future if there is one
   func recover(with success: Success) -> Future<Success> {
-    return self.mapCompletion(executor: .immediate) {
-      (value) -> Success in
-      switch value {
-      case .success(let success): return success
-      case .failure: return success
+    return self
+      .recover(executor: .immediate) { _ in success }
+  }
+
+  /// Recovers failure of this future if there is one
+  func recover<E: Swift.Error>(
+    from specificError: E,
+    with success: Success
+    ) -> Future<Success> where E: Equatable
+  {
+    return self.recover(executor: .immediate) {
+      if let myError = $0 as? E,
+        myError == specificError {
+        return success
+      } else {
+        throw $0
       }
     }
   }
@@ -112,7 +123,8 @@ public extension Completing {
   func recover(
     executor: Executor = .primary,
     _ transform: @escaping (Swift.Error) throws -> Success
-    ) -> Future<Success> {
+    ) -> Future<Success>
+  {
     return self.mapCompletion(executor: executor) {
       (value) -> Success in
       switch value {
@@ -122,6 +134,22 @@ public extension Completing {
     }
   }
 
+  /// Recovers failure of this future if there is one
+  func recover<E: Swift.Error>(
+    from specificError: E,
+    executor: Executor = .primary,
+    _ transform: @escaping (E) throws -> Success
+    ) -> Future<Success> where E: Equatable
+  {
+    return self.recover(executor: executor) {
+      if let myError = $0 as? E, myError == specificError {
+        return try transform(myError)
+      } else {
+        throw $0
+      }
+    }
+  }
+  
   /// Recovers failure of this future if there is one. Flattens future returned by the transform
   func flatRecover(
     executor: Executor = .primary,
@@ -131,7 +159,7 @@ public extension Completing {
     let handler = self.makeCompletionHandler(executor: executor) {
       [weak promise] (completion, originalExecutor) -> Void in
       guard case .some = promise else { return }
-
+      
       switch completion {
       case let .success(success):
         promise?.succeed(success, from: originalExecutor)
@@ -142,6 +170,22 @@ public extension Completing {
     }
     promise.insertHandlerToReleasePool(handler)
     return promise
+  }
+  
+  /// Recovers failure of this future if there is one. Flattens future returned by the transform
+  func flatRecover<E: Swift.Error>(
+    from specificError: E,
+    executor: Executor = .primary,
+    _ transform: @escaping (E) throws -> Future<Success>
+    ) -> Future<Success> where E: Equatable
+  {
+    return flatRecover(executor: executor) {
+      if let myError = $0 as? E, myError == specificError {
+        return try transform(myError)
+      } else {
+        throw $0
+      }
+    }
   }
 }
 
@@ -220,16 +264,54 @@ public extension Completing {
   }
 
   /// Recovers failure of this future if there is one with contextual transformer.
+  func recover<E: Swift.Error, C: ExecutionContext>(
+    from specificError: E,
+    context: C,
+    executor: Executor? = nil,
+    _ transform: @escaping (C, E) throws -> Success
+    ) -> Future<Success> where E: Equatable
+  {
+    return self.recover(context: context, executor: executor) {
+      (context, error) in
+      if let myError = error as? E, myError == specificError {
+        return try transform(context, myError)
+      } else {
+        throw error
+      }
+    }
+  }
+  
+  /// Recovers failure of this future if there is one with contextual transformer.
   /// Flattens future returned by the transform
   func flatRecover<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     _ transform: @escaping (C, Swift.Error) throws -> Future<Success>
-    ) -> Future<Success> {
+    ) -> Future<Success>
+  {
     return self.flatRecover(executor: executor ?? context.executor) {
       [weak context] (failure) -> Future<Success> in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, failure)
+    }
+  }
+  
+  /// Recovers failure of this future if there is one with contextual transformer.
+  /// Flattens future returned by the transform
+  func flatRecover<E: Swift.Error, C: ExecutionContext>(
+    from specificError: E,
+    context: C,
+    executor: Executor? = nil,
+    _ transform: @escaping (C, Swift.Error) throws -> Future<Success>
+    ) -> Future<Success> where E: Equatable
+  {
+    return self.flatRecover(context: context, executor: executor) {
+      (context, error) in
+      if let myError = error as? E, myError == specificError {
+        return try transform(context, myError)
+      } else {
+        throw error
+      }
     }
   }
 }
