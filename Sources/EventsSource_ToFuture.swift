@@ -52,7 +52,7 @@ public extension EventsSource {
       }
     }
 
-    promise._asyncNinja_insertHandlerToReleasePool(handler)
+    promise._asyncNinja_retainHandlerUntilFinalization(handler)
     cancellationToken?.add(cancellable: promise)
 
     return promise
@@ -154,7 +154,7 @@ public extension EventsSource {
       }
     }
 
-    promise._asyncNinja_insertHandlerToReleasePool(handler)
+    promise._asyncNinja_retainHandlerUntilFinalization(handler)
     cancellationToken?.add(cancellable: promise)
 
     return promise
@@ -247,7 +247,7 @@ public extension EventsSource {
       }
     }
 
-    promise._asyncNinja_insertHandlerToReleasePool(handler)
+    promise._asyncNinja_retainHandlerUntilFinalization(handler)
     cancellationToken?.add(cancellable: promise)
 
     return promise

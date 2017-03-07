@@ -142,7 +142,7 @@
         }
       }
 
-      promise._asyncNinja_notifyCompletion { [weak task] in task?.cancel() }
+      promise._asyncNinja_notifyFinalization { [weak task] in task?.cancel() }
       cancellationToken?.add(cancellable: task)
       cancellationToken?.add(cancellable: promise)
       context?.addDependent(cancellable: task)

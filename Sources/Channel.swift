@@ -53,12 +53,12 @@ public class Channel<U, S>: EventsSource {
   }
   
   /// **Internal use only**.
-  public func _asyncNinja_insertToReleasePool(_ releasable: Releasable) {
+  public func _asyncNinja_retainUntilFinalization(_ releasable: Releasable) {
     assertAbstract()
   }
   
   /// **Internal use only**.
-  public func _asyncNinja_notifyCompletion(_ block: @escaping () -> Void) {
+  public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     assertAbstract()
   }
 }

@@ -31,7 +31,7 @@ public class Sink<U, S>: EventsDestination {
   public typealias UpdateHandler = (_ sink: Sink<U, S>, _ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor?) -> Void
   private let _updateHandler: UpdateHandler
   private let _updateExecutor: Executor
-  private let _releasePool = ReleasePool()
+  private let _releasePool = ReleasePool(locking: PlaceholderLocking())
   
   private var _locking = makeLocking()
   private var _isCompleted = false
@@ -64,6 +64,7 @@ public class Sink<U, S>: EventsDestination {
     _locking.unlock()
     
     if didComplete {
+      _releasePool.drain()
       _updateExecutor.execute(from: originalExecutor) {
         (originalExecutor) in
         self._updateHandler(self, .completion(completion), originalExecutor)
@@ -74,11 +75,21 @@ public class Sink<U, S>: EventsDestination {
   }
 
   /// **Internal use only**.
-  public func _asyncNinja_insertToReleasePool(_ releasable: Releasable) {
-    _releasePool.insert(releasable)
+  public func _asyncNinja_retainUntilFinalization(_ releasable: Releasable) {
+    _locking.lock()
+    defer { _locking.unlock() }
+    if !_isCompleted {
+      _releasePool.insert(releasable)
+    }
   }
   
-  public func _asyncNinja_notifyCompletion(_ block: @escaping () -> Void) {
-    _releasePool.notifyDrain(block)
+  public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
+    _locking.lock()
+    defer { _locking.unlock() }
+    if _isCompleted {
+      block()
+    } else {
+      _releasePool.notifyDrain(block)
+    }
   }
 }

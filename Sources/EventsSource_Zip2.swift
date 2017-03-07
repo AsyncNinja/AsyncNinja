@@ -79,7 +79,7 @@ public func zip<T: EventsSource, U: EventsSource>(
     })
 
     let handler = channelA.makeHandler(executor: .immediate, handlerBlockA)
-    producer._asyncNinja_insertHandlerToReleasePool(handler)
+    producer._asyncNinja_retainHandlerUntilFinalization(handler)
   }
 
   do {
@@ -99,7 +99,7 @@ public func zip<T: EventsSource, U: EventsSource>(
     })
 
     let handler = channelB.makeHandler(executor: .immediate, handlerBlockB)
-    producer._asyncNinja_insertHandlerToReleasePool(handler)
+    producer._asyncNinja_retainHandlerUntilFinalization(handler)
   }
 
   cancellationToken?.add(cancellable: producer)

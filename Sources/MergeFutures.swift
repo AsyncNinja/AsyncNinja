@@ -65,13 +65,13 @@ public func merge<A: Completing, B: Completing>(_ a: A, _ b: B) -> Future<Either
     [weak promise] (completion, originalExecutor) in
     promise?.complete(completion.map(Either.left), from: originalExecutor)
   }
-  promise._asyncNinja_insertHandlerToReleasePool(handlerA)
+  promise._asyncNinja_retainHandlerUntilFinalization(handlerA)
 
   let handlerB = b.makeCompletionHandler(executor: .immediate) {
     [weak promise] (completion, originalExecutor) in
     promise?.complete(completion.map(Either.right), from: originalExecutor)
   }
 
-  promise._asyncNinja_insertHandlerToReleasePool(handlerB)
+  promise._asyncNinja_retainHandlerUntilFinalization(handlerB)
   return promise
 }

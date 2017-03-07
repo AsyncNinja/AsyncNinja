@@ -40,11 +40,11 @@ final class ConstantFuture<Success>: Future<Success> {
     return nil
   }
   
-  override func _asyncNinja_insertToReleasePool(_ releasable: Releasable) {
+  override func _asyncNinja_retainUntilFinalization(_ releasable: Releasable) {
     /* do nothing because future was created as complete */
   }
 
-  override func _asyncNinja_notifyCompletion(_ block: @escaping () -> Void) {
+  override func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     block()
   }
 }

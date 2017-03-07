@@ -47,12 +47,12 @@ public class Future<S>: Completing {
   }
 
   /// **Internal use only**.
-  public func _asyncNinja_insertToReleasePool(_ releasable: Releasable) {
+  public func _asyncNinja_retainUntilFinalization(_ releasable: Releasable) {
     assertAbstract()
   }
   
   /// **Internal use only**.
-  public func _asyncNinja_notifyCompletion(_ block: @escaping () -> Void) {
+  public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     assertAbstract()
   }
 }
@@ -196,13 +196,13 @@ public extension Future where S: Completing {
           [weak promise] (completion, originalExecutor) -> Void in
           promise?.complete(completion, from: originalExecutor)
         }
-        promise._asyncNinja_insertHandlerToReleasePool(handler)
+        promise._asyncNinja_retainHandlerUntilFinalization(handler)
       case .failure(let error):
         promise.fail(error, from: originalExecutor)
       }
     }
 
-    promise._asyncNinja_insertHandlerToReleasePool(handler)
+    promise._asyncNinja_retainHandlerUntilFinalization(handler)
 
     return promise
   }

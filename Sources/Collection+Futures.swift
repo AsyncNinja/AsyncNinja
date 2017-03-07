@@ -72,7 +72,7 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
           }
         }
 
-        promise._asyncNinja_insertHandlerToReleasePool(handler)
+        promise._asyncNinja_retainHandlerUntilFinalization(handler)
       }
 
       return promise
@@ -119,7 +119,7 @@ public extension Collection where Self.IndexDistance == Int {
       }
     }
 
-    promise._asyncNinja_notifyCompletion {
+    promise._asyncNinja_notifyFinalization {
       canContinue = false
     }
     
@@ -172,11 +172,11 @@ public extension Collection where Self.IndexDistance == Int {
           }
         }
 
-        promise._asyncNinja_insertHandlerToReleasePool(handler)
+        promise._asyncNinja_retainHandlerUntilFinalization(handler)
       }
     }
 
-    promise._asyncNinja_notifyCompletion {
+    promise._asyncNinja_notifyFinalization {
       canContinue = false
     }
     

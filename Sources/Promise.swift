@@ -103,7 +103,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
   }
 
   /// **internal use only**
-  override public func _asyncNinja_insertToReleasePool(_ releasable: Releasable) {
+  override public func _asyncNinja_retainUntilFinalization(_ releasable: Releasable) {
     // assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     // assert((releasable as? Handler)?.owner !== self) // This assertion is no longer valid because we have non-contextual on<Event>
     if !self.isComplete {
@@ -112,7 +112,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
   }
   
   /// **internal use only**
-  override public func _asyncNinja_notifyCompletion(_ block: @escaping () -> Void) {
+  override public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     if self.isComplete {
       block()
     } else {

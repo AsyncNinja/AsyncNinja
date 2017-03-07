@@ -30,7 +30,7 @@ public extension Completable {
       [weak self] (completion, originalExecutor) in
       self?.complete(completion, from: originalExecutor)
     }
-    self._asyncNinja_insertHandlerToReleasePool(handler)
+    self._asyncNinja_retainHandlerUntilFinalization(handler)
   }
 
   /// Shorthand to tryComplete(with:) that does not return value
@@ -152,6 +152,6 @@ public extension Completable where Success: AsyncNinjaOptionalAdaptor {
         self?.fail(failure, from: originalExecutor)
       }
     }
-    self._asyncNinja_insertHandlerToReleasePool(handler)
+    self._asyncNinja_retainHandlerUntilFinalization(handler)
   }
 }

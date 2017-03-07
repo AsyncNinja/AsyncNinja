@@ -62,7 +62,7 @@ public func zip<A, B, C>(_ futureA: Future<A>,
     }
   }
 
-  promise._asyncNinja_insertHandlerToReleasePool(handlerA)
+  promise._asyncNinja_retainHandlerUntilFinalization(handlerA)
 
   let handlerB = futureB.makeCompletionHandler(executor: .immediate) {
     [weak promise] (localSubvalueB, originalExecutor) in
@@ -82,7 +82,7 @@ public func zip<A, B, C>(_ futureA: Future<A>,
     }
   }
 
-  promise._asyncNinja_insertHandlerToReleasePool(handlerB)
+  promise._asyncNinja_retainHandlerUntilFinalization(handlerB)
 
   let handlerC = futureC.makeCompletionHandler(executor: .immediate)
   {
@@ -103,7 +103,7 @@ public func zip<A, B, C>(_ futureA: Future<A>,
     }
   }
   
-  promise._asyncNinja_insertHandlerToReleasePool(handlerC)
+  promise._asyncNinja_retainHandlerUntilFinalization(handlerC)
 
   return promise
 }

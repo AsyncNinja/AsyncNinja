@@ -215,12 +215,12 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
       self?.complete(completion, from: originalExecutor)
     }
 
-    self._asyncNinja_insertHandlerToReleasePool(handler)
+    self._asyncNinja_retainHandlerUntilFinalization(handler)
   }
 
   /// **internal use only** Inserts releasable to an internal release pool
   /// that will be drained on completion
-  override public func _asyncNinja_insertToReleasePool(_ releasable: Releasable) {
+  override public func _asyncNinja_retainUntilFinalization(_ releasable: Releasable) {
     // assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
     _locking.lock()
     defer { _locking.unlock() }
@@ -231,7 +231,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
 
   /// **internal use only** Inserts releasable to an internal release pool
   /// that will be drained on completion
-  override public func _asyncNinja_notifyCompletion(_ block: @escaping () -> Void) {
+  override public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     _locking.lock()
     defer { _locking.unlock() }
     if case .none = _completion {

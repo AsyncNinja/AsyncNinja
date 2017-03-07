@@ -86,7 +86,7 @@ public extension Updating {
       (update, originalExecutor) in
       block(update)
     }
-    self._asyncNinja_insertHandlerToReleasePool(handler)
+    self._asyncNinja_retainHandlerUntilFinalization(handler)
   }
 
   /// Subscribes for buffered and new update values for the channel
@@ -109,7 +109,7 @@ public extension Updating {
       guard let context = context else { return }
       block(context, update)
     }
-    self._asyncNinja_insertHandlerToReleasePool(handler)
+    self._asyncNinja_retainHandlerUntilFinalization(handler)
   }
 }
 
@@ -180,17 +180,17 @@ public extension EventsDestination {
 
 public protocol LifetimeExtender: class {
   /// **Internal use only**.
-  func _asyncNinja_insertToReleasePool(_ releasable: Releasable)
+  func _asyncNinja_retainUntilFinalization(_ releasable: Releasable)
 
   /// **Internal use only**. Specified block will be called on completion, but will not keep self alive.
-  func _asyncNinja_notifyCompletion(_ block: @escaping () -> Void)
+  func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void)
 }
 
 public extension LifetimeExtender {
   /// **internal use only**
-  func _asyncNinja_insertHandlerToReleasePool(_ handler: AnyObject?) {
+  func _asyncNinja_retainHandlerUntilFinalization(_ handler: AnyObject?) {
     if let handler = handler {
-      _asyncNinja_insertToReleasePool(handler)
+      _asyncNinja_retainUntilFinalization(handler)
     }
   }
 }

@@ -231,7 +231,7 @@ public extension EventsSource {
     }
     
     timer.resume()
-    producer._asyncNinja_insertToReleasePool(timer)
+    producer._asyncNinja_retainUntilFinalization(timer)
     
     let handler = self.makeHandler(executor: .immediate) {
       [weak producer] (event, originalExecutor) in
@@ -256,7 +256,7 @@ public extension EventsSource {
       }
     }
     
-    self._asyncNinja_insertHandlerToReleasePool(handler)
+    self._asyncNinja_retainHandlerUntilFinalization(handler)
     cancellationToken?.add(cancellable: producer)
     
     return producer
