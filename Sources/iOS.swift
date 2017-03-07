@@ -418,4 +418,19 @@
     /// An `UpdatableProperty` that refers to read-write property `UIViewController.title`
     var title: ProducerProxy<String?, Void> { return updatable(forKeyPath: "title") }
   }
+  
+  extension UIDevice: ObjCUIInjectedExecutionContext {}
+  public extension ReactiveProperties where Object: UIDevice {
+    /// An `Channel` that refers to read-only property `UIControl.state`
+    var orientation: Channel<UIDeviceOrientation, Void> {
+      let notificationsChannel: Channel<Notification, Void> = NotificationCenter.default
+        .updatable(object: UIDevice.current, name: .UIDeviceOrientationDidChange)
+      notificationsChannel._asyncNinja_notifyFinalization {
+        UIDevice.current.endGeneratingDeviceOrientationNotifications()
+      }
+      UIDevice.current.beginGeneratingDeviceOrientationNotifications()
+      return notificationsChannel
+        .map(executor: .immediate) { ($0.object as! UIDevice).orientation }
+    }
+  }
 #endif
