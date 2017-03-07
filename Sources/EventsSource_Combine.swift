@@ -72,7 +72,7 @@ public extension EventsSource {
         }
       }
 
-      producer.insertHandlerToReleasePool(handler)
+      producer._asyncNinja_insertHandlerToReleasePool(handler)
     }
 
     do {
@@ -102,7 +102,7 @@ public extension EventsSource {
         }
       }
 
-      producer.insertHandlerToReleasePool(handler)
+      producer._asyncNinja_insertHandlerToReleasePool(handler)
     }
     
     return producer

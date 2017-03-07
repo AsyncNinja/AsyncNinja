@@ -57,7 +57,7 @@ public extension Completing {
       let transformedValue = fallible { try transform(completion) }
       promise?.complete(transformedValue, from: originalExecutor)
     }
-    promise.insertHandlerToReleasePool(handler)
+    promise._asyncNinja_insertHandlerToReleasePool(handler)
     return promise
   }
 
@@ -168,7 +168,7 @@ public extension Completing {
         catch { promise?.fail(error, from: originalExecutor) }
       }
     }
-    promise.insertHandlerToReleasePool(handler)
+    promise._asyncNinja_insertHandlerToReleasePool(handler)
     return promise
   }
   
@@ -339,7 +339,7 @@ public extension Completing {
       (completion, originalExecutor) in
       block(completion, originalExecutor)
     }
-    self.insertHandlerToReleasePool(handler)
+    self._asyncNinja_insertHandlerToReleasePool(handler)
   }
 
   /// Performs block when competion becomes available.
@@ -511,7 +511,7 @@ public extension Completing {
         promise.complete(completion, from: executor)
       }
     }
-    self.insertHandlerToReleasePool(handler)
+    self._asyncNinja_insertHandlerToReleasePool(handler)
 
     return promise
   }

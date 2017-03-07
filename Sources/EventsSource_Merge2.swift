@@ -67,7 +67,7 @@ public func merge<T: EventsSource, U: EventsSource>(
   })
 
   let handlerA = channelA.makeHandler(executor: .immediate, handlerBlockA)
-  producer.insertHandlerToReleasePool(handlerA)
+  producer._asyncNinja_insertHandlerToReleasePool(handlerA)
 
   let handlerBlockB = makeHandlerBlock(updateHandler: { [weak producer] (update, originalExecutor) in producer?.update(.right(update), from: originalExecutor) },
                                        successHandler: { (success: U.Success) in
@@ -75,7 +75,7 @@ public func merge<T: EventsSource, U: EventsSource>(
                                         return successA.map { ($0, success) }
   })
   let handlerB = channelB.makeHandler(executor: .immediate, handlerBlockB)
-  producer.insertHandlerToReleasePool(handlerB)
+  producer._asyncNinja_insertHandlerToReleasePool(handlerB)
 
   cancellationToken?.add(cancellable: producer)
 
@@ -123,7 +123,7 @@ public func merge<T: EventsSource, U: EventsSource>(
                                         successA = success
                                         return successB.map { (success, $0) }
   })
-  producer.insertHandlerToReleasePool(handlerA)
+  producer._asyncNinja_insertHandlerToReleasePool(handlerA)
   
   
   let handlerB = channelB.makeHandler(executor: .immediate,
@@ -131,7 +131,7 @@ public func merge<T: EventsSource, U: EventsSource>(
                                         successB = success
                                         return successA.map { ($0, success) }
   })
-  producer.insertHandlerToReleasePool(handlerB)
+  producer._asyncNinja_insertHandlerToReleasePool(handlerB)
   cancellationToken?.add(cancellable: producer)
   
   return producer

@@ -230,7 +230,7 @@ private class KeepUnorderedChannelFlatteningBehaviorStorage<P, S, T>: BaseChanne
             producer?.update(update, from: originalExecutor)
             
         }
-        producer.insertHandlerToReleasePool(handler)
+        producer._asyncNinja_insertHandlerToReleasePool(handler)
       }
     case .completion(let completion):
       producer.complete(completion, from: originalExecutor)
@@ -266,7 +266,7 @@ private class KeepLatestTransformChannelFlatteningBehaviorStorage<P, S, T>: Base
             nop()
           }
       }
-      producer.insertHandlerToReleasePool(handler)
+      producer._asyncNinja_insertHandlerToReleasePool(handler)
       
       executor.execute(from: originalExecutor) { (originalExecutor) in
         do {
@@ -328,7 +328,7 @@ private class DropResultsOutOfOrderChannelFlatteningBehaviorStorage<P, S, T>: Ba
             }
           }
       }
-      producer.insertHandlerToReleasePool(handler)
+      producer._asyncNinja_insertHandlerToReleasePool(handler)
       
       executor.execute(from: originalExecutor) { (originalExecutor) in
         do {
@@ -413,7 +413,7 @@ private class OrderResultsChannelFlatteningBehaviorStorage<P, S, T>: BaseChannel
         self_.locking.unlock()
         self_.waitForTheNextFutureIfNeeded(producer: producer)
     }
-    producer.insertHandlerToReleasePool(handler)
+    producer._asyncNinja_insertHandlerToReleasePool(handler)
   }
 }
 
@@ -473,6 +473,6 @@ private class TransformSeriallyChannelFlatteningBehaviorStorage<P, S, T>: BaseCh
         self_.isRunning = false
         self_.launchNextTransformIfNeeded(producer: producer, from: originalExecutor)
     }
-    producer.insertHandlerToReleasePool(handler)
+    producer._asyncNinja_insertHandlerToReleasePool(handler)
   }
 }

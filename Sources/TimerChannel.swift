@@ -38,7 +38,7 @@ private func makeTimer(dispatchTimer: DispatchSourceTimer,
     }
   }
   dispatchTimer.resume()
-  producer.insertToReleasePool(dispatchTimer)
+  producer._asyncNinja_insertToReleasePool(dispatchTimer)
   return producer
 }
 

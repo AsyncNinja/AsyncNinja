@@ -32,6 +32,9 @@ public class Sink<U, S>: EventsDestination {
   private let _updateHandler: UpdateHandler
   private let _updateExecutor: Executor
   private let _releasePool = ReleasePool()
+  
+  private var _locking = makeLocking()
+  private var _isCompleted = false
 
   /// designated initializer
   public init(updateExecutor: Executor,
@@ -54,15 +57,28 @@ public class Sink<U, S>: EventsDestination {
   public func tryComplete(
     _ completion: Fallible<Success>,
     from originalExecutor: Executor? = nil) -> Bool {
-    _updateExecutor.execute(from: originalExecutor) {
-      (originalExecutor) in
-      self._updateHandler(self, .completion(completion), originalExecutor)
+    
+    _locking.lock()
+    let didComplete = !_isCompleted
+    _isCompleted = true
+    _locking.unlock()
+    
+    if didComplete {
+      _updateExecutor.execute(from: originalExecutor) {
+        (originalExecutor) in
+        self._updateHandler(self, .completion(completion), originalExecutor)
+      }
     }
-    return true
+    
+    return didComplete
   }
 
   /// **Internal use only**.
-  public func insertToReleasePool(_ releasable: Releasable) {
+  public func _asyncNinja_insertToReleasePool(_ releasable: Releasable) {
     _releasePool.insert(releasable)
+  }
+  
+  public func _asyncNinja_notifyCompletion(_ block: @escaping () -> Void) {
+    _releasePool.notifyDrain(block)
   }
 }

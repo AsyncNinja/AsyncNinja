@@ -78,7 +78,7 @@ extension EventsSource {
       catch { producer.fail(error, from: originalExecutor) }
     }
 
-    producer.insertHandlerToReleasePool(handler)
+    producer._asyncNinja_insertHandlerToReleasePool(handler)
     cancellationToken?.add(cancellable: producer)
   }
 
@@ -129,7 +129,7 @@ extension EventsSource {
       (event, originalExecutor) in
       block(event)
     }
-    self.insertHandlerToReleasePool(handler)
+    self._asyncNinja_insertHandlerToReleasePool(handler)
   }
 
   /// Subscribes for buffered and new values (both update and completion) for the channel

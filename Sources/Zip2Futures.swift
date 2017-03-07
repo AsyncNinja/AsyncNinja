@@ -59,7 +59,7 @@ public func zip<A, B>(_ futureA: Future<A>,
     }
   }
 
-  promise.insertHandlerToReleasePool(handlerA)
+  promise._asyncNinja_insertHandlerToReleasePool(handlerA)
 
   let handlerB = futureB.makeCompletionHandler(executor: .immediate)
   {
@@ -80,7 +80,7 @@ public func zip<A, B>(_ futureA: Future<A>,
     }
   }
 
-  promise.insertHandlerToReleasePool(handlerB)
+  promise._asyncNinja_insertHandlerToReleasePool(handlerB)
 
   return promise
 }
