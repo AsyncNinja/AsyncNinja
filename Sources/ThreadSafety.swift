@@ -62,3 +62,34 @@ private struct LockingThreadSafeContainer: ThreadSafeContainer {
     return (oldHead, newHead)
   }
 }
+
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+
+  import Foundation
+
+  struct LockFreeThreadSafeContainer: ThreadSafeContainer {
+    var head: AnyObject?
+
+    @discardableResult
+    mutating func updateHead(_ block: (AnyObject?) -> AnyObject?) -> (oldHead: AnyObject?, newHead: AnyObject?) {
+      while true {
+        // this is a hard way to make atomic compare and swap of swift references
+        let oldHead = self.head
+        let newHead = block(oldHead)
+        let oldRef = oldHead.map(Unmanaged.passUnretained)
+        let newRef = newHead.map(Unmanaged.passRetained)
+        let oldPtr = oldRef?.toOpaque() ?? nil
+        let newPtr = newRef?.toOpaque() ?? nil
+
+        if OSAtomicCompareAndSwapPtrBarrier(oldPtr, newPtr, UnsafeMutableRawPointer(&self.head).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)) {
+          oldRef?.release()
+          return (oldHead, newHead)
+        } else {
+          newRef?.release()
+        }
+
+      }
+    }
+  }
+  
+#endif

@@ -22,6 +22,76 @@
 
 import Dispatch
 
+/// Constatns used my AsyncNinja
+/// Values of these constants were carefully considered
+struct AsyncNinjaConstants {
+  #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+  /// Defines whether usage of lock-free structures is allowed
+  static let isLockFreeUseAllowed = true
+  #endif
+
+  /// Defines size of buffer for channels.
+  /// Buffer size is an amount of the latest values for channel to remember
+  ///
+  /// Example:
+  /// ```swift
+  /// let producer = Producer<Int, Void>(bufferSize: ...)
+  /// producer.update([0, 1, 2])
+  /// producer.onUpdate { print($0) }
+  /// producer.update([3, 4, 5])
+  /// ```
+  /// Output will depend on buffer size:
+  /// - 0: `3 4 5`
+  /// - 1: `2 3 4 5`
+  /// - 2: `1 2 3 4 5`
+  ///
+  /// This kind of behavior is present in each way of interaction
+  /// with `Channel`: transformation, sync enumeration and etc.
+  static let defaultChannelBufferSize = 1
+}
+
+/// Errors produced by AsyncNinja
+public enum AsyncNinjaError: Swift.Error, Equatable {
+  /// An error of cancelled primitive. `Promises` and `Producers`
+  /// can be cancecelled with method `cancel()`.
+  /// CancellationToken may be used in multiple other cases
+  case cancelled
+
+  /// An error of deallocated context
+  /// Basically means that execution was bound to context,
+  /// by context was deallocated before execution started
+  case contextDeallocated
+}
+
+/// Convenience protocol for detection cancellation
+public protocol CancellationRepresentableError: Swift.Error {
+
+  /// returns true if the error is actually a cancellation
+  var representsCancellation: Bool { get }
+}
+
+/// Conformance of AsyncNinjaError to CancellationRepresentableError
+extension AsyncNinjaError: CancellationRepresentableError {
+
+  /// returns true if the error is actually a cancellation
+  public var representsCancellation: Bool { return .cancelled == self }
+}
+
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+
+  import Foundation
+
+  /// Conformance to CancellationRepresentableError
+  extension URLError: CancellationRepresentableError {
+
+    /// tells if this error is actually a cancellation
+    public var representsCancellation: Bool {
+      return self.errorCode == URLError.cancelled.rawValue
+    }
+  }
+  
+#endif
+
 extension Dictionary {
   mutating func value(forKey key: Key,
                       orMake makeValue: (Key) throws -> Value
@@ -145,6 +215,34 @@ extension DispatchWallTime {
   }
 }
 
+/// DispatchGroup improved with AsyncNinja
+public extension DispatchGroup {
+  /// Makes future from of `DispatchGroups`'s notify after balancing all enters and leaves
+  var completionFuture: Future<Void> {
+    // Test: FutureTests.testGroupCompletionFuture
+    return completionFuture(executor: .primary)
+  }
+
+  /// Makes future from of `DispatchGroups`'s notify after balancing all enters and leaves
+  /// *Property `DispatchGroup.completionFuture` most cover most of your cases*
+  ///
+  /// - Parameter executor: to notify on
+  /// - Returns: `Future` that completes with balancing enters and leaves of the `DispatchGroup`
+  func completionFuture(executor: Executor) -> Future<Void> {
+    let promise = Promise<Void>()
+    let executor_ = executor.isDispatchQueueExecutor ? executor: .primary
+    self.notify(queue: executor_.dispatchQueue!) { [weak promise] in
+      promise?.succeed((), from: executor_)
+    }
+    return promise
+  }
+
+  /// Convenience method that leaves group on completion of provided Future or Channel
+  func leaveOnComplete<T: Completing>(of completable: T) {
+    completable.onComplete(executor: .immediate) { _ in self.leave() }
+  }
+}
+
 /// Specifies strategy of selecting buffer size of channel derived
 /// from another channel, e.g through transformations
 public enum DerivedChannelBufferSize {
@@ -177,5 +275,32 @@ public enum DerivedChannelBufferSize {
     case .inherited: return max(leftUpdating.maxBufferSize, rightUpdating.maxBufferSize)
     case let .specific(value): return value
     }
+  }
+}
+
+/// **Internal use only**
+class Box<T> {
+  let value: T
+
+  init(_ value: T) {
+    self.value = value
+  }
+}
+
+/// **Internal use only**
+class MutableBox<T> {
+  var value: T
+
+  init(_ value: T) {
+    self.value = value
+  }
+}
+
+/// **Internal use only**
+class WeakBox<T: AnyObject> {
+  private(set) weak var value: T?
+
+  init(_ value: T) {
+    self.value = value
   }
 }

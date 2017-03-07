@@ -177,65 +177,6 @@ public extension Future {
   }
 }
 
-// MARK: - Flattening
-public extension Future where S: Completing {
-  /// Flattens two nested futures
-  ///
-  /// - Returns: flattened future
-  func flatten() -> Future<Success.Success> {
-    // Test: FutureTests.testFlatten
-    // Test: FutureTests.testFlatten_OuterFailure
-    // Test: FutureTests.testFlatten_InnerFailure
-    let promise = Promise<Success.Success>()
-    let handler = self.makeCompletionHandler(executor: .immediate) {
-      [weak promise] (failure, originalExecutor) in
-      guard let promise = promise else { return }
-      switch failure {
-      case .success(let future):
-        let handler = future.makeCompletionHandler(executor: .immediate) {
-          [weak promise] (completion, originalExecutor) -> Void in
-          promise?.complete(completion, from: originalExecutor)
-        }
-        promise._asyncNinja_retainHandlerUntilFinalization(handler)
-      case .failure(let error):
-        promise.fail(error, from: originalExecutor)
-      }
-    }
-
-    promise._asyncNinja_retainHandlerUntilFinalization(handler)
-
-    return promise
-  }
-}
-
-/// DispatchGroup improved with AsyncNinja
-public extension DispatchGroup {
-  /// Makes future from of `DispatchGroups`'s notify after balancing all enters and leaves
-  var completionFuture: Future<Void> {
-    // Test: FutureTests.testGroupCompletionFuture
-    return completionFuture(executor: .primary)
-  }
-
-  /// Makes future from of `DispatchGroups`'s notify after balancing all enters and leaves
-  /// *Property `DispatchGroup.completionFuture` most cover most of your cases*
-  ///
-  /// - Parameter executor: to notify on
-  /// - Returns: `Future` that completes with balancing enters and leaves of the `DispatchGroup`
-  func completionFuture(executor: Executor) -> Future<Void> {
-    let promise = Promise<Void>()
-    let executor_ = executor.isDispatchQueueExecutor ? executor: .primary
-    self.notify(queue: executor_.dispatchQueue!) { [weak promise] in
-      promise?.succeed((), from: executor_)
-    }
-    return promise
-  }
-
-  /// Convenience method that leaves group on completion of provided Future or Channel
-  func leaveOnComplete<T: Completing>(of completable: T) {
-    completable.onComplete(executor: .immediate) { _ in self.leave() }
-  }
-}
-
 /// **Internal use only**
 ///
 /// Each subscription to a future value will be expressed in such handler.
