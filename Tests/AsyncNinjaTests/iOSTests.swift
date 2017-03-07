@@ -203,11 +203,11 @@
                object: object,
                keyPathOrGetSet: .left("highlighted"),
                values: iOSTests.boolFixture)
-//      self.testStreamable(updatable: object.rp.animationImages,
+//      self.testEventsDestination(updatable: object.rp.animationImages,
 //                                 object: object,
 //                                 keyPath: "animationImages",
 //                                 values: iOSTests.arraysOfImagesAndNilsFixture)
-//      self.testStreamable(updatable: object.rp.highlightedAnimationImages,
+//      self.testEventsDestination(updatable: object.rp.highlightedAnimationImages,
 //                                 object: object,
 //                                 keyPath: "highlightedAnimationImages",
 //                                 values: iOSTests.arraysOfImagesAndNilsFixture)
@@ -219,7 +219,7 @@
                object: object,
                keyPathOrGetSet: .left("animationRepeatCount"),
                values: iOSTests.intFixture)
-//      self.testStreamable(updatable: object.rp.isAnimating,
+//      self.testEventsDestination(updatable: object.rp.isAnimating,
 //                                 object: object,
 //                                 keyPath: "animating",
 //                                 values: iOSTests.boolFixture,
@@ -247,23 +247,53 @@
         let attributedStringsFixture = iOSTests.stringsFixture
           .map { NSAttributedString(string: $0, attributes: nil) }
 
-        testStreamable(object.rp.title(for: state),
+        testEventsDestination(object.rp.title(for: state),
                        object: object,
                        keyPathOrGet: .right({ $0.title(for: state) }),
                        values: iOSTests.stringsAndNilsFixture)
-        testStreamable(object.rp.image(for: state),
+        testEventsDestination(object.rp.image(for: state),
                        object: object,
                        keyPathOrGet: .right({ $0.image(for: state) }),
                        values: iOSTests.imagesAndNilsFixture)
-        testStreamable(object.rp.backgroundImage(for: state),
+        testEventsDestination(object.rp.backgroundImage(for: state),
                        object: object,
                        keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
                        values: iOSTests.imagesAndNilsFixture)
-        testStreamable(object.rp.attributedTitle(for: state),
+        testEventsDestination(object.rp.attributedTitle(for: state),
                        object: object,
                        keyPathOrGet: .right({ $0.attributedTitle(for: state) }),
                        values: attributedStringsFixture)
       }
+    }
+    
+    func testUIBarItem() {
+      let object = UIBarButtonItem()
+      testBoth(object.rp.isEnabled,
+               object: object,
+               keyPathOrGetSet: .left("enabled"),
+               values: iOSTests.boolFixture)
+      testBoth(object.rp.title,
+               object: object,
+               keyPathOrGetSet: .left("title"),
+               values: iOSTests.stringsAndNilsFixture)
+      testBoth(object.rp.image,
+               object: object,
+               keyPathOrGetSet: .left("image"),
+               values: iOSTests.imagesAndNilsFixture)
+      if #available(iOS 8.0, *) {
+        testBoth(object.rp.landscapeImagePhone,
+                 object: object,
+                 keyPathOrGetSet: .left("landscapeImagePhone"),
+                 values: iOSTests.imagesAndNilsFixture)
+      }
+      testBoth(object.rp.image,
+               object: object,
+               keyPathOrGetSet: .left("image"),
+               values: iOSTests.imagesAndNilsFixture)
+//      testEventsDestination(object.rp.titleTextAttributes(for: .normal),
+//                            object: object,
+//                            keyPathOrGet: .right({ $0.titleTextAttributes(for: .normal) }),
+//                            values: /*TODO*/)
     }
 
     func testUIViewController() {
@@ -277,7 +307,7 @@
 
   // MARK: - T: Equatable
   extension iOSTests {
-    func testBoth<T: Streamable&Streaming, Object: NSObject>(
+    func testBoth<T: EventsDestination&EventsSource, Object: NSObject>(
       _ stream: T,
       object: Object,
       keyPathOrGetSet: Either<String, (getter: (Object) -> T.Update?, setter: (Object, T.Update?) -> Void)>,
@@ -286,14 +316,14 @@
       line: UInt = #line
     ) where T.Update: Equatable
     {
-      testStreamable(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
+      testEventsDestination(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
                      values: values, file: file, line: line)
-      testStreaming(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
+      testEventsSource(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
                     values: values, file: file, line: line)
     }
 
-    func testStreamable<T: Streamable, Object: NSObject>(
-      _ streamable: T,
+    func testEventsDestination<T: EventsDestination, Object: NSObject>(
+      _ eventsDestination: T,
       object: Object,
       keyPathOrGet: Either<String, (Object) -> T.Update?>,
       values: [T.Update],
@@ -302,7 +332,7 @@
     ) where T.Update: Equatable
     {
       for value in values {
-        streamable.update(value, from: .main)
+        eventsDestination.update(value, from: .main)
         let objectValue: T.Update? = eval {
           switch keyPathOrGet {
           case let .left(keyPath):
@@ -315,8 +345,8 @@
       }
     }
 
-    func testStreaming<T: Streaming, Object: NSObject>(
-      _ streaming: T,
+    func testEventsSource<T: EventsSource, Object: NSObject>(
+      _ eventsSource: T,
       object: Object,
       keyPathOrSet: Either<String, (Object, T.Update?) -> Void>,
       values: [T.Update],
@@ -324,7 +354,7 @@
       line: UInt = #line
       ) where T.Update: Equatable
     {
-      var updatingIterator = streaming.makeIterator()
+      var updatingIterator = eventsSource.makeIterator()
       let _ = updatingIterator.next() // skip an initial value
       for value in values {
         switch keyPathOrSet {
@@ -342,7 +372,7 @@
 
   // MARK: - T: Optional<Equatable>
   extension iOSTests {
-    func testBoth<T: Streamable&Streaming, Object: NSObject>(
+    func testBoth<T: EventsDestination&EventsSource, Object: NSObject>(
       _ stream: T,
       object: Object,
       keyPathOrGetSet: Either<String, (getter: (Object) -> T.Update?, setter: (Object, T.Update?) -> Void)>,
@@ -351,14 +381,14 @@
       line: UInt = #line
       ) where T.Update: AsyncNinjaOptionalAdaptor, T.Update.AsyncNinjaWrapped: Equatable
     {
-      testStreamable(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
+      testEventsDestination(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
                      values: values, file: file, line: line)
-      testStreaming(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
+      testEventsSource(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
                     values: values, file: file, line: line)
     }
 
-    func testStreamable<T: Streamable, Object: NSObject>(
-      _ streamable: T,
+    func testEventsDestination<T: EventsDestination, Object: NSObject>(
+      _ eventsDestination: T,
       object: Object,
       keyPathOrGet: Either<String, (Object) -> T.Update?>,
       values: [T.Update],
@@ -368,7 +398,7 @@
       ) where T.Update: AsyncNinjaOptionalAdaptor, T.Update.AsyncNinjaWrapped: Equatable
     {
       for value in values {
-        streamable.update(value, from: .main)
+        eventsDestination.update(value, from: .main)
         let objectValue: T.Update? = eval {
           switch keyPathOrGet {
           case let .left(keyPath):
@@ -381,8 +411,8 @@
       }
     }
 
-    func testStreaming<T: Streaming, Object: NSObject>(
-      _ streaming: T,
+    func testEventsSource<T: EventsSource, Object: NSObject>(
+      _ eventsSource: T,
       object: Object,
       keyPathOrSet: Either<String, (Object, T.Update?) -> Void>,
       values: [T.Update],
@@ -390,7 +420,7 @@
       line: UInt = #line
       ) where T.Update: AsyncNinjaOptionalAdaptor, T.Update.AsyncNinjaWrapped: Equatable
     {
-      var updatingIterator = streaming.makeIterator()
+      var updatingIterator = eventsSource.makeIterator()
       let _ = updatingIterator.next() // skip an initial value
       for value in values {
         switch keyPathOrSet {

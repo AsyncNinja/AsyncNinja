@@ -28,14 +28,14 @@
 		OBJ_118 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_38 /* Queue.swift */; };
 		OBJ_119 /* ReleasePool.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_39 /* ReleasePool.swift */; };
 		OBJ_120 /* Sink.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_40 /* Sink.swift */; };
-		OBJ_121 /* Streaming_Combine.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_41 /* Streaming_Combine.swift */; };
-		OBJ_122 /* Streaming_FlatMapFutures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_42 /* Streaming_FlatMapFutures.swift */; };
-		OBJ_123 /* Streaming_Implementation.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_43 /* Streaming_Implementation.swift */; };
-		OBJ_124 /* Streaming_Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_44 /* Streaming_Map.swift */; };
-		OBJ_125 /* Streaming_Merge2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_45 /* Streaming_Merge2.swift */; };
-		OBJ_126 /* Streaming_ToFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_46 /* Streaming_ToFuture.swift */; };
-		OBJ_127 /* Streaming_Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_47 /* Streaming_Transform.swift */; };
-		OBJ_128 /* Streaming_Zip2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_48 /* Streaming_Zip2.swift */; };
+		OBJ_121 /* EventsSource_Combine.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_41 /* EventsSource_Combine.swift */; };
+		OBJ_122 /* EventsSource_FlatMapFutures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_42 /* EventsSource_FlatMapFutures.swift */; };
+		OBJ_123 /* EventsSource_Implementation.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_43 /* EventsSource_Implementation.swift */; };
+		OBJ_124 /* EventsSource_Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_44 /* EventsSource_Map.swift */; };
+		OBJ_125 /* EventsSource_Merge2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_45 /* EventsSource_Merge2.swift */; };
+		OBJ_126 /* EventsSource_ToFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_46 /* EventsSource_ToFuture.swift */; };
+		OBJ_127 /* EventsSource_Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_47 /* EventsSource_Transform.swift */; };
+		OBJ_128 /* EventsSource_Zip2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_48 /* EventsSource_Zip2.swift */; };
 		OBJ_129 /* ThreadSafety.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_49 /* ThreadSafety.swift */; };
 		OBJ_130 /* TimerChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_50 /* TimerChannel.swift */; };
 		OBJ_131 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_51 /* Util.swift */; };
@@ -121,14 +121,14 @@
 		OBJ_38 /* Queue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
 		OBJ_39 /* ReleasePool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleasePool.swift; sourceTree = "<group>"; };
 		OBJ_40 /* Sink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sink.swift; sourceTree = "<group>"; };
-		OBJ_41 /* Streaming_Combine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Streaming_Combine.swift; sourceTree = "<group>"; };
-		OBJ_42 /* Streaming_FlatMapFutures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Streaming_FlatMapFutures.swift; sourceTree = "<group>"; };
-		OBJ_43 /* Streaming_Implementation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Streaming_Implementation.swift; sourceTree = "<group>"; };
-		OBJ_44 /* Streaming_Map.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Streaming_Map.swift; sourceTree = "<group>"; };
-		OBJ_45 /* Streaming_Merge2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Streaming_Merge2.swift; sourceTree = "<group>"; };
-		OBJ_46 /* Streaming_ToFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Streaming_ToFuture.swift; sourceTree = "<group>"; };
-		OBJ_47 /* Streaming_Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Streaming_Transform.swift; sourceTree = "<group>"; };
-		OBJ_48 /* Streaming_Zip2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Streaming_Zip2.swift; sourceTree = "<group>"; };
+		OBJ_41 /* EventsSource_Combine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Combine.swift; sourceTree = "<group>"; };
+		OBJ_42 /* EventsSource_FlatMapFutures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_FlatMapFutures.swift; sourceTree = "<group>"; };
+		OBJ_43 /* EventsSource_Implementation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Implementation.swift; sourceTree = "<group>"; };
+		OBJ_44 /* EventsSource_Map.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Map.swift; sourceTree = "<group>"; };
+		OBJ_45 /* EventsSource_Merge2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Merge2.swift; sourceTree = "<group>"; };
+		OBJ_46 /* EventsSource_ToFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_ToFuture.swift; sourceTree = "<group>"; };
+		OBJ_47 /* EventsSource_Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Transform.swift; sourceTree = "<group>"; };
+		OBJ_48 /* EventsSource_Zip2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Zip2.swift; sourceTree = "<group>"; };
 		OBJ_49 /* ThreadSafety.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadSafety.swift; sourceTree = "<group>"; };
 		OBJ_50 /* TimerChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerChannel.swift; sourceTree = "<group>"; };
 		OBJ_51 /* Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Util.swift; sourceTree = "<group>"; };
@@ -184,7 +184,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -193,7 +193,6 @@
 				OBJ_79 /* Documentation */,
 				OBJ_80 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_55 /* Tests */ = {
@@ -270,14 +269,14 @@
 				OBJ_38 /* Queue.swift */,
 				OBJ_39 /* ReleasePool.swift */,
 				OBJ_40 /* Sink.swift */,
-				OBJ_41 /* Streaming_Combine.swift */,
-				OBJ_42 /* Streaming_FlatMapFutures.swift */,
-				OBJ_43 /* Streaming_Implementation.swift */,
-				OBJ_44 /* Streaming_Map.swift */,
-				OBJ_45 /* Streaming_Merge2.swift */,
-				OBJ_46 /* Streaming_ToFuture.swift */,
-				OBJ_47 /* Streaming_Transform.swift */,
-				OBJ_48 /* Streaming_Zip2.swift */,
+				OBJ_41 /* EventsSource_Combine.swift */,
+				OBJ_42 /* EventsSource_FlatMapFutures.swift */,
+				OBJ_43 /* EventsSource_Implementation.swift */,
+				OBJ_44 /* EventsSource_Map.swift */,
+				OBJ_45 /* EventsSource_Merge2.swift */,
+				OBJ_46 /* EventsSource_ToFuture.swift */,
+				OBJ_47 /* EventsSource_Transform.swift */,
+				OBJ_48 /* EventsSource_Zip2.swift */,
 				OBJ_49 /* ThreadSafety.swift */,
 				OBJ_50 /* TimerChannel.swift */,
 				OBJ_51 /* Util.swift */,
@@ -348,7 +347,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_80 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -426,14 +425,14 @@
 				OBJ_118 /* Queue.swift in Sources */,
 				OBJ_119 /* ReleasePool.swift in Sources */,
 				OBJ_120 /* Sink.swift in Sources */,
-				OBJ_121 /* Streaming_Combine.swift in Sources */,
-				OBJ_122 /* Streaming_FlatMapFutures.swift in Sources */,
-				OBJ_123 /* Streaming_Implementation.swift in Sources */,
-				OBJ_124 /* Streaming_Map.swift in Sources */,
-				OBJ_125 /* Streaming_Merge2.swift in Sources */,
-				OBJ_126 /* Streaming_ToFuture.swift in Sources */,
-				OBJ_127 /* Streaming_Transform.swift in Sources */,
-				OBJ_128 /* Streaming_Zip2.swift in Sources */,
+				OBJ_121 /* EventsSource_Combine.swift in Sources */,
+				OBJ_122 /* EventsSource_FlatMapFutures.swift in Sources */,
+				OBJ_123 /* EventsSource_Implementation.swift in Sources */,
+				OBJ_124 /* EventsSource_Map.swift in Sources */,
+				OBJ_125 /* EventsSource_Merge2.swift in Sources */,
+				OBJ_126 /* EventsSource_ToFuture.swift in Sources */,
+				OBJ_127 /* EventsSource_Transform.swift in Sources */,
+				OBJ_128 /* EventsSource_Zip2.swift in Sources */,
 				OBJ_129 /* ThreadSafety.swift in Sources */,
 				OBJ_130 /* TimerChannel.swift in Sources */,
 				OBJ_131 /* Util.swift in Sources */,

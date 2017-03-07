@@ -23,7 +23,7 @@
 import Dispatch
 
 // MARK: - whole channel transformations
-public extension Streaming {
+public extension EventsSource {
 
   /// Applies transformation to the whole channel. `map` methods
   /// are more convenient if you want to transform updates values only.
@@ -94,7 +94,7 @@ public extension Streaming {
 
 // MARK: - updates only transformations
 
-public extension Streaming {
+public extension EventsSource {
 
   /// Applies transformation to update values of the channel.
   /// `map` methods are more convenient if you want to transform
@@ -180,7 +180,7 @@ public extension Streaming {
 
 // MARK: - updates only flattening transformations
 
-public extension Streaming {
+public extension EventsSource {
 
   /// Applies transformation to update values of the channel.
   ///
@@ -335,7 +335,7 @@ public extension Streaming {
 
 // MARK: convenient transformations
 
-public extension Streaming {
+public extension EventsSource {
 
   /// Filters update values of the channel
   ///
@@ -413,7 +413,7 @@ public extension Streaming {
   }
 }
 
-public extension Streaming where Update: _Fallible {
+public extension EventsSource where Update: _Fallible {
   /// makes channel of unsafely unwrapped optional Updates
   var unsafelyUnwrapped: Channel<Update.Success, Success> {
     return map(executor: .immediate) { $0.unsafeSuccess }

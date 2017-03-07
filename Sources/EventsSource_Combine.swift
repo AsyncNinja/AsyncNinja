@@ -22,7 +22,7 @@
 
 import Dispatch
 
-public extension Streaming {
+public extension EventsSource {
   /// Samples the channel with specified channel
   ///
   /// - Parameters:

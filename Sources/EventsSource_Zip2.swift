@@ -23,7 +23,7 @@
 import Dispatch
 
 /// Zips two channels into channels of tuples
-public func zip<T: Streaming, U: Streaming>(
+public func zip<T: EventsSource, U: EventsSource>(
   _ channelA: T,
   _ channelB: U,
   cancellationToken: CancellationToken? = nil,

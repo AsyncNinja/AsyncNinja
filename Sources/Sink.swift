@@ -22,9 +22,9 @@
 
 import Dispatch
 
-/// Is a `Streamable` you an only apply values to.
+/// Is a `EventsDestination` you an only apply values to.
 /// Very useful for write-only reactive properties (you can write to, but they are not observable) 
-public class Sink<U, S>: Streamable {
+public class Sink<U, S>: EventsDestination {
 
   public typealias Update = U
   public typealias Success = S

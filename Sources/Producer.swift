@@ -52,7 +52,7 @@ final public class Producer<Update, Success>: BaseProducer<Update, Success>, Cac
 /// Mutable subclass of channel
 /// You can update and complete producer manually
 /// **internal use only**
-public class BaseProducer<Update, Success>: Channel<Update, Success>, Streamable {
+public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDestination {
   private let _maxBufferSize: Int
   fileprivate let _bufferedUpdates = Queue<Update>()
   private let _releasePool = ReleasePool(locking: PlaceholderLocking())

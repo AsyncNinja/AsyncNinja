@@ -23,7 +23,7 @@
 import Dispatch
 
 // MARK: - internal methods
-extension Streaming {
+extension EventsSource {
   /// **internal use only**
   final public func makeCompletionHandler(
     executor: Executor,
@@ -65,7 +65,7 @@ extension Streaming {
   }
 
   /// **internal use only**
-  func attach<T: Streamable>(
+  func attach<T: EventsDestination>(
     producer: T,
     executor: Executor,
     cancellationToken: CancellationToken?,
@@ -98,7 +98,7 @@ extension Streaming {
   }
 
   /// **internal use only**
-  func attach<T: Streamable, C: ExecutionContext>(
+  func attach<T: EventsDestination, C: ExecutionContext>(
     producer: T,
     context: C,
     executor: Executor?,
@@ -215,7 +215,7 @@ extension Streaming {
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
   ///     an extended cancellation options of returned channel
-  func bindEvents<T: Streamable>(
+  func bindEvents<T: EventsDestination>(
     to producer: T,
     cancellationToken: CancellationToken? = nil) where T.Update == Update, T.Success == Success {
     self.attach(producer: producer,
@@ -241,7 +241,7 @@ extension Streaming {
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
   ///     an extended cancellation options of returned channel
-  func bind<T: Streamable>(
+  func bind<T: EventsDestination>(
     to updatableProperty: T,
     cancellationToken: CancellationToken? = nil) where T.Update == Update, T.Success == Void {
     self.attach(producer: updatableProperty,

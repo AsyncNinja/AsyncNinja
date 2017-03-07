@@ -23,7 +23,7 @@
 import Dispatch
 
 /// represents values that updateally arrive followed by failure of completion that completes Channel. Channel oftenly represents result of long running task that is not yet arrived and flow of some intermediate results.
-public class Channel<U, S>: Streaming {
+public class Channel<U, S>: EventsSource {
   public typealias Update = U
   public typealias Success = S
   public typealias Handler = ChannelHandler<Update, Success>
@@ -83,7 +83,7 @@ extension Channel: CustomStringConvertible, CustomDebugStringConvertible {
       let maxBufferSize = self.maxBufferSize
       let bufferedString = (0 == maxBufferSize)
         ? ""
-        : " Buffered(\(currentBufferSize)/\(maxBufferSize))"
+       : " Buffered(\(currentBufferSize)/\(maxBufferSize))"
       return "Incomplete\(bufferedString) \(body)"
     }
   }

@@ -159,7 +159,7 @@ public enum DerivedChannelBufferSize {
   case specific(Int)
 
   /// **internal use only**
-  func bufferSize<T: Streaming>(_ updating: T) -> Int {
+  func bufferSize<T: EventsSource>(_ updating: T) -> Int {
     switch self {
     case .default: return AsyncNinjaConstants.defaultChannelBufferSize
     case .inherited: return updating.maxBufferSize
@@ -168,7 +168,7 @@ public enum DerivedChannelBufferSize {
   }
 
   /// **internal use only**
-  func bufferSize<T: Streaming, U: Streaming>(
+  func bufferSize<T: EventsSource, U: EventsSource>(
     _ leftUpdating: T,
     _ rightUpdating: U
     ) -> Int {

@@ -23,7 +23,7 @@
 import Dispatch
 
 /// Merges channels with completely unrelated types into one
-public func merge<T: Streaming, U: Streaming>(
+public func merge<T: EventsSource, U: EventsSource>(
   _ channelA: T,
   _ channelB: U,
   cancellationToken: CancellationToken? = nil,
@@ -83,7 +83,7 @@ public func merge<T: Streaming, U: Streaming>(
 }
 
 /// Merges channels into one
-public func merge<T: Streaming, U: Streaming>(
+public func merge<T: EventsSource, U: EventsSource>(
   _ channelA: T,
   _ channelB: U,
   cancellationToken: CancellationToken? = nil,

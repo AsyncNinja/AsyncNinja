@@ -135,7 +135,7 @@ public extension EventsController {
   typealias Event = ChannelEvent<Update, Success>
 }
 
-public protocol Streaming: EventsController, Completing, Updating, Sequence {
+public protocol EventsSource: EventsController, Completing, Updating, Sequence {
 
   associatedtype Iterator: IteratorProtocol = ChannelIterator<Update, Success>
 
@@ -151,10 +151,10 @@ public protocol Streaming: EventsController, Completing, Updating, Sequence {
     _ block: @escaping (_ event: Event, _ originalExecutor: Executor) -> Void) -> AnyObject?
 }
 
-public protocol Streamable: EventsController, Updatable, Completable {
+public protocol EventsDestination: EventsController, Updatable, Completable {
 }
 
-public extension Streamable {
+public extension EventsDestination {
 
   /// Applies specified ChannelValue to the Producer
   /// Value will not be applied for completed Producer

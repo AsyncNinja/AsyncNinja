@@ -42,9 +42,9 @@
     /// - Parameter events: events that to listen for
     /// - Returns: unbuffered channel
     func actionChannel(forEvents events: UIControlEvents = UIControlEvents.allEvents) -> ActionChannel {
-      let actionReceiver = ActionReceiver(control: self)
+      let actionReceiver = UIControlActionReceiver(control: self)
       self.addTarget(actionReceiver,
-                     action: #selector(ActionReceiver.asyncNinjaAction(sender:forEvent:)),
+                     action: #selector(UIControlActionReceiver.asyncNinjaAction(sender:forEvent:)),
                      for: events)
       self.notifyDeinit {
         actionReceiver.producer.cancelBecauseOfDeallocatedContext(from: nil)
@@ -71,7 +71,7 @@
     }
   }
   
-  private class ActionReceiver: NSObject {
+  private class UIControlActionReceiver: NSObject {
     weak var control: UIControl?
     let producer = Producer<UIControl.ActionChannelUpdate, Void>(bufferSize: 0)
     
@@ -85,6 +85,19 @@
         event: event
       )
       self.producer.update(update, from: .main)
+    }
+  }
+
+  private class ActionReceiver: NSObject {
+    weak var object: NSObject?
+    let producer = Producer<AnyObject?, Void>(bufferSize: 0)
+    
+    init(object: NSObject) {
+      self.object = object
+    }
+    
+    dynamic func asyncNinjaAction(sender: AnyObject?) {
+      self.producer.update(sender, from: .main)
     }
   }
 
@@ -257,6 +270,105 @@
     /// An `Sink` that refers to write-only `UIImageView.setAttributedTitle(_:, for:)`
     func attributedTitle(for state: UIControlState) -> Sink<NSAttributedString?, Void> {
       return sink { $0.setAttributedTitle($1, for: state) }
+    }
+  }
+
+  extension UIBarItem: ObjCUIInjectedExecutionContext {}
+  
+  public extension ReactiveProperties where Object: UIBarItem {
+    /// An `ProducerProxy` that refers to read-write property `UIBarItem.title`
+    var isEnabled: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "enabled", onNone: .drop) }
+    
+    /// An `ProducerProxy` that refers to read-write property `UIBarItem.title`
+    var title: ProducerProxy<String?, Void> { return updatable(forKeyPath: "title") }
+    
+    /// An `ProducerProxy` that refers to read-write property `UIBarItem.image`
+    var image: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "image") }
+    
+    /// An `ProducerProxy` that refers to read-write property `UIBarItem.landscapeImagePhone`
+    @available(iOS 8.0, *)
+    var landscapeImagePhone: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "landscapeImagePhone") }
+    
+    /// An `Sink` that refers to write-only `UIBarItem.setTitleTextAttributes(_:, for:)`
+    func titleTextAttributes(for state: UIControlState) -> Sink<[String: Any]?, Void> {
+      return sink { $0.setTitleTextAttributes($1, for: state) }
+    }
+  }
+  
+  public extension UIBarButtonItem {
+    func actionChannel() -> Channel<AnyObject?, Void> {
+      if let actionReceiver = self.target as? ActionReceiver {
+        return actionReceiver.producer
+      } else {
+        let actionReceiver = ActionReceiver(object: self)
+        self.target = actionReceiver
+        self.action = #selector(ActionReceiver.asyncNinjaAction(sender:))
+        self.notifyDeinit {
+          actionReceiver.producer.cancelBecauseOfDeallocatedContext(from: nil)
+        }
+        return actionReceiver.producer
+      }
+    }
+  }
+
+  public extension ReactiveProperties where Object: UIBarButtonItem {
+    /// An `ProducerProxy` that refers to read-write property `UIBarButtonItem.style`
+    var style: ProducerProxy<UIBarButtonItemStyle, Void> {
+      return updatable(forKeyPath: "style", onNone: .drop, customGetter: { $0.style }, customSetter: { $0.style = $1 })
+    }
+
+    /// An `ProducerProxy` that refers to read-write property `UIBarButtonItem.width`
+    var width: ProducerProxy<CGFloat, Void> {
+      return updatable(forKeyPath: "width", onNone: .drop)
+    } 
+    
+    /// An `ProducerProxy` that refers to read-write property `UIBarButtonItem.width`
+    var possibleTitles: ProducerProxy<Set<String>?, Void> {
+      return updatable(forKeyPath: "possibleTitles",
+                       customGetter: { $0.possibleTitles },
+                       customSetter: { $0.possibleTitles = $1 })
+    }
+    
+    /// An `Sink` that refers to write-only `UIBarButtonItem.setBackgroundImage(_:, for:, barMetrics:)`
+    func backgroundImage(for state: UIControlState, barMetrics: UIBarMetrics) -> Sink<UIImage?, Void> {
+      return sink { $0.setBackgroundImage($1, for: state, barMetrics: barMetrics) }
+    }
+    
+    /// An `Sink` that refers to write-only `UIBarButtonItem.setBackgroundImage(_:, for:, style:, barMetrics:)`
+    func backgroundImage(for state: UIControlState, style: UIBarButtonItemStyle, barMetrics: UIBarMetrics) -> Sink<UIImage?, Void> {
+      return sink { $0.setBackgroundImage($1, for: state, style: style, barMetrics: barMetrics) }
+    }
+
+    /// An `ProducerProxy` that refers to read-write property `UIBarButtonItem.tintColor`
+    var tintColor: ProducerProxy<UIColor?, Void> {
+      return updatable(forKeyPath: "tintColor",
+                       customGetter: { $0.tintColor },
+                       customSetter: { $0.tintColor = $1 })
+    }
+    
+    /// An `Sink` that refers to write-only `UIBarButtonItem.setBackgroundVerticalPositionAdjustment(_:, for:)`
+    func backgroundVerticalPositionAdjustment(for barMetrics: UIBarMetrics) -> Sink<CGFloat, Void> {
+      return sink { $0.setBackgroundVerticalPositionAdjustment($1, for: barMetrics) }
+    }
+    
+    /// An `Sink` that refers to write-only `UIBarButtonItem.setTitlePositionAdjustment(_:, for:)`
+    func titlePositionAdjustment(for barMetrics: UIBarMetrics) -> Sink<UIOffset, Void> {
+      return sink { $0.setTitlePositionAdjustment($1, for: barMetrics) }
+    }
+    
+    /// An `Sink` that refers to write-only `UIBarButtonItem.setBackButtonBackgroundImage(_:, for:, barMetrics:)`
+    func backButtonBackgroundImage(for state: UIControlState, barMetrics: UIBarMetrics) -> Sink<UIImage?, Void> {
+      return sink { $0.setBackButtonBackgroundImage($1, for: state, barMetrics: barMetrics) }
+    }
+    
+    /// An `Sink` that refers to write-only `UIBarButtonItem.setBackButtonTitlePositionAdjustment(_:, for:)`
+    func backButtonTitlePositionAdjustment(for barMetrics: UIBarMetrics) -> Sink<UIOffset, Void> {
+      return sink { $0.setBackButtonTitlePositionAdjustment($1, for: barMetrics) }
+    }
+
+    /// An `Sink` that refers to write-only `UIBarButtonItem.setBackButtonBackgroundVerticalPositionAdjustment(_:, for:)`
+    func backButtonBackgroundVerticalPositionAdjustment(for barMetrics: UIBarMetrics) -> Sink<CGFloat, Void> {
+      return sink { $0.setBackButtonBackgroundVerticalPositionAdjustment($1, for: barMetrics) }
     }
   }
 

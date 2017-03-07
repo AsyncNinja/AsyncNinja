@@ -138,7 +138,7 @@ import Dispatch
       
       let values = [1, 2, 3, 4, 5]
       for value in values {
-        notificationCenter.post(name: name, object: myObject, userInfo: ["myValue" : value])
+        notificationCenter.post(name: name, object: myObject, userInfo: ["myValue": value])
         usleep(10_000)
       }
 
@@ -164,7 +164,7 @@ import Dispatch
       
       let values = [1, 2, 3, 4, 5]
       for value in values {
-        let notification = Notification(name: name, object: myObject, userInfo: ["myValue" : value])
+        let notification = Notification(name: name, object: myObject, userInfo: ["myValue": value])
         updatable.update(notification)
         usleep(10_000)
       }

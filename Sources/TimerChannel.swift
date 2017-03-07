@@ -60,7 +60,7 @@ public func makeTimer(
 }
 
 private func makeTimer(executor: Executor, setup: (DispatchSourceTimer) -> Void) -> TimerChannel {
-  let queueExecutor = executor.isDispatchQueueExecutor ? executor : .primary
+  let queueExecutor = executor.isDispatchQueueExecutor ? executor: .primary
   let timer = DispatchSource.makeTimerSource(queue: queueExecutor.dispatchQueue!)
   setup(timer)
   return makeTimer(dispatchTimer: timer, executor: executor, from: queueExecutor)
