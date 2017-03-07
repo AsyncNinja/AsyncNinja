@@ -166,6 +166,8 @@
   }
 
   public extension ReactiveProperties where Object: UISearchBar {
+
+#if os(iOS)
     /// An `ProducerProxy` that refers to read-write property `UISearchBar.barStyle`
     var barStyle: ProducerProxy<UIBarStyle, Void> {
       return updatable(forKeyPath: "barStyle",
@@ -173,6 +175,7 @@
                        customGetter: { $0.barStyle },
                        customSetter: { $0.barStyle = $1 })
     }
+#endif
 
     /// An `ProducerProxy` that refers to read-write property `UISearchBar.text`
     var text: ProducerProxy<String, Void> { return updatable(forKeyPath: "text", onNone: .drop) }
@@ -355,7 +358,8 @@
     func titlePositionAdjustment(for barMetrics: UIBarMetrics) -> Sink<UIOffset, Void> {
       return sink { $0.setTitlePositionAdjustment($1, for: barMetrics) }
     }
-    
+
+    #if os(iOS)
     /// An `Sink` that refers to write-only `UIBarButtonItem.setBackButtonBackgroundImage(_:, for:, barMetrics:)`
     func backButtonBackgroundImage(for state: UIControlState, barMetrics: UIBarMetrics) -> Sink<UIImage?, Void> {
       return sink { $0.setBackButtonBackgroundImage($1, for: state, barMetrics: barMetrics) }
@@ -370,8 +374,10 @@
     func backButtonBackgroundVerticalPositionAdjustment(for barMetrics: UIBarMetrics) -> Sink<CGFloat, Void> {
       return sink { $0.setBackButtonBackgroundVerticalPositionAdjustment($1, for: barMetrics) }
     }
+    #endif
   }
   
+#if os(iOS)
   public extension ReactiveProperties where Object: UIDatePicker {
     /// An `ProducerProxy` that refers to read-write property `UIDatePicker.datePickerMode`
     var datePickerMode: ProducerProxy<UIDatePickerMode, Void> {
@@ -399,28 +405,34 @@
                        customGetter: { (date: $0.date, animated: false) },
                        customSetter: { $0.setDate($1.date, animated: $1.animated) })
     }
-    
+
     /// An `ProducerProxy` that refers to read-write property `UIDatePicker.minimumDate`
     var minimumDate: Sink<Date?, Void> { return sink { $0.minimumDate = $1 } }
-    
+
     /// An `ProducerProxy` that refers to read-write property `UIDatePicker.maximumDate`
     var maximumDate: Sink<Date?, Void> { return sink { $0.maximumDate = $1 } }
 
-//    TODO: Investigate
-//    /// An `ProducerProxy` that refers to read-write property `UIDatePicker.countDownDuration`
-//    var countDownDuration: ProducerProxy<TimeInterval, Void> { return updatable(forKeyPath: "countDownDuration", onNone: .drop) }
-    
+    //    TODO: Investigate
+    //    /// An `ProducerProxy` that refers to read-write property `UIDatePicker.countDownDuration`
+    //    var countDownDuration: ProducerProxy<TimeInterval, Void> { return updatable(forKeyPath: "countDownDuration", onNone: .drop) }
+
     /// An `ProducerProxy` that refers to read-write property `UIDatePicker.minuteInterval`
     var minuteInterval: ProducerProxy<Int, Void> { return updatable(forKeyPath: "minuteInterval", onNone: .drop) }
   }
+#endif
 
   public extension ReactiveProperties where Object: UIViewController {
     /// An `UpdatableProperty` that refers to read-write property `UIViewController.title`
     var title: ProducerProxy<String?, Void> { return updatable(forKeyPath: "title") }
   }
   
-  extension UIDevice: ObjCUIInjectedExecutionContext {}
+  extension UIDevice: ObjCUIInjectedExecutionContext {
+  }
+
   public extension ReactiveProperties where Object: UIDevice {
+
+    #if os(iOS)
+
     /// An `Channel` that refers to read-only property `UIControl.state`
     var orientation: Channel<UIDeviceOrientation, Void> {
       let notificationsChannel: Channel<Notification, Void> = NotificationCenter.default
@@ -432,5 +444,7 @@
       return notificationsChannel
         .map(executor: .immediate) { ($0.object as! UIDevice).orientation }
     }
+    
+    #endif
   }
 #endif

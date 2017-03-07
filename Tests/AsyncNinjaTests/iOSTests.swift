@@ -183,48 +183,50 @@
     }
 
     func testUISearchBar() {
-      let object = UISearchBar()
+      #if os(iOS)
+        let object = UISearchBar()
 
-      testBoth(object.rp.barStyle,
-               object: object,
-               keyPathOrGetSet: .right(getter: { $0.barStyle }, setter: { $0.barStyle = $1! }),
-               values: [.default, .default, .black, .black, .default, .black])
-      testBoth(object.rp.text,
-               object: object,
-               keyPathOrGetSet: .left("text"),
-               values: iOSTests.stringsFixture)
-      testBoth(object.rp.prompt,
-               object: object,
-               keyPathOrGetSet: .left("prompt"),
-               values: iOSTests.stringsAndNilsFixture)
-      testBoth(object.rp.placeholder,
-               object: object,
-               keyPathOrGetSet: .left("placeholder"),
-               values: iOSTests.stringsAndNilsFixture)
-      testBoth(object.rp.showsBookmarkButton,
-               object: object,
-               keyPathOrGetSet: .left("showsBookmarkButton"),
-               values: iOSTests.boolFixture)
-      testBoth(object.rp.showsCancelButton,
-               object: object,
-               keyPathOrGetSet: .left("showsCancelButton"),
-               values: iOSTests.boolFixture)
-      testBoth(object.rp.showsSearchResultsButton,
-               object: object,
-               keyPathOrGetSet: .left("showsSearchResultsButton"),
-               values: iOSTests.boolFixture)
-      testBoth(object.rp.isSearchResultsButtonSelected,
-               object: object,
-               keyPathOrGetSet: .left("searchResultsButtonSelected"),
-               values: iOSTests.boolFixture)
-      testBoth(object.rp.barTintColor,
-               object: object,
-               keyPathOrGetSet: .left("barTintColor"),
-               values: iOSTests.colorsFiture)
-      testBoth(object.rp.searchBarStyle,
-               object: object,
-               keyPathOrGetSet: .right(getter: { $0.searchBarStyle }, setter: { $0.searchBarStyle = $1! }),
-               values: [.default, .default, .prominent, .minimal, .minimal, .default])
+        testBoth(object.rp.barStyle,
+                 object: object,
+                 keyPathOrGetSet: .right(getter: { $0.barStyle }, setter: { $0.barStyle = $1! }),
+                 values: [.default, .default, .black, .black, .default, .black])
+        testBoth(object.rp.text,
+                 object: object,
+                 keyPathOrGetSet: .left("text"),
+                 values: iOSTests.stringsFixture)
+        testBoth(object.rp.prompt,
+                 object: object,
+                 keyPathOrGetSet: .left("prompt"),
+                 values: iOSTests.stringsAndNilsFixture)
+        testBoth(object.rp.placeholder,
+                 object: object,
+                 keyPathOrGetSet: .left("placeholder"),
+                 values: iOSTests.stringsAndNilsFixture)
+        testBoth(object.rp.showsBookmarkButton,
+                 object: object,
+                 keyPathOrGetSet: .left("showsBookmarkButton"),
+                 values: iOSTests.boolFixture)
+        testBoth(object.rp.showsCancelButton,
+                 object: object,
+                 keyPathOrGetSet: .left("showsCancelButton"),
+                 values: iOSTests.boolFixture)
+        testBoth(object.rp.showsSearchResultsButton,
+                 object: object,
+                 keyPathOrGetSet: .left("showsSearchResultsButton"),
+                 values: iOSTests.boolFixture)
+        testBoth(object.rp.isSearchResultsButtonSelected,
+                 object: object,
+                 keyPathOrGetSet: .left("searchResultsButtonSelected"),
+                 values: iOSTests.boolFixture)
+        testBoth(object.rp.barTintColor,
+                 object: object,
+                 keyPathOrGetSet: .left("barTintColor"),
+                 values: iOSTests.colorsFiture)
+        testBoth(object.rp.searchBarStyle,
+                 object: object,
+                 keyPathOrGetSet: .right(getter: { $0.searchBarStyle }, setter: { $0.searchBarStyle = $1! }),
+                 values: [.default, .default, .prominent, .minimal, .minimal, .default])
+      #endif
     }
 
     func testUIImageView() {
@@ -336,49 +338,51 @@
     }
     
     func testUIDatePicker() {
-      let object = UIDatePicker()
-      
-      let datePickerModeFixtures: [UIDatePickerMode] = [
-        .time, .time, .date, .date, .dateAndTime, .countDownTimer, .countDownTimer, .dateAndTime
-      ]
-      testBoth(object.rp.datePickerMode,
-               object: object,
-               keyPathOrGetSet: .right(getter: { $0.datePickerMode }, setter: { $0.datePickerMode = $1! }),
-               values: datePickerModeFixtures)
-      testBoth(object.rp.locale,
-               object: object,
-               keyPathOrGetSet: .left("locale"),
-               values: iOSTests.localesFixture)
-      testBoth(object.rp.calendar,
-               object: object,
-               keyPathOrGetSet: .left("calendar"),
-               values: iOSTests.calendarsFixture)
-      testBoth(object.rp.timeZone,
-               object: object,
-               keyPathOrGetSet: .left("timeZone"),
-               values: iOSTests.timezonesAndNilsFixture)
-      testBoth(object.rp.date,
-               object: object,
-               keyPathOrGetSet: .left("date"),
-               values: iOSTests.datesFixture)
-      testEventsDestination(object.rp.minimumDate,
-               object: object,
-               keyPathOrGet: .left("minimumDate"),
-               values: iOSTests.datesAndNilsFixture)
-      testEventsDestination(object.rp.maximumDate,
-               object: object,
-               keyPathOrGet: .left("maximumDate"),
-               values: iOSTests.datesAndNilsFixture)
-//      TODO: Investigate
-//      object.datePickerMode = .countDownTimer
-//      testBoth(object.rp.countDownDuration,
-//               object: object,
-//               keyPathOrGetSet: .left("countDownDuration"),
-//               values: iOSTests.timeIntervalFixture)
-      testBoth(object.rp.minuteInterval,
-               object: object,
-               keyPathOrGetSet: .left("minuteInterval"),
-               values: iOSTests.intFixture)
+      #if os(iOS)
+        let object = UIDatePicker()
+
+        let datePickerModeFixtures: [UIDatePickerMode] = [
+          .time, .time, .date, .date, .dateAndTime, .countDownTimer, .countDownTimer, .dateAndTime
+        ]
+        testBoth(object.rp.datePickerMode,
+                 object: object,
+                 keyPathOrGetSet: .right(getter: { $0.datePickerMode }, setter: { $0.datePickerMode = $1! }),
+                 values: datePickerModeFixtures)
+        testBoth(object.rp.locale,
+                 object: object,
+                 keyPathOrGetSet: .left("locale"),
+                 values: iOSTests.localesFixture)
+        testBoth(object.rp.calendar,
+                 object: object,
+                 keyPathOrGetSet: .left("calendar"),
+                 values: iOSTests.calendarsFixture)
+        testBoth(object.rp.timeZone,
+                 object: object,
+                 keyPathOrGetSet: .left("timeZone"),
+                 values: iOSTests.timezonesAndNilsFixture)
+        testBoth(object.rp.date,
+                 object: object,
+                 keyPathOrGetSet: .left("date"),
+                 values: iOSTests.datesFixture)
+        testEventsDestination(object.rp.minimumDate,
+                              object: object,
+                              keyPathOrGet: .left("minimumDate"),
+                              values: iOSTests.datesAndNilsFixture)
+        testEventsDestination(object.rp.maximumDate,
+                              object: object,
+                              keyPathOrGet: .left("maximumDate"),
+                              values: iOSTests.datesAndNilsFixture)
+        //      TODO: Investigate
+        //      object.datePickerMode = .countDownTimer
+        //      testBoth(object.rp.countDownDuration,
+        //               object: object,
+        //               keyPathOrGetSet: .left("countDownDuration"),
+        //               values: iOSTests.timeIntervalFixture)
+        testBoth(object.rp.minuteInterval,
+                 object: object,
+                 keyPathOrGetSet: .left("minuteInterval"),
+                 values: iOSTests.intFixture)
+      #endif
     }
 
     func testUIViewController() {
