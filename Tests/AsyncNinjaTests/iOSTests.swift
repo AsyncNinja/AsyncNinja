@@ -37,7 +37,7 @@
       ]
 
     static let intFixture: [Int] = [1, 1, 2, 2, 3, 1, 4]
-    static let timeIntervalFixture: [TimeInterval] = [0.125, 0.125, 0.25, 0.5, 0.5, 1.0, 1.0]
+    static let timeIntervalFixture: [TimeInterval] = [2, 2, 4, 8, 8, 16, 16]
     static let cgFloatFixture: [CGFloat] = [0.0, 0.0, 0.25, 0.5, 0.5, 1.0, 1.0]
     static let boolFixture: [Bool] = [true, true, false, false, true]
     static let stringsAndNilsFixture: [String?] = ["1", nil, "1", "1", "2", "2", nil, nil, "3", "1", "4"]
@@ -47,12 +47,51 @@
     static let fontsFiture: [UIFont] = iOSTests.fontTextStyleFixture
       .map(UIFont.preferredFont(forTextStyle:))
     static let textAlignementFixture: [NSTextAlignment] = [.center, .left, .left, .center, .right, .right, .natural, .natural]
+    static let localesFixture: [Locale] = [
+      Locale(identifier: "uk"),
+      Locale(identifier: "uk"),
+      Locale(identifier: "nl"),
+      Locale(identifier: "nl"),
+      Locale(identifier: "en_US"),
+      Locale(identifier: "nl"),
+    ]
+    static let calendarsFixture: [Calendar] = [
+      Calendar.current,
+      Calendar.current,
+      Calendar(identifier: .iso8601),
+      Calendar(identifier: .japanese),
+      Calendar.current,
+    ]
+    static let timezonesAndNilsFixture: [TimeZone?] = [
+      TimeZone.current,
+      nil,
+      TimeZone.current,
+      nil,
+      TimeZone(secondsFromGMT: 0),
+      TimeZone(secondsFromGMT: 0),
+      TimeZone(secondsFromGMT: 60 * 60),
+      nil,
+      TimeZone.current,
+      ]
     
     static func drawTestImage(_ text: String) -> UIImage {
       return UIImage.draw(size: CGSize(width: 100, height: 100)) { _ in
         text.draw(at: CGPoint(x: 0, y: 0), withAttributes: [:])
       }
     }
+    static let datesAndNilsFixture: [Date?] = [
+      Date(timeInterval: 10.0, since: Date()),
+      Date(timeInterval: 10.0, since: Date()),
+      nil,
+      Date(timeInterval: 20.0, since: Date()),
+      nil,
+      Date(timeInterval: 20.0, since: Date()),
+      Date(timeInterval: 10.0, since: Date()),
+      nil,
+      nil,
+      Date(timeInterval: 30.0, since: Date()),
+      ]
+    static let datesFixture: [Date] = iOSTests.datesAndNilsFixture.flatMap { $0 }
     
     static let imageOne = drawTestImage("1")
     static let imageTwo = drawTestImage("2")
@@ -294,6 +333,52 @@
 //                            object: object,
 //                            keyPathOrGet: .right({ $0.titleTextAttributes(for: .normal) }),
 //                            values: /*TODO*/)
+    }
+    
+    func testUIDatePicker() {
+      let object = UIDatePicker()
+      
+      let datePickerModeFixtures: [UIDatePickerMode] = [
+        .time, .time, .date, .date, .dateAndTime, .countDownTimer, .countDownTimer, .dateAndTime
+      ]
+      testBoth(object.rp.datePickerMode,
+               object: object,
+               keyPathOrGetSet: .right(getter: { $0.datePickerMode }, setter: { $0.datePickerMode = $1! }),
+               values: datePickerModeFixtures)
+      testBoth(object.rp.locale,
+               object: object,
+               keyPathOrGetSet: .left("locale"),
+               values: iOSTests.localesFixture)
+      testBoth(object.rp.calendar,
+               object: object,
+               keyPathOrGetSet: .left("calendar"),
+               values: iOSTests.calendarsFixture)
+      testBoth(object.rp.timeZone,
+               object: object,
+               keyPathOrGetSet: .left("timeZone"),
+               values: iOSTests.timezonesAndNilsFixture)
+      testBoth(object.rp.date,
+               object: object,
+               keyPathOrGetSet: .left("date"),
+               values: iOSTests.datesFixture)
+      testEventsDestination(object.rp.minimumDate,
+               object: object,
+               keyPathOrGet: .left("minimumDate"),
+               values: iOSTests.datesAndNilsFixture)
+      testEventsDestination(object.rp.maximumDate,
+               object: object,
+               keyPathOrGet: .left("maximumDate"),
+               values: iOSTests.datesAndNilsFixture)
+//      TODO: Investigate
+//      object.datePickerMode = .countDownTimer
+//      testBoth(object.rp.countDownDuration,
+//               object: object,
+//               keyPathOrGetSet: .left("countDownDuration"),
+//               values: iOSTests.timeIntervalFixture)
+      testBoth(object.rp.minuteInterval,
+               object: object,
+               keyPathOrGetSet: .left("minuteInterval"),
+               values: iOSTests.intFixture)
     }
 
     func testUIViewController() {

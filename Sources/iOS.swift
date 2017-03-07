@@ -371,6 +371,48 @@
       return sink { $0.setBackButtonBackgroundVerticalPositionAdjustment($1, for: barMetrics) }
     }
   }
+  
+  public extension ReactiveProperties where Object: UIDatePicker {
+    /// An `ProducerProxy` that refers to read-write property `UIDatePicker.datePickerMode`
+    var datePickerMode: ProducerProxy<UIDatePickerMode, Void> {
+      return updatable(forKeyPath: "datePickerMode",
+                       onNone: .drop,
+                       customGetter: { $0.datePickerMode },
+                       customSetter: { $0.datePickerMode = $1 })
+    }
+
+    /// An `ProducerProxy` that refers to read-write property `UIDatePicker.locale`
+    var locale: ProducerProxy<Locale, Void> { return updatable(forKeyPath: "locale", onNone: .replace(Locale.current)) }
+
+    /// An `ProducerProxy` that refers to read-write property `UIDatePicker.calendar`
+    var calendar: ProducerProxy<Calendar, Void> { return updatable(forKeyPath: "calendar", onNone: .replace(Calendar.current)) }
+
+    /// An `ProducerProxy` that refers to read-write property `UIDatePicker.timeZone`
+    var timeZone: ProducerProxy<TimeZone?, Void> { return updatable(forKeyPath: "timeZone") }
+
+    /// An `ProducerProxy` that refers to read-write property `UIDatePicker.date`
+    var date: ProducerProxy<Date, Void> { return updatable(forKeyPath: "date", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UIDatePicker.dateWithAnimation`
+    var dateWithAnimation: ProducerProxy<(date: Date, animated: Bool), Void> {
+      return updatable(forKeyPath: "date", onNone: .drop,
+                       customGetter: { (date: $0.date, animated: false) },
+                       customSetter: { $0.setDate($1.date, animated: $1.animated) })
+    }
+    
+    /// An `ProducerProxy` that refers to read-write property `UIDatePicker.minimumDate`
+    var minimumDate: Sink<Date?, Void> { return sink { $0.minimumDate = $1 } }
+    
+    /// An `ProducerProxy` that refers to read-write property `UIDatePicker.maximumDate`
+    var maximumDate: Sink<Date?, Void> { return sink { $0.maximumDate = $1 } }
+
+//    TODO: Investigate
+//    /// An `ProducerProxy` that refers to read-write property `UIDatePicker.countDownDuration`
+//    var countDownDuration: ProducerProxy<TimeInterval, Void> { return updatable(forKeyPath: "countDownDuration", onNone: .drop) }
+    
+    /// An `ProducerProxy` that refers to read-write property `UIDatePicker.minuteInterval`
+    var minuteInterval: ProducerProxy<Int, Void> { return updatable(forKeyPath: "minuteInterval", onNone: .drop) }
+  }
 
   public extension ReactiveProperties where Object: UIViewController {
     /// An `UpdatableProperty` that refers to read-write property `UIViewController.title`
