@@ -507,18 +507,25 @@
 
     /// An `Channel` that refers to read-only property `UIControl.state`
     var orientation: Channel<UIDeviceOrientation, Void> {
+      let simulatedEventsProducer = Producer<UIDeviceOrientation, Void>(bufferedUpdates: [.unknown])
       let notificationsChannel: Channel<Notification, Void> = NotificationCenter.default
         .updatable(object: UIDevice.current,
                    name: .UIDeviceOrientationDidChange,
-                   observationSession: observationSession) { (notificationCenter, object, isEnabled) in
-                    if isEnabled {
-                      object.beginGeneratingDeviceOrientationNotifications()
-                    } else {
-                      object.endGeneratingDeviceOrientationNotifications()
-                    }
+                   observationSession: observationSession)
+        {
+          [weak simulatedEventsProducer] (notificationCenter, object, isEnabled) in
+          if isEnabled {
+            object.beginGeneratingDeviceOrientationNotifications()
+            simulatedEventsProducer?.update(object.orientation)
+          } else {
+            object.endGeneratingDeviceOrientationNotifications()
+            simulatedEventsProducer?.update(.unknown)
+          }
       }
-      return notificationsChannel
+      let realEventsProducer = notificationsChannel
         .map(executor: .immediate) { ($0.object as! UIDevice).orientation }
+      return merge(simulatedEventsProducer, realEventsProducer)
+        .mapSuccess { _ in return () }
     }
 
     #endif
