@@ -33,6 +33,10 @@
       ("testUITextField", testUITextField),
       ("testUISearchBar", testUISearchBar),
       ("testUIImageView", testUIImageView),
+      ("testUIButton", testUIButton),
+      ("testUIBarItem", testUIBarItem),
+      ("testUIDatePicker", testUIDatePicker),
+      ("testUILabel", testUILabel),
       ("testUIViewController", testUIViewController),
       ]
 
@@ -42,11 +46,16 @@
     static let boolFixture: [Bool] = [true, true, false, false, true]
     static let stringsAndNilsFixture: [String?] = ["1", nil, "1", "1", "2", "2", nil, nil, "3", "1", "4"]
     static let stringsFixture: [String] = stringsAndNilsFixture.flatMap { $0 }
-    static let colorsFiture: [UIColor] = [.white, .white, .red, .green, .green, .blue, .blue]
+    static let attributedStringsFixture = iOSTests.stringsFixture
+      .map { NSAttributedString(string: $0, attributes: nil) }
+    static let colorsAndNilsFiture: [UIColor?] = [.white, .white, nil, .red, nil, nil, .green, nil, .green, .blue, .blue]
+    static let colorsFiture: [UIColor] = iOSTests.colorsAndNilsFiture.flatMap { $0 }
     static let fontTextStyleFixture: [UIFontTextStyle] = [.headline, .subheadline, .body, .footnote, .caption1, .caption2]
     static let fontsFiture: [UIFont] = iOSTests.fontTextStyleFixture
       .map(UIFont.preferredFont(forTextStyle:))
     static let textAlignementFixture: [NSTextAlignment] = [.center, .left, .left, .center, .right, .right, .natural, .natural]
+    static let lineBreakModeFixture: [NSLineBreakMode] = [.byWordWrapping, .byWordWrapping, .byCharWrapping, .byCharWrapping, .byClipping, .byTruncatingHead, .byWordWrapping, .byTruncatingMiddle, .byTruncatingTail]
+    static let baselineAdjustmentFixture: [UIBaselineAdjustment] = [.alignBaselines, .alignBaselines, .alignCenters, .alignCenters, .none, .alignBaselines, .alignCenters]
     static let localesFixture: [Locale] = [
       Locale(identifier: "uk"),
       Locale(identifier: "uk"),
@@ -92,6 +101,15 @@
       Date(timeInterval: 30.0, since: Date()),
       ]
     static let datesFixture: [Date] = iOSTests.datesAndNilsFixture.flatMap { $0 }
+    static let shadowOffsetsFixture: [CGSize] = [
+      CGSize(width: 0, height: 0),
+      CGSize(width: 0, height: 0),
+      CGSize(width: 2, height: 3),
+      CGSize(width: 2, height: 3),
+      CGSize(width: -2, height: -3),
+      CGSize(width: 2, height: 3),
+      CGSize(width: 0, height: 0),
+    ]
     
     static let imageOne = drawTestImage("1")
     static let imageTwo = drawTestImage("2")
@@ -285,8 +303,6 @@
 
       for state in states {
         let object = UIButton()
-        let attributedStringsFixture = iOSTests.stringsFixture
-          .map { NSAttributedString(string: $0, attributes: nil) }
 
         testEventsDestination(object.rp.title(for: state),
                        object: object,
@@ -303,7 +319,7 @@
         testEventsDestination(object.rp.attributedTitle(for: state),
                        object: object,
                        keyPathOrGet: .right({ $0.attributedTitle(for: state) }),
-                       values: attributedStringsFixture)
+                       values: iOSTests.attributedStringsFixture)
       }
     }
     
@@ -336,7 +352,60 @@
 //                            keyPathOrGet: .right({ $0.titleTextAttributes(for: .normal) }),
 //                            values: /*TODO*/)
     }
-    
+
+    func testUILabel() {
+      let object = UILabel()
+
+      testBoth(object.rp.text,
+               object: object,
+               keyPathOrGetSet: .left("text"),
+               values: iOSTests.stringsFixture)
+      testBoth(object.rp.font,
+               object: object,
+               keyPathOrGetSet: .left("font"),
+               values: iOSTests.fontsFiture)
+      testBoth(object.rp.textColor,
+               object: object,
+               keyPathOrGetSet: .left("textColor"),
+               values: iOSTests.colorsFiture)
+      testBoth(object.rp.shadowColor,
+               object: object,
+               keyPathOrGetSet: .left("shadowColor"),
+               values: iOSTests.colorsAndNilsFiture)
+      testBoth(object.rp.shadowOffset,
+               object: object,
+               keyPathOrGetSet: .right(getter: { $0.shadowOffset }, setter: { $0.shadowOffset = $1! }),
+               values: iOSTests.shadowOffsetsFixture)
+      testBoth(object.rp.textAlignment,
+               object: object,
+               keyPathOrGetSet: .right(getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! }),
+               values: iOSTests.textAlignementFixture)
+      testBoth(object.rp.lineBreakMode,
+               object: object,
+               keyPathOrGetSet: .right(getter: { $0.lineBreakMode }, setter: { $0.lineBreakMode = $1! }),
+               values: iOSTests.lineBreakModeFixture)
+      testBoth(object.rp.attributedText,
+               object: object,
+               keyPathOrGetSet: .left("attributedText"),
+               values: iOSTests.attributedStringsFixture)
+      testBoth(object.rp.highlightedTextColor,
+               object: object,
+               keyPathOrGetSet: .left("highlightedTextColor"),
+               values: iOSTests.colorsAndNilsFiture)
+      testBoth(object.rp.isHighlighted,
+               object: object,
+               keyPathOrGetSet: .left("highlighted"),
+               values: iOSTests.boolFixture)
+      testBoth(object.rp.numberOfLines,
+               object: object,
+               keyPathOrGetSet: .left("numberOfLines"),
+               values: iOSTests.intFixture)
+      testBoth(object.rp.baselineAdjustment,
+               object: object,
+               keyPathOrGetSet: .right(getter: { $0.baselineAdjustment }, setter: { $0.baselineAdjustment = $1! }),
+               values: iOSTests.baselineAdjustmentFixture)
+    }
+
     func testUIDatePicker() {
       #if os(iOS)
         let object = UIDatePicker()

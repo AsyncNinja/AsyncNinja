@@ -133,8 +133,64 @@
 
   // MARK: - reactive properties for UILabel
   public extension ReactiveProperties where Object: UILabel {
-    /// An `ProducerProxy` that refers to read-write property `UITextField.text`
+    /// An `ProducerProxy` that refers to read-write property `UILabel.text`
     var text: ProducerProxy<String, Void> { return updatable(forKeyPath: "text", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UILabel.font`
+    var font: ProducerProxy<UIFont, Void> { return updatable(forKeyPath: "font", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UILabel.textColor`
+    var textColor: ProducerProxy<UIColor?, Void> { return updatable(forKeyPath: "textColor") }
+
+    /// An `ProducerProxy` that refers to read-write property `UILabel.shadowColor`
+    var shadowColor: ProducerProxy<UIColor?, Void> { return updatable(forKeyPath: "shadowColor") }
+
+    /// An `ProducerProxy` that refers to read-write property `UILabel.shadowOffset`
+    var shadowOffset: ProducerProxy<CGSize, Void> {
+      return updatable(forKeyPath: "shadowOffset",
+                       onNone: .drop,
+                       customGetter: { $0.shadowOffset },
+                       customSetter: { $0.shadowOffset = $1 })
+    }
+
+    /// An `ProducerProxy` that refers to read-write property `UILabel.textAlignment`
+    var textAlignment: ProducerProxy<NSTextAlignment, Void> {
+      return updatable(forKeyPath: "textAlignment",
+                       onNone: .drop,
+                       customGetter: { $0.textAlignment },
+                       customSetter: { $0.textAlignment = $1 })
+    }
+
+    /// An `ProducerProxy` that refers to read-write property `UILabel.lineBreakMode`
+    var lineBreakMode: ProducerProxy<NSLineBreakMode, Void> {
+      return updatable(forKeyPath: "lineBreakMode",
+                       onNone: .drop,
+                       customGetter: { $0.lineBreakMode },
+                       customSetter: { $0.lineBreakMode = $1 })
+    }
+
+    /// An `ProducerProxy` that refers to read-write property `UITextField.attributedText`
+    var attributedText: ProducerProxy<NSAttributedString?, Void> { return updatable(forKeyPath: "attributedText") }
+
+    /// An `ProducerProxy` that refers to read-write property `UILabel.highlightedTextColor`
+    var highlightedTextColor: ProducerProxy<UIColor?, Void> { return updatable(forKeyPath: "highlightedTextColor") }
+
+    /// An `ProducerProxy` that refers to read-write property `UILabel.isHighlighted`
+    var isHighlighted: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "highlighted", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UILabel.isEnabled`
+    var isEnabled: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "enabled", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UILabel.numberOfLines`
+    var numberOfLines: ProducerProxy<Int, Void> { return updatable(forKeyPath: "numberOfLines", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UILabel.baselineAdjustment`
+    var baselineAdjustment: ProducerProxy<UIBaselineAdjustment, Void> {
+      return updatable(forKeyPath: "baselineAdjustment",
+                       onNone: .drop,
+                       customGetter: { $0.baselineAdjustment },
+                       customSetter: { $0.baselineAdjustment = $1 })
+    }
   }
 
   // MARK: - reactive properties for UITextField
