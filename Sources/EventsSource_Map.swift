@@ -333,6 +333,137 @@ public extension EventsSource {
   }
 }
 
+// MARK: - map completion
+
+public extension EventsSource {
+
+  /// Applies transformation to a completion of EventsSource.
+  ///
+  /// - Parameters:
+  ///   - context: `ExectionContext` to apply transformation in
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need to override
+  ///     an executor provided by the context
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  ///   - transform: to apply
+  ///   - strongContext: context restored from weak reference to specified context
+  ///   - value: `ChannelValue` to transform. May be either update or completion
+  /// - Returns: transformed channel
+  func mapCompletion<Transformed, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (C, Fallible<Success>) throws -> Transformed
+    ) -> Channel<Update, Transformed>
+  {
+    return self.makeProducer(context: context, executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      (context, event, producer, originalExecutor) in
+      switch event {
+      case let .update(update):
+        producer.update(update, from: originalExecutor)
+      case let .completion(completion):
+        let transformedCompletion = fallible { try transform(context, completion) }
+        producer.complete(transformedCompletion, from: originalExecutor)
+      }
+    }
+  }
+
+  /// Applies transformation to a success of EventsSource.
+  ///
+  /// - Parameters:
+  ///   - context: `ExectionContext` to apply transformation in
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need to override
+  ///     an executor provided by the context
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  ///   - transform: to apply
+  ///   - strongContext: context restored from weak reference to specified context
+  ///   - value: `ChannelValue` to transform. May be either update or completion
+  /// - Returns: transformed channel
+  func mapSuccess<Transformed, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (C, Success) throws -> Transformed
+    ) -> Channel<Update, Transformed> {
+    return self.mapCompletion(context: context, executor: executor) {
+      (context, value) -> Transformed in
+      let success = try value.liftSuccess()
+      return try transform(context, success)
+    }
+  }
+
+  /// Applies transformation to a completion of EventsSource.
+  ///
+  /// - Parameters:
+  ///   - executor: to execute transform on
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  ///   - transform: to apply
+  ///   - value: `ChannelValue` to transform. May be either update or completion
+  /// - Returns: transformed channel
+  func mapCompletion<Transformed>(
+    executor: Executor = .primary,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (Fallible<Success>) throws -> Transformed
+    ) -> Channel<Update, Transformed>
+  {
+    return self.makeProducer(executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      (event, producer, originalExecutor) in
+      switch event {
+      case let .update(update):
+        producer.update(update, from: originalExecutor)
+      case let .completion(completion):
+        let transformedCompletion = fallible { try transform(completion) }
+        producer.complete(transformedCompletion, from: originalExecutor)
+      }
+    }
+  }
+
+  /// Applies transformation to a success of EventsSource.
+  ///
+  /// - Parameters:
+  ///   - executor: to execute transform on
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  ///   - transform: to apply
+  ///   - value: `ChannelValue` to transform. May be either update or completion
+  /// - Returns: transformed channel
+  func mapSuccess<Transformed>(
+    executor: Executor = .primary,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    _ transform: @escaping (Success) throws -> Transformed
+    ) -> Channel<Update, Transformed> {
+    return self.mapCompletion(executor: executor, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      (value) -> Transformed in
+      let transformedValue = try value.liftSuccess()
+      return try transform(transformedValue)
+    }
+  }
+}
+
 // MARK: convenient transformations
 
 public extension EventsSource {

@@ -230,7 +230,7 @@
       observationSession: ObservationSession? = nil
       ) -> ReactiveProperties<Self> {
       return reactiveProperties(executor: executor,
-                                from: executor,
+                                from: originalExecutor,
                                 observationSession: observationSession)
     }
 

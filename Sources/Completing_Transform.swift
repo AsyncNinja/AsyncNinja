@@ -22,7 +22,7 @@
 
 import Dispatch
 
-public extension Completing {
+public extension Future {
   /// Transforms Completing<SuccessA> => Completing<SuccessB>
   ///
   /// This method is suitable for **pure**ish transformations (not changing shared state).
@@ -170,7 +170,7 @@ public extension Completing {
   }
 }
 
-public extension Completing {
+public extension Future {
   /// Transforms Completing<SuccessA> => Completing<SuccessB>
   ///
   /// This method is suitable for impure transformations (changing state of context).
@@ -316,7 +316,7 @@ public extension Completing {
 }
 
 // MARK: - Flattening
-public extension Completing where Success: Completing {
+public extension Future where Success: Completing {
   /// Flattens two nested futures
   ///
   /// - Returns: flattened future
