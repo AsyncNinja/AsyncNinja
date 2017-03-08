@@ -92,8 +92,8 @@
         }
 
         observationSession?.insert(item: observer)
-        self.notifyDeinit { [weak producer] in
-          producer?.cancelBecauseOfDeallocatedContext(from: nil)
+        self.notifyDeinit {
+          producer.cancelBecauseOfDeallocatedContext(from: nil)
           observer.isEnabled = false
         }
       }
@@ -170,8 +170,8 @@
         }
         
         observationSession?.insert(item: observer)
-        self.notifyDeinit { [weak producer] in
-          producer?.cancelBecauseOfDeallocatedContext(from: nil)
+        self.notifyDeinit {
+          producer.cancelBecauseOfDeallocatedContext(from: nil)
           observer.isEnabled = false
         }
       }
@@ -228,8 +228,8 @@
         }
         
         observationSession?.insert(item: observer)
-        self.notifyDeinit { [weak producer] in
-          producer?.cancelBecauseOfDeallocatedContext(from: nil)
+        self.notifyDeinit {
+          producer.cancelBecauseOfDeallocatedContext(from: nil)
           observer.isEnabled = false
         }
       }
@@ -291,8 +291,8 @@
         }
         
         observationSession?.insert(item: observer)
-        self.notifyDeinit { [weak producer] in
-          producer?.cancelBecauseOfDeallocatedContext(from: nil)
+        self.notifyDeinit {
+          producer.cancelBecauseOfDeallocatedContext(from: nil)
           observer.isEnabled = false
         }
       }
@@ -307,8 +307,8 @@
           setter(strongSelf, update)
         }
       }
-      self.notifyDeinit { [weak sink] in
-        sink?.cancelBecauseOfDeallocatedContext(from: nil)
+      self.notifyDeinit {
+        sink.cancelBecauseOfDeallocatedContext(from: nil)
       }
       return sink
     }
@@ -391,8 +391,8 @@
         }
 
         observationSession?.insert(item: observer)
-        self.notifyDeinit { [weak producer] in
-          producer?.cancelBecauseOfDeallocatedContext(from: nil)
+        self.notifyDeinit {
+          producer.cancelBecauseOfDeallocatedContext(from: nil)
           observer.isEnabled = false
         }
       }

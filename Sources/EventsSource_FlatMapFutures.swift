@@ -106,7 +106,7 @@ public extension EventsSource {
     }
     
     context.addDependent(completable: producer)
-    self.attach(producer: producer, executor: .immediate, cancellationToken: cancellationToken, storage.onEvent)
+    self.attach(producer, executor: .immediate, cancellationToken: cancellationToken, storage.onEvent)
     return producer
   }
   
@@ -142,7 +142,7 @@ public extension EventsSource {
     let producer = Producer<Fallible<T>, Success>(bufferSize: bufferSize)
     let storage: BaseChannelFlatteningBehaviorStorage<Update, Success, T>
       = behavior.makeStorage(executor: executor, transform)
-    self.attach(producer: producer, executor: .immediate, cancellationToken: cancellationToken, storage.onEvent)
+    self.attach(producer, executor: .immediate, cancellationToken: cancellationToken, storage.onEvent)
     return producer
   }
 }

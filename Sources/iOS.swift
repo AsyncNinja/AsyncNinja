@@ -101,6 +101,7 @@
     }
   }
 
+  // MARK: - reactive properties for UIView
   public extension ReactiveProperties where Object: UIView {
     /// An `ProducerProxy` that refers to read-write property `UIView.alpha`
     var alpha: ProducerProxy<CGFloat, Void> { return updatable(forKeyPath: "alpha", onNone: .drop) }
@@ -118,6 +119,7 @@
     var isUserInteractionEnabled: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "userInteractionEnabled", onNone: .drop) }
   }
   
+  // MARK: - reactive properties for UIControl
   public extension ReactiveProperties where Object: UIControl {
     /// An `ProducerProxy` that refers to read-write property `UIControl.isEnabled`
     var isEnabled: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "enabled", onNone: .drop) }
@@ -129,6 +131,13 @@
     var state: Channel<UIControlState, Void> { return updating(forKeyPath: "state", onNone: .drop) }
   }
 
+  // MARK: - reactive properties for UILabel
+  public extension ReactiveProperties where Object: UILabel {
+    /// An `ProducerProxy` that refers to read-write property `UITextField.text`
+    var text: ProducerProxy<String, Void> { return updatable(forKeyPath: "text", onNone: .drop) }
+  }
+
+  // MARK: - reactive properties for UITextField
   public extension ReactiveProperties where Object: UITextField {
     /// An `ProducerProxy` that refers to read-write property `UITextField.text`
     var text: ProducerProxy<String, Void> { return updatable(forKeyPath: "text", onNone: .drop) }
@@ -165,6 +174,7 @@
     var isEditing: Channel<Bool, Void> { return updating(forKeyPath: "isEditing", onNone: .drop) }
   }
 
+  // MARK: - reactive properties for UISearchBar
   public extension ReactiveProperties where Object: UISearchBar {
 
 #if os(iOS)
@@ -210,6 +220,7 @@
     }
   }
 
+  // MARK: - reactive properties for UIImageView
   public extension ReactiveProperties where Object: UIImageView {
     /// An `ProducerProxy` that refers to read-write property `UIImageView.image`
     var image: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "image") }
@@ -248,6 +259,7 @@
     }
   }
 
+  // MARK: - reactive properties for UIButton
   public extension ReactiveProperties where Object: UIButton {
 
     /// An `Sink` that refers to write-only `UIImageView.setTitle(_:, for:)`
@@ -278,6 +290,7 @@
 
   extension UIBarItem: ObjCUIInjectedExecutionContext {}
   
+  // MARK: - reactive properties for UIBarItem
   public extension ReactiveProperties where Object: UIBarItem {
     /// An `ProducerProxy` that refers to read-write property `UIBarItem.title`
     var isEnabled: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "enabled", onNone: .drop) }
@@ -314,6 +327,7 @@
     }
   }
 
+  // MARK: - reactive properties for UIBarButtonItem
   public extension ReactiveProperties where Object: UIBarButtonItem {
     /// An `ProducerProxy` that refers to read-write property `UIBarButtonItem.style`
     var style: ProducerProxy<UIBarButtonItemStyle, Void> {
@@ -378,6 +392,7 @@
   }
   
 #if os(iOS)
+  // MARK: - reactive properties for UIDatePicker
   public extension ReactiveProperties where Object: UIDatePicker {
     /// An `ProducerProxy` that refers to read-write property `UIDatePicker.datePickerMode`
     var datePickerMode: ProducerProxy<UIDatePickerMode, Void> {
@@ -421,14 +436,15 @@
   }
 #endif
 
+  // MARK: - reactive properties for UIViewController
   public extension ReactiveProperties where Object: UIViewController {
     /// An `UpdatableProperty` that refers to read-write property `UIViewController.title`
     var title: ProducerProxy<String?, Void> { return updatable(forKeyPath: "title") }
   }
   
-  extension UIDevice: ObjCUIInjectedExecutionContext {
-  }
+  extension UIDevice: ObjCUIInjectedExecutionContext {}
 
+  // MARK: - reactive properties for UIDevice
   public extension ReactiveProperties where Object: UIDevice {
 
     #if os(iOS)
@@ -444,7 +460,7 @@
       return notificationsChannel
         .map(executor: .immediate) { ($0.object as! UIDevice).orientation }
     }
-    
+
     #endif
   }
 #endif

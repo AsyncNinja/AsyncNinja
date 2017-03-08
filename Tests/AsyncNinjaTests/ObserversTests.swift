@@ -94,16 +94,17 @@ import Dispatch
       
       let myObject = MyObject()
       
-      let updatableProperty: ProducerProxy<Int?, Void> = myObject.updatable(forKeyPath: #keyPath(MyObject.myValue), executor: .main, from: .main)
+      var updatableProperty: ProducerProxy<Int?, Void>? = myObject.updatable(forKeyPath: #keyPath(MyObject.myValue), executor: .main, from: .main)
       var detectedChanges = [Int]()
-      updatableProperty.onUpdate(executor: .main) {
+      updatableProperty!.onUpdate(executor: .main) {
         if let value = $0 {
           detectedChanges.append(value)
         }
       }
       
       let producer = Producer<Int?, String>()
-      producer.bind(to: updatableProperty)
+      producer.bind(updatableProperty!)
+      updatableProperty = nil
       
       let range = 1..<5
       for index in range {

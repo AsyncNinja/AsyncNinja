@@ -59,27 +59,27 @@ extension EventsSource {
     ) -> BaseProducer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<P, S>(bufferSize: bufferSize)
-    self.attach(producer: producer, executor: executor,
+    self.attach(producer, executor: executor,
                 cancellationToken: cancellationToken, onEvent)
     return producer
   }
 
   /// **internal use only**
   func attach<T: EventsDestination>(
-    producer: T,
+    _ eventsDestination: T,
     executor: Executor,
     cancellationToken: CancellationToken?,
     _ onEvent: @escaping (_ event: Event, _ producer: T, _ originalExecutor: Executor) throws -> Void)
   {
     let handler = self.makeHandler(executor: executor) {
-      [weak producer] (event, originalExecutor) in
-      guard let producer = producer else { return }
-      do { try onEvent(event, producer, originalExecutor) }
-      catch { producer.fail(error, from: originalExecutor) }
+      [weak eventsDestination] (event, originalExecutor) in
+      guard let eventsDestination = eventsDestination else { return }
+      do { try onEvent(event, eventsDestination, originalExecutor) }
+      catch { eventsDestination.fail(error, from: originalExecutor) }
     }
 
-    producer._asyncNinja_retainHandlerUntilFinalization(handler)
-    cancellationToken?.add(cancellable: producer)
+    eventsDestination._asyncNinja_retainHandlerUntilFinalization(handler)
+    cancellationToken?.add(cancellable: eventsDestination)
   }
 
   /// **internal use only**
@@ -92,30 +92,32 @@ extension EventsSource {
     ) -> BaseProducer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = BaseProducer<P, S>(bufferSize: bufferSize)
-    self.attach(producer: producer, context: context, executor: executor,
+    self.attach(producer, context: context, executor: executor,
                 cancellationToken: cancellationToken, onEvent)
     return producer
   }
 
   /// **internal use only**
   func attach<T: EventsDestination, C: ExecutionContext>(
-    producer: T,
+    _ eventsDestination: T,
     context: C,
     executor: Executor?,
     cancellationToken: CancellationToken?,
     _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: T, _ originalExecutor: Executor) throws -> Void)
   {
     let executor_ = executor ?? context.executor
-    self.attach(producer: producer, executor: executor_, cancellationToken: cancellationToken)
+    self.attach(eventsDestination, executor: executor_, cancellationToken: cancellationToken)
     {
       [weak context] (event, producer, originalExecutor) in
       guard let context = context else { return }
       try onEvent(context, event, producer, originalExecutor)
     }
 
-    context.addDependent(completable: producer)
+    context.addDependent(completable: eventsDestination)
   }
+}
 
+public extension EventsSource {
   /// Subscribes for buffered and new values (both update and completion) for the channel
   ///
   /// - Parameters:
@@ -216,9 +218,10 @@ extension EventsSource {
   ///     Keep default value of the argument unless you need
   ///     an extended cancellation options of returned channel
   func bindEvents<T: EventsDestination>(
-    to producer: T,
-    cancellationToken: CancellationToken? = nil) where T.Update == Update, T.Success == Success {
-    self.attach(producer: producer,
+    _ eventsDestination: T,
+    cancellationToken: CancellationToken? = nil
+    ) where T.Update == Update, T.Success == Success {
+    self.attach(eventsDestination,
                 executor: .immediate,
                 cancellationToken: cancellationToken)
     {
@@ -242,9 +245,10 @@ extension EventsSource {
   ///     Keep default value of the argument unless you need
   ///     an extended cancellation options of returned channel
   func bind<T: EventsDestination>(
-    to updatableProperty: T,
-    cancellationToken: CancellationToken? = nil) where T.Update == Update, T.Success == Void {
-    self.attach(producer: updatableProperty,
+    _ eventsDestination: T,
+    cancellationToken: CancellationToken? = nil
+    ) where T.Update == Update, T.Success == Void {
+    self.attach(eventsDestination,
                 executor: .immediate,
                 cancellationToken: cancellationToken)
     {
