@@ -508,11 +508,15 @@
     /// An `Channel` that refers to read-only property `UIControl.state`
     var orientation: Channel<UIDeviceOrientation, Void> {
       let notificationsChannel: Channel<Notification, Void> = NotificationCenter.default
-        .updatable(object: UIDevice.current, name: .UIDeviceOrientationDidChange)
-      notificationsChannel._asyncNinja_notifyFinalization {
-        UIDevice.current.endGeneratingDeviceOrientationNotifications()
+        .updatable(object: UIDevice.current,
+                   name: .UIDeviceOrientationDidChange,
+                   observationSession: observationSession) { (notificationCenter, object, isEnabled) in
+                    if isEnabled {
+                      object.beginGeneratingDeviceOrientationNotifications()
+                    } else {
+                      object.endGeneratingDeviceOrientationNotifications()
+                    }
       }
-      UIDevice.current.beginGeneratingDeviceOrientationNotifications()
       return notificationsChannel
         .map(executor: .immediate) { ($0.object as! UIDevice).orientation }
     }

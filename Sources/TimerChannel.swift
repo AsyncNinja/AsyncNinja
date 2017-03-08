@@ -29,7 +29,7 @@ private func makeTimer(dispatchTimer: DispatchSourceTimer,
                        from originalExecutor: Executor) -> TimerChannel {
   let producer = Producer<Void, Void>()
   dispatchTimer.setEventHandler { [weak producer] in
-    if executor.isDispatchQueueExecutor {
+    if case .some = executor.representedDispatchQueue {
       producer?.update((), from: originalExecutor)
     } else {
       executor.execute(from: originalExecutor) { (originalExecutor) in
@@ -60,8 +60,8 @@ public func makeTimer(
 }
 
 private func makeTimer(executor: Executor, setup: (DispatchSourceTimer) -> Void) -> TimerChannel {
-  let queueExecutor = executor.isDispatchQueueExecutor ? executor: .primary
-  let timer = DispatchSource.makeTimerSource(queue: queueExecutor.dispatchQueue!)
+  let queueExecutor = executor.dispatchQueueBasedExecutor
+  let timer = DispatchSource.makeTimerSource(queue: queueExecutor.representedDispatchQueue!)
   setup(timer)
   return makeTimer(dispatchTimer: timer, executor: executor, from: queueExecutor)
 }

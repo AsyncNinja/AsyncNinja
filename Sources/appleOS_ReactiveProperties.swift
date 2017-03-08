@@ -226,7 +226,7 @@
     /// - Parameter observationSession: is an object that helps to control observation
     /// - Returns: `ReactiveProperties` that capture specified values
     func reactiveProperties(
-      from originalExecutor: Executor? = nil,
+      from originalExecutor: Executor? = .immediate,
       observationSession: ObservationSession? = nil
       ) -> ReactiveProperties<Self> {
       return reactiveProperties(executor: executor,

@@ -25,45 +25,54 @@
   import Foundation
   
   /// **Internal use only** `NotificationsObserver` is an object for managing KVO.
-  final class NotificationsObserver: ObservationSessionItem {
+  final class NotificationsObserver<T: NSObject>: ObservationSessionItem {
     typealias ObservationBlock = (Notification) -> Void
     
     let notificationCenter: NotificationCenter
-    weak var object: NSObject?
+    weak var object: T?
+    let objectRef: Unmanaged<T>?
     let name: NSNotification.Name
     let observationBlock: ObservationBlock
     var observationToken: NSObjectProtocol? = nil
+    let enablingCallback: (_ notificationCenter: NotificationCenter, _ object: T?, _ isEnabled: Bool) -> Void
     var isEnabled: Bool {
       didSet {
         if isEnabled == oldValue {
           return
-        } else if isEnabled {
+        } else if !isEnabled {
+          notificationCenter.removeObserver(observationToken!)
+          enablingCallback(notificationCenter, objectRef?.takeUnretainedValue(), false)
+        } else if let object = object {
           observationToken = notificationCenter.addObserver(forName: name,
                                                             object: object,
                                                             queue: nil,
                                                             using: observationBlock)
-        } else {
-          notificationCenter.removeObserver(observationToken!)
+          enablingCallback(notificationCenter, object, true)
         }
       }
     }
     
     init(notificationCenter: NotificationCenter,
-         object: NSObject?,
+         object: T?,
          name: NSNotification.Name,
          isEnabled: Bool,
-         observationBlock: @escaping ObservationBlock) {
+         enablingCallback: @escaping (_ notificationCenter: NotificationCenter, _ object: T?, _ isEnabled: Bool) -> Void,
+         observationBlock: @escaping ObservationBlock)
+    {
       self.notificationCenter = notificationCenter
       self.object = object
+      self.objectRef = object.map(Unmanaged.passUnretained)
       self.name = name
       self.observationBlock = observationBlock
       self.isEnabled = isEnabled
+      self.enablingCallback = enablingCallback
       
       if isEnabled {
         observationToken = notificationCenter.addObserver(forName: name,
                                                           object: object,
                                                           queue: nil,
                                                           using: observationBlock)
+        enablingCallback(notificationCenter, object, isEnabled)
       }
     }
     
@@ -73,14 +82,49 @@
   }
   
   extension NotificationCenter: ObjCInjectedRetainer {
-    public func updatable(
-      object: NSObject?,
+    public func updatable<T: NSObject>(
+      object: T,
       name: NSNotification.Name,
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
-      channelBufferSize: Int = 1
-      ) -> ProducerProxy<Notification, Void> {
-      
+      channelBufferSize: Int = 1,
+      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ object: T, _ isEnabled: Bool) -> Void) = { _ in}
+      ) -> ProducerProxy<Notification, Void>
+    {
+      return _updatable(object: object,
+                        name: name,
+                        from: originalExecutor,
+                        observationSession: observationSession,
+                        channelBufferSize: channelBufferSize,
+                        enablingCallback: { enablingCallback($0, $1!, $2) })
+    }
+
+    public func updatable(
+      name: NSNotification.Name,
+      from originalExecutor: Executor? = nil,
+      observationSession: ObservationSession? = nil,
+      channelBufferSize: Int = 1,
+      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ isEnabled: Bool) -> Void) = { _ in}
+      ) -> ProducerProxy<Notification, Void>
+    {
+      return _updatable(object: nil,
+                        name: name,
+                        from: originalExecutor,
+                        observationSession: observationSession,
+                        channelBufferSize: channelBufferSize,
+                        enablingCallback: { enablingCallback($0, $2) })
+    }
+
+    func _updatable<T: NSObject>(
+      object: T?,
+      name: NSNotification.Name,
+      from originalExecutor: Executor? = nil,
+      observationSession: ObservationSession? = nil,
+      channelBufferSize: Int = 1,
+      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ object: T?, _ isEnabled: Bool) -> Void) = { _ in}
+      ) -> ProducerProxy<Notification, Void>
+    {
+
       let producer = ProducerProxy<Notification, Void>(bufferSize: channelBufferSize, updateExecutor: .immediate) {
         [weak self] (producerProxy, event, originalExecutor) in
         switch event {
@@ -90,23 +134,24 @@
           nop()
         }
       }
-      
+
       let observer = NotificationsObserver(notificationCenter: self,
                                            object: object,
                                            name: name,
-                                           isEnabled: observationSession?.isEnabled ?? true)
+                                           isEnabled: observationSession?.isEnabled ?? true,
+                                           enablingCallback: enablingCallback)
       {
         [weak producer] (notification) in
         producer?.updateWithoutHandling(notification, from: nil)
       }
-      
-      
+
+
       observationSession?.insert(item: observer)
       self.notifyDeinit { [weak producer] in
         producer?.cancelBecauseOfDeallocatedContext(from: nil)
         observer.isEnabled = false
       }
-      
+
       return producer
     }
   }

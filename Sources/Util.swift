@@ -230,8 +230,8 @@ public extension DispatchGroup {
   /// - Returns: `Future` that completes with balancing enters and leaves of the `DispatchGroup`
   func completionFuture(executor: Executor) -> Future<Void> {
     let promise = Promise<Void>()
-    let executor_ = executor.isDispatchQueueExecutor ? executor: .primary
-    self.notify(queue: executor_.dispatchQueue!) { [weak promise] in
+    let executor_ = executor.dispatchQueueBasedExecutor
+    self.notify(queue: executor_.representedDispatchQueue!) { [weak promise] in
       promise?.succeed((), from: executor_)
     }
     return promise
