@@ -127,6 +127,15 @@ public protocol Updatable: UpdatesController {
               from originalExecutor: Executor?)
 }
 
+public extension Updatable {
+  /// Sends specified Update to the Updatable
+  ///
+  /// - Parameter update: value to update with
+  func update(_ update: Update) {
+    self.update(update, from: nil)
+  }
+}
+
 // MARK: - Events
 public protocol EventsController: UpdatesController, CompletionController {
 }
