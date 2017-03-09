@@ -316,15 +316,15 @@ public extension Completing {
 }
 
 // MARK: - Flattening
-public extension Future where Success: Completing {
+public extension Future where S: Completing {
   /// Flattens two nested futures
   ///
   /// - Returns: flattened future
-  func flatten() -> Future<Success.Success> {
+  func flatten() -> Future<S.Success> {
     // Test: FutureTests.testFlatten
     // Test: FutureTests.testFlatten_OuterFailure
     // Test: FutureTests.testFlatten_InnerFailure
-    let promise = Promise<Success.Success>()
+    let promise = Promise<S.Success>()
     let handler = self.makeCompletionHandler(executor: .immediate) {
       [weak promise] (failure, originalExecutor) in
       guard let promise = promise else { return }
