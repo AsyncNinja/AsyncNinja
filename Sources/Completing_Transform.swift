@@ -22,7 +22,7 @@
 
 import Dispatch
 
-public extension Future {
+public extension Completing {
   /// Transforms Completing<SuccessA> => Completing<SuccessB>
   ///
   /// This method is suitable for **pure**ish transformations (not changing shared state).
@@ -170,7 +170,7 @@ public extension Future {
   }
 }
 
-public extension Future {
+public extension Completing {
   /// Transforms Completing<SuccessA> => Completing<SuccessB>
   ///
   /// This method is suitable for impure transformations (changing state of context).
