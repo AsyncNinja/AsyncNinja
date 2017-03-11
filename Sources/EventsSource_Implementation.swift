@@ -118,6 +118,27 @@ extension EventsSource {
 }
 
 public extension EventsSource {
+  /// **internal use only**
+  func _onEvent(
+    executor: Executor = .primary,
+    _ block: @escaping (_ event: Event, _ originalExecutor: Executor) -> Void) {
+    let handler = self.makeHandler(executor: executor, block)
+    self._asyncNinja_retainHandlerUntilFinalization(handler)
+  }
+
+  /// **internal use only**
+  func _onEvent<C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    _ block: @escaping (_ strongContext: C, _ event: Event, _ originalExecutor: Executor) -> Void) {
+    _onEvent(executor: executor ?? context.executor) {
+      [weak context] (event, originalExecutor) in
+      if let context = context {
+        block(context, event, originalExecutor)
+      }
+    }
+  }
+
   /// Subscribes for buffered and new values (both update and completion) for the channel
   ///
   /// - Parameters:
@@ -127,11 +148,9 @@ public extension EventsSource {
   func onEvent(
     executor: Executor = .primary,
     _ block: @escaping (_ event: Event) -> Void) {
-    let handler = self.makeHandler(executor: executor) {
-      (event, originalExecutor) in
+    _onEvent { (event, originalExecutor) in
       block(event)
     }
-    self._asyncNinja_retainHandlerUntilFinalization(handler)
   }
 
   /// Subscribes for buffered and new values (both update and completion) for the channel
@@ -148,16 +167,9 @@ public extension EventsSource {
     context: C,
     executor: Executor? = nil,
     _ block: @escaping (_ strongContext: C, _ event: Event) -> Void) {
-
-    let handler = self.makeHandler(executor: executor ?? context.executor)
-    {
-      [weak context] (event, originalExecutor) in
-      guard let context = context else { return }
+    _onEvent(context: context, executor: executor) {
+      (context, event, originalExecutor) in
       block(context, event)
-    }
-
-    if let handler = handler {
-      context.releaseOnDeinit(handler)
     }
   }
 
@@ -170,15 +182,24 @@ public extension EventsSource {
   ///   - completion: received by the channel
   func extractAll(
     executor: Executor = .primary,
-    _ block: @escaping (_ updates: [Update], _ completion: Fallible<Success>) -> Void) {
+    _ block: @escaping (_ updates: [Update], _ completion: Fallible<Success>) -> Void)
+  {
     var updates = [Update]()
-    let executor_ = executor.makeDerivedSerialExecutor()
-    self.onEvent(executor: executor_) { (event) in
+    var locking = makeLocking(isFair: true)
+
+    self._onEvent(executor: .immediate) { (event, originalExecutor) in
       switch event {
       case let .update(update):
+        locking.lock()
         updates.append(update)
+        locking.unlock()
       case let .completion(completion):
-        block(updates, completion)
+        locking.lock()
+        let finalUpdatres = updates
+        locking.unlock()
+        executor.execute(from: originalExecutor) { (originalExecutor) in
+          block(finalUpdatres, completion)
+        }
       }
     }
   }
@@ -197,14 +218,11 @@ public extension EventsSource {
   func extractAll<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    _ block: @escaping (_ strongContext: C, _ updates: [Update], _ completion: Fallible<Success>) -> Void) {
-    var updates = [Update]()
-    let executor_ = (executor ?? context.executor).makeDerivedSerialExecutor()
-    self.onEvent(context: context, executor: executor_) { (context, value) in
-      switch value {
-      case let .update(update):
-        updates.append(update)
-      case let .completion(completion):
+    _ block: @escaping (_ strongContext: C, _ updates: [Update], _ completion: Fallible<Success>) -> Void)
+  {
+    extractAll(executor: executor ?? context.executor) {
+      [weak context] (updates, completion) in
+      if let context = context {
         block(context, updates, completion)
       }
     }
