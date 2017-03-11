@@ -131,11 +131,15 @@ public extension EventsSource {
     context: C,
     executor: Executor? = nil,
     _ block: @escaping (_ strongContext: C, _ event: Event, _ originalExecutor: Executor) -> Void) {
-    _onEvent(executor: executor ?? context.executor) {
-      [weak context] (event, originalExecutor) in
+
+    let handler = self.makeHandler(executor: executor ?? context.executor)
+    { [weak context] (event, originalExecutor) in
       if let context = context {
         block(context, event, originalExecutor)
       }
+    }
+    if let handler = handler {
+      context.releaseOnDeinit(handler)
     }
   }
 

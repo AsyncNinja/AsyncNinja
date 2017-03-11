@@ -109,7 +109,9 @@ public extension Updating {
       guard let context = context else { return }
       block(context, update)
     }
-    self._asyncNinja_retainHandlerUntilFinalization(handler)
+    if let handler = handler {
+      context.releaseOnDeinit(handler)
+    }
   }
 }
 
