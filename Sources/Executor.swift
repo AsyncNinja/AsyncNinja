@@ -27,33 +27,30 @@ public struct Executor {
   /// Handler that encapsulates asynchrounous way of execution escaped block
   public typealias Handler = (@escaping (Void) -> Void) -> Void
   private let _impl: ExecutorImpl
-  private let _strictAsync: Bool
   var dispatchQueueBasedExecutor: Executor {
-    switch _impl.asyncNinja_representedDispatchQueue() {
+    switch _impl.asyncNinja_representedDispatchQueue {
     case .none: return .primary
     case .some: return self
     }
   }
   var representedDispatchQueue: DispatchQueue? {
-    return _impl.asyncNinja_representedDispatchQueue()
+    return _impl.asyncNinja_representedDispatchQueue
   }
 
   /// Initializes executor with specified implementation
   ///
   /// - Parameter impl: implementation of executor
-  fileprivate init(impl: ExecutorImpl, strictAsync: Bool = false) {
+  fileprivate init(impl: ExecutorImpl) {
     _impl = impl
-    _strictAsync = strictAsync
   }
 
   /// Initialiaes executor with custom handler
   ///
   /// - Parameters:
   ///   - handler: encapsulates asynchrounous way of execution escaped block
-  public init(strictAsync: Bool = false, handler: @escaping Handler) {
+  public init(relaxAsyncWhenLaunchingFrom: ObjectIdentifier? = nil, handler: @escaping Handler) {
     // Test: ExecutorTests.testCustomHandler
-    _impl = HandlerBasedExecutorImpl(handler: handler)
-    _strictAsync = strictAsync
+    _impl = HandlerBasedExecutorImpl(relaxAsyncWhenLaunchingFrom: relaxAsyncWhenLaunchingFrom, handler: handler)
   }
 
   /// Schedules specified block for execution
@@ -65,19 +62,8 @@ public struct Executor {
   ///   you calling this method on.
   /// - Parameter block: to execute
   func execute(from original: Executor?, _ block: @escaping (_ original: Executor) -> Void) {
-    guard let original = original else {
-      _impl.asyncNinja_execute { block(self) }
-      return;
-    }
-
-    if _strictAsync {
-      _impl.asyncNinja_execute { block(self) }
-    } else if _impl is ImmediateExecutorImpl {
-      block(original)
-    } else if _impl === original._impl {
-      block(self)
-    } else if _impl is PrimaryExecutorImpl,
-      original._impl.asyncNinja_canImmediatelyExecuteFromPrimaryExecutor() {
+    if let original = original,
+      _impl.asyncNinja_canImmediatelyExecute(from: original._impl) {
       block(original)
     } else {
       _impl.asyncNinja_execute { block(self) }
@@ -100,10 +86,10 @@ public extension Executor {
   // Test: ExecutorTests.testPrimary
   /// primary executor is primary because it will be used
   /// as default value when executor argument is ommited
-  static let primary = Executor(impl: PrimaryExecutorImpl(), strictAsync: false)
+  static let primary = Executor(impl: PrimaryExecutorImpl())
 
   /// shortcut to the main queue executor
-  static let main = Executor(impl: MainExecutorImpl(), strictAsync: false)
+  static let main = Executor(impl: MainExecutorImpl())
 
   // Test: ExecutorTests.testUserInteractive
   /// shortcut to the global concurrent user interactive queue executor
@@ -127,15 +113,15 @@ public extension Executor {
 
   // Test: ExecutorTests.testImmediate
   /// executes block immediately. Not suitable for long running calculations
-  static let immediate = Executor(impl: ImmediateExecutorImpl(), strictAsync: false)
+  static let immediate = Executor(impl: ImmediateExecutorImpl())
 
   /// initializes executor based on specified queue
   ///
   /// - Parameter queue: to execute submitted blocks on
   /// - Returns: executor
-  static func queue(_ queue: DispatchQueue, strictAsync: Bool = false) -> Executor {
+  static func queue(_ queue: DispatchQueue) -> Executor {
     // Test: ExecutorTests.testCustomQueue
-    return Executor(impl: queue, strictAsync: strictAsync)
+    return Executor(impl: queue)
   }
 
   // Test: ExecutorTests.testCustomQoS
@@ -143,8 +129,8 @@ public extension Executor {
   ///
   /// - Parameter qos: quality of service for submitted blocks
   /// - Returns: executor
-  static func queue(_ qos: DispatchQoS.QoSClass, strictAsync: Bool = true) -> Executor {
-    return Executor.queue(.global(qos: qos), strictAsync: strictAsync)
+  static func queue(_ qos: DispatchQoS.QoSClass) -> Executor {
+    return Executor.queue(.global(qos: qos))
   }
 }
 
@@ -152,14 +138,19 @@ public extension Executor {
 
 /// **internal use only**
 fileprivate protocol ExecutorImpl: class {
+  var asyncNinja_representedDispatchQueue: DispatchQueue? { get }
+  var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { get }
+
   func asyncNinja_execute(_ block: @escaping (Void) -> Void)
   func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void)
-  func asyncNinja_representedDispatchQueue() -> DispatchQueue?
-  func asyncNinja_canImmediatelyExecuteFromPrimaryExecutor() -> Bool
+  func asyncNinja_canImmediatelyExecute(from impl: ExecutorImpl) -> Bool
 }
 
 private class PrimaryExecutorImpl: ExecutorImpl {
   let queue = DispatchQueue.global()
+
+  var asyncNinja_representedDispatchQueue: DispatchQueue? { return queue }
+  var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { return true }
 
   func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
     queue.async(execute: block)
@@ -170,18 +161,17 @@ private class PrimaryExecutorImpl: ExecutorImpl {
     queue.asyncAfter(wallDeadline: wallDeadline, execute: block)
   }
 
-  func asyncNinja_representedDispatchQueue() -> DispatchQueue? {
-    return queue
-  }
-
-  func asyncNinja_canImmediatelyExecuteFromPrimaryExecutor() -> Bool {
-    return true
+  func asyncNinja_canImmediatelyExecute(from impl: ExecutorImpl) -> Bool {
+    return impl.asyncNinja_canImmediatelyExecuteOnPrimaryExecutor
   }
 }
 
 private class MainExecutorImpl: ExecutorImpl {
   let queue = DispatchQueue.main
 
+  var asyncNinja_representedDispatchQueue: DispatchQueue? { return queue }
+  var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { return true }
+
   func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
     queue.async(execute: block)
   }
@@ -191,16 +181,15 @@ private class MainExecutorImpl: ExecutorImpl {
     queue.asyncAfter(wallDeadline: wallDeadline, execute: block)
   }
 
-  func asyncNinja_representedDispatchQueue() -> DispatchQueue? {
-    return queue
-  }
-
-  func asyncNinja_canImmediatelyExecuteFromPrimaryExecutor() -> Bool {
-    return true
+  func asyncNinja_canImmediatelyExecute(from impl: ExecutorImpl) -> Bool {
+    return impl === self
   }
 }
 
 extension DispatchQueue: ExecutorImpl {
+  var asyncNinja_representedDispatchQueue: DispatchQueue? { return self }
+  var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { return false }
+
   fileprivate func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
     self.async(execute: block)
   }
@@ -210,16 +199,15 @@ extension DispatchQueue: ExecutorImpl {
     self.asyncAfter(wallDeadline: wallDeadline, execute: block)
   }
 
-  func asyncNinja_representedDispatchQueue() -> DispatchQueue? {
-    return self
-  }
-
-  func asyncNinja_canImmediatelyExecuteFromPrimaryExecutor() -> Bool {
-    return false
+  fileprivate func asyncNinja_canImmediatelyExecute(from impl: ExecutorImpl) -> Bool {
+    return impl === self
   }
 }
 
 fileprivate class ImmediateExecutorImpl: ExecutorImpl {
+  var asyncNinja_representedDispatchQueue: DispatchQueue? { return nil }
+  var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { return true }
+
   func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
     block()
   }
@@ -231,11 +219,7 @@ fileprivate class ImmediateExecutorImpl: ExecutorImpl {
     }
   }
 
-  func asyncNinja_representedDispatchQueue() -> DispatchQueue? {
-    return nil
-  }
-
-  func asyncNinja_canImmediatelyExecuteFromPrimaryExecutor() -> Bool {
+  func asyncNinja_canImmediatelyExecute(from impl: ExecutorImpl) -> Bool {
     return true
   }
 }
@@ -243,8 +227,13 @@ fileprivate class ImmediateExecutorImpl: ExecutorImpl {
 fileprivate class HandlerBasedExecutorImpl: ExecutorImpl {
   public typealias Handler = (@escaping (Void) -> Void) -> Void
   private let _handler: Handler
+  private let _relaxAsyncWhenLaunchingFrom: ObjectIdentifier?
 
-  init(handler: @escaping Handler) {
+  var asyncNinja_representedDispatchQueue: DispatchQueue? { return nil }
+  var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { return false }
+
+  init(relaxAsyncWhenLaunchingFrom: ObjectIdentifier?, handler: @escaping Handler) {
+    _relaxAsyncWhenLaunchingFrom = relaxAsyncWhenLaunchingFrom
     _handler = handler
   }
 
@@ -259,11 +248,11 @@ fileprivate class HandlerBasedExecutorImpl: ExecutorImpl {
     }
   }
 
-  func asyncNinja_representedDispatchQueue() -> DispatchQueue? {
-    return nil
-  }
-
-  func asyncNinja_canImmediatelyExecuteFromPrimaryExecutor() -> Bool {
-    return false
+  func asyncNinja_canImmediatelyExecute(from impl: ExecutorImpl) -> Bool {
+    if let other = impl as? HandlerBasedExecutorImpl {
+      return _relaxAsyncWhenLaunchingFrom == other._relaxAsyncWhenLaunchingFrom
+    } else {
+      return false
+    }
   }
 }

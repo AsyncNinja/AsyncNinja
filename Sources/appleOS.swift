@@ -32,13 +32,14 @@
     ///
     /// - Parameters:
     ///   - queue: an `OperationQueue` to make executor from
-    ///   - strictAsync: `true` if the `Executor` must execute blocks strictly asynchronously.
+    ///   - isStrictAsync: `true` if the `Executor` must execute blocks strictly asynchronously.
     ///     `false` will relax requirements to increase performance
     /// - Returns: constructed `Executor`
     static func operationQueue(
       _ queue: OperationQueue,
-      strictAsync: Bool = false) -> Executor {
-      return Executor(strictAsync: strictAsync, handler: queue.addOperation)
+      isStrictAsync: Bool = false) -> Executor {
+      return Executor(relaxAsyncWhenLaunchingFrom: isStrictAsync ? nil : ObjectIdentifier(queue),
+                      handler: queue.addOperation)
     }
   }
 
@@ -98,7 +99,7 @@
 
     /// returns an executor that executes block on private queue of NSManagedObjectContext
     public var executor: Executor {
-      return Executor(strictAsync: true, handler: self.perform)
+      return Executor(handler: self.perform)
     }
   }
 
@@ -107,7 +108,7 @@
 
     /// returns an executor that executes block on private queue of NSPersistentStoreCoordinator
     public var executor: Executor {
-      return Executor(strictAsync: true, handler: self.perform)
+      return Executor(handler: self.perform)
     }
   }
 
