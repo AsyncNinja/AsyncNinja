@@ -126,14 +126,14 @@ protocol Actor: ExecutionContext {
 
 class TestActor: Actor, ReleasePoolOwner {
   let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
-  var executor: Executor { return .queue(self.internalQueue, isSerial: true) }
+  var executor: Executor { return .queue(self.internalQueue) }
   let releasePool = ReleasePool()
 }
 
 @available(macOS 10.10, iOS 8.0, tvOS 9.0, watchOS 2.0, *)
 class TestObjCActor: NSObject, Actor, ObjCInjectedRetainer {
     let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
-    var executor: Executor { return .queue(self.internalQueue, isSerial: true) }
+    var executor: Executor { return .queue(self.internalQueue) }
 }
 
 func eval<Result>(_ body: () throws -> Result) rethrows -> Result {

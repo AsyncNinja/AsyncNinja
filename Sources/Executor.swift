@@ -27,7 +27,6 @@ public struct Executor {
   /// Handler that encapsulates asynchrounous way of execution escaped block
   public typealias Handler = (@escaping (Void) -> Void) -> Void
   private let _impl: ExecutorImpl
-  private let _isSerial: Bool
   private let _strictAsync: Bool
   var dispatchQueueBasedExecutor: Executor {
     switch _impl.asyncNinja_representedDispatchQueue() {
@@ -42,22 +41,18 @@ public struct Executor {
   /// Initializes executor with specified implementation
   ///
   /// - Parameter impl: implementation of executor
-  fileprivate init(impl: ExecutorImpl, isSerial: Bool = false, strictAsync: Bool = false) {
+  fileprivate init(impl: ExecutorImpl, strictAsync: Bool = false) {
     _impl = impl
-    _isSerial = isSerial
     _strictAsync = strictAsync
   }
 
   /// Initialiaes executor with custom handler
   ///
   /// - Parameters:
-  ///   - isSerial: specifies if blocks submitted to the handler will
-  ///     be executed serialy. Keep default value otherwise.
   ///   - handler: encapsulates asynchrounous way of execution escaped block
-  public init(isSerial: Bool = false, strictAsync: Bool = false, handler: @escaping Handler) {
+  public init(strictAsync: Bool = false, handler: @escaping Handler) {
     // Test: ExecutorTests.testCustomHandler
     _impl = HandlerBasedExecutorImpl(handler: handler)
-    _isSerial = isSerial
     _strictAsync = strictAsync
   }
 
@@ -105,10 +100,10 @@ public extension Executor {
   // Test: ExecutorTests.testPrimary
   /// primary executor is primary because it will be used
   /// as default value when executor argument is ommited
-  static let primary = Executor(impl: PrimaryExecutorImpl(), isSerial: false, strictAsync: false)
+  static let primary = Executor(impl: PrimaryExecutorImpl(), strictAsync: false)
 
   /// shortcut to the main queue executor
-  static let main = Executor(impl: MainExecutorImpl(), isSerial: true, strictAsync: false)
+  static let main = Executor(impl: MainExecutorImpl(), strictAsync: false)
 
   // Test: ExecutorTests.testUserInteractive
   /// shortcut to the global concurrent user interactive queue executor
@@ -132,15 +127,15 @@ public extension Executor {
 
   // Test: ExecutorTests.testImmediate
   /// executes block immediately. Not suitable for long running calculations
-  static let immediate = Executor(impl: ImmediateExecutorImpl(), isSerial: true, strictAsync: false)
+  static let immediate = Executor(impl: ImmediateExecutorImpl(), strictAsync: false)
 
   /// initializes executor based on specified queue
   ///
   /// - Parameter queue: to execute submitted blocks on
   /// - Returns: executor
-  static func queue(_ queue: DispatchQueue, isSerial: Bool = false, strictAsync: Bool = false) -> Executor {
+  static func queue(_ queue: DispatchQueue, strictAsync: Bool = false) -> Executor {
     // Test: ExecutorTests.testCustomQueue
-    return Executor(impl: queue, isSerial: isSerial, strictAsync: strictAsync)
+    return Executor(impl: queue, strictAsync: strictAsync)
   }
 
   // Test: ExecutorTests.testCustomQoS
@@ -149,7 +144,7 @@ public extension Executor {
   /// - Parameter qos: quality of service for submitted blocks
   /// - Returns: executor
   static func queue(_ qos: DispatchQoS.QoSClass, strictAsync: Bool = true) -> Executor {
-    return Executor.queue(.global(qos: qos), isSerial: false, strictAsync: strictAsync)
+    return Executor.queue(.global(qos: qos), strictAsync: strictAsync)
   }
 }
 

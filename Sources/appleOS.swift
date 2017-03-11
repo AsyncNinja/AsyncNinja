@@ -32,17 +32,13 @@
     ///
     /// - Parameters:
     ///   - queue: an `OperationQueue` to make executor from
-    ///   - isSerial: true if `maxOperationsCount` is going to be 1 all the time
-    ///     Using serial queue might give a tiny performance benefit in reare cases
-    ///     Keep default value if you are not sure about the queue
     ///   - strictAsync: `true` if the `Executor` must execute blocks strictly asynchronously.
     ///     `false` will relax requirements to increase performance
     /// - Returns: constructed `Executor`
     static func operationQueue(
       _ queue: OperationQueue,
-      isSerial: Bool = false,
       strictAsync: Bool = false) -> Executor {
-      return Executor(isSerial: isSerial, strictAsync: strictAsync, handler: queue.addOperation)
+      return Executor(strictAsync: strictAsync, handler: queue.addOperation)
     }
   }
 
@@ -102,7 +98,7 @@
 
     /// returns an executor that executes block on private queue of NSManagedObjectContext
     public var executor: Executor {
-      return Executor(isSerial: true, strictAsync: true, handler: self.perform)
+      return Executor(strictAsync: true, handler: self.perform)
     }
   }
 
@@ -111,7 +107,7 @@
 
     /// returns an executor that executes block on private queue of NSPersistentStoreCoordinator
     public var executor: Executor {
-      return Executor(isSerial: true, strictAsync: true, handler: self.perform)
+      return Executor(strictAsync: true, handler: self.perform)
     }
   }
 
