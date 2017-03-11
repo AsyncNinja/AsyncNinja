@@ -33,8 +33,7 @@ public extension EventsSource {
     ) -> Promise<Update?> {
 
     let promise = Promise<Update?>()
-    let executor_ = executor.makeDerivedSerialExecutor()
-    let handler = self.makeHandler(executor: executor_) {
+    let handler = self.makeHandler(executor: executor) {
       [weak promise] (event, originalExecutor) in
       switch event {
       case let .update(update):
@@ -129,25 +128,28 @@ public extension EventsSource {
     ) -> Promise<Update?> {
 
     var latestMatchingUpdate: Update?
+    var locking = makeLocking(isFair: true)
 
     let promise = Promise<Update?>()
-    let executor_ = executor.makeDerivedSerialExecutor()
-    let handler = self.makeHandler(executor: executor_) {
+    let handler = self.makeHandler(executor: executor) {
       [weak promise] (event, originalExecutor) in
       switch event {
       case let .update(update):
         do {
           if try predicate(update) {
+            locking.lock()
             latestMatchingUpdate = update
+            locking.unlock()
           }
         } catch {
           promise?.fail(error, from: originalExecutor)
         }
       case .completion(.success):
-        promise?.succeed(latestMatchingUpdate, from: originalExecutor)
+        let success = locking.locker { latestMatchingUpdate }
+        promise?.succeed(success, from: originalExecutor)
       case let .completion(.failure(failure)):
-        if let latestMatchingUpdate = latestMatchingUpdate {
-          promise?.succeed(latestMatchingUpdate, from: originalExecutor)
+        if let success = locking.locker({ latestMatchingUpdate }) {
+          promise?.succeed(success, from: originalExecutor)
         } else {
           promise?.fail(failure, from: originalExecutor)
         }
