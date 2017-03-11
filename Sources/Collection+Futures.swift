@@ -24,51 +24,63 @@ import Dispatch
 
 /// Collection improved with AsyncNinja
 /// Single failure fails them all
-public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element: Completing {
-
-  /// joins an array of futures to a future array
-  func joined() -> Future<[Self.Iterator.Element.Success]> {
-    return _asyncFlatMap(executor: .immediate) { $0 as! Future<Self.Iterator.Element.Success> }
-  }
+public extension Sequence where Self.Iterator.Element: Completing {
 
   /// reduces results of collection of futures to future accumulated value
-  func reduce<Result>(
+  func asyncReduce<Result>(
+    _ initialResult: Result,
     executor: Executor = .primary,
-    initialResult: Result,
-    isOrdered: Bool = false,
     _ nextPartialResult: @escaping (Result, Self.Iterator.Element.Success) throws -> Result)
     -> Future<Result> {
+
+      // Test: BatchFutureTests.testReduce
+      // Test: BatchFutureTests.testReduceThrows
       
-      guard !isOrdered else {
-        return self.joined().map(executor: executor) {
-          try $0.reduce(initialResult, nextPartialResult)
-        }
-      }
-
       let promise = Promise<Result>()
-      let executor_ = executor.makeDerivedSerialExecutor()
-
+      var values: Array<Self.Iterator.Element.Success?> = self.map { _ in nil }
+      var unknownSubvaluesCount = values.count
+      var locking = makeLocking(isFair: true)
       var canContinue = true
-      let count = self.count
-      var accumulator = initialResult
-      var unknownSubvaluesCount = count
 
-      for future in self {
-        let handler = future.makeCompletionHandler(executor: executor_)
+      for (index, future) in self.enumerated() {
+        let handler = future.makeCompletionHandler(executor: .immediate)
         {
           [weak promise] (completion, originalExecutor) -> Void in
-          guard let promise = promise, canContinue else { return }
-
-          do {
-            accumulator = try nextPartialResult(accumulator, try completion.liftSuccess())
+          locking.lock()
+          guard
+            canContinue,
+            case .some = promise
+            else {
+              locking.unlock()
+              return
+          }
+          switch completion {
+          case let .success(success):
+            values[index] = success
             unknownSubvaluesCount -= 1
-            if 0 == unknownSubvaluesCount {
-              promise.succeed(accumulator, from: originalExecutor)
-              canContinue = false
+            let runReduce = 0 == unknownSubvaluesCount
+            locking.unlock()
+
+            if runReduce {
+              executor.execute(from: originalExecutor) { [weak promise] (originalExecutor) in
+                locking.lock()
+                defer { locking.unlock() }
+                do {
+                  let result = try values.reduce(initialResult) { (accumulator, value) in
+                    return try nextPartialResult(accumulator, value!)
+                  }
+                  promise?.succeed(result)
+                } catch {
+                  promise?.fail(error)
+                }
+              }
             }
-          } catch {
-            promise.fail(error, from: originalExecutor)
+          case let .failure(failure):
             canContinue = false
+            locking.unlock()
+
+            promise?.fail(failure)
+
           }
         }
 
@@ -78,6 +90,14 @@ public extension Collection where Self.IndexDistance == Int, Self.Iterator.Eleme
       return promise
   }
 
+}
+
+public extension Collection where Self.IndexDistance == Int, Self.Iterator.Element: Completing {
+
+  /// joins an array of futures to a future array
+  func joined() -> Future<[Self.Iterator.Element.Success]> {
+    return _asyncFlatMap(executor: .immediate) { $0 as! Future<Self.Iterator.Element.Success> }
+  }
 }
 
 /// Collection improved with AsyncNinja
