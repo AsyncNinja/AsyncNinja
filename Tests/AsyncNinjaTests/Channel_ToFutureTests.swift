@@ -44,8 +44,6 @@ class Channel_ToFutureTests: XCTestCase {
     ("testLastNotFoundContextual", testLastNotFoundContextual),
     ("testLastFailureContextual", testLastFailureContextual),
     ("testLastDeadContextual", testLastDeadContextual),
-    ("testReduce", testReduce),
-    ("testReduceContextual", testReduceContextual),
     ]
 
   func testFirstSuccessIncomplete() {
@@ -404,55 +402,5 @@ class Channel_ToFutureTests: XCTestCase {
     updatable.fail(TestError.testCode)
 
     self.waitForExpectations(timeout: 1.0)
-  }
-
-  func testReduceContextual() {
-    let actor = TestActor()
-    let producer = Producer<String, Int>()
-    let expectation = self.expectation(description: "future to complete")
-
-    let future = producer.reduce("A", context: actor) { (actor, accumulator, value) -> String in
-      assert(actor: actor)
-      return accumulator + value
-    }
-
-    future.onSuccess { (concatString, successValue) in
-      XCTAssertEqual(concatString, "ABCDEF")
-      XCTAssertEqual(successValue, 7)
-      expectation.fulfill()
-    }
-
-    producer.update("B")
-    producer.update("C")
-    producer.update("D")
-    producer.update("E")
-    producer.update("F")
-    producer.succeed(7)
-    self.waitForExpectations(timeout: 1.0)
-  }
-
-  func testReduce() {
-    multiTest {
-      let producer = Producer<String, Int>()
-      let sema = DispatchSemaphore(value: 0)
-
-      let future: Future<(String, Int)> = producer.reduce("A") { (accumulator, value) -> String in
-        return accumulator + value
-      }
-      
-      future.onSuccess { (concatString, successValue) in
-        XCTAssertEqual(concatString, "ABCDEF")
-        XCTAssertEqual(successValue, 7)
-        sema.signal()
-      }
-      
-      producer.update("B")
-      producer.update("C")
-      producer.update("D")
-      producer.update("E")
-      producer.update("F")
-      producer.succeed(7)
-      sema.wait()
-    }
   }
 }

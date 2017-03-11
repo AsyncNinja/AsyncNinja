@@ -212,3 +212,13 @@ public enum ChannelEvent<Update, Success> {
   /// A kind of value that can be received once and completes the channel
   case completion(Fallible<Success>)
 }
+
+public extension ChannelEvent {
+  static func success(_ success: Success) -> ChannelEvent {
+    return .completion(.success(success))
+  }
+
+  static func failure(_ error: Swift.Error) -> ChannelEvent {
+    return .completion(.failure(error))
+  }
+}
