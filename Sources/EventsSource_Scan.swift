@@ -185,7 +185,8 @@ public extension EventsSource {
               return .failure(error)
             }
           case .completion(.success(let successValue)):
-            return .success((partialResult, successValue))
+            let success: (Result, Success) = (partialResult, successValue)
+            return .success(success)
           case let .completion(.failure(failure)):
             return .failure(failure)
           }
