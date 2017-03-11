@@ -97,16 +97,6 @@ public struct Executor {
   func execute(after timeout: Double, _ block: @escaping (_ original: Executor) -> Void) {
     _impl.asyncNinja_execute(after: timeout) { block(self) }
   }
-
-  /// Makes serial executor. Retured executor will
-  /// serially perform blocks on current executor
-  func makeDerivedSerialExecutor() -> Executor {
-    if _isSerial {
-      return self
-    } else {
-      return Executor(impl: _impl.asyncNinja_makeDerivedSerialExecutor(), isSerial: true)
-    }
-  }
 }
 
 // MARK: - known executors
@@ -169,7 +159,6 @@ public extension Executor {
 fileprivate protocol ExecutorImpl: class {
   func asyncNinja_execute(_ block: @escaping (Void) -> Void)
   func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void)
-  func asyncNinja_makeDerivedSerialExecutor() -> ExecutorImpl
   func asyncNinja_representedDispatchQueue() -> DispatchQueue?
   func asyncNinja_canImmediatelyExecuteFromPrimaryExecutor() -> Bool
 }
@@ -184,10 +173,6 @@ private class PrimaryExecutorImpl: ExecutorImpl {
   func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
     let wallDeadline = DispatchWallTime.now().adding(seconds: timeout)
     queue.asyncAfter(wallDeadline: wallDeadline, execute: block)
-  }
-
-  func asyncNinja_makeDerivedSerialExecutor() -> ExecutorImpl {
-    return DispatchQueue(label: "derived", qos: .default, attributes: [], target: queue)
   }
 
   func asyncNinja_representedDispatchQueue() -> DispatchQueue? {
@@ -211,10 +196,6 @@ private class MainExecutorImpl: ExecutorImpl {
     queue.asyncAfter(wallDeadline: wallDeadline, execute: block)
   }
 
-  func asyncNinja_makeDerivedSerialExecutor() -> ExecutorImpl {
-    return self
-  }
-
   func asyncNinja_representedDispatchQueue() -> DispatchQueue? {
     return queue
   }
@@ -232,10 +213,6 @@ extension DispatchQueue: ExecutorImpl {
   fileprivate func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
     let wallDeadline = DispatchWallTime.now().adding(seconds: timeout)
     self.asyncAfter(wallDeadline: wallDeadline, execute: block)
-  }
-
-  fileprivate func asyncNinja_makeDerivedSerialExecutor() -> ExecutorImpl {
-    return DispatchQueue(label: "derived", qos: .default, attributes: [], target: self)
   }
 
   func asyncNinja_representedDispatchQueue() -> DispatchQueue? {
@@ -257,10 +234,6 @@ fileprivate class ImmediateExecutorImpl: ExecutorImpl {
     DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
       block()
     }
-  }
-
-  func asyncNinja_makeDerivedSerialExecutor() -> ExecutorImpl {
-    return DerivedHandlerBasedExecutorImpl(handler: { $0() })
   }
 
   func asyncNinja_representedDispatchQueue() -> DispatchQueue? {
@@ -291,25 +264,11 @@ fileprivate class HandlerBasedExecutorImpl: ExecutorImpl {
     }
   }
 
-  func asyncNinja_makeDerivedSerialExecutor() -> ExecutorImpl {
-    return DerivedHandlerBasedExecutorImpl(handler: _handler)
-  }
-
   func asyncNinja_representedDispatchQueue() -> DispatchQueue? {
     return nil
   }
 
   func asyncNinja_canImmediatelyExecuteFromPrimaryExecutor() -> Bool {
     return false
-  }
-}
-
-fileprivate class DerivedHandlerBasedExecutorImpl: HandlerBasedExecutorImpl {
-  var _locking = makeLocking()
-
-  override func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
-    _locking.lock()
-    super.asyncNinja_execute(block)
-    _locking.unlock()
   }
 }
