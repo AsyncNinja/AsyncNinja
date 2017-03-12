@@ -40,12 +40,14 @@
       ("testUILabel", testUILabel),
       ("testUISwitch", testUISwitch),
       ("testUIStepper", testUIStepper),
+      ("testUISlider", testUISlider),
       ("testUIViewController", testUIViewController),
       ]
 
     static let intFixture: [Int] = [1, 1, 2, 2, 3, 1, 4]
     static let timeIntervalFixture: [TimeInterval] = [2, 2, 4, 8, 8, 16, 16]
     static let cgFloatFixture: [CGFloat] = [0.0, 0.0, 0.25, 0.5, 0.5, 1.0, 1.0]
+    static let floatFixture: [Float] = [0.0, 0.0, 0.25, 0.5, 0.5, 1.0, 1.0]
     static let doubleFixture: [Double] = [0.0, 0.0, 0.25, 0.5, 0.5, 1.0, 1.0]
     static let boolFixture: [Bool] = [true, true, false, false, true]
     static let stringsAndNilsFixture: [String?] = ["1", nil, "1", "1", "2", "2", nil, nil, "3", "1", "4"]
@@ -579,6 +581,63 @@
                               object: object,
                               keyPathOrGet: .right({ $0.decrementImage(for: state) }),
                               values: iOSTests.imagesFixture)
+      }
+    }
+
+    func testUISlider() {
+      let object = UISlider()
+
+      testEventsStream(object.rp.value,
+                       object: object,
+                       keyPathOrGetSet: .left("value"),
+                       values: iOSTests.floatFixture)
+      testEventsStream(object.rp.minimumValue,
+                       object: object,
+                       keyPathOrGetSet: .left("minimumValue"),
+                       values: iOSTests.floatFixture)
+      testEventsStream(object.rp.minimumValue,
+                       object: object,
+                       keyPathOrGetSet: .left("minimumValue"),
+                       values: iOSTests.floatFixture)
+      testEventsStream(object.rp.minimumValueImage,
+                       object: object,
+                       keyPathOrGetSet: .left("minimumValueImage"),
+                       values: iOSTests.imagesAndNilsFixture)
+      testEventsStream(object.rp.maximumValueImage,
+                       object: object,
+                       keyPathOrGetSet: .left("maximumValueImage"),
+                       values: iOSTests.imagesAndNilsFixture)
+      testEventsStream(object.rp.isContinuous,
+                       object: object,
+                       keyPathOrGetSet: .left("continuous"),
+                       values: iOSTests.boolFixture)
+      testEventsStream(object.rp.minimumTrackTintColor,
+                       object: object,
+                       keyPathOrGetSet: .left("minimumTrackTintColor"),
+                       values: iOSTests.colorsAndNilsFiture)
+      testEventsStream(object.rp.maximumTrackTintColor,
+                       object: object,
+                       keyPathOrGetSet: .left("maximumTrackTintColor"),
+                       values: iOSTests.colorsAndNilsFiture)
+      testEventsStream(object.rp.thumbTintColor,
+                       object: object,
+                       keyPathOrGetSet: .left("thumbTintColor"),
+                       values: iOSTests.colorsAndNilsFiture)
+      for state in iOSTests.uiControlStatesFixture {
+        let object = UISlider()
+
+        testEventsDestination(object.rp.thumbImage(for: state),
+                              object: object,
+                              keyPathOrGet: .right({ $0.thumbImage(for: state) }),
+                              values: iOSTests.imagesAndNilsFixture)
+        testEventsDestination(object.rp.minimumTrackImage(for: state),
+                              object: object,
+                              keyPathOrGet: .right({ $0.minimumTrackImage(for: state) }),
+                              values: iOSTests.imagesAndNilsFixture)
+        testEventsDestination(object.rp.maximumTrackImage(for: state),
+                              object: object,
+                              keyPathOrGet: .right({ $0.maximumTrackImage(for: state) }),
+                              values: iOSTests.imagesAndNilsFixture)
       }
     }
 

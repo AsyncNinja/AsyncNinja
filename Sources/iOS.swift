@@ -593,6 +593,58 @@
     }
   }
 
+  // MARK: - reactive properties for UISlider
+  public extension ReactiveProperties where Object: UISlider {
+    /// An `ProducerProxy` that refers to read-write property `UISlider.value`
+    var value: ProducerProxy<Float, Void> { return updatable(forKeyPath: "value", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UISlider.minimumValue`
+    var minimumValue: ProducerProxy<Float, Void> { return updatable(forKeyPath: "minimumValue", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UISlider.maximumValue`
+    var maximumValue: ProducerProxy<Float, Void> { return updatable(forKeyPath: "maximumValue", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UISlider.minimumValueImage`
+    var minimumValueImage: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "minimumValueImage") }
+
+    /// An `ProducerProxy` that refers to read-write property `UISlider.maximumValueImage`
+    var maximumValueImage: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "maximumValueImage") }
+
+    /// An `ProducerProxy` that refers to read-write property `UIStepper.isContinuous`
+    var isContinuous: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "continuous", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UISlider.minimumTrackTintColor`
+    var minimumTrackTintColor: ProducerProxy<UIColor?, Void> { return updatable(forKeyPath: "minimumTrackTintColor") }
+
+    /// An `ProducerProxy` that refers to read-write property `UISlider.maximumTrackTintColor`
+    var maximumTrackTintColor: ProducerProxy<UIColor?, Void> { return updatable(forKeyPath: "maximumTrackTintColor") }
+
+    /// An `ProducerProxy` that refers to read-write property `UISlider.thumbTintColor`
+    var thumbTintColor: ProducerProxy<UIColor?, Void> { return updatable(forKeyPath: "thumbTintColor") }
+
+    /// An `ProducerProxy` that refers to read-write property `UISlider.valueWithAnimation`
+    var valueWithAnimation: ProducerProxy<(value: Float, isAnimated: Bool), Void> {
+      return updatable(forKeyPath: "value", onNone: .drop,
+                       customGetter: { (date: $0.value, isAnimated: false) },
+                       customSetter: { $0.setValue($1.value, animated: $1.isAnimated) })
+    }
+
+    /// An `Sink` that refers to write-only `UISlider.setThumbImage(_:, for:)`
+    func thumbImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+      return sink { $0.setThumbImage($1, for: state) }
+    }
+
+    /// An `Sink` that refers to write-only `UISlider.setMinimumTrackImage(_:, for:)`
+    func minimumTrackImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+      return sink { $0.setMinimumTrackImage($1, for: state) }
+    }
+
+    /// An `Sink` that refers to write-only `UISlider.setMaximumTrackImage(_:, for:)`
+    func maximumTrackImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+      return sink { $0.setMaximumTrackImage($1, for: state) }
+    }
+  }
+
   // MARK: - reactive properties for UIViewController
   public extension ReactiveProperties where Object: UIViewController {
     /// An `UpdatableProperty` that refers to read-write property `UIViewController.title`
