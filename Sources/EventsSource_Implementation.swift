@@ -291,3 +291,51 @@ public extension EventsSource {
     }
   }
 }
+
+public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&EventsDestination>(
+  _ majorStream: T,
+  _ minorStream: U
+  ) where T.Update == U.Update, T.Success == T.Success
+{
+  var locking = makeLocking(isFair: true)
+  var majorRevision = 1
+  var minorRevision = 0
+
+  let minorHandler = minorStream.makeUpdateHandler(executor: .immediate) {
+    [weak majorStream] (update, originalExecutor) in
+    locking.lock()
+    if minorRevision >= majorRevision {
+      minorRevision += 1
+      locking.unlock()
+      majorStream?.update(update, from: originalExecutor)
+    } else {
+      minorRevision = majorRevision
+      locking.unlock()
+    }
+  }
+
+  if let minorHandler = minorHandler {
+    let box = MutableBox<AnyObject?>(minorHandler)
+    majorStream._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
+    minorStream._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
+  }
+
+  let majorHandler = majorStream.makeUpdateHandler(executor: .immediate) {
+    [weak minorStream] (update, originalExecutor) in
+    locking.lock()
+    if majorRevision >= minorRevision {
+      majorRevision += 1
+      locking.unlock()
+      minorStream?.update(update, from: originalExecutor)
+    } else {
+      majorRevision = minorRevision
+      locking.unlock()
+    }
+  }
+
+  if let majorHandler = majorHandler {
+    let box = MutableBox<AnyObject?>(majorHandler)
+    majorStream._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
+    minorStream._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
+  }
+}

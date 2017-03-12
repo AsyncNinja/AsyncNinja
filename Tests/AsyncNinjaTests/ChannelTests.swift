@@ -229,4 +229,44 @@ class ChannelTests: XCTestCase {
     XCTAssertEqual("Incomplete Channel", channelD.description)
     XCTAssertEqual("Incomplete Channel<Int, String>", channelD.debugDescription)
   }
+
+  func testDoubleBind() {
+    class Actor<T>: TestActor {
+      var dynamicValue: DynamicProperty<T> { return _dynamicValue }
+      var value: T {
+        get { return _dynamicValue.value }
+        set { _dynamicValue.value = newValue }
+      }
+      private var _dynamicValue: DynamicProperty<T>!
+
+      init(initialValue: T) {
+        super.init()
+        _dynamicValue = makeDynamicProperty(initialValue)
+      }
+    }
+
+    let majorActor = Actor<Int>(initialValue: 3)
+    let minorActor = Actor<Int>(initialValue: 4)
+    doubleBind(majorActor.dynamicValue, minorActor.dynamicValue)
+
+    func test(value: Int, file: StaticString = #file, line: UInt = #line) {
+      minorActor.internalQueue.sync {
+        XCTAssertEqual(minorActor.value, value, file: file, line: line)
+      }
+      majorActor.internalQueue.sync {
+        XCTAssertEqual(majorActor.value, value, file: file, line: line)
+      }
+    }
+
+    test(value: 3)
+
+    minorActor.value = 6
+    test(value: 6)
+
+    minorActor.value = 8
+    test(value: 8)
+
+    majorActor.value = 7
+    test(value: 7)
+  }
 }
