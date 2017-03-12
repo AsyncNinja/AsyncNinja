@@ -29,78 +29,6 @@
   extension UIResponder: ObjCUIInjectedExecutionContext {
   }
   
-  /// UIControl improved with AsyncNinja
-  public extension UIControl {
-    /// Update of ActionChannel
-    typealias ActionChannelUpdate = (sender: AnyObject?, event: UIEvent)
-    
-    /// Channel that contains actions sent by the control
-    typealias ActionChannel = Channel<ActionChannelUpdate, Void>
-    
-    /// Makes channel that will have update value on each triggering of action
-    ///
-    /// - Parameter events: events that to listen for
-    /// - Returns: unbuffered channel
-    func actionChannel(forEvents events: UIControlEvents = UIControlEvents.allEvents) -> ActionChannel {
-      let actionReceiver = UIControlActionReceiver(control: self)
-      self.addTarget(actionReceiver,
-                     action: #selector(UIControlActionReceiver.asyncNinjaAction(sender:forEvent:)),
-                     for: events)
-      self.notifyDeinit {
-        actionReceiver.producer.cancelBecauseOfDeallocatedContext(from: nil)
-      }
-      
-      return actionReceiver.producer
-    }
-    
-    /// Shortcut that binds block to UIControl event
-    ///
-    /// - Parameters:
-    ///   - events: events to react on
-    ///   - context: context to bind block to
-    ///   - block: block to execute on action on context
-    func onAction<C: ExecutionContext>(
-      forEvents events: UIControlEvents = UIControlEvents.allEvents,
-      context: C,
-      _ block: @escaping (C, AnyObject?, UIEvent) -> Void) {
-      
-      self.actionChannel(forEvents: events)
-        .onUpdate(context: context) { (context, update) in
-          block(context, update.sender, update.event)
-      }
-    }
-  }
-  
-  private class UIControlActionReceiver: NSObject {
-    weak var control: UIControl?
-    let producer = Producer<UIControl.ActionChannelUpdate, Void>(bufferSize: 0)
-    
-    init(control: UIControl) {
-      self.control = control
-    }
-    
-    dynamic func asyncNinjaAction(sender: AnyObject?, forEvent event: UIEvent) {
-      let update: UIControl.ActionChannelUpdate = (
-        sender: sender,
-        event: event
-      )
-      self.producer.update(update, from: .main)
-    }
-  }
-
-  private class ActionReceiver: NSObject {
-    weak var object: NSObject?
-    let producer = Producer<AnyObject?, Void>(bufferSize: 0)
-    
-    init(object: NSObject) {
-      self.object = object
-    }
-    
-    dynamic func asyncNinjaAction(sender: AnyObject?) {
-      self.producer.update(sender, from: .main)
-    }
-  }
-
   // MARK: - reactive properties for UIView
   public extension ReactiveProperties where Object: UIView {
     /// An `ProducerProxy` that refers to read-write property `UIView.alpha`
@@ -121,6 +49,39 @@
   
   // MARK: - reactive properties for UIControl
   public extension ReactiveProperties where Object: UIControl {
+    /// Makes channel that will have update value on each triggering of action
+    ///
+    /// - Parameter events: events that to listen for
+    /// - Returns: unbuffered channel
+    func actions(forEvents events: UIControlEvents = UIControlEvents.allEvents) -> Channel<(sender: AnyObject?, event: UIEvent), Void> {
+      let actionReceiver = UIControlActionReceiver(control: object)
+      object.addTarget(actionReceiver,
+                     action: #selector(UIControlActionReceiver.asyncNinjaAction(sender:forEvent:)),
+                     for: events)
+      object.notifyDeinit {
+        actionReceiver.producer.cancelBecauseOfDeallocatedContext(from: nil)
+      }
+
+      return actionReceiver.producer
+    }
+
+    /// Shortcut that binds block to UIControl event
+    ///
+    /// - Parameters:
+    ///   - events: events to react on
+    ///   - context: context to bind block to
+    ///   - block: block to execute on action on context
+    func onAction<C: ExecutionContext>(
+      forEvents events: UIControlEvents = UIControlEvents.allEvents,
+      context: C,
+      _ block: @escaping (C, AnyObject?, UIEvent) -> Void) {
+
+      self.actions(forEvents: events)
+        .onUpdate(context: context) { (context, update) in
+          block(context, update.sender, update.event)
+      }
+    }
+
     /// An `ProducerProxy` that refers to read-write property `UIControl.isEnabled`
     var isEnabled: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "enabled", onNone: .drop) }
 
@@ -129,6 +90,23 @@
 
     /// An `Channel` that refers to read-only property `UIControl.state`
     var state: Channel<UIControlState, Void> { return updating(forKeyPath: "state", onNone: .drop) }
+  }
+
+  private class UIControlActionReceiver: NSObject {
+    weak var control: UIControl?
+    let producer = Producer<(sender: AnyObject?, event: UIEvent), Void>(bufferSize: 0)
+
+    init(control: UIControl) {
+      self.control = control
+    }
+
+    dynamic func asyncNinjaAction(sender: AnyObject?, forEvent event: UIEvent) {
+      let update: (sender: AnyObject?, event: UIEvent) = (
+        sender: sender,
+        event: event
+      )
+      self.producer.update(update, from: .main)
+    }
   }
 
   // MARK: - reactive properties for UILabel
@@ -399,24 +377,22 @@
     }
   }
   
-  public extension UIBarButtonItem {
+  // MARK: - reactive properties for UIBarButtonItem
+  public extension ReactiveProperties where Object: UIBarButtonItem {
     func actionChannel() -> Channel<AnyObject?, Void> {
-      if let actionReceiver = self.target as? ActionReceiver {
+      if let actionReceiver = object.target as? UIBarButtonItemActionReceiver {
         return actionReceiver.producer
       } else {
-        let actionReceiver = ActionReceiver(object: self)
-        self.target = actionReceiver
-        self.action = #selector(ActionReceiver.asyncNinjaAction(sender:))
-        self.notifyDeinit {
+        let actionReceiver = UIBarButtonItemActionReceiver(object: object)
+        object.target = actionReceiver
+        object.action = #selector(UIBarButtonItemActionReceiver.asyncNinjaAction(sender:))
+        object.notifyDeinit {
           actionReceiver.producer.cancelBecauseOfDeallocatedContext(from: nil)
         }
         return actionReceiver.producer
       }
     }
-  }
 
-  // MARK: - reactive properties for UIBarButtonItem
-  public extension ReactiveProperties where Object: UIBarButtonItem {
     /// An `ProducerProxy` that refers to read-write property `UIBarButtonItem.style`
     var style: ProducerProxy<UIBarButtonItemStyle, Void> {
       return updatable(forKeyPath: "style", onNone: .drop, customGetter: { $0.style }, customSetter: { $0.style = $1 })
@@ -478,7 +454,20 @@
     }
     #endif
   }
-  
+
+  private class UIBarButtonItemActionReceiver: NSObject {
+    weak var object: UIBarButtonItem?
+    let producer = Producer<AnyObject?, Void>(bufferSize: 0)
+
+    init(object: UIBarButtonItem) {
+      self.object = object
+    }
+
+    dynamic func asyncNinjaAction(sender: AnyObject?) {
+      self.producer.update(sender, from: .main)
+    }
+  }
+
 #if os(iOS)
   // MARK: - reactive properties for UIDatePicker
   public extension ReactiveProperties where Object: UIDatePicker {
@@ -651,6 +640,41 @@
     var title: ProducerProxy<String?, Void> { return updatable(forKeyPath: "title") }
   }
 
+  // MARK: - UIGestureRecognizer
+  extension UIGestureRecognizer: ObjCUIInjectedExecutionContext { }
+
+  // MARK: - reactive properties for UIGestureRecognizer
+  public extension ReactiveProperties where Object: UIGestureRecognizer {
+    /// Makes channel that will have update value on each triggering of action
+    ///
+    /// - Parameter events: events that to listen for
+    /// - Returns: unbuffered channel
+    var actions: Channel<UIGestureRecognizer, Void> {
+      let actionReceiver = UIGestureRecognizerActionReceiver(object: object)
+      object.addTarget(actionReceiver,
+                     action: #selector(UIGestureRecognizerActionReceiver.asyncNinjaAction(gestureRecogniser:)))
+      object.notifyDeinit {
+        actionReceiver.producer.cancelBecauseOfDeallocatedContext(from: nil)
+      }
+
+      return actionReceiver.producer
+    }
+  }
+
+  public class UIGestureRecognizerActionReceiver: NSObject {
+    weak var object: UIGestureRecognizer?
+    let producer = Producer<UIGestureRecognizer, Void>(bufferSize: 0)
+
+    init(object: UIGestureRecognizer) {
+      self.object = object
+    }
+
+    dynamic func asyncNinjaAction(gestureRecogniser: UIGestureRecognizer) {
+      self.producer.update(gestureRecogniser, from: .main)
+    }
+  }
+
+  // MARK: - UIDevice
   extension UIDevice: ObjCUIInjectedExecutionContext {}
 
   // MARK: - reactive properties for UIDevice
