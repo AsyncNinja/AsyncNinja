@@ -31,12 +31,14 @@
       ("testUIView", testUIView),
       ("testUIControl", testUIControl),
       ("testUITextField", testUITextField),
+      ("testUITextView", testUITextView),
       ("testUISearchBar", testUISearchBar),
       ("testUIImageView", testUIImageView),
       ("testUIButton", testUIButton),
       ("testUIBarItem", testUIBarItem),
       ("testUIDatePicker", testUIDatePicker),
       ("testUILabel", testUILabel),
+      ("testUISwitch", testUISwitch),
       ("testUIViewController", testUIViewController),
       ]
 
@@ -47,7 +49,12 @@
     static let stringsAndNilsFixture: [String?] = ["1", nil, "1", "1", "2", "2", nil, nil, "3", "1", "4"]
     static let stringsFixture: [String] = stringsAndNilsFixture.flatMap { $0 }
     static let attributedStringsFixture = iOSTests.stringsFixture
-      .map { NSAttributedString(string: $0, attributes: nil) }
+      .map {
+        NSAttributedString(string: $0,
+                           attributes: [
+                            NSFontAttributeName : UIFont.systemFont(ofSize: 14.0)
+        ])
+    }
     static let colorsAndNilsFiture: [UIColor?] = [.white, .white, nil, .red, nil, nil, .green, nil, .green, .blue, .blue]
     static let colorsFiture: [UIColor] = iOSTests.colorsAndNilsFiture.flatMap { $0 }
     static let fontTextStyleFixture: [UIFontTextStyle] = [.headline, .subheadline, .body, .footnote, .caption1, .caption2]
@@ -198,6 +205,43 @@
                        object: object,
                        keyPathOrGetSet: .left("disabledBackground"),
                        values: iOSTests.imagesAndNilsFixture)
+    }
+
+    func testUITextView() {
+      let object = UITextView()
+
+      testEventsStream(object.rp.text,
+                       object: object,
+                       keyPathOrGetSet: .left("text"),
+                       values: iOSTests.stringsFixture)
+      testEventsStream(object.rp.font,
+                       object: object,
+                       keyPathOrGetSet: .left("font"),
+                       values: iOSTests.fontsFiture)
+      testEventsStream(object.rp.textColor,
+                       object: object,
+                       keyPathOrGetSet: .left("textColor"),
+                       values: iOSTests.colorsAndNilsFiture)
+      testEventsStream(object.rp.textAlignment,
+                       object: object,
+                       keyPathOrGetSet: .right(getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! }),
+                       values: iOSTests.textAlignementFixture)
+      testEventsStream(object.rp.isEditable,
+                       object: object,
+                       keyPathOrGetSet: .left("editable"),
+                       values: iOSTests.boolFixture)
+      testEventsStream(object.rp.isSelectable,
+                       object: object,
+                       keyPathOrGetSet: .left("selectable"),
+                       values: iOSTests.boolFixture)
+      testEventsStream(object.rp.attributedText,
+                       object: object,
+                       keyPathOrGetSet: .left("attributedText"),
+                       values: iOSTests.attributedStringsFixture)
+      testEventsStream(object.rp.clearsOnInsertion,
+                       object: object,
+                       keyPathOrGetSet: .left("clearsOnInsertion"),
+                       values: iOSTests.boolFixture)
     }
 
     func testUISearchBar() {

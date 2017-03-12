@@ -169,7 +169,7 @@
                        customSetter: { $0.lineBreakMode = $1 })
     }
 
-    /// An `ProducerProxy` that refers to read-write property `UITextField.attributedText`
+    /// An `ProducerProxy` that refers to read-write property `UILabel.attributedText`
     var attributedText: ProducerProxy<NSAttributedString?, Void> { return updatable(forKeyPath: "attributedText") }
 
     /// An `ProducerProxy` that refers to read-write property `UILabel.highlightedTextColor`
@@ -228,6 +228,38 @@
 
     /// An `Channel` that refers to read-only property `UITextField.isEditing`
     var isEditing: Channel<Bool, Void> { return updating(forKeyPath: "isEditing", onNone: .drop) }
+  }
+
+  // MARK: - reactive properties for UITextView
+  public extension ReactiveProperties where Object: UITextView {
+    /// An `ProducerProxy` that refers to read-write property `UITextView.text`
+    var text: ProducerProxy<String, Void> { return updatable(forKeyPath: "text", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UITextView.font`
+    var font: ProducerProxy<UIFont, Void> { return updatable(forKeyPath: "font", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UITextView.textColor`
+    var textColor: ProducerProxy<UIColor?, Void> { return updatable(forKeyPath: "textColor") }
+
+    /// An `ProducerProxy` that refers to read-write property `UITextView.textAlignment`
+    var textAlignment: ProducerProxy<NSTextAlignment, Void> {
+      return updatable(forKeyPath: "textAlignment",
+                       onNone: .drop,
+                       customGetter: { $0.textAlignment },
+                       customSetter: { $0.textAlignment = $1 })
+    }
+
+    /// An `ProducerProxy` that refers to read-write property `UITextView.isEditable`
+    var isEditable: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "editable", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UITextView.isSelectable`
+    var isSelectable: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "selectable", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UITextView.attributedText`
+    var attributedText: ProducerProxy<NSAttributedString, Void> { return updatable(forKeyPath: "attributedText", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UITextView.clearsOnInsertion`
+    var clearsOnInsertion: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "clearsOnInsertion", onNone: .drop) }
   }
 
   // MARK: - reactive properties for UISearchBar
