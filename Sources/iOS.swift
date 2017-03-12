@@ -524,6 +524,7 @@
   }
 #endif
 
+  // MARK: - reactive properties for UISwitch
   public extension ReactiveProperties where Object: UISwitch {
     /// An `ProducerProxy` that refers to read-write property `UISwitch.isOn`
     var isOn: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "on", onNone: .drop) }
@@ -548,12 +549,56 @@
     var offImage: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "offImage") }
   }
 
+  // MARK: - reactive properties for UIStepper
+  public extension ReactiveProperties where Object: UIStepper {
+    /// An `ProducerProxy` that refers to read-write property `UIStepper.isContinuous`
+    var isContinuous: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "continuous", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UIStepper.autorepeat`
+    var autorepeat: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "autorepeat", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UIStepper.wraps`
+    var wraps: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "wraps", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UIStepper.value`
+    var value: ProducerProxy<Double, Void> { return updatable(forKeyPath: "value", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UIStepper.minimumValue`
+    var minimumValue: ProducerProxy<Double, Void> { return updatable(forKeyPath: "minimumValue", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UIStepper.maximumValue`
+    var maximumValue: ProducerProxy<Double, Void> { return updatable(forKeyPath: "maximumValue", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UIStepper.stepValue`
+    var stepValue: ProducerProxy<Double, Void> { return updatable(forKeyPath: "stepValue", onNone: .drop) }
+
+    /// An `Sink` that refers to write-only `UIStepper.setBackButtonBackgroundImage(_:, for:)`
+    func backgroundImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+      return sink { $0.setBackgroundImage($1, for: state) }
+    }
+
+    /// An `Sink` that refers to write-only `UIStepper.setDividerImage(_:, forLeftSegmentState:, rightSegmentState:)`
+    func dividerImage(forLeftSegmentState leftState: UIControlState, rightSegmentState rightState: UIControlState) -> Sink<UIImage?, Void> {
+      return sink { $0.setDividerImage($1, forLeftSegmentState: leftState, rightSegmentState: rightState) }
+    }
+
+    /// An `Sink` that refers to write-only `setIncrementImage(_:, for:)`
+    func incrementImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+      return sink { $0.setIncrementImage($1, for: state) }
+    }
+
+    /// An `Sink` that refers to write-only `setDecrementImage(_:, for:)`
+    func decrementImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+      return sink { $0.setDecrementImage($1, for: state) }
+    }
+  }
+
   // MARK: - reactive properties for UIViewController
   public extension ReactiveProperties where Object: UIViewController {
     /// An `UpdatableProperty` that refers to read-write property `UIViewController.title`
     var title: ProducerProxy<String?, Void> { return updatable(forKeyPath: "title") }
   }
-  
+
   extension UIDevice: ObjCUIInjectedExecutionContext {}
 
   // MARK: - reactive properties for UIDevice

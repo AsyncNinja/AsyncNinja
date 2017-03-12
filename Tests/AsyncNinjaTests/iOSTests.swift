@@ -39,12 +39,14 @@
       ("testUIDatePicker", testUIDatePicker),
       ("testUILabel", testUILabel),
       ("testUISwitch", testUISwitch),
+      ("testUIStepper", testUIStepper),
       ("testUIViewController", testUIViewController),
       ]
 
     static let intFixture: [Int] = [1, 1, 2, 2, 3, 1, 4]
     static let timeIntervalFixture: [TimeInterval] = [2, 2, 4, 8, 8, 16, 16]
     static let cgFloatFixture: [CGFloat] = [0.0, 0.0, 0.25, 0.5, 0.5, 1.0, 1.0]
+    static let doubleFixture: [Double] = [0.0, 0.0, 0.25, 0.5, 0.5, 1.0, 1.0]
     static let boolFixture: [Bool] = [true, true, false, false, true]
     static let stringsAndNilsFixture: [String?] = ["1", nil, "1", "1", "2", "2", nil, nil, "3", "1", "4"]
     static let stringsFixture: [String] = stringsAndNilsFixture.flatMap { $0 }
@@ -90,8 +92,8 @@
       TimeZone.current,
       ]
 
-    static func drawTestImage(_ text: String) -> UIImage {
-      return UIImage.draw(size: CGSize(width: 100, height: 100)) { _ in
+    static func drawTestImage(_ text: String, width: CGFloat = 100, height: CGFloat = 100) -> UIImage {
+      return UIImage.draw(size: CGSize(width: width, height: height)) { _ in
         text.draw(at: CGPoint(x: 0, y: 0), withAttributes: [:])
       }
     }
@@ -126,8 +128,16 @@
                                                    imageOne, imageTwo, imageTwo,
                                                    nil, nil, imageThree,
                                                    imageOne, imageFour]
+    static let imagesFixture: [UIImage] = iOSTests.imagesAndNilsFixture.flatMap { $0 }
     static let arraysOfImagesAndNilsFixture: [[UIImage]?] = iOSTests.imagesAndNilsFixture
       .map { $0.map { [$0] } }
+    static let uiControlStatesFixture: [UIControlState] = eval {
+      var result: [UIControlState] = [.normal, .highlighted, .disabled, .selected]
+      if #available(iOS 9.0, *) {
+        result.append(.focused)
+      }
+      return result
+    }
 
     func testUIView() {
       let object = UIView()
@@ -340,12 +350,7 @@
     }
 
     func testUIButton() {
-      var states: [UIControlState] = [.normal, .highlighted, .disabled, .selected]
-      if #available(iOS 9.0, *) {
-        states.append(.focused)
-      }
-
-      for state in states {
+      for state in iOSTests.uiControlStatesFixture {
         let object = UIButton()
 
         testEventsDestination(object.rp.title(for: state),
@@ -521,6 +526,60 @@
                        object: object,
                        keyPathOrGetSet: .left("offImage"),
                        values: iOSTests.imagesAndNilsFixture)
+    }
+
+    func testUIStepper() {
+      let object = UIStepper()
+
+      testEventsStream(object.rp.isContinuous,
+                       object: object,
+                       keyPathOrGetSet: .left("continuous"),
+                       values: iOSTests.boolFixture)
+      testEventsStream(object.rp.autorepeat,
+                       object: object,
+                       keyPathOrGetSet: .left("autorepeat"),
+                       values: iOSTests.boolFixture)
+      testEventsStream(object.rp.wraps,
+                       object: object,
+                       keyPathOrGetSet: .left("wraps"),
+                       values: iOSTests.boolFixture)
+      testEventsStream(object.rp.value,
+                       object: object,
+                       keyPathOrGetSet: .left("value"),
+                       values: iOSTests.doubleFixture)
+      testEventsStream(object.rp.minimumValue,
+                       object: object,
+                       keyPathOrGetSet: .left("minimumValue"),
+                       values: iOSTests.doubleFixture)
+      testEventsStream(object.rp.maximumValue,
+                       object: object,
+                       keyPathOrGetSet: .left("maximumValue"),
+                       values: iOSTests.doubleFixture.map { $0 + 100.0 })
+      testEventsStream(object.rp.stepValue,
+                       object: object,
+                       keyPathOrGetSet: .left("stepValue"),
+                       values: iOSTests.doubleFixture.map { $0 + 0.1 })
+      for state in iOSTests.uiControlStatesFixture {
+        let object = UIStepper()
+
+//    TODO: investigate
+//        testEventsDestination(object.rp.backgroundImage(for: state),
+//                              object: object,
+//                              keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
+//                              values: testImages)
+        testEventsDestination(object.rp.incrementImage(for: state),
+                              object: object,
+                              keyPathOrGet: .right({ $0.incrementImage(for: state) }),
+                              values: iOSTests.imagesFixture)
+        testEventsDestination(object.rp.dividerImage(forLeftSegmentState: state, rightSegmentState: state),
+                              object: object,
+                              keyPathOrGet: .right({ $0.dividerImage(forLeftSegmentState: state, rightSegmentState: state) }),
+                              values: iOSTests.imagesFixture)
+        testEventsDestination(object.rp.decrementImage(for: state),
+                              object: object,
+                              keyPathOrGet: .right({ $0.decrementImage(for: state) }),
+                              values: iOSTests.imagesFixture)
+      }
     }
 
     func testUIViewController() {
