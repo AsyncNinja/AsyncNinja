@@ -511,7 +511,6 @@
     /// An `ProducerProxy` that refers to read-write property `UIDatePicker.minuteInterval`
     var minuteInterval: ProducerProxy<Int, Void> { return updatable(forKeyPath: "minuteInterval", onNone: .drop) }
   }
-#endif
 
   // MARK: - reactive properties for UISwitch
   public extension ReactiveProperties where Object: UISwitch {
@@ -633,6 +632,7 @@
       return sink { $0.setMaximumTrackImage($1, for: state) }
     }
   }
+#endif
 
   // MARK: - reactive properties for UIViewController
   public extension ReactiveProperties where Object: UIViewController {

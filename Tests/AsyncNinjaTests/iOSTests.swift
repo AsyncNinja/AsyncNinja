@@ -506,6 +506,7 @@
     }
 
     func testUISwitch() {
+      #if os(iOS)
       let object = UISwitch()
 
       testEventsStream(object.rp.isOn,
@@ -528,9 +529,11 @@
                        object: object,
                        keyPathOrGetSet: .left("offImage"),
                        values: iOSTests.imagesAndNilsFixture)
+      #endif
     }
 
     func testUIStepper() {
+      #if os(iOS)
       let object = UIStepper()
 
       testEventsStream(object.rp.isContinuous,
@@ -582,9 +585,11 @@
                               keyPathOrGet: .right({ $0.decrementImage(for: state) }),
                               values: iOSTests.imagesFixture)
       }
+      #endif
     }
 
     func testUISlider() {
+      #if os(iOS)
       let object = UISlider()
 
       testEventsStream(object.rp.value,
@@ -639,6 +644,7 @@
                               keyPathOrGet: .right({ $0.maximumTrackImage(for: state) }),
                               values: iOSTests.imagesAndNilsFixture)
       }
+      #endif
     }
 
     func testUIViewController() {
