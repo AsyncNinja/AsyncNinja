@@ -471,10 +471,10 @@
     var date: ProducerProxy<Date, Void> { return updatable(forKeyPath: "date", onNone: .drop) }
 
     /// An `ProducerProxy` that refers to read-write property `UIDatePicker.dateWithAnimation`
-    var dateWithAnimation: ProducerProxy<(date: Date, animated: Bool), Void> {
+    var dateWithAnimation: ProducerProxy<(date: Date, isAnimated: Bool), Void> {
       return updatable(forKeyPath: "date", onNone: .drop,
-                       customGetter: { (date: $0.date, animated: false) },
-                       customSetter: { $0.setDate($1.date, animated: $1.animated) })
+                       customGetter: { (date: $0.date, isAnimated: false) },
+                       customSetter: { $0.setDate($1.date, animated: $1.isAnimated) })
     }
 
     /// An `ProducerProxy` that refers to read-write property `UIDatePicker.minimumDate`
@@ -491,6 +491,30 @@
     var minuteInterval: ProducerProxy<Int, Void> { return updatable(forKeyPath: "minuteInterval", onNone: .drop) }
   }
 #endif
+
+  public extension ReactiveProperties where Object: UISwitch {
+    /// An `ProducerProxy` that refers to read-write property `UISwitch.isOn`
+    var isOn: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "on", onNone: .drop) }
+
+    /// An `ProducerProxy` that refers to read-write property `UISwitch.isOnWithAnimation`
+    var isOnWithAnimation: ProducerProxy<(isOn: Bool, isAnimated: Bool), Void> {
+      return updatable(forKeyPath: "on", onNone: .drop,
+                       customGetter: { return (isOn: $0.isOn, isAnimated: false) },
+                       customSetter: { $0.setOn($1.isOn, animated: $1.isAnimated) })
+    }
+
+    /// An `ProducerProxy` that refers to read-write property `UISwitch.onTintColor`
+    var onTintColor: ProducerProxy<UIColor?, Void> { return updatable(forKeyPath: "onTintColor") }
+
+    /// An `ProducerProxy` that refers to read-write property `UISwitch.thumbTintColor`
+    var thumbTintColor: ProducerProxy<UIColor?, Void> { return updatable(forKeyPath: "thumbTintColor") }
+
+    /// An `ProducerProxy` that refers to read-write property `UISwitch.onImage`
+    var onImage: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "onImage") }
+
+    /// An `ProducerProxy` that refers to read-write property `UISwitch.offImage`
+    var offImage: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "offImage") }
+  }
 
   // MARK: - reactive properties for UIViewController
   public extension ReactiveProperties where Object: UIViewController {

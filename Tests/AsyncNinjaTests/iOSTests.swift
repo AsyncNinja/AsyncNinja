@@ -454,6 +454,31 @@
       #endif
     }
 
+    func testUISwitch() {
+      let object = UISwitch()
+
+      testEventsStream(object.rp.isOn,
+                       object: object,
+                       keyPathOrGetSet: .left("on"),
+                       values: iOSTests.boolFixture)
+      testEventsStream(object.rp.onTintColor,
+                       object: object,
+                       keyPathOrGetSet: .left("onTintColor"),
+                       values: iOSTests.colorsAndNilsFiture)
+      testEventsStream(object.rp.thumbTintColor,
+                       object: object,
+                       keyPathOrGetSet: .left("thumbTintColor"),
+                       values: iOSTests.colorsAndNilsFiture)
+      testEventsStream(object.rp.onImage,
+                       object: object,
+                       keyPathOrGetSet: .left("onImage"),
+                       values: iOSTests.imagesAndNilsFixture)
+      testEventsStream(object.rp.offImage,
+                       object: object,
+                       keyPathOrGetSet: .left("offImage"),
+                       values: iOSTests.imagesAndNilsFixture)
+    }
+
     func testUIViewController() {
       let object = UIViewController()
       testEventsStream(object.rp.title,
