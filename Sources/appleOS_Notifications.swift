@@ -125,8 +125,8 @@
       ) -> ProducerProxy<Notification, Void>
     {
 
-      let producer = ProducerProxy<Notification, Void>(bufferSize: channelBufferSize, updateExecutor: .immediate) {
-        [weak self] (producerProxy, event, originalExecutor) in
+      let producer = ProducerProxy<Notification, Void>(updateExecutor: .immediate, bufferSize: channelBufferSize)
+      { [weak self] (producerProxy, event, originalExecutor) in
         switch event {
         case let .update(update):
           self?.post(update)

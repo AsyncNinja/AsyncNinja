@@ -64,7 +64,7 @@
       customGetter: CustomGetter<T?>? = nil,
       customSetter: CustomSetter<T?>? = nil
       ) -> ProducerProxy<T?, Void> {
-      let producer = ProducerProxy<T?, Void>(bufferSize: channelBufferSize, updateExecutor: executor) {
+      let producer = ProducerProxy<T?, Void>(updateExecutor: executor, bufferSize: channelBufferSize) {
         [weak self] (producerProxy, event, originalExecutor) in
         switch event {
         case let .update(update):
@@ -141,7 +141,7 @@
       customGetter: CustomGetter<T>? = nil,
       customSetter: CustomSetter<T>? = nil
       ) -> ProducerProxy<T, Void> {
-      let producer = ProducerProxy<T, Void>(bufferSize: channelBufferSize, updateExecutor: executor) {
+      let producer = ProducerProxy<T, Void>(updateExecutor: executor, bufferSize: channelBufferSize) {
         [weak self] (producerProxy, event, originalExecutor) in
         switch event {
         case let .update(update):

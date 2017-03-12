@@ -22,6 +22,8 @@
 
 import Dispatch
 
+// MARK: - Producer
+
 /// Producer that can be manually created
 final public class Producer<Update, Success>: BaseProducer<Update, Success>, CachableCompletable {
   public typealias CompletingType = Channel<Update, Success>
@@ -48,6 +50,93 @@ final public class Producer<Update, Success>: BaseProducer<Update, Success>, Cac
     bufferedUpdates.forEach(_bufferedUpdates.push)
   }
 }
+
+// MARK: - ProducerProxy
+
+/// ProducerProxy acts like a producer but is actually a proxy for some operation, e.g. setting and oberving property
+public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
+  typealias UpdateHandler = (_ producer: ProducerProxy<Update, Success>, _ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor?) -> Void
+  private let _updateHandler: UpdateHandler
+  private let _updateExecutor: Executor
+
+  /// designated initializer
+  init(updateExecutor: Executor,
+       bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize,
+       updateHandler: @escaping UpdateHandler)
+  {
+    _updateHandler = updateHandler
+    _updateExecutor = updateExecutor
+    super.init(bufferSize: bufferSize)
+  }
+
+  func updateWithoutHandling(_ update: Update,
+                             from originalExecutor: Executor?) {
+    super.update(update, from: originalExecutor)
+  }
+
+  @discardableResult
+  func tryCompleteWithoutHandling(
+    with completion: Fallible<Success>,
+    from originalExecutor: Executor?) -> Bool {
+    return super.tryComplete(completion, from: originalExecutor)
+  }
+
+  /// Calls update handler instead of sending specified Update to the Producer
+  override public func update(
+    _ update: Update,
+    from originalExecutor: Executor? = nil) {
+    _updateExecutor.execute(from: originalExecutor) {
+      (originalExecutor) in
+      self._updateHandler(self, .update(update), originalExecutor)
+    }
+  }
+
+  /// Calls update handler instead of sending specified Complete to the Producer
+  override public func tryComplete(
+    _ completion: Fallible<Success>,
+    from originalExecutor: Executor? = nil) -> Bool {
+    _updateExecutor.execute(from: originalExecutor) {
+      (originalExecutor) in
+      self._updateHandler(self, .completion(completion), originalExecutor)
+    }
+    return true
+  }
+}
+
+// MARK: - DynamicProperty
+
+public class DynamicProperty<T>: BaseProducer<T, Void> {
+  private let _updateExecutor: Executor
+  public var value: T {
+    get { return _value }
+    set { self.update(newValue) }
+  }
+  private var _value: T
+
+  /// designated initializer
+  init(initialValue: T,
+       updateExecutor: Executor,
+       bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize)
+  {
+    _updateExecutor = updateExecutor
+    _value = initialValue
+    super.init(bufferSize: bufferSize)
+    _pushUpdateToBuffer(initialValue)
+  }
+
+  /// Calls update handler instead of sending specified Update to the Producer
+  override public func update(
+    _ update: Update,
+    from originalExecutor: Executor? = nil) {
+    _updateExecutor.execute(from: originalExecutor) {
+      [weak self] (originalExecutor) in
+      self?._value = update
+    }
+    super.update(update, from: originalExecutor)
+  }
+}
+
+// MARK: - BaseProducer
 
 /// Mutable subclass of channel
 /// You can update and complete producer manually
@@ -105,7 +194,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
     return handler
   }
 
-  private func _pushUpdateToBuffer(_ update: Update) {
+  fileprivate func _pushUpdateToBuffer(_ update: Update) {
     _bufferedUpdates.push(update)
     if _bufferedUpdates.count > self.maxBufferSize {
       let _ = _bufferedUpdates.pop()
@@ -256,57 +345,6 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
     let channelIteratorImpl = ProducerIteratorImpl<Update, Success>(channel: self, bufferedUpdates: Queue())
     _locking.unlock()
     return ChannelIterator(impl: channelIteratorImpl)
-  }
-}
-
-// MARK: - ProducerProxy
-
-/// ProducerProxy acts like a producer but is actually a proxy for some operation, e.g. setting and oberving property
-public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
-  typealias UpdateHandler = (_ producer: ProducerProxy<Update, Success>, _ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor?) -> Void
-  private let _updateHandler: UpdateHandler
-  private let _updateExecutor: Executor
-  
-  /// designated initializer
-  init(bufferSize: Int,
-       updateExecutor: Executor,
-       updateHandler: @escaping UpdateHandler) {
-    _updateHandler = updateHandler
-    _updateExecutor = updateExecutor
-    super.init(bufferSize: bufferSize)
-  }
-  
-  func updateWithoutHandling(_ update: Update,
-                             from originalExecutor: Executor?) {
-    super.update(update, from: originalExecutor)
-  }
-
-  @discardableResult
-  func tryCompleteWithoutHandling(
-    with completion: Fallible<Success>,
-    from originalExecutor: Executor?) -> Bool {
-    return super.tryComplete(completion, from: originalExecutor)
-  }
-
-  /// Calls update handler instead of sending specified Update to the Producer
-  override public func update(
-    _ update: Update,
-    from originalExecutor: Executor? = nil) {
-    _updateExecutor.execute(from: originalExecutor) {
-      (originalExecutor) in
-      self._updateHandler(self, .update(update), originalExecutor)
-    }
-  }
-  
-  /// Calls update handler instead of sending specified Complete to the Producer
-  override public func tryComplete(
-    _ completion: Fallible<Success>,
-    from originalExecutor: Executor? = nil) -> Bool {
-    _updateExecutor.execute(from: originalExecutor) {
-      (originalExecutor) in
-      self._updateHandler(self, .completion(completion), originalExecutor)
-    }
-    return true
   }
 }
 

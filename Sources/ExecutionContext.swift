@@ -110,6 +110,17 @@ public extension ExecutionContext {
       completable?.cancelBecauseOfDeallocatedContext()
     }
   }
+
+  func makeDynamicProperty<T>(
+    _ initialValue: T,
+    bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize
+    ) -> DynamicProperty<T>
+  {
+    return DynamicProperty(
+      initialValue: initialValue,
+      updateExecutor: executor,
+      bufferSize: bufferSize)
+  }
 }
 
 /// Protocol for any instance that has `ReleasePool`.
