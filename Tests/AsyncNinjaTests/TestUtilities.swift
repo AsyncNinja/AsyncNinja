@@ -130,7 +130,8 @@ class TestActor: Actor, ReleasePoolOwner {
   let releasePool = ReleasePool()
 }
 
-@available(macOS 10.10, iOS 8.0, tvOS 9.0, watchOS 2.0, *)
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+
 class TestObjCActor: NSObject, Actor, ObjCInjectedRetainer {
     let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
     var executor: Executor { return .queue(self.internalQueue) }
@@ -139,3 +140,5 @@ class TestObjCActor: NSObject, Actor, ObjCInjectedRetainer {
 func eval<Result>(_ body: () throws -> Result) rethrows -> Result {
   return try body()
 }
+
+#endif
