@@ -192,4 +192,15 @@
     }
   }
 
+  public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&EventsDestination>(
+    _ majorStream: T,
+    _ minorStream: U,
+    valueTransformer: ValueTransformer)
+  {
+    doubleBind(majorStream,
+               transform: { valueTransformer.transformedValue($0) as! U.Update },
+               minorStream,
+               reverseTransform: { valueTransformer.reverseTransformedValue($0) as! T.Update })
+  }
+
 #endif

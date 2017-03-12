@@ -294,8 +294,9 @@ public extension EventsSource {
 
 public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&EventsDestination>(
   _ majorStream: T,
-  _ minorStream: U
-  ) where T.Update == U.Update, T.Success == T.Success
+  transform: @escaping (T.Update) -> U.Update,
+  _ minorStream: U,
+  reverseTransform: @escaping (U.Update) -> T.Update)
 {
   var locking = makeLocking(isFair: true)
   var majorRevision = 1
@@ -307,7 +308,7 @@ public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&Events
     if minorRevision >= majorRevision {
       minorRevision += 1
       locking.unlock()
-      majorStream?.update(update, from: originalExecutor)
+      majorStream?.update(reverseTransform(update), from: originalExecutor)
     } else {
       minorRevision = majorRevision
       locking.unlock()
@@ -326,7 +327,7 @@ public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&Events
     if majorRevision >= minorRevision {
       majorRevision += 1
       locking.unlock()
-      minorStream?.update(update, from: originalExecutor)
+      minorStream?.update(transform(update), from: originalExecutor)
     } else {
       majorRevision = minorRevision
       locking.unlock()
@@ -338,4 +339,12 @@ public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&Events
     majorStream._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
     minorStream._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
   }
+}
+
+public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&EventsDestination>(
+  _ majorStream: T,
+  _ minorStream: U
+  ) where T.Update == U.Update
+{
+  doubleBind(majorStream, transform: { $0 }, minorStream, reverseTransform: { $0 })
 }
