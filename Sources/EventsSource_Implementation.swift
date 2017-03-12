@@ -78,7 +78,12 @@ extension EventsSource {
       catch { eventsDestination.fail(error, from: originalExecutor) }
     }
 
-    eventsDestination._asyncNinja_retainHandlerUntilFinalization(handler)
+    if let handler = handler {
+      let box = MutableBox<AnyObject?>(handler)
+      self._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
+      eventsDestination._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
+    }
+
     cancellationToken?.add(cancellable: eventsDestination)
   }
 

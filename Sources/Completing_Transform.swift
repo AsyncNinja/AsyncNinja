@@ -309,7 +309,7 @@ public extension Completing {
         promise.complete(completion, from: executor)
       }
     }
-    self._asyncNinja_retainHandlerUntilFinalization(handler)
+    promise._asyncNinja_retainHandlerUntilFinalization(handler)
 
     return promise
   }

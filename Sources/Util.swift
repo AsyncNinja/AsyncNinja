@@ -304,3 +304,16 @@ class WeakBox<T: AnyObject> {
     self.value = value
   }
 }
+
+/// **Internal use only**
+class HalfRetainer<T> {
+  let box: MutableBox<T?>
+
+  init(box: MutableBox<T?>) {
+    self.box = box
+  }
+
+  deinit {
+    box.value = nil
+  }
+}
