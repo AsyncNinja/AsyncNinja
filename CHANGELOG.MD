@@ -1,3 +1,11 @@
+# 1.0.0-beta5
+* adding ability to nest synchronously calls on the same executor instead of making async dispatches all the time
+* naming improved
+* infrastructure build up on protocols has been build
+* major reactive programming improvements: `ReactiveProperties`, convenience extensions added to most popular iOS controls, bindings added
+* `Sink`, `DynamicProperty`, `ProducerProxy` added
+* fixing and improving memory management/lifetime management of `Channel`
+
 # 1.0.0-beta4
 * x32 targets fixed
 * `ProducerProxy` added
