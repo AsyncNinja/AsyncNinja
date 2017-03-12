@@ -103,6 +103,10 @@ func pickInt(max: Int = 100) -> Int {
   #endif
 }
 
+func eval<Result>(_ body: () throws -> Result) rethrows -> Result {
+  return try body()
+}
+
 enum TestError: Error {
   case testCode
   case otherCode
@@ -135,10 +139,6 @@ class TestActor: Actor, ReleasePoolOwner {
 class TestObjCActor: NSObject, Actor, ObjCInjectedRetainer {
     let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
     var executor: Executor { return .queue(self.internalQueue) }
-}
-
-func eval<Result>(_ body: () throws -> Result) rethrows -> Result {
-  return try body()
 }
 
 #endif
