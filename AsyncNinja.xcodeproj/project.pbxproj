@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F8369B581E76FC5300B65C97 /* appleOS_URLSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8369B571E76FC5300B65C97 /* appleOS_URLSession.swift */; };
+		F8369B5A1E76FCBB00B65C97 /* appleOS_CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8369B591E76FCBB00B65C97 /* appleOS_CoreData.swift */; };
 		OBJ_100 /* Collection+Futures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_19 /* Collection+Futures.swift */; };
 		OBJ_101 /* Completable_Implementation.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_20 /* Completable_Implementation.swift */; };
 		OBJ_102 /* Completing_Implementation.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_21 /* Completing_Implementation.swift */; };
@@ -91,6 +93,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F8369B571E76FC5300B65C97 /* appleOS_URLSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = appleOS_URLSession.swift; sourceTree = "<group>"; };
+		F8369B591E76FCBB00B65C97 /* appleOS_CoreData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = appleOS_CoreData.swift; sourceTree = "<group>"; };
 		OBJ_10 /* appleOS_Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Notifications.swift; sourceTree = "<group>"; };
 		OBJ_11 /* appleOS_Observation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Observation.swift; sourceTree = "<group>"; };
 		OBJ_12 /* appleOS_ReactiveProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_ReactiveProperties.swift; sourceTree = "<group>"; };
@@ -186,7 +190,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -195,7 +199,6 @@
 				OBJ_80 /* Documentation */,
 				OBJ_81 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_55 /* Tests */ = {
@@ -241,6 +244,8 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_8 /* appleOS.swift */,
+				F8369B571E76FC5300B65C97 /* appleOS_URLSession.swift */,
+				F8369B591E76FCBB00B65C97 /* appleOS_CoreData.swift */,
 				OBJ_9 /* appleOS_ExecutionContext.swift */,
 				OBJ_10 /* appleOS_Notifications.swift */,
 				OBJ_11 /* appleOS_Observation.swift */,
@@ -351,7 +356,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_81 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -435,6 +440,7 @@
 				OBJ_124 /* OptionalAdaptor.swift in Sources */,
 				OBJ_125 /* Producer.swift in Sources */,
 				OBJ_126 /* Promise.swift in Sources */,
+				F8369B5A1E76FCBB00B65C97 /* appleOS_CoreData.swift in Sources */,
 				OBJ_127 /* Queue.swift in Sources */,
 				OBJ_128 /* ReleasePool.swift in Sources */,
 				OBJ_129 /* Sink.swift in Sources */,
@@ -442,6 +448,7 @@
 				OBJ_131 /* TimerChannel.swift in Sources */,
 				OBJ_132 /* Util.swift in Sources */,
 				OBJ_133 /* watchOS.swift in Sources */,
+				F8369B581E76FC5300B65C97 /* appleOS_URLSession.swift in Sources */,
 				OBJ_134 /* Zip2Futures.swift in Sources */,
 				OBJ_135 /* Zip3Futures.swift in Sources */,
 			);
