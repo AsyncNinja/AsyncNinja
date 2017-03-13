@@ -1,0 +1,275 @@
+
+@startuml
+
+package "Key Protocols" {
+    interface CompletionController<Success> {
+        Completion is Fallible<Success>
+    }
+
+    interface Completing<Success> {
+        func onComplete()
+        func mapCompletion()
+    }
+
+    interface Completable<Success> {
+        func complete()
+    }
+
+    interface UpdatesController<Update> {
+    }
+
+    interface Updating<Update> {
+        func onUpdate()
+        func mapUpdate()
+    }
+
+    interface Updatable<Update> {
+        func update()
+    }
+
+    interface EventsController<Update, Success> {
+        typealias Event = ChannelEvent<Update, Success>
+    }
+
+    interface EventsSource<Update, Success> {
+    }
+
+    interface EventsDestination<Update, Success> {
+    }
+}
+
+package "Async Primitives" {
+    abstract class Future<Success> {
+        **abstract immutable proxy of a value**
+        **that will be available later**
+        ===
+    }
+
+    class ConstantFuture<Success> {
+        **private implementation of future**
+        **that has been made completed**
+        ===
+        - init(completion:)
+    }
+
+    class Promise<Success> {
+        **mutable future**
+        ===
+        + init()
+    }
+
+    abstract class Channel<Update, Success> {
+        **abstract immutable proxy for updates**
+        **that will arrive one by one**
+        **followed by a completion**
+        ===
+    }
+
+    abstract class BaseProducer<Update, Success> {
+        **abstract mutable Channel**
+        ===
+    }
+
+    class Producer<Update, Success> {
+        **mutable Channel you can update manually**
+        ===
+        + init()
+    }
+
+    class ProducerProxy<Update, Success> {
+        **mutable Channel that acts like**
+        **a proxy to some read-write value**
+        ===
+        + init(updateExecutor:updateHandler:)
+    }
+
+    class DynamicProperty<Value> {
+        **mutable Channel that acts like**
+        **a dynamic property**
+        Update in Value
+        Success is Void
+        ===
+        + init(_ initialValue:updateExecutor:)
+    }
+
+    class Sink<Update, Success> {
+        **updatable object that acts like a setter**
+        **and looks like an EventsDestination**
+        ===
+        + init(updateExecutor:updateHandler:)
+    }
+
+    class CachableValue {
+        **a simple cache that can contain single value**
+        ===
+    }
+    class Cache {
+        **a simple cache that can contain**
+        **multiple values by unique hashable key**
+        ===
+    }
+}
+
+package "Memory & Async Execution Helpers" {
+    class Executor {
+        **encapsulates asynchrounous way**
+        **of execution escaped block**
+
+        ===
+
+        case main
+        case primary
+        case default
+        func queue(_:)
+        func operationQueue(_:)
+
+        --
+
+        func execute(from:, _:)
+        func execute(after:, _:)
+    }
+
+    class ReleasePool {
+        **retains another objects until drain**
+        ===
+    }
+
+    interface Retainer {
+        **Extends lifetime of attached objects until self deinit**
+        ===
+        func releaseOnDeinit(_:)
+        func notifyDeinit(_:)
+    }
+
+    interface ReleasePoolOwner {
+        **Protocol that implements Retainer methods**
+        **using provided ReleasePool**
+        ===
+    }
+
+    interface ObjCInjectedRetainer {
+        **Protocol that implements Retainer methods**
+        **using Objective-C runtime**
+    }
+
+    interface ExecutionContext {
+        **Protocol for concurrency-aware active objects**
+        ===
+    }
+
+    interface ObjCUIInjectedExecutionContext {
+        **Protocol that implements Retainer and ExecutionContext**
+        **methods for UI related classes**
+    }
+}
+
+package "Various Utility Types" {
+    class Fallible<Success> {
+        **Validation Monad**
+        **A container of either Success or Failure**
+        ===
+        case success(Success)
+        case failure(Error)
+
+        ---
+
+        func map(_:)
+        func liftSuccess()
+        func onSuccess(_:)
+        func onFailure(_:)
+    }
+
+    class Either<Left, Right> {
+        **Either Monad**
+        **A container of either Left or Right**
+        ===
+        case left(Left)
+        case right(right)
+
+        ---
+
+        func mapLeft(_:)
+        func mapRight(_:)
+        func onLeft(_:)
+        func onRight(_:)
+    }
+
+    class ChannelEvent<Update, Success> {
+        **Either Monad**
+        **made specially to look like a channel event**
+        ===
+        case update(Update)
+        case completion(Fallible<Success>)
+    }
+
+    class CancellationToken {
+        **token to cancel various operations with**
+        ===
+        func cancel()
+    }
+
+    class ObservationSession {
+        **An object that is able to control**
+        **observation-related channel constructors**
+        ===
+        var isEnabled: Bool
+        init(isEnabled:)
+    }
+
+    class ReactiveProperties<Object: NSObject> {
+        **An adaptor for reactive properties**
+
+        **Has multiple extensions that provide**
+        **convenience methods/properties that make reactive properties**
+        ===
+        func updatable<T>(...) -> ProducerProxy<T, Void>
+        func updating<T>(...) -> Channel<T, Void>
+        func sink<T>(...) -> Sink<T, Void>
+    }
+}
+
+CompletionController <|.. Completing
+CompletionController <|.. Completable
+
+UpdatesController <|.. Updating
+UpdatesController <|.. Updatable
+
+CompletionController <|.. EventsController
+UpdatesController <|.. EventsController
+
+EventsController <|.. EventsSource
+EventsController <|.. EventsDestination
+
+Updating <|.. EventsSource
+Completing <|.. EventsSource
+
+Updatable <|.. EventsDestination
+Completable <|.. EventsDestination
+
+Completing <|.. Future
+
+Future <|-- Promise
+Future <|-- ConstantFuture
+Completable <|.. Promise
+
+EventsSource <|.. Channel
+
+Channel <|-- BaseProducer
+EventsDestination <|.. BaseProducer
+
+BaseProducer <|-- DynamicProperty
+BaseProducer <|-- Producer
+BaseProducer <|-- ProducerProxy
+
+EventsDestination <|.. Sink
+
+Retainer <|.. ExecutionContext
+ExecutionContext *-- Executor
+Retainer <|.. ReleasePoolOwner
+ReleasePoolOwner *-- ReleasePool
+Retainer <|.. ObjCInjectedRetainer
+NSObjectProtocol <|.. ObjCInjectedRetainer
+
+ExecutionContext <|.. ObjCUIInjectedExecutionContext
+ObjCInjectedRetainer <|.. ObjCUIInjectedExecutionContext
+@enduml
