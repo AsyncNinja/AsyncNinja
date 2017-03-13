@@ -23,7 +23,7 @@
 import Dispatch
 
 /// An object that allows to implement and control cancellation
-public class CancellationToken {
+public class CancellationToken: Cancellable {
   private var _container = makeThreadSafeContainer()
 
   /// Returns state of the object
@@ -52,6 +52,13 @@ public class CancellationToken {
       } else {
         return $0
       }
+    }
+  }
+
+  /// Manually cancelles all attached items
+  public func cancel() {
+    _container.updateHead { _ in
+      return CancelledItem()
     }
   }
 
