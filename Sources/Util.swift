@@ -137,6 +137,11 @@ public enum Either<Left, Right> {
     else { return nil }
   }
 
+  /// Transforms left value of `Either`. Does nothing if the value contains right
+  ///
+  /// - Parameter transform: closure that transforms Left to T
+  /// - Returns: transformed `Either`
+  /// - Throws: rethrows error thrown from transform
   public func mapLeft<T>(_ transform: (Left) throws -> T) rethrows -> Either<T, Right> {
     switch self {
     case let .left(left):
@@ -146,6 +151,11 @@ public enum Either<Left, Right> {
     }
   }
 
+  /// Transforms right value of `Either`. Does nothing if the value contains left
+  ///
+  /// - Parameter transform: closure that transforms Right to T
+  /// - Returns: transformed `Either`
+  /// - Throws: rethrows error thrown from transform
   public func mapRight<T>(_ transform: (Right) throws -> T) rethrows -> Either<Left, T> {
     switch self {
     case let .left(left):

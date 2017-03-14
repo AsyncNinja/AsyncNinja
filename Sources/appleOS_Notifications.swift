@@ -82,6 +82,11 @@
   }
   
   extension NotificationCenter: ObjCInjectedRetainer {
+
+    /// Makes a `ProducerProxy` that transforms notifications to updates
+    /// Subscribe to listen to notifications. Update to post notifications
+    ///
+    /// - Returns: constructed `ProducerProxy`
     public func updatable<T: NSObject>(
       object: T,
       name: NSNotification.Name,
@@ -99,6 +104,10 @@
                         enablingCallback: { enablingCallback($0, $1!, $2) })
     }
 
+    /// Makes a `ProducerProxy` that transforms notifications to updates
+    /// Subscribe to listen to notifications. Update to post notifications
+    ///
+    /// - Returns: constructed `ProducerProxy`
     public func updatable(
       name: NSNotification.Name,
       from originalExecutor: Executor? = nil,

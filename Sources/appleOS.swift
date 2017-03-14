@@ -26,8 +26,6 @@
   
   public extension Executor {
     
-    /// Convenience function that makes executor from `OperationQueue`
-    
     /// makes an `Executor` from `OperationQueue`
     ///
     /// - Parameters:
@@ -37,7 +35,9 @@
     /// - Returns: constructed `Executor`
     static func operationQueue(
       _ queue: OperationQueue,
-      isStrictAsync: Bool = false) -> Executor {
+      isStrictAsync: Bool = false
+      ) -> Executor
+    {
       return Executor(relaxAsyncWhenLaunchingFrom: isStrictAsync ? nil : ObjectIdentifier(queue),
                       handler: queue.addOperation)
     }
@@ -84,6 +84,7 @@
     var executor: Executor { return .main }
   }
 
+  // **internal use only**
   private struct Statics {
     static var increment: OSAtomic_int64_aligned64_t = 0
     static func withUniqueKey(_ block: (Int64) -> Void) {
@@ -143,6 +144,12 @@
     }
   }
 
+  /// Binds two event streams bidirectionally.
+  ///
+  /// - Parameters:
+  ///   - majorStream: a stream to bind to. This stream has a priority during initial synchronization
+  ///   - minorStream: a stream to bind to.
+  ///   - valueTransformer: `ValueTransformer` to use to transform from T.Update to U.Update and reverse
   public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&EventsDestination>(
     _ majorStream: T,
     _ minorStream: U,
@@ -160,14 +167,22 @@
   
   import WebKit
   
+  // MARK: - reactive properties for WKWebView
   public extension ReactiveProperties where Object: WKWebView {
+
+    /// An `Sink` that refers to write-only `WKWebView.load(_:)`
     var loadRequest: Sink<URLRequest, Void> { return sink { $0.load($1) } }
     
+    /// An `Sink` that refers to write-only `WKWebView.loadFileURL(_:, allowingReadAccessTo:)`
     @available(OSX 10.11, iOS 9, *)
-    var loadFileURL: Sink<(url: URL, readAccessURL: URL), Void> { return sink { $0.loadFileURL($1.url, allowingReadAccessTo: $1.readAccessURL) } }
+    var loadFileURL: Sink<(url: URL, readAccessURL: URL), Void> {
+      return sink { $0.loadFileURL($1.url, allowingReadAccessTo: $1.readAccessURL) }
+    }
     
+    /// An `Sink` that refers to write-only `WKWebView.loadHTMLString(_:, baseURL:)`
     var loadHTMLString: Sink<(string: String, baseURL: URL?), Void> { return sink { $0.loadHTMLString($1.string, baseURL: $1.baseURL) } }
     
+    /// An `Sink` that refers to write-only `load(_:, mimeType:, characterEncodingName:, baseURL:)`
     @available(OSX 10.11, iOS 9, *)
     var loadData: Sink<(data: Data, mimeType: String, characterEncodingName: String, baseURL: URL), Void> {
       return sink { $0.load($1.data, mimeType: $1.mimeType, characterEncodingName: $1.characterEncodingName, baseURL: $1.baseURL) }

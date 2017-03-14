@@ -292,6 +292,13 @@ public extension EventsSource {
   }
 }
 
+/// Binds two event streams bidirectionally.
+///
+/// - Parameters:
+///   - majorStream: a stream to bind to. This stream has a priority during initial synchronization
+///   - transform: for T.Update -> U.Update
+///   - minorStream: a stream to bind to.
+///   - reverseTransform: for U.Update -> T.Update
 public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&EventsDestination>(
   _ majorStream: T,
   transform: @escaping (T.Update) -> U.Update,
@@ -341,6 +348,11 @@ public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&Events
   }
 }
 
+/// Binds two event streams bidirectionally.
+///
+/// - Parameters:
+///   - majorStream: a stream to bind to. This stream has a priority during initial synchronization
+///   - minorStream: a stream to bind to.
 public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&EventsDestination>(
   _ majorStream: T,
   _ minorStream: U

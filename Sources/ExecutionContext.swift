@@ -111,6 +111,14 @@ public extension ExecutionContext {
     }
   }
 
+  /// Makes a dynamic property bound to the execution context
+  ///
+  /// - Parameters:
+  ///   - initialValue: initial value to set
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  /// - Returns: `DynamicProperty` bound to the context
   func makeDynamicProperty<T>(
     _ initialValue: T,
     bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize

@@ -22,6 +22,7 @@
 
 import Dispatch
 
+/// Protocol for a Completable that can be used for cachable
 public protocol CachableCompletable: Completable {
   associatedtype CompletingType: Completing
 

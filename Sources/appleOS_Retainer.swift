@@ -300,6 +300,10 @@
       return producer
     }
 
+    /// Makes a sink that wraps specified setter
+    ///
+    /// - Parameter setter: to use with sink
+    /// - Returns: constructed sink
     func sink<T>(executor: Executor, setter: @escaping CustomSetter<T>) -> Sink<T, Void> {
       let sink = Sink<T, Void>(updateExecutor: executor) {
         [weak self] (sink, event, originalExecutor) in
@@ -399,8 +403,15 @@
 
       return producer
     }
+  }
 
-    func setValue<T>(_ newValue: T, forKeyPath keyPath: String, allowSettingSameValue: Bool, customSetter: CustomSetter<T>?) {
+  extension Retainer where Self: NSObject {
+    func setValue<T>(
+      _ newValue: T,
+      forKeyPath keyPath: String,
+      allowSettingSameValue: Bool,
+      customSetter: CustomSetter<T>?)
+    {
       let nsNewObjectValue: NSObject?
       if let customSetter = customSetter {
         customSetter(self, newValue)
@@ -422,8 +433,13 @@
         }
       }
     }
-    
-    func getValue<T>(forKeyPath keyPath: String, changes: [NSKeyValueChangeKey: Any], customGetter: CustomGetter<T>?) -> T? {
+
+    func getValue<T>(
+      forKeyPath keyPath: String,
+      changes: [NSKeyValueChangeKey: Any],
+      customGetter: CustomGetter<T>?
+      ) -> T?
+    {
         if let customGetter = customGetter {
             return customGetter(self)
         } else {
@@ -431,7 +447,12 @@
         }
     }
 
-    func getValue<T>(forKeyPath keyPath: String, changes: [NSKeyValueChangeKey: Any], customGetter: CustomGetter<T?>?) -> T? {
+    func getValue<T>(
+      forKeyPath keyPath: String,
+      changes: [NSKeyValueChangeKey: Any],
+      customGetter: CustomGetter<T?>?
+      ) -> T?
+    {
       if let customGetter = customGetter {
         return customGetter(self).flatMap { $0 }
       } else {

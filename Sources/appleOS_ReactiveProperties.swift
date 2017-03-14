@@ -185,6 +185,10 @@
                              customGetter: customGetter)
     }
 
+    /// Makes a sink that wraps specified setter
+    ///
+    /// - Parameter setter: to use with sink
+    /// - Returns: constructed sink
     func sink<T>(setter: @escaping CustomSetter<T>) -> Sink<T, Void> {
       return object.sink(executor: executor, setter: setter)
     }

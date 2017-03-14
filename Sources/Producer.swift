@@ -105,12 +105,17 @@ public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
 
 // MARK: - DynamicProperty
 
+/// DynamicProperty acts like a property but looks like a `Producer`.
+/// You can make non Objective-C dynamic properties with it.
 public class DynamicProperty<T>: BaseProducer<T, Void> {
-  private let _updateExecutor: Executor
+  /// Value that property contains
+  /// It is safe to use this property for any `Executor` but do not expect it to be updated immediatly.
   public var value: T {
     get { return _value }
     set { self.update(newValue) }
   }
+
+  private let _updateExecutor: Executor
   private var _value: T
 
   /// designated initializer

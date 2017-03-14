@@ -24,6 +24,7 @@ import Dispatch
 
 // MARK: - Completion
 
+/// A base protocol for objects that are aware of Success, Error and Completion
 public protocol CompletionController: LifetimeExtender {
   associatedtype Success
 }
@@ -59,10 +60,12 @@ public protocol Completable: CompletionController, Cancellable {
 
 // MARK: - Updates
 
+/// A base protocol for objects that are aware of Update
 public protocol UpdatesController: LifetimeExtender {
   associatedtype Update
 }
 
+/// A base protocol for objects that can provide Update values periodically
 public protocol Updating: UpdatesController {
 
   /// **internal use only**
@@ -115,6 +118,7 @@ public extension Updating {
   }
 }
 
+/// A base protocol for objects that can be updated with Update values
 public protocol Updatable: UpdatesController {
 
   /// Sends specified Update to the Updatable
@@ -139,6 +143,8 @@ public extension Updatable {
 }
 
 // MARK: - Events
+
+/// A base protocol of object aware of Update, Success, Error, Completion
 public protocol EventsController: UpdatesController, CompletionController {
 }
 
@@ -146,6 +152,7 @@ public extension EventsController {
   typealias Event = ChannelEvent<Update, Success>
 }
 
+/// A base protocol of object that update and complete
 public protocol EventsSource: EventsController, Completing, Updating, Sequence {
 
   associatedtype Iterator: IteratorProtocol = ChannelIterator<Update, Success>
@@ -162,6 +169,7 @@ public protocol EventsSource: EventsController, Completing, Updating, Sequence {
     _ block: @escaping (_ event: Event, _ originalExecutor: Executor) -> Void) -> AnyObject?
 }
 
+/// A base protocol of object that can be updated and completed
 public protocol EventsDestination: EventsController, Updatable, Completable {
 }
 
@@ -189,6 +197,8 @@ public extension EventsDestination {
 
 // MARK: - Supporting Interfaces
 
+/// Base protocol for objects that can extend lifetime of attached objects
+/// up to the moment of finalization (deinit or completion).
 public protocol LifetimeExtender: class {
   /// **Internal use only**.
   func _asyncNinja_retainUntilFinalization(_ releasable: Releasable)
@@ -216,10 +226,19 @@ public enum ChannelEvent<Update, Success> {
 }
 
 public extension ChannelEvent {
+
+  /// Convenence initializer of ChannelEvent.completion
+  ///
+  /// - Parameter success: success value to complete with
+  /// - Returns: successful completion channel event
   static func success(_ success: Success) -> ChannelEvent {
     return .completion(.success(success))
   }
 
+  /// Convenence initializer of ChannelEvent.completion
+  ///
+  /// - Parameter failure: error to complete with
+  /// - Returns: failure completion channel event
   static func failure(_ error: Swift.Error) -> ChannelEvent {
     return .completion(.failure(error))
   }
