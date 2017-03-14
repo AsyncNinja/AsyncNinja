@@ -153,5 +153,25 @@
                minorStream,
                reverseTransform: { valueTransformer.reverseTransformedValue($0) as! T.Update })
   }
+  
+#endif
 
+#if os(macOS) || os(iOS)
+  
+  import WebKit
+  
+  public extension ReactiveProperties where Object: WKWebView {
+    var loadRequest: Sink<URLRequest, Void> { return sink { $0.load($1) } }
+    
+    @available(OSX 10.11, iOS 9, *)
+    var loadFileURL: Sink<(url: URL, readAccessURL: URL), Void> { return sink { $0.loadFileURL($1.url, allowingReadAccessTo: $1.readAccessURL) } }
+    
+    var loadHTMLString: Sink<(string: String, baseURL: URL?), Void> { return sink { $0.loadHTMLString($1.string, baseURL: $1.baseURL) } }
+    
+    @available(OSX 10.11, iOS 9, *)
+    var loadData: Sink<(data: Data, mimeType: String, characterEncodingName: String, baseURL: URL), Void> {
+      return sink { $0.load($1.data, mimeType: $1.mimeType, characterEncodingName: $1.characterEncodingName, baseURL: $1.baseURL) }
+    }
+  }
+  
 #endif
