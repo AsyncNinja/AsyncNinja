@@ -403,10 +403,8 @@
 
       return producer
     }
-  }
 
-  extension Retainer where Self: NSObject {
-    func setValue<T>(
+    fileprivate func setValue<T>(
       _ newValue: T,
       forKeyPath keyPath: String,
       allowSettingSameValue: Bool,
@@ -434,7 +432,7 @@
       }
     }
 
-    func getValue<T>(
+    fileprivate func getValue<T>(
       forKeyPath keyPath: String,
       changes: [NSKeyValueChangeKey: Any],
       customGetter: CustomGetter<T>?
@@ -447,7 +445,7 @@
         }
     }
 
-    func getValue<T>(
+    fileprivate func getValue<T>(
       forKeyPath keyPath: String,
       changes: [NSKeyValueChangeKey: Any],
       customGetter: CustomGetter<T?>?
