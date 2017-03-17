@@ -15,7 +15,7 @@
 * Integration: [Swift Package Manager](Documentation/Integration.md#using-swift-package-manager), [CocoaPods](Documentation/Integration.md#cocoapods), [git submodule](Documentation/Integration.md#using-git-submodule)
 * **[Full Documentation](http://cocoadocs.org/docsets/AsyncNinja/)**
 
-![Tiny Map of Primitives](Documentation/Resources/tiny_map.svg)
+![Tiny Map of Primitives](Documentation/Resources/tiny_map.png)
 [see full UML of types](Documentation/Resources/map.svg)
 
 * Related Articles
