@@ -35,10 +35,9 @@ public protocol CachableCompletable: Completable {
 /// that can be either `Future` or `Channel` and Context. That gives
 /// an opportunity to make cache that can report of status of completion
 /// updateally (e.g. download persentage).
-public class CachableValue<T: CachableCompletable, Context: ExecutionContext> {
-  public typealias MissHandler = (_ strongContext: Context) throws -> T.CompletingType
+public class CachableValue<T: CachableCompletable> {
+  public typealias MissHandler = () throws -> T.CompletingType
   private let _executor: Executor
-  private weak var _context: Context?
   private var _locking = makeLocking()
   private let _missHandler: MissHandler
   private var _completing = T()
@@ -47,13 +46,27 @@ public class CachableValue<T: CachableCompletable, Context: ExecutionContext> {
   /// Designated initializer
   ///
   /// - Parameters:
+  ///   - executor: executor to call miss handle on
+  ///   - missHandler: block that handles cache misses
+  public init(executor: Executor, missHandler: @escaping MissHandler) {
+    _executor = executor
+    _missHandler = missHandler
+  }
+
+  /// Convenience initializer
+  ///
+  /// - Parameters:
   ///   - context: context that owns CahableValue
   ///   - missHandler: block that handles cache misses
   ///   - strongContext: context restored from weak reference
-  public init(context: Context, missHandler: @escaping MissHandler) {
-    _context = context
-    _missHandler = missHandler
-    _executor = context.executor
+  public convenience init<C: ExecutionContext>(context: C, missHandler: @escaping (_ strongContext: C) throws -> T.CompletingType) {
+    self.init(executor: context.executor) { [weak context] in
+      if let context = context {
+        return try missHandler(context)
+      } else {
+        throw AsyncNinjaError.contextDeallocated
+      }
+    }
   }
 
   /// Fetches value
@@ -112,13 +125,8 @@ public class CachableValue<T: CachableCompletable, Context: ExecutionContext> {
   }
 
   private func _handleMissOnExecutor(from originalExecutor: Executor?) {
-    guard let context = _context else {
-      _completing.fail(AsyncNinjaError.contextDeallocated, from: originalExecutor)
-      return
-    }
-
     do {
-      let completable = try _missHandler(context)
+      let completable = try _missHandler()
       completable._onComplete(executor: .immediate) {
         [weak self] (completion, originalExecutor) in
         self?._handle(completion: completion, from: originalExecutor)
@@ -153,9 +161,9 @@ private enum CachableValueState {
 }
 
 /// Convenience typealias for CachableValue based on `Future`
-public typealias SimpleCachableValue<Success, Context: ExecutionContext>
-  = CachableValue<Promise<Success>, Context>
+public typealias SimpleCachableValue<Success>
+  = CachableValue<Promise<Success>>
 
 /// Convenience typealias for CachableValue based on `Channel`
-public typealias ReportingCachableValue<Update, Success, Context: ExecutionContext>
-  = CachableValue<Producer<Update, Success>, Context>
+public typealias ReportingCachableValue<Update, Success>
+  = CachableValue<Producer<Update, Success>>
