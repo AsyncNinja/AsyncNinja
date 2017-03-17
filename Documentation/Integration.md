@@ -5,6 +5,7 @@ This topic describes options of integration.
 ##### Contents
 * [Using Swift Package Manager](#using-swift-package-manager)
 * [CocoaPods](#cocoapods)
+* [Carthage](#carthage)
 * [Using git submodule](#using-git-submodule)
 
 ## Using [Swift Package Manager](https://github.com/apple/swift-package-manager)
@@ -40,6 +41,14 @@ target 'MyWonderfulApp' do
   use_frameworks!
   pod 'AsyncNinja'
 end
+```
+
+## Carthage
+
+Add to your Cartfile:
+
+```
+github "AsyncNinja/AsyncNinja"
 ```
 
 ## Using git submodule

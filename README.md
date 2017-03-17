@@ -5,6 +5,7 @@
 ![License:MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
 [![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)](https://travis-ci.org/AsyncNinja)
 [![CocoaPods](https://img.shields.io/cocoapods/v/AsyncNinja.svg)](https://cocoapods.org/pods/AsyncNinja)
+[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 
 * supports: macOS 10.10+, iOS 8.0+, tvOS 9.0+, watchOS 2.0+, Linux
 * `Future`, `Channel`, `DynamicProperty`, `Cache`, `Fallible`, `Executor`, `ExecutionContext`, ...
@@ -20,18 +21,11 @@
 * Related Articles
 	* Moving to nice asynchronous Swift code: [GitHub](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md), [Medium](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
 
-### Contents
-
-* [Integration](#integration)
-* [Why AsyncNinja?](#why-asyncninja)
-* [Using Futures](#using-futures)
-* [Using Channels](#using-channels)
-* [Reactive Programming](#reactive-programming)
-
 ## Integration
 
 * [Swift Package Manager](Documentation/Integration.md#using-swift-package-manager)
 * [CocoaPods](Documentation/Integration.md#cocoapods)
+* [Carthage](Documentation/Integration.md#сarthage)
 * [git submodule](Documentation/Integration.md#using-git-submodule)
 
 ## Why AsyncNinja?
