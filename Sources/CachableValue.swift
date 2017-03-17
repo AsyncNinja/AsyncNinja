@@ -36,11 +36,13 @@ public protocol CachableCompletable: Completable {
 /// an opportunity to make cache that can report of status of completion
 /// updateally (e.g. download persentage).
 public class CachableValue<T: CachableCompletable, Context: ExecutionContext> {
-
-  /// Function that resolves cache misses. `strongContext` is a context restored from weak reference
   public typealias MissHandler = (_ strongContext: Context) throws -> T.CompletingType
-  private var _lockingBox: MutableBox<Locking>
-  private let _impl: CachableValueImpl<T, Context>
+  private let _executor: Executor
+  private weak var _context: Context?
+  private var _locking = makeLocking()
+  private let _missHandler: MissHandler
+  private var _completing = T()
+  private var _state: CachableValueState = .initial
 
   /// Designated initializer
   ///
@@ -49,11 +51,9 @@ public class CachableValue<T: CachableCompletable, Context: ExecutionContext> {
   ///   - missHandler: block that handles cache misses
   ///   - strongContext: context restored from weak reference
   public init(context: Context, missHandler: @escaping MissHandler) {
-    let lockingBox = MutableBox(makeLocking())
-    _lockingBox = lockingBox
-    _impl = CachableValueImpl(context: context,
-                              locker: { lockingBox.value.locker($0) },
-                              missHandler: missHandler)
+    _context = context
+    _missHandler = missHandler
+    _executor = context.executor
   }
 
   /// Fetches value
@@ -66,71 +66,49 @@ public class CachableValue<T: CachableCompletable, Context: ExecutionContext> {
   /// - Returns: `Future` of `Channel`
   public func value(
     mustStartHandlingMiss: Bool = true,
-    mustInvalidateOldValue: Bool = false
+    mustInvalidateOldValue: Bool = false,
+    from originalExecutor: Executor? = nil
     ) -> T.CompletingType {
-    _lockingBox.value.lock()
-    defer { _lockingBox.value.unlock() }
-    return _impl.value(mustStartHandlingMiss: mustStartHandlingMiss,
-                       mustInvalidateOldValue: mustInvalidateOldValue)
+    
+    let (shouldHandle, result): (Bool, T.CompletingType) = _locking.locker {
+      switch _state {
+      case .initial:
+        if mustStartHandlingMiss {
+          _state = .handling
+          return (true, _completing as! T.CompletingType)
+        } else {
+          return (false, _completing as! T.CompletingType)
+        }
+      case .handling:
+        return (false, _completing as! T.CompletingType)
+      case .finished:
+        if mustInvalidateOldValue {
+          _completing = T()
+          if mustStartHandlingMiss {
+            _state = .handling
+            return (true, _completing as! T.CompletingType)
+          } else {
+            _state = .initial
+            return (false, _completing as! T.CompletingType)
+          }
+        } else {
+          return (false, _completing as! T.CompletingType)
+        }
+      }
+    }
+    
+    if shouldHandle {
+      _executor.execute(from: originalExecutor) { [weak self] (originalExecutor) in
+        self?._handleMissOnExecutor(from: originalExecutor)
+      }
+    }
+    
+    return result
   }
 
   /// Invalidates cached value
   public func invalidate() {
-    _lockingBox.value.lock()
-    defer { _lockingBox.value.unlock() }
-    return _impl.invalidate()
-  }
-}
-
-/// **Internal use only** Implementation of CachableValue.
-class CachableValueImpl<T: CachableCompletable, Context: ExecutionContext> {
-  typealias MissHandler = CachableValue<T, Context>.MissHandler
-  private weak var _context: Context?
-  private let _locker: (() -> Void) -> Void
-  private let _missHandler: MissHandler
-  private var _completing = T()
-  private var _state: CachableValueState = .initial
-
-  init(context: Context, locker: @escaping (() -> Void) -> Void, missHandler: @escaping MissHandler) {
-    _context = context
-    _locker = locker
-    _missHandler = missHandler
-  }
-
-  func value(mustStartHandlingMiss: Bool,
-             mustInvalidateOldValue: Bool,
-             from originalExecutor: Executor? = nil
-    ) -> T.CompletingType {
-    switch _state {
-    case .initial:
-      if mustStartHandlingMiss {
-        _handleMiss(from: originalExecutor)
-      }
-    case .handling:
-      nop()
-    case .finished:
-      if mustInvalidateOldValue {
-        _completing = T()
-        _state = .initial
-        if mustStartHandlingMiss {
-          _handleMiss(from: originalExecutor)
-        }
-      }
-    }
-    return _completing as! T.CompletingType
-  }
-
-  private func _handleMiss(from originalExecutor: Executor?) {
-    _state = .handling
-
-    guard let context = _context else {
-      _completing.fail(AsyncNinjaError.contextDeallocated, from: originalExecutor)
-      return
-    }
-
-    context.executor.execute(from: originalExecutor) { [weak self] (originalExecutor) in
-      self?._handleMissOnExecutor(from: originalExecutor)
-    }
+    let _ = value(mustStartHandlingMiss: false, mustInvalidateOldValue: true)
   }
 
   private func _handleMissOnExecutor(from originalExecutor: Executor?) {
@@ -152,19 +130,17 @@ class CachableValueImpl<T: CachableCompletable, Context: ExecutionContext> {
   }
 
   private func _handle(completion: Fallible<T.CompletingType.Success>, from originalExecutor: Executor) {
-    _locker {
-      _state = .finished
-      switch completion {
-      case .success(let success):
-        _completing.succeed(success as! T.Success, from: originalExecutor)
-      case .failure(let failure):
-        _completing.fail(failure, from: originalExecutor)
-      }
+    _locking.lock()
+    let completing = _completing
+    _state = .finished
+    _locking.unlock()
+    
+    switch completion {
+    case .success(let success):
+      completing.succeed(success as! T.Success, from: originalExecutor)
+    case .failure(let failure):
+      completing.fail(failure, from: originalExecutor)
     }
-  }
-
-  public func invalidate() {
-    let _ = value(mustStartHandlingMiss: false, mustInvalidateOldValue: true)
   }
 }
 

@@ -29,12 +29,12 @@ import Dispatch
 /// cache that can report of status of completion updateally
 /// (e.g. download persentage).
 public class Cache<Key: Hashable, T: CachableCompletable, Context: ExecutionContext> {
-  typealias _CachableValue = CachableValueImpl<T, Context>
+  typealias _CachableValue = CachableValue<T, Context>
 
   /// Block that resolves miss
   public typealias MissHandler = (_ strongContext: Context, _ key: Key) throws -> T.CompletingType
 
-  private let _lockingBox = MutableBox(makeLocking())
+  private var _locking = makeLocking()
   private weak var _context: Context?
   private let _missHandler: (Context, Key) throws -> T.CompletingType
   private var _cachedValuesByKey = [Key:_CachableValue]()
@@ -56,30 +56,38 @@ public class Cache<Key: Hashable, T: CachableCompletable, Context: ExecutionCont
   ///   - mustStartHandlingMiss: `true` if handling miss is allowed. `false` is useful if you want to use value if there is one and do not want to handle miss.
   ///   - mustInvalidateOldValue: `true` if previous value may not be used.
   /// - Returns: `Future` of `Channel`
-  public func value(forKey key: Key,
-                    mustStartHandlingMiss: Bool = true,
-                    mustInvalidateOldValue: Bool = false,
-                    from originalExecutor: Executor? = nil) -> T.CompletingType {
+  public func value(
+    forKey key: Key,
+    mustStartHandlingMiss: Bool = true,
+    mustInvalidateOldValue: Bool = false,
+    from originalExecutor: Executor? = nil) -> T.CompletingType
+  {
     guard let context = _context else {
       let completing = T()
       completing.fail(AsyncNinjaError.contextDeallocated, from: originalExecutor)
       return completing as! T.CompletingType
     }
-
-    _lockingBox.value.lock()
-    defer { _lockingBox.value.unlock() }
+    
+    let cachableValueForKey: _CachableValue = _locking.locker {
+      func makeCachableValue(key: Key) -> _CachableValue {
+        let missHandler = _missHandler
+        return _CachableValue(context: context) {
+          try missHandler($0, key)
+        }
+      }
+      return self._cachedValuesByKey
+        .value(forKey: key, orMake: makeCachableValue(key:))
+    }
+    
     func makeCachableValue(key: Key) -> _CachableValue {
       let missHandler = _missHandler
-      let lockingBox = _lockingBox
-      return _CachableValue(context: context, locker: { lockingBox.value.locker($0) }) {
+      return _CachableValue(context: context) {
         try missHandler($0, key)
       }
     }
-    return _cachedValuesByKey
-      .value(forKey: key, orMake: makeCachableValue)
-      .value(mustStartHandlingMiss: mustStartHandlingMiss,
-             mustInvalidateOldValue: mustInvalidateOldValue,
-             from: originalExecutor)
+    return cachableValueForKey.value(mustStartHandlingMiss: mustStartHandlingMiss,
+                                     mustInvalidateOldValue: mustInvalidateOldValue,
+                                     from: originalExecutor)
   }
 
   /// Invalidates cached value for specified key
