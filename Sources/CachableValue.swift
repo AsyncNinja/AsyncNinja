@@ -112,7 +112,7 @@ public class CachableValue<T: CachableCompletable, Context: ExecutionContext> {
   }
 
   private func _handleMissOnExecutor(from originalExecutor: Executor?) {
-    guard let context = self._context else {
+    guard let context = _context else {
       _completing.fail(AsyncNinjaError.contextDeallocated, from: originalExecutor)
       return
     }
@@ -124,7 +124,9 @@ public class CachableValue<T: CachableCompletable, Context: ExecutionContext> {
         self?._handle(completion: completion, from: originalExecutor)
       }
     } catch {
+      _locking.lock()
       _state = .finished
+      _locking.unlock()
       _completing.fail(error, from: originalExecutor)
     }
   }
