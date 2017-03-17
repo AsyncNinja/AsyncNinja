@@ -1,34 +1,103 @@
 
-# AsyncNinja: a Swift library for concurrency and reactive programming
+# ![Ninja Cat](NinjaCat.png) AsyncNinja
+# Swift library for concurrency and reactive programming
 
-![Ninja Cat](NinjaCat.png)
 ![License:MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
 [![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)](https://travis-ci.org/AsyncNinja)
 [![CocoaPods](https://img.shields.io/cocoapods/v/AsyncNinja.svg)](https://cocoapods.org/pods/AsyncNinja)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 
-* supports: macOS 10.10+, iOS 8.0+, tvOS 9.0+, watchOS 2.0+, Linux
-* `Future`, `Channel`, `DynamicProperty`, `Cache`, `Fallible`, `Executor`, `ExecutionContext`, ...
-* neat KVO, target-action, notifications, bindings
-* from less to none boilerplate code for threading and memory management
-* automated cancellation
-* rich collection of transformations (`map`, `filter`, `recover`, `flatMap`, `debounce`, `distinct`, `merge`, `zip`, `sample`, `scan`, ...)
-* **[Full Documentation](http://cocoadocs.org/docsets/AsyncNinja/)**
-
-![Tiny Map of Primitives](Documentation/Resources/tiny_map.png)
-[see full UML of types](Documentation/Resources/map.svg)
+|   | Features   |
+|---|---|
+| 🦄 powerful primitives       | `Future`, `Channel`, `DynamicProperty`, `Cache`, ...           |
+| 🤘 versatile transformations | `map`, `filter`, `recover`, `debounce`, `distinct`, ...   |
+| ✌️ convenient combination    | `flatMap`, `merge`, `zip`, `sample`, `scan`, `reduce`, ...   |
+| 🙌 improves existing things  | Key-Value Observing,  target-action, notifications, bindings            |
+| 🍳 less boilerplate code       | neat cancellation, threading, memory manament                  |
+| 🕶 extendable                | powerful extensions for `URLSession`, UI controls, `CoreData`, ... |
+| 🍱 all platforms (Swift 3.0+)    |  🖥 macOS 10.10+  📱 iOS 8.0+ 📺 tvOS 9.0+ ⌚️ watchOS 2.0+ 🐧 Linux       |
+| 🤓 documentation             | ~95% + sample code, **[see full documentation](http://cocoadocs.org/docsets/AsyncNinja/)** |
+| 🔩 simple integration        | [SPM](Documentation/Integration.md#using-swift-package-manager), [CocoaPods](Documentation/Integration.md#cocoapods), [Carthage](Documentation/Integration.md#сarthage) |
 
 * Related Articles
 	* Moving to nice asynchronous Swift code: [GitHub](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md), [Medium](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
 
-## Integration
+## Reactive Programming
 
-* [Swift Package Manager](Documentation/Integration.md#using-swift-package-manager)
-* [CocoaPods](Documentation/Integration.md#cocoapods)
-* [Carthage](Documentation/Integration.md#сarthage)
-* [git submodule](Documentation/Integration.md#using-git-submodule)
+#### reactive properties
 
-## Why AsyncNinja?
+```swift
+let searchResults = searchBar.rp.text
+  .debounce(interval: 0.3)
+  .distinct()
+  .flatMap(behavior: .keepLatestTransform) { (query) -> Future<[SearchResult]> in
+    return query.isEmpty
+      ? .just([])
+      : searchGitHub(query: query).recover([])
+  }
+```
+
+#### bindings
+
+- unbinds automatically
+- dispatches to a correct queue automatically
+- no  `.observeOn(MainScheduler.instance)` and `.disposed(by: disposeBag)`
+
+```swift
+class MyViewController: UIViewController {
+  /* ... */
+  @IBOutlet weak var myLabel: UILabel!
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    UIDevice.current.rp.orientation
+      .map { $0.description }
+      .bind(myLabel.rp.text)
+  }
+  
+  /* ... */
+}
+```
+
+#### contexts usage
+
+- no `[weak self]`
+- no `DispatchQueue.main.async { ... }`
+- no  `.observeOn(MainScheduler.instance)`
+
+```swift
+class MyViewController: NSViewController {
+  let service: MyService
+
+  /* ... */
+  
+  func fetchAndPresentItems(for request: Request) {
+    service.perform(request: request)
+      .map(context: self, executor: .primary) { (self, response) in
+        return self.items(from: response)
+      }
+      .onSuccess(context: self) { (self, items) in
+        self.present(items: items)
+      }
+  }
+  
+  func items(from response: Response) throws -> [Items] {
+    /* ... extract items from response ... */
+  }
+  
+  func present(items: [Items]) {
+    /* ... update UI ... */
+  }
+}
+
+class MyService {
+  func perform(request: Request) -> Future<Response> {
+    /* ... */
+  }
+}
+```
+
+## In Depth
 
 Let's assume that we have:
 
@@ -285,76 +354,3 @@ func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> {
 }
 ```
 
-## Reactive Programming
-
-#### reactive properties
-```swift
-let searchResults = searchBar.rp.text
-  .debounce(interval: 0.3)
-  .distinct()
-  .flatMap(behavior: .keepLatestTransform) { (query) -> Future<[SearchResult]> in
-    return query.isEmpty
-      ? .just([])
-      : searchGitHub(query: query).recover([])
-  }
-```
-
-#### bindings
-
-- unbinds automatically
-- dispatches to a correct queue automatically
-- no  `.observeOn(MainScheduler.instance)` and `.disposed(by: disposeBag)`
-
-```swift
-class MyViewController: UIViewController {
-  /* ... */
-  @IBOutlet weak var myLabel: UILabel!
-
-  override func viewDidLoad() {
-    super.viewDidLoad()
-    UIDevice.current.rp.orientation
-      .map { $0.description }
-      .bind(myLabel.rp.text)
-  }
-  
-  /* ... */
-}
-```
-
-#### contexts usage
-
-- no `[weak self]`
-- no `DispatchQueue.main.async { ... }`
-- no  `.observeOn(MainScheduler.instance)`
-
-```swift
-class MyViewController: NSViewController {
-  let service: MyService
-
-  /* ... */
-  
-  func fetchAndPresentItems(for request: Request) {
-    service.perform(request: request)
-      .map(context: self, executor: .primary) { (self, response) in
-        return self.items(from: response)
-      }
-      .onSuccess(context: self) { (self, items) in
-        self.present(items: items)
-      }
-  }
-  
-  func items(from response: Response) throws -> [Items] {
-    /* ... extract items from response ... */
-  }
-  
-  func present(items: [Items]) {
-    /* ... update UI ... */
-  }
-}
-
-class MyService {
-  func perform(request: Request) -> Future<Response> {
-    /* ... */
-  }
-}
-```
