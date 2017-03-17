@@ -1,6 +1,6 @@
 
-# ![Ninja Cat](NinjaCat.png) AsyncNinja
-# Swift library for concurrency and reactive programming
+# ![AsyncNinja Title](title_image.png)
+## Swift library for concurrency and reactive programming
 
 ![License:MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
 [![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)](https://travis-ci.org/AsyncNinja)
