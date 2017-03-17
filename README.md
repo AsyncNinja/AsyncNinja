@@ -3,8 +3,8 @@
 
 ![Ninja Cat](NinjaCat.png)
 ![License:MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
-![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)
-![CocoaPods](https://img.shields.io/cocoapods/v/AsyncNinja.svg)
+[![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)](https://travis-ci.org/AsyncNinja)
+[![CocoaPods](https://img.shields.io/cocoapods/v/AsyncNinja.svg)](https://cocoapods.org/pods/AsyncNinja)
 
 * supports: macOS 10.10+, iOS 8.0+, tvOS 9.0+, watchOS 2.0+, Linux
 * `Future`, `Channel`, `DynamicProperty`, `Cache`, `Fallible`, `Executor`, `ExecutionContext`, ...
@@ -12,7 +12,6 @@
 * from less to none boilerplate code for threading and memory management
 * automated cancellation
 * rich collection of transformations (`map`, `filter`, `recover`, `flatMap`, `debounce`, `distinct`, `merge`, `zip`, `sample`, `scan`, ...)
-* Integration: [Swift Package Manager](Documentation/Integration.md#using-swift-package-manager), [CocoaPods](Documentation/Integration.md#cocoapods), [git submodule](Documentation/Integration.md#using-git-submodule)
 * **[Full Documentation](http://cocoadocs.org/docsets/AsyncNinja/)**
 
 ![Tiny Map of Primitives](Documentation/Resources/tiny_map.png)
@@ -23,10 +22,17 @@
 
 ### Contents
 
+* [Integration](#integration)
 * [Why AsyncNinja?](#why-asyncninja)
 * [Using Futures](#using-futures)
 * [Using Channels](#using-channels)
 * [Reactive Programming](#reactive-programming)
+
+## Integration
+
+* [Swift Package Manager](Documentation/Integration.md#using-swift-package-manager)
+* [CocoaPods](Documentation/Integration.md#cocoapods)
+* [git submodule](Documentation/Integration.md#using-git-submodule)
 
 ## Why AsyncNinja?
 
