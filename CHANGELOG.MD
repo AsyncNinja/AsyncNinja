@@ -1,3 +1,8 @@
+# 1.0.0-beta6
+* documentation updated
+* `Cache` and `CachedValue` improved
+* `URLSession` extensions updated
+
 # 1.0.0-beta5
 * adding ability to nest synchronously calls on the same executor instead of making async dispatches all the time
 * naming improved
