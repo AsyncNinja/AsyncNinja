@@ -1,41 +1,39 @@
-# AsyncNinja is a concurrency library for Swift
 
-Toolset for typesafe, threadsafe, memory leaks safe concurrency in Swift 3.
+# AsyncNinja: a Swift library for concurrency and reactive programming
 
+![Ninja Cat](NinjaCat.png)
 ![License:MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
-![Platform:macOS|iOS|tvOS|watchOS|Linux](https://img.shields.io/badge/platform-macOS%7CiOS%7CtvOS%7CwatchOS%7CLinux-orange.svg)
-![Swift](https://img.shields.io/badge/Swift-3.0-orange.svg)
-![Swift Package Manager Supported](https://img.shields.io/badge/Swift%20Package%20Manager-Supported-orange.svg)
-![CocoaPods](https://img.shields.io/cocoapods/v/AsyncNinja.svg)
 ![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)
+![CocoaPods](https://img.shields.io/cocoapods/v/AsyncNinja.svg)
 
-* **Integration**:
-    * [Swift Package Manager](Documentation/Integration.md#using-swift-package-manager)
-    * [CocoaPods](Documentation/Integration.md#cocoapods)
-    * [git submodule](Documentation/Integration.md#using-git-submodule)
-* Requirements
-    * Swift 3.0+ (Xcode 8.0+)
-    * macOS 10.10+, iOS 8.0+, watchOS 2.0+, tvOS 9.0+, Linux
-* [Found issue? Have a feature request? Have question?](https://github.com/AsyncNinja/AsyncNinja/issues)
+* supports: macOS 10.10+, iOS 8.0+, tvOS 9.0+, watchOS 2.0+, Linux
+* `Future`, `Channel`, `DynamicProperty`, `Cache`, `Fallible`, `Executor`, `ExecutionContext`, ...
+* neat KVO, target-action, notifications, bindings
+* from less to none boilerplate code for threading and memory management
+* automated cancellation
+* rich collection of transformations (`map`, `filter`, `recover`, `flatMap`, `debounce`, `distinct`, `merge`, `zip`, `sample`, `scan`, ...)
+* Integration: [Swift Package Manager](Documentation/Integration.md#using-swift-package-manager), [CocoaPods](Documentation/Integration.md#cocoapods), [git submodule](Documentation/Integration.md#using-git-submodule)
+* **[Full Documentation](http://cocoadocs.org/docsets/AsyncNinja/)**
 
-Contents
+![Tiny Map of Primitives](Documentation/Resources/tiny_map.svg)
+[see full UML of types](Documentation/Resources/map.svg)
+
+* Related Articles
+	* Moving to nice asynchronous Swift code: [GitHub](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md), [Medium](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
+
+### Contents
 
 * [Why AsyncNinja?](#why-asyncninja)
-* [Implemented Primitives](#implemented-primitives)
 * [Using Futures](#using-futures)
 * [Using Channels](#using-channels)
-* [Documentation](#documentation)
-* [Related Articles](#related-articles)
-* [Comparison with RxSwift](#comparison-with-rxswift)
-
-![Ninja Cat](https://github.com/AsyncNinja/AsyncNinja/raw/master/NinjaCat.png)
+* [Reactive Programming](#reactive-programming)
 
 ## Why AsyncNinja?
 
 Let's assume that we have:
 
 * `Person` is an example of a struct that contains information about the person.
-* `MyService` is an example of a class that serves as an entry point to the model. Works in background.
+* `MyService` is an example of a class that serves as an entry point to the model. Works in a background.
 * `MyViewController` is an example of a class that manages UI-related instances. Works on the main queue.
 
 #### Code on callbacks
@@ -130,23 +128,9 @@ extension MyService {
 * the block will be retained and called as long as specified context (MyViewController) exists
 * [Want to see extended explanation?](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
 
-## Implemented Primitives
-This framework is an implementation of following principles:
-
-* provide abstraction that makes
-    * doing right things easier
-    * doing wrong things harder
-* use abstraction is based on monads
-    * [`Future`](Documentation/Future.md) is a proxy of value that will be available at some point in the future. See example for advances of using futures.
-    * [`Channel`](Documentation/Channel.md) is like a `Future` that may provide `Update` values before completion.
-    * [`Executor`](Documentation/Executor.md) is object made to execute escaped block `(Void) -> Void`. Its propose is to encapsulate a way of an execution.
-    * [`ExecutionContext`](Documentation/ExecutionContext.md) is a protocol concurrency-aware objects must conform to. It basically make them actors or components of actor.
-    * [`Fallible`](Documentation/Fallible.md) is validation monad. Is an object that represents either success value of failure value (Error).
-    * [`Cache`](Documentation/Cache.md) is a primitive that lets you coalesce requests and cache responses
-
 ## Using Futures
 
-Let's assume that we have function that finds all prime numbers lesser then n
+Let's assume that we have function that finds all prime numbers lesser than n
 
 ```swift
 func primeNumbers(to n: Int) -> [Int] { /* ... */ }
@@ -301,49 +285,9 @@ func makeChannelOfPrimeNumbers(to n: Int) -> Channel<Int, Int> {
 }
 ```
 
----
+## Reactive Programming
 
-## Documentation
-
-**Visit [CocoaPods website](http://cocoadocs.org/docsets/AsyncNinja/) for reference**
-
-* [`Future`](Documentation/Future.md)
-* [`Channel`](Documentation/Channel.md)
-* [`Cache`](Documentation/Cache.md)
-* [`Executor`](Documentation/Executor.md)
-* [`ExecutionContext`](Documentation/ExecutionContext.md)
-* [Actor Model](Documentation/ActorModel.md)
-* [Memory Management](Documentation/MemoryManagement.md)
-* [Integration](Documentation/Integration.md)
-* [Navigating in methods of `Future` and `Channel`](Documentation/Navigation.md)
-
-### [`Fallible`](Documentation/Fallible.md) ![Fallible](https://drive.google.com/uc?export=download&id=0B9BWA0kaXtzEMW5GX3ByX1JXOWs)
-
-
-## Related Articles
-* Moving to nice asynchronous Swift code
-    * [GitHub](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md)
-    * [Medium](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
-
-## Comparison with [RxSwift](https://github.com/ReactiveX/RxSwift)
-
-#### RxSwift
-```swift
-let searchResults = searchBar.rx.text.orEmpty
-  .throttle(0.3, scheduler: MainScheduler.instance)
-  .distinctUntilChanged()
-  .flatMapLatest { query -> Observable<[Repository]> in
-    if query.isEmpty {
-      return .just([])
-    }
-
-    return searchGitHub(query)
-        .catchErrorJustReturn([])
-  }
-  .observeOn(MainScheduler.instance)
-```
-
-#### AsyncNinja
+#### reactive properties
 ```swift
 let searchResults = searchBar.rp.text
   .debounce(interval: 0.3)
@@ -351,10 +295,66 @@ let searchResults = searchBar.rp.text
   .flatMap(behavior: .keepLatestTransform) { (query) -> Future<[SearchResult]> in
     return query.isEmpty
       ? .just([])
-      : searchGitHub(query: query).recover(with: [])
+      : searchGitHub(query: query).recover([])
   }
 ```
 
-#### Differences beyond naming:
-- AsyncNinja lacks explicit lifetime and threading shenanigans such as `.observeOn(MainScheduler.instance)` and `.disposed(by: disposeBag)`
-- AsyncNinja has ability to dispatch to correct queue almost automatically (no additional code for UI-related classes and +3 lines for any other class)
+#### bindings
+
+- unbinds automatically
+- dispatches to a correct queue automatically
+- no  `.observeOn(MainScheduler.instance)` and `.disposed(by: disposeBag)`
+
+```swift
+class MyViewController: UIViewController {
+  /* ... */
+  @IBOutlet weak var myLabel: UILabel!
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    UIDevice.current.rp.orientation
+      .map { $0.description }
+      .bind(myLabel.rp.text)
+  }
+  
+  /* ... */
+}
+```
+
+#### contexts usage
+
+- no `[weak self]`
+- no `DispatchQueue.main.async { ... }`
+- no  `.observeOn(MainScheduler.instance)`
+
+```swift
+class MyViewController: NSViewController {
+  let service: MyService
+
+  /* ... */
+  
+  func fetchAndPresentItems(for request: Request) {
+    service.perform(request: request)
+      .map(context: self, executor: .primary) { (self, response) in
+        return self.items(from: response)
+      }
+      .onSuccess(context: self) { (self, items) in
+        self.present(items: items)
+      }
+  }
+  
+  func items(from response: Response) throws -> [Items] {
+    /* ... extract items from response ... */
+  }
+  
+  func present(items: [Items]) {
+    /* ... update UI ... */
+  }
+}
+
+class MyService {
+  func perform(request: Request) -> Future<Response> {
+    /* ... */
+  }
+}
+```

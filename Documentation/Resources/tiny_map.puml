@@ -1,0 +1,50 @@
+
+@startuml
+
+abstract class Future<Success> {
+    **abstract immutable proxy of a value**
+    **that will be available later**
+    ===
+}
+
+class Promise<Success> {
+    **mutable future**
+    ===
+    + init()
+}
+
+abstract class Channel<Update, Success> {
+    **abstract immutable proxy for updates**
+    **that will arrive one by one**
+    **followed by a completion**
+    ===
+}
+
+class Producer<Update, Success> {
+    **mutable Channel you can update manually**
+    ===
+    + init()
+}
+
+class ProducerProxy<Update, Success> {
+    **mutable Channel that acts like**
+    **a proxy to some read-write value**
+    ===
+    + init(updateExecutor:updateHandler:)
+}
+
+class DynamicProperty<Value> {
+    **mutable Channel that acts like**
+    **a dynamic property**
+    Update in Value
+    Success is Void
+    ===
+    + init(_ initialValue:updateExecutor:)
+}
+
+Future <|-- Promise
+Channel <|-- DynamicProperty
+Channel <|-- Producer
+Channel <|-- ProducerProxy
+
+@enduml
