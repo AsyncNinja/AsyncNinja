@@ -61,6 +61,10 @@ public class Channel<U, S>: EventsSource {
   public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     assertAbstract()
   }
+
+  public func staticCast<A, B>() -> Channel<A, B> {
+    return mapEvent(executor: .immediate) { $0.staticCast() }
+  }
 }
 
 // MARK: - Description

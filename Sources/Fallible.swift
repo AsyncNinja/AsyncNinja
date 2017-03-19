@@ -52,6 +52,30 @@ public enum Fallible<Success>: _Fallible {
   }
 }
 
+public extension Fallible {
+  func staticCast<T>() -> Fallible<T> {
+    switch self {
+    case let .success(success):
+      return .success(success as! T)
+    case let .failure(failure):
+      return .failure(failure)
+    }
+  }
+
+  func dynamicCast<T>() -> Fallible<T> {
+    switch self {
+    case let .success(success):
+      if let castedSuccess = success as? T {
+        return .success(castedSuccess)
+      } else {
+        return .failure(AsyncNinjaError.dynamicCastFailed)
+      }
+    case let .failure(failure):
+      return .failure(failure)
+    }
+  }
+}
+
 // MARK: - Description
 
 extension Fallible: CustomStringConvertible, CustomDebugStringConvertible {

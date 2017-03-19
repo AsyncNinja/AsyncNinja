@@ -242,4 +242,13 @@ public extension ChannelEvent {
   static func failure(_ error: Swift.Error) -> ChannelEvent {
     return .completion(.failure(error))
   }
+
+  func staticCast<U, S>() -> ChannelEvent<U, S> {
+    switch self {
+    case let .update(update):
+      return .update(update as! U)
+    case let .completion(completion):
+      return .completion(completion.staticCast())
+    }
+  }
 }

@@ -55,6 +55,10 @@ public class Future<S>: Completing {
   public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     assertAbstract()
   }
+
+  public func staticCast<T>() -> Future<T> {
+    return map(executor: .immediate) { $0 as! T }
+  }
 }
 
 // MARK: - Description

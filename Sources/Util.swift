@@ -61,6 +61,8 @@ public enum AsyncNinjaError: Swift.Error, Equatable {
   /// Basically means that execution was bound to context,
   /// by context was deallocated before execution started
   case contextDeallocated
+
+  case dynamicCastFailed
 }
 
 /// Convenience protocol for detection cancellation
@@ -162,6 +164,15 @@ public enum Either<Left, Right> {
       return .left(left)
     case let .right(right):
       return .right(try(transform(right)))
+    }
+  }
+
+  public func staticCast<L, R>() -> Either<L, R> {
+    switch self {
+    case let .left(left):
+      return .left(left as! L)
+    case let .right(right):
+      return .right(right as! R)
     }
   }
 }

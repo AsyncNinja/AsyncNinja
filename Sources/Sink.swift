@@ -92,4 +92,12 @@ public class Sink<U, S>: EventsDestination {
       _releasePool.notifyDrain(block)
     }
   }
+
+  public func staticCast<A, B>() -> Sink<A, B> {
+    let sink = Sink<A, B>(updateExecutor: _updateExecutor) { [weak self] (sink, event, originalExecutor) in
+      self?.apply(event.staticCast(), from: originalExecutor)
+    }
+    sink._asyncNinja_retainUntilFinalization(self)
+    return sink
+  }
 }
