@@ -43,7 +43,7 @@ class Channel_TransformTests: XCTestCase {
     let derivedProducer = initalProducer.debounce(interval: 0.5)
     let expectation = self.expectation(description: "completion of derived producer")
 
-    derivedProducer.extractAll { (numbers, stringOrError) in
+    derivedProducer.extractAll().onSuccess { (numbers, stringOrError) in
       XCTAssertEqual([1, 6, 9, 12], numbers)
       XCTAssertEqual("Finished!", stringOrError.success!)
       expectation.fulfill()
@@ -77,7 +77,7 @@ class Channel_TransformTests: XCTestCase {
     let updatable = Producer<Int, Void>()
     let expectation = self.expectation(description: "completion of producer")
 
-    updatable.distinct().extractAll { (updates, completion) in
+    updatable.distinct().extractAll().onSuccess { (updates, completion) in
       XCTAssertEqual(updates, [1, 2, 3, 4, 5, 6, 7])
       expectation.fulfill()
     }
@@ -95,7 +95,7 @@ class Channel_TransformTests: XCTestCase {
     let updatable = Producer<Int?, Void>()
     let expectation = self.expectation(description: "completion of producer")
 
-    updatable.distinct().extractAll { (updates, completion) in
+    updatable.distinct().extractAll().onSuccess { (updates, completion) in
       let assumedResults: [Int?] = [nil, 1, nil, 2, 3, nil, 3, 4, 5, 6, 7]
       XCTAssertEqual(updates.count, assumedResults.count)
       for (update, result) in zip(updates, assumedResults) {
@@ -117,7 +117,7 @@ class Channel_TransformTests: XCTestCase {
     let updatable = Producer<[Int], Void>()
     let expectation = self.expectation(description: "completion of producer")
     
-    updatable.distinct().extractAll { (updates, completion) in
+    updatable.distinct().extractAll().onSuccess { (updates, completion) in
       let assumedResults: [[Int]] = [[1], [1, 2], [1, 2, 3], [1]]
       XCTAssertEqual(updates.count, assumedResults.count)
       for (update, result) in zip(updates, assumedResults) {
@@ -140,7 +140,7 @@ class Channel_TransformTests: XCTestCase {
       let updatable = Producer<NSString, Void>()
       let expectation = self.expectation(description: "completion of producer")
       
-      updatable.distinctNSObjects().extractAll { (updates, completion) in
+      updatable.distinctNSObjects().extractAll().onSuccess { (updates, completion) in
         let assumedResults: [NSString] = ["objectA", "objectB", "objectC", "objectA"]
         XCTAssertEqual(updates.count, assumedResults.count)
         for (update, result) in zip(updates, assumedResults) {
@@ -168,7 +168,7 @@ class Channel_TransformTests: XCTestCase {
       let objectB: NSString = "objectB"
       let objectC: NSString = "objectC"
       
-      updatable.distinctCollectionOfNSObjects().extractAll { (updates, completion) in
+      updatable.distinctCollectionOfNSObjects().extractAll().onSuccess { (updates, completion) in
         let assumedResults: [[NSString]] = [[objectA], [objectA, objectB], [objectA, objectB, objectC], [objectA]]
         XCTAssertEqual(updates.count, assumedResults.count)
         for (update, result) in zip(updates, assumedResults) {

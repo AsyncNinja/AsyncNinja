@@ -41,7 +41,7 @@ class Channel_Merge2Tests: XCTestCase {
       let channelOfNumbers: Channel = merge(producerOfOdds, producerOfEvents)
       let sema = DispatchSemaphore(value: 0)
 
-      channelOfNumbers.extractAll { (numbers, stringsOfError) in
+      channelOfNumbers.extractAll().onSuccess { (numbers, stringsOfError) in
         XCTAssertEqual(numbers, [1, 3, 2, 4, 5, 6, 7, 8])
         XCTAssertEqual(stringsOfError.success!.0, "Hello")
         XCTAssertEqual(stringsOfError.success!.1, "World")
@@ -75,7 +75,7 @@ class Channel_Merge2Tests: XCTestCase {
       let channelOfNumbers = merge(producerOfOdds, producerOfEvents, bufferSize: .specific(8))
       let sema = DispatchSemaphore(value: 0)
 
-      channelOfNumbers.extractAll { (numbers, stringsOfError) in
+      channelOfNumbers.extractAll().onSuccess { (numbers, stringsOfError) in
         XCTAssertEqual(numbers.count, fixtureNumbers.count)
         for (number, fixture) in zip(numbers, fixtureNumbers) {
           XCTAssert(number == fixture)

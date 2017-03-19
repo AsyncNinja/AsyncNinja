@@ -39,7 +39,7 @@ class Channel_Zip2: XCTestCase {
     let expectation = self.expectation(description: "channel to finish")
 
     zip(producerOfOdds, producerOfEvents)
-      .extractAll { (pairs, stringsOfError) in
+      .extractAll().onSuccess { (pairs, stringsOfError) in
         let fixturePairs = [(1, 2), (3, 4), (5, 6), (7, 8)]
         XCTAssertEqual(fixturePairs.count, pairs.count)
         for (pair, fixturePair) in zip(pairs, fixturePairs) {

@@ -47,7 +47,7 @@ class Channel_Scan: XCTestCase {
         return accumulator + value
       }
 
-      channel.extractAll { (updates, completion) in
+      channel.extractAll().onSuccess { (updates, completion) in
         XCTAssertEqual(updates, ["AB", "ABC", "ABCD", "ABCDE", "ABCDEF"])
         XCTAssertEqual(completion.success!.0, "ABCDEF")
         XCTAssertEqual(completion.success!.1, 7)
@@ -73,7 +73,7 @@ class Channel_Scan: XCTestCase {
         return accumulator + value
       }
 
-      channel.extractAll { (updates, completion) in
+      channel.extractAll().onSuccess { (updates, completion) in
         XCTAssertEqual(updates, ["AB", "ABC", "ABCD", "ABCDE", "ABCDEF"])
         XCTAssertEqual(completion.success!.0, "ABCDEF")
         XCTAssertEqual(completion.success!.1, 7)

@@ -39,7 +39,7 @@ class Channel_CombineTests: XCTestCase {
     let channelOfNumbers = producerOfOdds.sample(with: producerOfEvents)
     let expectation = self.expectation(description: "async checks to finish")
 
-    channelOfNumbers.extractAll { (pairs, stringsOfError) in
+    channelOfNumbers.extractAll().onSuccess { (pairs, stringsOfError) in
       let fixturePairs = [
         (3, 2),
         (5, 6),

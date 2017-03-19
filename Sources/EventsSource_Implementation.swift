@@ -182,21 +182,12 @@ public extension EventsSource {
     }
   }
 
-  /// Subscribes for all buffered and new values (both update and completion) for the channel
-  ///
-  /// - Parameters:
-  ///   - executor: to execute block on
-  ///   - block: to execute. Will be called once with all values
-  ///   - updates: all received by the channel
-  ///   - completion: received by the channel
-  func extractAll(
-    executor: Executor = .primary,
-    _ block: @escaping (_ updates: [Update], _ completion: Fallible<Success>) -> Void)
-  {
+  /// Makes a future of accumulated updates and completion
+  func extractAll() -> Future<(updates: [Update], completion: Fallible<Success>)> {
     var updates = [Update]()
     var locking = makeLocking(isFair: true)
-
-    self._onEvent(executor: .immediate) { (event, originalExecutor) in
+    let promise = Promise<(updates: [Update], completion: Fallible<Success>)>()
+    let handler = self.makeHandler(executor: .immediate) { [weak promise] (event, originalExecutor) in
       switch event {
       case let .update(update):
         locking.lock()
@@ -204,37 +195,13 @@ public extension EventsSource {
         locking.unlock()
       case let .completion(completion):
         locking.lock()
-        let finalUpdatres = updates
+        let finalUpdates = updates
         locking.unlock()
-        executor.execute(from: originalExecutor) { (originalExecutor) in
-          block(finalUpdatres, completion)
-        }
+        promise?.succeed((finalUpdates, completion))
       }
     }
-  }
-
-  /// Subscribes for all buffered and new values (both update and completion) for the channel
-  ///
-  /// - Parameters:
-  ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor.
-  ///     Keep default value of the argument unless you need
-  ///     to override an executor provided by the context
-  ///   - block: to execute. Will be called once with all values
-  ///   - strongContext: context restored from weak reference to specified context
-  ///   - updates: all received by the channel
-  ///   - completion: received by the channel
-  func extractAll<C: ExecutionContext>(
-    context: C,
-    executor: Executor? = nil,
-    _ block: @escaping (_ strongContext: C, _ updates: [Update], _ completion: Fallible<Success>) -> Void)
-  {
-    extractAll(executor: executor ?? context.executor) {
-      [weak context] (updates, completion) in
-      if let context = context {
-        block(context, updates, completion)
-      }
-    }
+    promise._asyncNinja_retainHandlerUntilFinalization(handler)
+    return promise
   }
 
   /// Binds events to a specified ProducerProxy
