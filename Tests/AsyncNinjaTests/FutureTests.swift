@@ -44,6 +44,7 @@ class FutureTests: XCTestCase {
     ("testFlatten", testFlatten),
     ("testFlatten_OuterFailure", testFlatten_OuterFailure),
     ("testFlatten_InnerFailure", testFlatten_InnerFailure),
+    ("testChannelFlatten", testChannelFlatten),
     ("testGroupCompletionFuture", testGroupCompletionFuture),
     ("testDescription", testDescription),
     ]
@@ -365,6 +366,34 @@ class FutureTests: XCTestCase {
     } else {
       XCTFail("timeout")
     }
+  }
+
+  func testChannelFlatten() {
+    let startTime = DispatchTime.now()
+    let value = pickInt()
+    let futureOfChannel = future(after: 0.2) { () -> Channel<String, Int> in
+      return channel { (update) -> Int in
+        usleep(50_000)
+        update("a")
+        usleep(50_000)
+        update("b")
+        usleep(50_000)
+        update("c")
+        usleep(50_000)
+        update("d")
+        usleep(50_000)
+        update("e")
+        usleep(50_000)
+        return value
+      }
+    }
+    let flattenedChannel = futureOfChannel.flatten()
+    let (updates, failable) = flattenedChannel.waitForAll()
+    let finishTime = DispatchTime.now()
+    XCTAssertEqual(updates, ["a", "b", "c", "d", "e"])
+    XCTAssertEqual(failable.success!, value)
+    XCTAssert(startTime + 0.3 < finishTime)
+    XCTAssert(startTime + 0.7 > finishTime)
   }
 
   func testGroupCompletionFuture() {

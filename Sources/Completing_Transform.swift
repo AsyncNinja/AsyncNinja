@@ -345,3 +345,38 @@ public extension Future where S: Completing {
     return promise
   }
 }
+
+public extension Future where S: Completing, S: Updating {
+  /// Flattens channel nested in future
+  ///
+  /// - Returns: flattened future
+  func flatten() -> Channel<S.Update, S.Success> {
+    // Test: FutureTests.testChannelFlatten
+    let producer = Producer<S.Update, S.Success>()
+
+    let handler = self.makeCompletionHandler(executor: .immediate) {
+      [weak producer] (failure, originalExecutor) in
+      guard let producer = producer else { return }
+      switch failure {
+      case .success(let channel):
+        let completionHandler = channel.makeCompletionHandler(executor: .immediate) {
+          [weak producer] (completion, originalExecutor) -> Void in
+          producer?.complete(completion, from: originalExecutor)
+        }
+        producer._asyncNinja_retainHandlerUntilFinalization(completionHandler)
+
+        let updateHandler = channel.makeUpdateHandler(executor: .immediate) {
+          [weak producer] (update, originalExecutor) -> Void in
+          producer?.update(update, from: originalExecutor)
+        }
+        producer._asyncNinja_retainHandlerUntilFinalization(updateHandler)
+      case .failure(let error):
+        producer.fail(error, from: originalExecutor)
+      }
+    }
+
+    producer._asyncNinja_retainHandlerUntilFinalization(handler)
+
+    return producer
+  }
+}
