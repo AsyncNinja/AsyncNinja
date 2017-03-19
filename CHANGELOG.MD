@@ -2,6 +2,11 @@
 * documentation updated
 * `Cache` and `CachedValue` improved
 * `URLSession` extensions updated
+* `Future.flatMap` improved
+* `Channel.extractAll()` refactored to provide `Future<(updates: [Update], completion: Fallible<Success>)>`
+* `Channel.waitForAll()` refactored and extended
+* Major fixes of `Cache` and `CachableValue`
+* Carthage support
 
 # 1.0.0-beta5
 * adding ability to nest synchronously calls on the same executor instead of making async dispatches all the time
