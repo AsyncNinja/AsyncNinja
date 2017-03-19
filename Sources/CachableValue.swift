@@ -57,13 +57,17 @@ public class CachableValue<T: CachableCompletable> {
   ///
   /// - Parameters:
   ///   - context: context that owns CachableValue
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need to override
+  ///     an executor provided by the context
   ///   - missHandler: block that handles cache misses
   ///   - strongContext: context restored from weak reference
   public convenience init<C: ExecutionContext>(
     context: C,
+    executor: Executor? = nil,
     missHandler: @escaping (_ strongContext: C) throws -> T.CompletingType)
   {
-    self.init(executor: context.executor) { [weak context] in
+    self.init(executor: executor ?? context.executor) { [weak context] in
       if let context = context {
         return try missHandler(context)
       } else {

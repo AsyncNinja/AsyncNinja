@@ -53,13 +53,17 @@ public class Cache<Key: Hashable, T: CachableCompletable> {
   ///
   /// - Parameters:
   ///   - context: context that owns Cache
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need to override
+  ///     an executor provided by the context
   ///   - missHandler: block that handles cache misses
   ///   - strongContext: context restored from weak reference
   public convenience init<C: ExecutionContext>(
     context: C,
+    executor: Executor? = nil,
     missHandler: @escaping (_ strongContext: C, _ key: Key) throws -> T.CompletingType)
   {
-    self.init(executor: context.executor) { [weak context] (key) in
+    self.init(executor: executor ?? context.executor) { [weak context] (key) in
       if let context = context {
         return try missHandler(context, key)
       } else {
