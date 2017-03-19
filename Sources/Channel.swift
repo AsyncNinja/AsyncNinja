@@ -94,12 +94,20 @@ extension Channel: CustomStringConvertible, CustomDebugStringConvertible {
   }
 }
 
-// MARK: - Subscriptions
+// MARK: - Synchronsous waiting
 
 public extension Channel {
   /// Synchronously waits for channel to complete. Returns all updates and completion
   func waitForAll() -> (updates: [Update], completion: Fallible<Success>) {
-    return (self.map { $0 }, self.completion!)
+    return try! self.extractAll().wait().liftSuccess()
+  }
+
+  /// Waits for channel to complete and returns all updates and completion
+  ///
+  /// - Parameter seconds: to wait completion for
+  /// - Returns: completion value or nil if `Future` did not complete in specified timeout
+  func waitForAll(seconds: Double) -> (updates: [Update], completion: Fallible<Success>)? {
+    return try! self.extractAll().wait(seconds: seconds)?.liftSuccess()
   }
 }
 
