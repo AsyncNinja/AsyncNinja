@@ -91,6 +91,17 @@ public extension Completing {
     return mapSuccess(executor: executor, transform).flatten()
   }
 
+  /// Transforms Completing<SuccessA> => Channel<Update, BSuccessB>. Flattens channel returned by the transform
+  ///
+  /// This is the same as flatMapCompletion(executor:transform:)
+  /// but does not perform transformation if this future fails.
+  func flatMapSuccess<T: Completing&Updating>(
+    executor: Executor = .primary,
+    _ transform: @escaping (Success) throws -> T
+    ) -> Channel<T.Update, T.Success> {
+    return mapSuccess(executor: executor, transform).flatten()
+  }
+
   /// Recovers failure of this future if there is one
   func recover(with success: Success) -> Future<Success> {
     return recover(executor: .immediate) { _ in success }

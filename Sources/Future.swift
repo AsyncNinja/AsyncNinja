@@ -97,10 +97,11 @@ public extension Future {
   func map<T>(
     executor: Executor = .primary,
     _ transform: @escaping (_ success: Success) throws -> T
-    ) -> Future<T> {
+    ) -> Future<T>
+  {
     // Test: FutureTests.testMap_Success
     // Test: FutureTests.testMap_Failure
-    return self.mapSuccess(executor: executor, transform)
+    return mapSuccess(executor: executor, transform)
   }
 
   /// Applies the transformation to the future and flattens future returned by transformation
@@ -113,11 +114,30 @@ public extension Future {
   ///   - success: is a success value of original future
   ///
   /// - Returns: transformed future
-  func flatMap<T>(
+  func flatMap<T: Completing>(
     executor: Executor = .primary,
-    transform: @escaping (_ success: Success) throws -> Future<T>
-    ) -> Future<T> {
-    return self.flatMapSuccess(executor: executor, transform)
+    transform: @escaping (_ success: Success) throws -> T
+    ) -> Future<T.Success>
+  {
+    return flatMapSuccess(executor: executor, transform)
+  }
+
+  /// Applies the transformation to the future and flattens channel returned by transformation
+  ///
+  /// - Parameters:
+  ///   - executor: is `Executor` to execute transform on
+  ///   - transform: is block to execute on successful completion of original future.
+  ///     Return from transformation block will cause returned channel to complete with future.
+  ///     Throw from transformation block will returned future to complete with failure
+  ///   - success: is a success value of original future
+  ///
+  /// - Returns: transformed future
+  func flatMap<T: Completing&Updating>(
+    executor: Executor = .primary,
+    transform: @escaping (_ success: Success) throws -> T
+    ) -> Channel<T.Update, T.Success>
+  {
+    return flatMapSuccess(executor: executor, transform)
   }
 
   /// Applies the transformation to the future
@@ -138,12 +158,13 @@ public extension Future {
     context: C,
     executor: Executor? = nil,
     _ transform: @escaping (_ strongContext: C, _ Success: Success) throws -> T
-    ) -> Future<T> {
+    ) -> Future<T>
+  {
     // Test: FutureTests.testMapContextual_Success_ContextAlive
     // Test: FutureTests.testMapContextual_Success_ContextDead
     // Test: FutureTests.testMapContextual_Failure_ContextAlive
     // Test: FutureTests.testMapContextual_Failure_ContextDead
-    return self.mapSuccess(context: context, executor: executor, transform)
+    return mapSuccess(context: context, executor: executor, transform)
   }
 
   /// Applies the transformation to the future and flattens future returned by transformation
@@ -160,20 +181,45 @@ public extension Future {
   ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
   ///   - Success: is a success value of original future
   /// - Returns: transformed future
-  func flatMap<T, C: ExecutionContext>(
+  func flatMap<T: Completing, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    transform: @escaping (_ strongContext: C, _ Success: Success) throws -> Future<T>
-    ) -> Future<T> {
-    return self.flatMapSuccess(context: context, executor: executor, transform)
+    transform: @escaping (_ strongContext: C, _ Success: Success) throws -> T
+    ) -> Future<T.Success>
+  {
+    return flatMapSuccess(context: context, executor: executor, transform)
+  }
+
+  /// Applies the transformation to the future and flattens channel returned by transformation
+  ///
+  /// - Parameters:
+  ///   - context: is `ExecutionContext` to perform transform on.
+  ///     Instance of context will be passed as the first argument to the transformation.
+  ///     Transformation will not be executed if executor was deallocated before execution,
+  ///     returned future will fail with `AsyncNinjaError.contextDeallocated` error
+  ///   - executor: is `Executor` to override executor provided by context
+  ///   - transform: is block to execute on successful completion of original channel.
+  ///     Return from transformation block will cause returned channel to complete with channel.
+  ///     Throw from transformation block will returned channel to complete with failure
+  ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
+  ///   - Success: is a success value of original future
+  /// - Returns: transformed future
+  func flatMap<T: Completing&Updating, C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    transform: @escaping (_ strongContext: C, _ Success: Success) throws -> T
+    ) -> Channel<T.Update, T.Success>
+  {
+    return flatMapSuccess(context: context, executor: executor, transform)
   }
 
   /// Makes future with delayed completion
   ///
   /// - Parameter timeout: is `Double` (seconds) to delay competion of original future with.
   /// - Returns: delayed future
-  func delayed(timeout: Double) -> Future<Success> {
-    return self.delayedCompletion(timeout: timeout)
+  func delayed(timeout: Double) -> Future<Success>
+  {
+    return delayedCompletion(timeout: timeout)
   }
 }
 
