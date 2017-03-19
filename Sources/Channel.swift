@@ -61,12 +61,20 @@ public class Channel<U, S>: EventsSource {
   public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     assertAbstract()
   }
+}
 
-  public func staticCast<A, B>() -> Channel<A, B> {
+// MARK: - Casting
+
+public extension Channel {
+
+  /// Transforms the channel to a channel of unrelated type
+  /// Correctness of such transformation is left on our behalf
+  func staticCast<A, B>() -> Channel<A, B> {
     return mapEvent(executor: .immediate) { $0.staticCast() }
   }
 
-  public func makeFuture() -> Future<Success> {
+  /// Transforms the channel to a future
+  func makeFuture() -> Future<Success> {
     let promise = Promise<Success>()
     let handler = makeCompletionHandler(executor: .immediate) {
       [weak promise] (completion, originalExecutor) in
@@ -76,7 +84,9 @@ public class Channel<U, S>: EventsSource {
     return promise
   }
 
-  public func staticCastToFuture<T>() -> Future<T> {
+  /// Transforms the channel to a future of unrelated type
+  /// Correctness of such transformation is left on our behalf
+  func staticCast<T>() -> Future<T> {
     let promise = Promise<T>()
     let handler = makeCompletionHandler(executor: .immediate) {
       [weak promise] (completion, originalExecutor) in

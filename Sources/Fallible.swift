@@ -52,7 +52,12 @@ public enum Fallible<Success>: _Fallible {
   }
 }
 
+// MARK: - Casting
+
 public extension Fallible {
+
+  /// Transforms the fallible to a fallible of unrelated type
+  /// Correctness of such transformation is left on our behalf
   func staticCast<T>() -> Fallible<T> {
     switch self {
     case let .success(success):
@@ -62,6 +67,8 @@ public extension Fallible {
     }
   }
 
+  /// Transforms the fallible to a fallible of unrelated type
+  /// Incorrect transformation will result into dynamicCastFailed failure
   func dynamicCast<T>() -> Fallible<T> {
     switch self {
     case let .success(success):

@@ -62,6 +62,7 @@ public enum AsyncNinjaError: Swift.Error, Equatable {
   /// by context was deallocated before execution started
   case contextDeallocated
 
+  /// An error of failed dynamic cast
   case dynamicCastFailed
 }
 
@@ -167,6 +168,8 @@ public enum Either<Left, Right> {
     }
   }
 
+  /// Transforms the either to a either of unrelated type
+  /// Correctness of such transformation is left on our behalf
   public func staticCast<L, R>() -> Either<L, R> {
     switch self {
     case let .left(left):
@@ -233,6 +236,45 @@ extension DispatchWallTime {
     #else
       return self + .milliseconds(Int(seconds * 1_000.0))
     #endif
+  }
+}
+
+/// Value reveived by channel
+public enum ChannelEvent<Update, Success> {
+  /// A kind of value that can be received multiple times be for the completion one
+  case update(Update)
+
+  /// A kind of value that can be received once and completes the channel
+  case completion(Fallible<Success>)
+}
+
+public extension ChannelEvent {
+
+  /// Convenence initializer of ChannelEvent.completion
+  ///
+  /// - Parameter success: success value to complete with
+  /// - Returns: successful completion channel event
+  static func success(_ success: Success) -> ChannelEvent {
+    return .completion(.success(success))
+  }
+
+  /// Convenence initializer of ChannelEvent.completion
+  ///
+  /// - Parameter failure: error to complete with
+  /// - Returns: failure completion channel event
+  static func failure(_ error: Swift.Error) -> ChannelEvent {
+    return .completion(.failure(error))
+  }
+
+  /// Transforms the event to a event of unrelated type
+  /// Correctness of such transformation is left on our behalf
+  func staticCast<U, S>() -> ChannelEvent<U, S> {
+    switch self {
+    case let .update(update):
+      return .update(update as! U)
+    case let .completion(completion):
+      return .completion(completion.staticCast())
+    }
   }
 }
 

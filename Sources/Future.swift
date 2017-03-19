@@ -55,12 +55,18 @@ public class Future<S>: Completing {
   public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     assertAbstract()
   }
+}
 
-  public func staticCast<T>() -> Future<T> {
+public extension Future {
+
+  /// Transforms the future to a future of unrelated type
+  /// Correctness of such transformation is left on our behalf
+  func staticCast<T>() -> Future<T> {
     return map(executor: .immediate) { $0 as! T }
   }
 
-  public func makeChannel<Update>(updates: [Update] = []) -> Channel<Update, Success> {
+  /// Transforms the future to a channel
+  func makeChannel<Update>(updates: [Update] = []) -> Channel<Update, Success> {
     let producer = Producer<Update, Success>(bufferedUpdates: updates)
     let handler = makeCompletionHandler(executor: .immediate) {
       [weak producer] (completion, originalExecutor) in
@@ -70,7 +76,9 @@ public class Future<S>: Completing {
     return producer
   }
 
-  public func staticCastToChannel<Update, T>(updates: [Update] = []) -> Channel<Update, T> {
+  /// Transforms the future to a channel of unrelated type
+  /// Correctness of such transformation is left on our behalf
+  func staticCast<Update, T>(updates: [Update] = []) -> Channel<Update, T> {
     let producer = Producer<Update, T>(bufferedUpdates: updates)
     let handler = makeCompletionHandler(executor: .immediate) {
       [weak producer] (completion, originalExecutor) in

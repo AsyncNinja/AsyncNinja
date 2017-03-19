@@ -93,6 +93,8 @@ public class Sink<U, S>: EventsDestination {
     }
   }
 
+  /// Transforms the sink to a sink of unrelated type
+  /// Correctness of such transformation is left on our behalf
   public func staticCast<A, B>() -> Sink<A, B> {
     let sink = Sink<A, B>(updateExecutor: _updateExecutor) { [weak self] (sink, event, originalExecutor) in
       self?.apply(event.staticCast(), from: originalExecutor)
