@@ -393,7 +393,7 @@ class FutureTests: XCTestCase {
     XCTAssertEqual(updates, ["a", "b", "c", "d", "e"])
     XCTAssertEqual(failable.success!, value)
     XCTAssert(startTime + 0.3 < finishTime)
-    XCTAssert(startTime + 0.7 > finishTime)
+    XCTAssert(startTime + 1.2 > finishTime)
   }
 
   func testGroupCompletionFuture() {
