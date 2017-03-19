@@ -49,6 +49,25 @@ public class Cache<Key: Hashable, T: CachableCompletable> {
     _missHandler = missHandler
   }
 
+  /// Convenience initializer
+  ///
+  /// - Parameters:
+  ///   - context: context that owns Cache
+  ///   - missHandler: block that handles cache misses
+  ///   - strongContext: context restored from weak reference
+  public convenience init<C: ExecutionContext>(
+    context: C,
+    missHandler: @escaping (_ strongContext: C, _ key: Key) throws -> T.CompletingType)
+  {
+    self.init(executor: context.executor) { [weak context] (key) in
+      if let context = context {
+        return try missHandler(context, key)
+      } else {
+        throw AsyncNinjaError.contextDeallocated
+      }
+    }
+  }
+
   /// Fetches value
   ///
   /// - Parameters:

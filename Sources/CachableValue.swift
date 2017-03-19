@@ -56,10 +56,13 @@ public class CachableValue<T: CachableCompletable> {
   /// Convenience initializer
   ///
   /// - Parameters:
-  ///   - context: context that owns CahableValue
+  ///   - context: context that owns CachableValue
   ///   - missHandler: block that handles cache misses
   ///   - strongContext: context restored from weak reference
-  public convenience init<C: ExecutionContext>(context: C, missHandler: @escaping (_ strongContext: C) throws -> T.CompletingType) {
+  public convenience init<C: ExecutionContext>(
+    context: C,
+    missHandler: @escaping (_ strongContext: C) throws -> T.CompletingType)
+  {
     self.init(executor: context.executor) { [weak context] in
       if let context = context {
         return try missHandler(context)
