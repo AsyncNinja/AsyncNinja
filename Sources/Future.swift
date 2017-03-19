@@ -69,6 +69,16 @@ public class Future<S>: Completing {
     producer._asyncNinja_retainHandlerUntilFinalization(handler)
     return producer
   }
+
+  public func staticCastToChannel<Update, T>(updates: [Update] = []) -> Channel<Update, T> {
+    let producer = Producer<Update, T>(bufferedUpdates: updates)
+    let handler = makeCompletionHandler(executor: .immediate) {
+      [weak producer] (completion, originalExecutor) in
+      producer?.complete(completion.staticCast())
+    }
+    producer._asyncNinja_retainHandlerUntilFinalization(handler)
+    return producer
+  }
 }
 
 // MARK: - Description

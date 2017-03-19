@@ -75,6 +75,16 @@ public class Channel<U, S>: EventsSource {
     promise._asyncNinja_retainHandlerUntilFinalization(handler)
     return promise
   }
+
+  public func staticCastToFuture<T>() -> Future<T> {
+    let promise = Promise<T>()
+    let handler = makeCompletionHandler(executor: .immediate) {
+      [weak promise] (completion, originalExecutor) in
+      promise?.complete(completion.staticCast())
+    }
+    promise._asyncNinja_retainHandlerUntilFinalization(handler)
+    return promise
+  }
 }
 
 // MARK: - Description
