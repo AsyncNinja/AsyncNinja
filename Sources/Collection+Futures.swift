@@ -39,6 +39,11 @@ public extension Sequence where Self.Iterator.Element: Completing {
       let promise = Promise<Result>()
       var values: Array<Self.Iterator.Element.Success?> = self.map { _ in nil }
       var unknownSubvaluesCount = values.count
+      guard unknownSubvaluesCount > 0 else {
+        promise.succeed(initialResult)
+        return promise
+      }
+      
       var locking = makeLocking(isFair: true)
       var canContinue = true
 
@@ -107,11 +112,14 @@ public extension Collection where Self.IndexDistance == Int {
   func _asyncMap<T>(
     executor: Executor = .primary,
     _ transform: @escaping (Self.Iterator.Element) throws -> T) -> Promise<[T]> {
-    let promise = Promise<[T]>()
-    var locking = makeLocking()
-    
-    var canContinue = true
     let count = self.count
+    let promise = Promise<[T]>()
+    guard count > 0 else {
+      promise.succeed([])
+      return promise
+    }
+    var locking = makeLocking()
+    var canContinue = true
     var subvalues = [T?](repeating: nil, count: count)
     var unknownSubvaluesCount = count
     
@@ -151,10 +159,14 @@ public extension Collection where Self.IndexDistance == Int {
     executor: Executor,
     _ transform: @escaping (Self.Iterator.Element) throws -> Future<T>) -> Promise<[T]> {
     let promise = Promise<[T]>()
-    var locking = makeLocking()
-    
-    var canContinue = true
     let count = self.count
+    guard count > 0 else {
+      promise.succeed([])
+      return promise
+    }
+    
+    var locking = makeLocking()
+    var canContinue = true
     var subvalues = [T?](repeating: nil, count: count)
     var unknownSubvaluesCount = count
     

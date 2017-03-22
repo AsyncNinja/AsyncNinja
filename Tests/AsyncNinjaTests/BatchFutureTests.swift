@@ -31,10 +31,14 @@ class BatchFutureTests: XCTestCase {
 
   static let allTests = [
     ("testJoined", testJoined),
+    ("testEmptyJoined", testEmptyJoined),
     ("testReduce", testReduce),
+    ("testEmptyReduce", testEmptyReduce),
     ("testReduceThrows", testReduceThrows),
     ("testFlatMap", testFlatMap),
+    ("testEmptyFlatMap", testEmptyFlatMap),
     ("testMap", testMap),
+    ("testEmptyMap", testEmptyMap),
     ]
 
   func testJoined() {
@@ -45,12 +49,28 @@ class BatchFutureTests: XCTestCase {
     XCTAssertEqual([1, 2, 3, 4, 5], Set(value))
   }
 
+  func testEmptyJoined() {
+    let value: [Int] = Array<Int>()
+      .map { value in future(after: 1.0 - Double(value) / 5.0, { value }) }
+      .joined()
+      .wait().success!
+    XCTAssertEqual([], Set(value))
+  }
+
   func testReduce() {
     let value: Int = (1...5)
       .map { value in future(after: Double(value) / 10.0) { value } }
       .asyncReduce(5) { $0 + $1 }
       .wait().success!
     XCTAssertEqual(20, value)
+  }
+
+  func testEmptyReduce() {
+    let value: Int = Array<Int>()
+      .map { value in future(after: Double(value) / 10.0) { value } }
+      .asyncReduce(5) { $0 + $1 }
+      .wait().success!
+    XCTAssertEqual(5, value)
   }
 
   func testReduceThrows() {
@@ -81,12 +101,37 @@ class BatchFutureTests: XCTestCase {
     self.waitForExpectations(timeout: 10.0, handler: nil)
   }
 
+  func testEmptyFlatMap() {
+    let expectation = self.expectation(description: "finish")
+    
+    let fixture = Array<Int>().map { _ in pickInt() }
+    let sum = fixture.reduce(0, +)
+    
+    fixture
+      .asyncFlatMap { value in future(after: Double(value) / 200.0) { value } }
+      .map { $0.reduce(0, +) }
+      .onSuccess { (value) in
+        XCTAssertEqual(sum, value)
+        expectation.fulfill()
+    }
+    
+    self.waitForExpectations(timeout: 10.0, handler: nil)
+  }
+
   func testMap() {
     let value = (1...5)
       .asyncMap(executor: .utility)  { $0 }
       .map { $0.reduce(5) { $0 + $1 } }
       .wait().success!
     XCTAssertEqual(20, value)
+  }
+
+  func testEmptyMap() {
+    let value = Array<Int>()
+      .asyncMap(executor: .utility)  { $0 }
+      .map { $0.reduce(5) { $0 + $1 } }
+      .wait().success!
+    XCTAssertEqual(5, value)
   }
 
 }
