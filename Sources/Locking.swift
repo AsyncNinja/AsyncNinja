@@ -22,12 +22,12 @@
 
 import Dispatch
 
-protocol Locking {
+public protocol Locking {
   mutating func lock()
   mutating func unlock()
 }
 
-extension Locking {
+public extension Locking {
   mutating func locker<T>(_ locked: () throws -> T) rethrows -> T {
     lock()
     defer { unlock() }
@@ -41,7 +41,7 @@ extension Locking {
   }
 }
 
-func makeLocking(isFair: Bool = false) -> Locking {
+public func makeLocking(isFair: Bool = false) -> Locking {
   #if os(Linux)
     return DispatchSemaphore(value: 1)
   #else
@@ -56,11 +56,11 @@ func makeLocking(isFair: Bool = false) -> Locking {
 }
 
 extension DispatchSemaphore: Locking {
-  func lock() {
+  public func lock() {
     self.wait()
   }
 
-  func unlock() {
+  public func unlock() {
     self.signal()
   }
 }
