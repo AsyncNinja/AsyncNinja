@@ -22,29 +22,40 @@
 
 import Dispatch
 
-/// Producer that can be manually created
-final public class Producer<Update, Success>: BaseProducer<Update, Success>, CachableCompletable {
-  public typealias CompletingType = Channel<Update, Success>
-
-  /// convenience initializer of Producer. Initializes Producer with default buffer size
-  public init() {
-    super.init(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
+/// DynamicProperty acts like a property but looks like a `Producer`.
+/// You can make non Objective-C dynamic properties with it.
+public class DynamicProperty<T>: BaseProducer<T, Void> {
+  /// Value that property contains
+  /// It is safe to use this property for any `Executor` but do not expect it to be updated immediatly.
+  public var value: T {
+    get { return _value }
+    set { self.update(newValue) }
   }
   
-  /// designated initializer of Producer. Initializes Producer with specified buffer size
-  override public init(bufferSize: Int) {
+  private let _updateExecutor: Executor
+  private var _value: T
+  
+  /// designated initializer
+  init(initialValue: T,
+       updateExecutor: Executor,
+       bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize)
+  {
+    _updateExecutor = updateExecutor
+    _value = initialValue
     super.init(bufferSize: bufferSize)
+    _pushUpdateToBuffer(initialValue)
   }
   
-  /// designated initializer of Producer. Initializes Producer with specified buffer size and values
-  public init<S: Sequence>(bufferSize: Int, bufferedUpdates: S) where S.Iterator.Element == Update {
-    super.init(bufferSize: bufferSize)
-    bufferedUpdates.suffix(bufferSize).forEach(_bufferedUpdates.push)
-  }
-  
-  /// designated initializer of Producer. Initializes Producer with specified buffer size and values
-  public init<C: Collection>(bufferedUpdates: C) where C.Iterator.Element == Update, C.IndexDistance: Integer {
-    super.init(bufferSize: Int(bufferedUpdates.count.toIntMax()))
-    bufferedUpdates.forEach(_bufferedUpdates.push)
+  /// Calls update handler instead of sending specified Update to the Producer
+  override public func tryUpdate(_ update: Update, from originalExecutor: Executor?) -> Bool {
+    if super.tryUpdate(update, from: originalExecutor) {
+      _updateExecutor.execute(from: originalExecutor) {
+        [weak self] (originalExecutor) in
+        self?._value = update
+      }
+      return true
+    } else {
+      return false
+    }
   }
 }

@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F8289C5C1E8522230093FFAA /* BaseProducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8289C5B1E8522230093FFAA /* BaseProducer.swift */; };
+		F8289C5E1E8522620093FFAA /* ProducerProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8289C5D1E8522620093FFAA /* ProducerProxy.swift */; };
+		F8289C601E85227D0093FFAA /* DynamicProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8289C5F1E85227D0093FFAA /* DynamicProperty.swift */; };
 		OBJ_100 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_17 /* Cache.swift */; };
 		OBJ_101 /* CancellationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_18 /* CancellationToken.swift */; };
 		OBJ_102 /* Channel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_19 /* Channel.swift */; };
@@ -93,6 +96,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F8289C5B1E8522230093FFAA /* BaseProducer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseProducer.swift; sourceTree = "<group>"; };
+		F8289C5D1E8522620093FFAA /* ProducerProxy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProducerProxy.swift; sourceTree = "<group>"; };
+		F8289C5F1E85227D0093FFAA /* DynamicProperty.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DynamicProperty.swift; sourceTree = "<group>"; };
 		OBJ_10 /* appleOS_ExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_ExecutionContext.swift; sourceTree = "<group>"; };
 		OBJ_11 /* appleOS_Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Notifications.swift; sourceTree = "<group>"; };
 		OBJ_12 /* appleOS_Observation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Observation.swift; sourceTree = "<group>"; };
@@ -190,7 +196,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -199,7 +205,6 @@
 				OBJ_82 /* Documentation */,
 				OBJ_83 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_57 /* Tests */ = {
@@ -283,6 +288,9 @@
 				OBJ_44 /* MergeFutures.swift */,
 				OBJ_45 /* OptionalAdaptor.swift */,
 				OBJ_46 /* Producer.swift */,
+				F8289C5B1E8522230093FFAA /* BaseProducer.swift */,
+				F8289C5D1E8522620093FFAA /* ProducerProxy.swift */,
+				F8289C5F1E85227D0093FFAA /* DynamicProperty.swift */,
 				OBJ_47 /* Promise.swift */,
 				OBJ_48 /* Queue.swift */,
 				OBJ_49 /* ReleasePool.swift */,
@@ -357,7 +365,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_83 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -437,6 +445,7 @@
 				OBJ_122 /* Future_Makers.swift in Sources */,
 				OBJ_123 /* iOS.swift in Sources */,
 				OBJ_124 /* KeyProtocols.swift in Sources */,
+				F8289C5C1E8522230093FFAA /* BaseProducer.swift in Sources */,
 				OBJ_125 /* Locking.swift in Sources */,
 				OBJ_126 /* macOS.swift in Sources */,
 				OBJ_127 /* MergeFutures.swift in Sources */,
@@ -444,10 +453,12 @@
 				OBJ_129 /* Producer.swift in Sources */,
 				OBJ_130 /* Promise.swift in Sources */,
 				OBJ_131 /* Queue.swift in Sources */,
+				F8289C601E85227D0093FFAA /* DynamicProperty.swift in Sources */,
 				OBJ_132 /* ReleasePool.swift in Sources */,
 				OBJ_133 /* Sink.swift in Sources */,
 				OBJ_134 /* ThreadSafety.swift in Sources */,
 				OBJ_135 /* TimerChannel.swift in Sources */,
+				F8289C5E1E8522620093FFAA /* ProducerProxy.swift in Sources */,
 				OBJ_136 /* Util.swift in Sources */,
 				OBJ_137 /* watchOS.swift in Sources */,
 				OBJ_138 /* Zip2Futures.swift in Sources */,
