@@ -88,7 +88,7 @@
             else { return }
           
           let newValue = strongSelf.getValue(forKeyPath: keyPath, changes: changes, customGetter: customGetter)
-          producer.updateWithoutHandling(newValue, from: executor)
+          let _ = producer.tryUpdateWithoutHandling(newValue, from: executor)
         }
 
         observationSession?.insert(item: observer)
@@ -163,9 +163,9 @@
             let producer = producer
             else { return }
           if let update = strongSelf.getValue(forKeyPath: keyPath, changes: changes, customGetter: customGetter) {
-            producer.updateWithoutHandling(update, from: executor)
+            let _ = producer.tryUpdateWithoutHandling(update, from: executor)
           } else if case let .replace(update) = onNone {
-            producer.updateWithoutHandling(update, from: executor)
+            let _ = producer.tryUpdateWithoutHandling(update, from: executor)
           }
         }
         

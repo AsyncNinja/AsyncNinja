@@ -69,12 +69,10 @@ public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
     super.init(bufferSize: bufferSize)
   }
 
-  func updateWithoutHandling(_ update: Update,
-                             from originalExecutor: Executor?) {
-    super.update(update, from: originalExecutor)
+  func tryUpdateWithoutHandling(_ update: Update, from originalExecutor: Executor?) -> Bool {
+    return super.tryUpdate(update, from: originalExecutor)
   }
 
-  @discardableResult
   func tryCompleteWithoutHandling(
     with completion: Fallible<Success>,
     from originalExecutor: Executor?) -> Bool {
@@ -82,19 +80,19 @@ public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
   }
 
   /// Calls update handler instead of sending specified Update to the Producer
-  override public func update(
-    _ update: Update,
-    from originalExecutor: Executor? = nil) {
+  override public func tryUpdate(_ update: Update, from originalExecutor: Executor?) -> Bool {
+    guard case .none = self.completion else { return false }
     _updateExecutor.execute(from: originalExecutor) {
       (originalExecutor) in
       self._updateHandler(self, .update(update), originalExecutor)
     }
+    
+    return true
   }
 
   /// Calls update handler instead of sending specified Complete to the Producer
-  override public func tryComplete(
-    _ completion: Fallible<Success>,
-    from originalExecutor: Executor? = nil) -> Bool {
+  override public func tryComplete(_ completion: Fallible<Success>, from originalExecutor: Executor? = nil) -> Bool {
+    guard case .none = self.completion else { return false }
     _updateExecutor.execute(from: originalExecutor) {
       (originalExecutor) in
       self._updateHandler(self, .completion(completion), originalExecutor)
@@ -130,14 +128,16 @@ public class DynamicProperty<T>: BaseProducer<T, Void> {
   }
 
   /// Calls update handler instead of sending specified Update to the Producer
-  override public func update(
-    _ update: Update,
-    from originalExecutor: Executor? = nil) {
-    _updateExecutor.execute(from: originalExecutor) {
-      [weak self] (originalExecutor) in
-      self?._value = update
+  override public func tryUpdate(_ update: Update, from originalExecutor: Executor?) -> Bool {
+    if super.tryUpdate(update, from: originalExecutor) {
+      _updateExecutor.execute(from: originalExecutor) {
+        [weak self] (originalExecutor) in
+        self?._value = update
+      }
+      return true
+    } else {
+      return false
     }
-    super.update(update, from: originalExecutor)
   }
 }
 
@@ -150,7 +150,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
   private let _maxBufferSize: Int
   fileprivate let _bufferedUpdates = Queue<Update>()
   private let _releasePool = ReleasePool(locking: PlaceholderLocking())
-  private var _locking = makeLocking()
+  var _locking = makeLocking()
   private var _handlers = QueueOfWeakElements<Handler>()
   private var _completion: Fallible<Success>?
 
@@ -215,14 +215,12 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
   ///   on `strictAsync: false` `Executor`s.
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
-  public func update(_ update: Update,
-                     from originalExecutor: Executor? = nil) {
-
+  public func tryUpdate(_ update: Update, from originalExecutor: Executor?) -> Bool {
     _locking.lock()
     guard case .none = _completion
       else {
         _locking.unlock()
-        return
+        return false
     }
 
     if self.maxBufferSize > 0 {
@@ -233,6 +231,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
     let handlers = _handlers
     _locking.unlock()
     handlers.forEach { $0.handle(event, from: originalExecutor) }
+    return true
   }
 
   /// Sends specified sequence of Update to the Producer

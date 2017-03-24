@@ -121,6 +121,25 @@ public extension Updating {
 /// A base protocol for objects that can be updated with Update values
 public protocol Updatable: UpdatesController {
 
+  /// Sends specified Update to the Updatable and returns true if succeded
+  ///
+  /// - Parameter update: value to update with
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
+  func tryUpdate(_ update: Update, from originalExecutor: Executor?) -> Bool
+}
+
+public extension Updatable {
+  /// Sends specified Update to the Updatable
+  ///
+  /// - Parameter update: value to update with
+  func update(_ update: Update) {
+    let _ = self.tryUpdate(update, from: nil)
+  }
+
   /// Sends specified Update to the Updatable
   ///
   /// - Parameter update: value to update with
@@ -129,16 +148,8 @@ public protocol Updatable: UpdatesController {
   ///   on `strictAsync: false` `Executor`s.
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
-  func update(_ update: Update,
-              from originalExecutor: Executor?)
-}
-
-public extension Updatable {
-  /// Sends specified Update to the Updatable
-  ///
-  /// - Parameter update: value to update with
-  func update(_ update: Update) {
-    self.update(update, from: nil)
+  func update(_ update: Update, from originalExecutor: Executor?) {
+    let _ = self.tryUpdate(update, from: originalExecutor)
   }
 }
 
@@ -175,7 +186,7 @@ public protocol EventsDestination: EventsController, Updatable, Completable {
 
 public extension EventsDestination {
 
-  /// Applies specified ChannelValue to the Producer
+  /// Posts event to the EventDestination
   /// Value will not be applied for completed Producer
   ///
   /// - Parameter event: `Event` to apply.
@@ -184,7 +195,7 @@ public extension EventsDestination {
   ///   on `strictAsync: false` `Executor`s.
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
-  public func apply(_ event: ChannelEvent<Update, Success>,
+  public func post(_ event: ChannelEvent<Update, Success>,
                     from originalExecutor: Executor? = nil) {
     switch event {
     case let .update(update):

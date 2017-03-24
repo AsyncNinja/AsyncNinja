@@ -151,7 +151,7 @@
                                            enablingCallback: enablingCallback)
       {
         [weak producer] (notification) in
-        producer?.updateWithoutHandling(notification, from: nil)
+        let _ = producer?.tryUpdateWithoutHandling(notification, from: nil)
       }
 
 

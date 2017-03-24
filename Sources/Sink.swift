@@ -44,26 +44,32 @@ public class Sink<U, S>: EventsDestination {
   }
 
   /// Calls update handler
-  public func update(
-    _ update: Update,
-    from originalExecutor: Executor? = nil) {
-    _updateExecutor.execute(from: originalExecutor) {
-      (originalExecutor) in
-      self._updateHandler(self, .update(update), originalExecutor)
+  public func tryUpdate(_ update: U, from originalExecutor: Executor?) -> Bool {
+    _locking.lock()
+    let isCompleted = _isCompleted
+    _locking.unlock()
+    
+    if isCompleted {
+      return false
+    } else {
+      _updateExecutor.execute(from: originalExecutor) { (originalExecutor) in
+        self._updateHandler(self, .update(update), originalExecutor)
+      }
+      return true
     }
   }
 
-  /// Calls update handler
+  /// Calls completion handler
   public func tryComplete(
     _ completion: Fallible<Success>,
     from originalExecutor: Executor? = nil) -> Bool {
     
     _locking.lock()
-    let didComplete = !_isCompleted
+    let isCompleted = _isCompleted
     _isCompleted = true
     _locking.unlock()
     
-    if didComplete {
+    if isCompleted {
       _releasePool.drain()
       _updateExecutor.execute(from: originalExecutor) {
         (originalExecutor) in
@@ -71,7 +77,7 @@ public class Sink<U, S>: EventsDestination {
       }
     }
     
-    return didComplete
+    return isCompleted
   }
 
   /// **Internal use only**.
@@ -97,7 +103,7 @@ public class Sink<U, S>: EventsDestination {
   /// Correctness of such transformation is left on our behalf
   public func staticCast<A, B>() -> Sink<A, B> {
     let sink = Sink<A, B>(updateExecutor: _updateExecutor) { [weak self] (sink, event, originalExecutor) in
-      self?.apply(event.staticCast(), from: originalExecutor)
+      self?.post(event.staticCast(), from: originalExecutor)
     }
     sink._asyncNinja_retainUntilFinalization(self)
     return sink

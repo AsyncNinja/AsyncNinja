@@ -65,7 +65,7 @@ public extension EventsSource {
           }
         }
 
-        producer?.apply(event)
+        producer?.post(event)
       }
     }
   }

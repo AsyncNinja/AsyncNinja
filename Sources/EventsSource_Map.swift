@@ -57,7 +57,7 @@ public extension EventsSource {
         {
             (context, event, producer, originalExecutor) in
             let transformedEvent = try transform(context, event)
-            producer.apply(transformedEvent, from: originalExecutor)
+            producer.post(transformedEvent, from: originalExecutor)
         }
     }
 
@@ -87,7 +87,7 @@ public extension EventsSource {
     {
       (event, producer, originalExecutor) in
       let transformedEvent = try transform(event)
-      producer.apply(transformedEvent, from: originalExecutor)
+      producer.post(transformedEvent, from: originalExecutor)
     }
   }
 }

@@ -178,7 +178,7 @@ public extension EventsSource {
     {
       (event: Event, producer: BaseProducer<Update, Success>, originalExecutor: Executor) -> Void in
       delayingExecutor.execute(after: timeout) { [weak producer] (originalExecutor) in
-        producer?.apply(event, from: originalExecutor)
+        producer?.post(event, from: originalExecutor)
       }
     }
   }
