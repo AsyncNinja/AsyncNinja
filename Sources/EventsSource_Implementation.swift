@@ -75,11 +75,11 @@ extension EventsSource {
     _ onEvent: @escaping (_ event: Event, _ eventsDestination: WeakBox<T>, _ originalExecutor: Executor) throws -> Void)
   {
     let weakBoxOfEventsDestination = WeakBox(eventsDestination)
-    let handler = self.makeHandler(executor: executor) {
-      (event, originalExecutor) in
+    let handler = self.makeHandler(executor: executor)
+    { (event, originalExecutor) in
       if pure, case .none = weakBoxOfEventsDestination.value { return }
       do { try onEvent(event, weakBoxOfEventsDestination, originalExecutor) }
-      catch { eventsDestination.fail(error, from: originalExecutor) }
+      catch { weakBoxOfEventsDestination.value?.fail(error, from: originalExecutor) }
     }
 
     if let handler = handler {
@@ -123,8 +123,7 @@ extension EventsSource {
   {
     let executor_ = executor ?? context.executor
     self.attach(eventsDestination, executor: executor_, pure: pure, cancellationToken: cancellationToken)
-    {
-      [weak context] (event, producer, originalExecutor) in
+    { [weak context] (event, producer, originalExecutor) in
       guard let context = context else { return }
       try onEvent(context, event, producer, originalExecutor)
     }
