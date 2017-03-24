@@ -32,6 +32,8 @@ class FutureTests: XCTestCase {
   static let allTests = [
     ("testLifetime", testLifetime),
     ("testMapLifetime", testMapLifetime),
+    ("testPureMapLifetime", testPureMapLifetime),
+    ("testImpureMapLifetime", testImpureMapLifetime),
     ("testMap_Success", testMap_Success),
     ("testMap_Failure", testMap_Failure),
     ("testMapContextual_Success_ContextAlive", testMapContextual_Success_ContextAlive),
@@ -89,18 +91,67 @@ class FutureTests: XCTestCase {
     weak var weakFutureValue: Future<Int>?
     weak var weakMappedFuture: Future<String>?
     eval { () -> Void in
-        var futureValue: Future<Int>? = future(executor: .queue(qos), after: 1.0) { 1 }
-        weakFutureValue = futureValue
-        
-        var mappedFuture: Future<String>? = futureValue!.map { _ in "hello" }
-        weakMappedFuture = mappedFuture
-        
-        mappedFuture = nil
-        futureValue = nil
+      var futureValue: Future<Int>? = future(executor: .queue(qos), after: 1.0) { 1 }
+      weakFutureValue = futureValue
+      
+      var mappedFuture: Future<String>? = futureValue!.map {
+        _ in
+        XCTFail()
+        return "hello"
+      }
+      weakMappedFuture = mappedFuture
+      
+      mappedFuture = nil
+      futureValue = nil
     }
     
     XCTAssertNil(weakFutureValue)
     XCTAssertNil(weakMappedFuture)
+  }
+
+  func testPureMapLifetime() {
+    let qos = pickQoS()
+    var futureValue: Future<Int>?
+    weak var weakMappedFuture: Future<String>?
+    eval { () -> Void in
+      futureValue = future(executor: .queue(qos), after: 1.0) { 1 }
+      
+      var mappedFuture: Future<String>? = futureValue!.map(pure: true) {
+        _ in
+        XCTFail()
+        return "hello"
+      }
+      weakMappedFuture = mappedFuture
+      
+      mappedFuture = nil
+      futureValue = nil
+    }
+    
+    XCTAssertNil(weakMappedFuture)
+    sleep(1)
+  }
+
+  func testImpureMapLifetime() {
+    let qos = pickQoS()
+    let expectation = self.expectation(description: "impure block executed")
+    var futureValue: Future<Int>?
+    weak var weakMappedFuture: Future<String>?
+    eval { () -> Void in
+      futureValue = future(executor: .queue(qos), after: 1.0) { 1 }
+      
+      var mappedFuture: Future<String>? = futureValue!.map(pure: false) {
+        _ in
+        expectation.fulfill()
+        return "hello"
+      }
+      weakMappedFuture = mappedFuture
+      
+      mappedFuture = nil
+      futureValue = nil
+    }
+    
+    XCTAssertNil(weakMappedFuture)
+    self.waitForExpectations(timeout: 1.0)
   }
 
   func testMap_Success() {

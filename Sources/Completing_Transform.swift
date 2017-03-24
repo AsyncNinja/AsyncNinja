@@ -27,29 +27,32 @@ import Dispatch
 extension Completing {
   func _mapCompletion<T>(
     executor: Executor = .primary,
+    pure: Bool,
     _ transform: @escaping (Fallible<Success>) throws -> T
     ) -> Promise<T>
   {
     let promise = Promise<T>()
     let handler = makeCompletionHandler(executor: executor) {
       [weak promise] (completion, originalExecutor) -> Void in
-      guard case .some = promise else { return }
+      if pure, case .none = promise { return }
       let transformedValue = fallible { try transform(completion) }
       promise?.complete(transformedValue, from: originalExecutor)
     }
     promise._asyncNinja_retainHandlerUntilFinalization(handler)
+    if !pure { self._asyncNinja_retainHandlerUntilFinalization(handler) }
     return promise
   }
   
   func _flatRecover(
     executor: Executor = .primary,
+    pure: Bool,
     _ transform: @escaping (Swift.Error) throws -> Future<Success>
     ) -> Promise<Success>
   {
     let promise = Promise<Success>()
     let handler = makeCompletionHandler(executor: executor) {
       [weak promise] (completion, originalExecutor) -> Void in
-      guard case .some = promise else { return }
+      if pure, case .none = promise { return }
       
       switch completion {
       case let .success(success):
@@ -60,6 +63,7 @@ extension Completing {
       }
     }
     promise._asyncNinja_retainHandlerUntilFinalization(handler)
+    if !pure { self._asyncNinja_retainHandlerUntilFinalization(handler) }
     return promise
   }
 }
@@ -73,10 +77,11 @@ public extension Completing {
   /// Use method mapCompletion(context:executor:transform:) for state changing transformations.
   func mapCompletion<Transformed>(
     executor: Executor = .primary,
+    pure: Bool = true,
     _ transform: @escaping (Fallible<Success>) throws -> Transformed
     ) -> Future<Transformed>
   {
-    return _mapCompletion(executor: executor, transform)
+    return _mapCompletion(executor: executor, pure: pure, transform)
   }
 
   /// Transforms Completing<SuccessA> => Future<SuccessB>. Flattens future returned by the transform
@@ -85,10 +90,11 @@ public extension Completing {
   /// Use method flatMapCompletion(context:executor:transform:) for state changing transformations.
   func flatMapCompletion<T: Completing>(
     executor: Executor = .primary,
+    pure: Bool = true,
     _ transform: @escaping (Fallible<Success>) throws -> T
     ) -> Future<T.Success>
   {
-    return mapCompletion(executor: executor, transform).flatten()
+    return mapCompletion(executor: executor, pure: pure, transform).flatten()
   }
 
   /// Transforms Completing<SuccessA> => Channel<SuccessB>. Flattens channel returned by the transform
@@ -97,10 +103,11 @@ public extension Completing {
   /// Use method flatMapCompletion(context:executor:transform:) for state changing transformations.
   func flatMapCompletion<T: Completing&Updating>(
     executor: Executor = .primary,
+    pure: Bool = true,
     _ transform: @escaping (Fallible<Success>) throws -> T
     ) -> Channel<T.Update, T.Success>
   {
-    return mapCompletion(executor: executor, transform).flatten()
+    return mapCompletion(executor: executor, pure: pure, transform).flatten()
   }
 
   /// Transforms Completing<SuccessA> => Future<SuccessB>
@@ -109,10 +116,11 @@ public extension Completing {
   /// but does not perform transformation if this future fails.
   func mapSuccess<Transformed>(
     executor: Executor = .primary,
+    pure: Bool = true,
     _ transform: @escaping (Success) throws -> Transformed
     ) -> Future<Transformed>
   {
-    return mapCompletion(executor: executor) { (value) -> Transformed in
+    return mapCompletion(executor: executor, pure: pure) { (value) -> Transformed in
       let transformedValue = try value.liftSuccess()
       return try transform(transformedValue)
     }
@@ -124,10 +132,11 @@ public extension Completing {
   /// but does not perform transformation if this future fails.
   func flatMapSuccess<T: Completing>(
     executor: Executor = .primary,
+    pure: Bool = true,
     _ transform: @escaping (Success) throws -> T
     ) -> Future<T.Success>
   {
-    return mapSuccess(executor: executor, transform).flatten()
+    return mapSuccess(executor: executor, pure: pure, transform).flatten()
   }
 
   /// Transforms Completing<SuccessA> => Channel<Update, BSuccessB>. Flattens channel returned by the transform
@@ -136,15 +145,15 @@ public extension Completing {
   /// but does not perform transformation if this future fails.
   func flatMapSuccess<T: Completing&Updating>(
     executor: Executor = .primary,
+    pure: Bool = true,
     _ transform: @escaping (Success) throws -> T
     ) -> Channel<T.Update, T.Success>
   {
-    return mapSuccess(executor: executor, transform).flatten()
+    return mapSuccess(executor: executor, pure: pure, transform).flatten()
   }
 
   /// Recovers failure of this future if there is one
-  func recover(with success: Success) -> Future<Success>
-  {
+  func recover(with success: Success) -> Future<Success> {
     return recover(executor: .immediate) { _ in success }
   }
 
@@ -167,10 +176,11 @@ public extension Completing {
   /// Recovers failure of this future if there is one
   func recover(
     executor: Executor = .primary,
+    pure: Bool = true,
     _ transform: @escaping (Swift.Error) throws -> Success
     ) -> Future<Success>
   {
-    return mapCompletion(executor: executor) {
+    return mapCompletion(executor: executor, pure: pure) {
       (value) -> Success in
       switch value {
       case .success(let success): return success
@@ -183,10 +193,11 @@ public extension Completing {
   func recover<E: Swift.Error>(
     from specificError: E,
     executor: Executor = .primary,
+    pure: Bool = true,
     _ transform: @escaping (E) throws -> Success
     ) -> Future<Success> where E: Equatable
   {
-    return recover(executor: executor) {
+    return recover(executor: executor, pure: pure) {
       if let myError = $0 as? E, myError == specificError {
         return try transform(myError)
       } else {
@@ -198,20 +209,22 @@ public extension Completing {
   /// Recovers failure of this future if there is one. Flattens future returned by the transform
   func flatRecover(
     executor: Executor = .primary,
+    pure: Bool = true,
     _ transform: @escaping (Swift.Error) throws -> Future<Success>
     ) -> Future<Success>
   {
-    return _flatRecover(executor: executor, transform)
+    return _flatRecover(executor: executor, pure: pure, transform)
   }
   
   /// Recovers failure of this future if there is one. Flattens future returned by the transform
   func flatRecover<E: Swift.Error>(
     from specificError: E,
     executor: Executor = .primary,
+    pure: Bool = true,
     _ transform: @escaping (E) throws -> Future<Success>
     ) -> Future<Success> where E: Equatable
   {
-    return flatRecover(executor: executor) {
+    return flatRecover(executor: executor, pure: pure) {
       if let myError = $0 as? E, myError == specificError {
         return try transform(myError)
       } else {
@@ -231,10 +244,11 @@ public extension Completing {
   func mapCompletion<Transformed, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
+    pure: Bool = true,
     _ transform: @escaping (C, Fallible<Success>) throws -> Transformed
     ) -> Future<Transformed>
   {
-    let promise = _mapCompletion(executor: executor ?? context.executor) {
+    let promise = _mapCompletion(executor: executor ?? context.executor, pure: pure) {
       [weak context] (value) -> Transformed in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, value)
@@ -250,10 +264,11 @@ public extension Completing {
   func flatMapCompletion<T: Completing, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
+    pure: Bool = true,
     _ transform: @escaping (C, Fallible<Success>) throws -> T
     ) -> Future<T.Success>
   {
-    return mapCompletion(context: context, executor: executor, transform).flatten()
+    return mapCompletion(context: context, executor: executor, pure: pure, transform).flatten()
   }
 
   /// Transforms Comletable<SuccessA> => Channel<UpdateB, SuccessB>. Flattens channel returned by the transform
@@ -263,10 +278,11 @@ public extension Completing {
   func flatMapCompletion<T: Completing&Updating, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
+    pure: Bool = true,
     _ transform: @escaping (C, Fallible<Success>) throws -> T
     ) -> Channel<T.Update, T.Success>
   {
-    return mapCompletion(context: context, executor: executor, transform).flatten()
+    return mapCompletion(context: context, executor: executor, pure: pure, transform).flatten()
   }
 
   /// Transforms Completing<SuccessA> => Future<SuccessB>
@@ -276,10 +292,11 @@ public extension Completing {
   func mapSuccess<Transformed, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
+    pure: Bool = true,
     _ transform: @escaping (C, Success) throws -> Transformed
     ) -> Future<Transformed>
   {
-    return mapCompletion(context: context, executor: executor) {
+    return mapCompletion(context: context, executor: executor, pure: pure) {
       (context, value) -> Transformed in
       let success = try value.liftSuccess()
       return try transform(context, success)
@@ -293,10 +310,11 @@ public extension Completing {
   func flatMapSuccess<T: Completing, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
+    pure: Bool = true,
     _ transform: @escaping (C, Success) throws -> T
     ) -> Future<T.Success>
   {
-    return mapSuccess(context: context, executor: executor, transform).flatten()
+    return mapSuccess(context: context, executor: executor, pure: pure, transform).flatten()
   }
 
   /// Transforms Completing<SuccessA> => Channel<UpdateB, SuccessB>. Flattens channel returned by the transform
@@ -306,20 +324,22 @@ public extension Completing {
   func flatMapSuccess<T: Completing&Updating, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
+    pure: Bool = true,
     _ transform: @escaping (C, Success) throws -> T
     ) -> Channel<T.Update, T.Success>
   {
-    return mapSuccess(context: context, executor: executor, transform).flatten()
+    return mapSuccess(context: context, executor: executor, pure: pure, transform).flatten()
   }
 
   /// Recovers failure of this future if there is one with contextual transformer.
   func recover<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
+    pure: Bool = true,
     _ transform: @escaping (C, Swift.Error) throws -> Success
     ) -> Future<Success>
   {
-    return mapCompletion(context: context, executor: executor) {
+    return mapCompletion(context: context, executor: executor, pure: pure) {
       (context, value) -> Success in
       switch value {
       case .success(let success):
@@ -335,10 +355,11 @@ public extension Completing {
     from specificError: E,
     context: C,
     executor: Executor? = nil,
+    pure: Bool = true,
     _ transform: @escaping (C, E) throws -> Success
     ) -> Future<Success> where E: Equatable
   {
-    return recover(context: context, executor: executor) {
+    return recover(context: context, executor: executor, pure: pure) {
       (context, error) in
       if let myError = error as? E, myError == specificError {
         return try transform(context, myError)
@@ -353,10 +374,11 @@ public extension Completing {
   func flatRecover<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
+    pure: Bool = true,
     _ transform: @escaping (C, Swift.Error) throws -> Future<Success>
     ) -> Future<Success>
   {
-    let promise = _flatRecover(executor: executor ?? context.executor) {
+    let promise = _flatRecover(executor: executor ?? context.executor, pure: pure) {
       [weak context] (failure) -> Future<Success> in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, failure)
@@ -371,10 +393,11 @@ public extension Completing {
     from specificError: E,
     context: C,
     executor: Executor? = nil,
+    pure: Bool = true,
     _ transform: @escaping (C, Swift.Error) throws -> Future<Success>
     ) -> Future<Success> where E: Equatable
   {
-    return flatRecover(context: context, executor: executor) {
+    return flatRecover(context: context, executor: executor, pure: pure) {
       (context, error) in
       if let myError = error as? E, myError == specificError {
         return try transform(context, myError)
