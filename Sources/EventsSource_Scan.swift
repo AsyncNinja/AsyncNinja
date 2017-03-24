@@ -38,16 +38,14 @@ public extension EventsSource {
     var partialResult = initialResult
     let queue = Queue<Event>()
 
-    return self.makeProducer(executor: .immediate, cancellationToken: cancellationToken, bufferSize: bufferSize) {
+    return self.makeProducer(executor: .immediate, pure: true, cancellationToken: cancellationToken, bufferSize: bufferSize) {
       (event, producer, originalExecutor) in
       locking.lock()
       queue.push(event)
       locking.unlock()
 
       executor.execute(from: originalExecutor) {
-        [weak producer] (originalExecutor) in
-        guard case .some = producer else { return }
-
+        (originalExecutor) in
         let event: ChannelEvent<Result, (Result, Success)> = locking.locker {
           let event = queue.pop()!
           switch event {
@@ -65,7 +63,7 @@ public extension EventsSource {
           }
         }
 
-        producer?.post(event)
+        producer.value?.post(event)
       }
     }
   }

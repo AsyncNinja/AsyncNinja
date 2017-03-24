@@ -38,8 +38,11 @@ extension Completing {
       let transformedValue = fallible { try transform(completion) }
       promise?.complete(transformedValue, from: originalExecutor)
     }
-    promise._asyncNinja_retainHandlerUntilFinalization(handler)
-    if !pure { self._asyncNinja_retainHandlerUntilFinalization(handler) }
+    if pure {
+      promise._asyncNinja_retainHandlerUntilFinalization(handler)
+    } else {
+      self._asyncNinja_retainHandlerUntilFinalization(handler)
+    }
     return promise
   }
   
@@ -63,7 +66,11 @@ extension Completing {
       }
     }
     promise._asyncNinja_retainHandlerUntilFinalization(handler)
-    if !pure { self._asyncNinja_retainHandlerUntilFinalization(handler) }
+    if pure {
+      promise._asyncNinja_retainHandlerUntilFinalization(handler)
+    } else {
+      self._asyncNinja_retainHandlerUntilFinalization(handler)
+    }
     return promise
   }
 }

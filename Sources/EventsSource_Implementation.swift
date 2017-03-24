@@ -53,13 +53,15 @@ extension EventsSource {
   /// **internal use only**
   func makeProducer<P, S>(
     executor: Executor,
+    pure: Bool,
     cancellationToken: CancellationToken?,
     bufferSize: DerivedChannelBufferSize,
-    _ onEvent: @escaping (_ event: Event, _ producer: BaseProducer<P, S>, _ originalExecutor: Executor) throws -> Void
-    ) -> BaseProducer<P, S> {
+    _ onEvent: @escaping (_ event: Event, _ producer: WeakBox<BaseProducer<P, S>>, _ originalExecutor: Executor) throws -> Void
+    ) -> BaseProducer<P, S>
+  {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<P, S>(bufferSize: bufferSize)
-    self.attach(producer, executor: executor,
+    self.attach(producer, executor: executor, pure: pure,
                 cancellationToken: cancellationToken, onEvent)
     return producer
   }
@@ -68,20 +70,26 @@ extension EventsSource {
   func attach<T: EventsDestination>(
     _ eventsDestination: T,
     executor: Executor,
+    pure: Bool,
     cancellationToken: CancellationToken?,
-    _ onEvent: @escaping (_ event: Event, _ producer: T, _ originalExecutor: Executor) throws -> Void)
+    _ onEvent: @escaping (_ event: Event, _ eventsDestination: WeakBox<T>, _ originalExecutor: Executor) throws -> Void)
   {
+    let weakBoxOfEventsDestination = WeakBox(eventsDestination)
     let handler = self.makeHandler(executor: executor) {
-      [weak eventsDestination] (event, originalExecutor) in
-      guard let eventsDestination = eventsDestination else { return }
-      do { try onEvent(event, eventsDestination, originalExecutor) }
+      (event, originalExecutor) in
+      if pure, case .none = weakBoxOfEventsDestination.value { return }
+      do { try onEvent(event, weakBoxOfEventsDestination, originalExecutor) }
       catch { eventsDestination.fail(error, from: originalExecutor) }
     }
 
     if let handler = handler {
-      let box = MutableBox<AnyObject?>(handler)
-      self._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
-      eventsDestination._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
+      if pure {
+        let box = MutableBox<AnyObject?>(handler)
+        self._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
+        eventsDestination._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
+      } else {
+        self._asyncNinja_retainUntilFinalization(handler)
+      }
     }
 
     cancellationToken?.add(cancellable: eventsDestination)
@@ -91,13 +99,15 @@ extension EventsSource {
   func makeProducer<P, S, C: ExecutionContext>(
     context: C,
     executor: Executor?,
+    pure: Bool,
     cancellationToken: CancellationToken?,
     bufferSize: DerivedChannelBufferSize,
-    _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: BaseProducer<P, S>, _ originalExecutor: Executor) throws -> Void
-    ) -> BaseProducer<P, S> {
+    _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: WeakBox<BaseProducer<P, S>>, _ originalExecutor: Executor) throws -> Void
+    ) -> BaseProducer<P, S>
+  {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = BaseProducer<P, S>(bufferSize: bufferSize)
-    self.attach(producer, context: context, executor: executor,
+    self.attach(producer, context: context, executor: executor, pure: pure,
                 cancellationToken: cancellationToken, onEvent)
     return producer
   }
@@ -107,11 +117,12 @@ extension EventsSource {
     _ eventsDestination: T,
     context: C,
     executor: Executor?,
+    pure: Bool,
     cancellationToken: CancellationToken?,
-    _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: T, _ originalExecutor: Executor) throws -> Void)
+    _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: WeakBox<T>, _ originalExecutor: Executor) throws -> Void)
   {
     let executor_ = executor ?? context.executor
-    self.attach(eventsDestination, executor: executor_, cancellationToken: cancellationToken)
+    self.attach(eventsDestination, executor: executor_, pure: pure, cancellationToken: cancellationToken)
     {
       [weak context] (event, producer, originalExecutor) in
       guard let context = context else { return }
@@ -217,16 +228,17 @@ public extension EventsSource {
     ) where T.Update == Update, T.Success == Success {
     self.attach(eventsDestination,
                 executor: .immediate,
+                pure: true,
                 cancellationToken: cancellationToken)
     {
       (event, producer, originalExecutor) in
       switch event {
       case let .update(update):
-        producer.update(update, from: originalExecutor)
+        producer.value?.update(update, from: originalExecutor)
       case let .completion(.failure(failure)):
-        producer.fail(failure, from: originalExecutor)
+        producer.value?.fail(failure, from: originalExecutor)
       case let .completion(.success(success)):
-        producer.succeed(success, from: originalExecutor)
+        producer.value?.succeed(success, from: originalExecutor)
       }
     }
   }
@@ -244,16 +256,17 @@ public extension EventsSource {
     ) where T.Update == Update, T.Success == Void {
     self.attach(eventsDestination,
                 executor: .immediate,
+                pure: true,
                 cancellationToken: cancellationToken)
     {
       (event, producer, originalExecutor) in
       switch event {
       case let .update(update):
-        producer.update(update, from: originalExecutor)
+        producer.value?.update(update, from: originalExecutor)
       case let .completion(.failure(failure)):
-        producer.fail(failure, from: originalExecutor)
+        producer.value?.fail(failure, from: originalExecutor)
       case .completion(.success):
-        producer.succeed(from: originalExecutor)
+        producer.value?.succeed(from: originalExecutor)
       }
     }
   }
