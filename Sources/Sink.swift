@@ -89,6 +89,7 @@ public class Sink<U, S>: EventsDestination {
     }
   }
   
+  /// **Internal use only**.
   public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     _locking.lock()
     defer { _locking.unlock() }

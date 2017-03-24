@@ -278,13 +278,12 @@ public func flatFuture<T, C: ExecutionContext>(
   cancellationToken: CancellationToken? = nil,
   _ block: @escaping (_ strongContext: C) throws -> Future<T>
   ) -> Future<T> {
-  let executor_ = executor ?? context.executor
-  let promise = flatPromise(executor: executor_,
-                                 after: timeout,
-                                 cancellationToken: cancellationToken)
+  let promise = flatPromise(executor: executor ?? context.executor,
+                            after: timeout,
+                            cancellationToken: cancellationToken)
   {
     [weak context] () -> Future<T> in
-
+    
     if let context = context {
       return try block(context)
     } else {
