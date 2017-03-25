@@ -30,7 +30,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
   let _bufferedUpdates = Queue<Update>()
   private let _releasePool = ReleasePool(locking: PlaceholderLocking())
   var _locking = makeLocking()
-  private var _handlers = QueueOfWeakElements<Handler>()
+  private var _handlers = QueueOfWeakElements<ProducerHandler<Update, Success>>()
   private var _completion: Fallible<Success>?
   
   /// amount of currently stored updates
@@ -58,7 +58,8 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
   override public func makeHandler(
     executor: Executor,
     _ block: @escaping (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void
-    ) -> AnyObject? {
+    ) -> AnyObject?
+  {
     return _locking.locker {
       return _makeHandler(executor: executor, block)
     }
@@ -67,8 +68,9 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
   fileprivate func _makeHandler(
     executor: Executor,
     _ block: @escaping (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void
-    ) -> Handler? {
-    let handler = Handler(executor: executor, bufferedUpdates: _bufferedUpdates.clone(), owner: self, block: block)
+    ) -> ProducerHandler<Update, Success>?
+  {
+    let handler = ProducerHandler(executor: executor, bufferedUpdates: _bufferedUpdates.clone(), owner: self, block: block)
     if let completion = _completion {
       handler.handle(.completion(completion), from: nil)
       return nil
@@ -237,7 +239,7 @@ fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Upd
   var _locking = makeLocking(isFair: true)
   let _bufferedUpdates: Queue<Update>
   let _producer: BaseProducer<Update, Success>
-  var _handler: ChannelHandler<Update, Success>?
+  var _handler: ProducerHandler<Update, Success>?
   override var completion: Fallible<Success>? {
     _locking.lock()
     defer { _locking.unlock() }
@@ -296,5 +298,60 @@ fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Upd
     _locking.unlock()
     
     _sema.signal()
+  }
+}
+
+// MARK: - Handlers
+
+/// **internal use only** Wraps each block submitted to the channel
+/// to provide required memory management behavior
+final fileprivate class ProducerHandler<Update, Success> {
+  public typealias Event = ChannelEvent<Update, Success>
+  typealias Block = (_ event: Event, _ on: Executor) -> Void
+
+  let executor: Executor
+  let block: Block
+  var locking = makeLocking()
+  var bufferedUpdates: Queue<Update>?
+  var owner: Channel<Update, Success>?
+
+  /// Designated initializer of ProducerHandler
+  init(executor: Executor,
+       bufferedUpdates: Queue<Update>,
+       owner: Channel<Update, Success>,
+       block: @escaping Block) {
+    self.executor = executor
+    self.block = block
+    self.bufferedUpdates = bufferedUpdates
+    self.owner = owner
+
+    executor.execute(from: nil) { (originalExecutor) in
+      self.handleBufferedUpdatesIfNeeded(from: originalExecutor)
+    }
+  }
+
+  func handleBufferedUpdatesIfNeeded(from originalExecutor: Executor) {
+    locking.lock()
+    let bufferedUpdates = self.bufferedUpdates
+    self.bufferedUpdates = nil
+    locking.unlock()
+
+    if let bufferedUpdates = bufferedUpdates {
+      for update in bufferedUpdates {
+        handle(.update(update), from: originalExecutor)
+      }
+    }
+  }
+
+  func handle(_ value: Event, from originalExecutor: Executor?) {
+    self.executor.execute(from: originalExecutor) {
+      (originalExecutor) in
+      self.handleBufferedUpdatesIfNeeded(from: originalExecutor)
+      self.block(value, originalExecutor)
+    }
+  }
+
+  func releaseOwner() {
+    self.owner = nil
   }
 }

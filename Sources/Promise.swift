@@ -42,7 +42,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
     executor: Executor,
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
     ) -> AnyObject? {
-    let handler = Handler(executor: executor, block: block, owner: self)
+    let handler = PromiseHandler(executor: executor, block: block, owner: self)
     
     _container.updateHead {
       switch $0 {
@@ -128,7 +128,7 @@ fileprivate class AbstractPromiseState<Success> {
 /// **internal use only**
 fileprivate  class SubscribedPromiseState<Success>: AbstractPromiseState<Success> {
   typealias Value = Fallible<Success>
-  typealias Handler = FutureHandler<Success>
+  typealias Handler = PromiseHandler<Success>
   
   weak private(set) var handler: Handler?
   let next: SubscribedPromiseState<Success>?
@@ -149,5 +149,36 @@ fileprivate  class CompletedPromiseState<Success>: AbstractPromiseState<Success>
   
   init(value: Fallible<Success>) {
     self.value = value
+  }
+}
+
+/// **Internal use only**
+///
+/// Each subscription to a future value will be expressed in such handler.
+/// Future will accumulate handlers until completion or deallocacion.
+final fileprivate class PromiseHandler<Success> {
+  typealias Block = (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+  let executor: Executor
+  let block: Block
+  var owner: Future<Success>?
+
+  init(executor: Executor,
+       block: @escaping Block,
+       owner: Future<Success>)
+  {
+    self.executor = executor
+    self.block = block
+    self.owner = owner
+  }
+
+  func handle(_ value: Fallible<Success>, from originalExecutor: Executor?) {
+    self.executor.execute(from: originalExecutor) {
+      (originalExecutor) in
+      self.block(value, originalExecutor)
+    }
+  }
+
+  func releaseOwner() {
+    self.owner = nil
   }
 }

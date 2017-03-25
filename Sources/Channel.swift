@@ -26,7 +26,6 @@ import Dispatch
 public class Channel<U, S>: EventsSource {
   public typealias Update = U
   public typealias Success = S
-  public typealias Handler = ChannelHandler<Update, Success>
   public typealias Iterator = ChannelIterator<Update, Success>
 
   /// completion of channel. Returns nil if channel is not complete yet
@@ -190,60 +189,5 @@ class ChannelIteratorImpl<Update, Success>  {
 
   func clone() -> ChannelIteratorImpl<Update, Success> {
     assertAbstract()
-  }
-}
-
-// MARK: - Handlers
-
-/// **internal use only** Wraps each block submitted to the channel
-/// to provide required memory management behavior
-final public class ChannelHandler<Update, Success> {
-  public typealias Event = ChannelEvent<Update, Success>
-  typealias Block = (_ event: Event, _ on: Executor) -> Void
-
-  let executor: Executor
-  let block: Block
-  var locking = makeLocking()
-  var bufferedUpdates: Queue<Update>?
-  var owner: Channel<Update, Success>?
-
-  /// Designated initializer of ChannelHandler
-  init(executor: Executor,
-       bufferedUpdates: Queue<Update>,
-       owner: Channel<Update, Success>,
-       block: @escaping Block) {
-    self.executor = executor
-    self.block = block
-    self.bufferedUpdates = bufferedUpdates
-    self.owner = owner
-
-    executor.execute(from: nil) { (originalExecutor) in
-      self.handleBufferedUpdatesIfNeeded(from: originalExecutor)
-    }
-  }
-
-  func handleBufferedUpdatesIfNeeded(from originalExecutor: Executor) {
-    locking.lock()
-    let bufferedUpdates = self.bufferedUpdates
-    self.bufferedUpdates = nil
-    locking.unlock()
-
-    if let bufferedUpdates = bufferedUpdates {
-      for update in bufferedUpdates {
-        handle(.update(update), from: originalExecutor)
-      }
-    }
-  }
-
-  func handle(_ value: Event, from originalExecutor: Executor?) {
-    self.executor.execute(from: originalExecutor) {
-      (originalExecutor) in
-      self.handleBufferedUpdatesIfNeeded(from: originalExecutor)
-      self.block(value, originalExecutor)
-    }
-  }
-
-  func releaseOwner() {
-    self.owner = nil
   }
 }

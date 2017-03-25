@@ -25,8 +25,6 @@ import Dispatch
 /// Future is a proxy of value that will be available at some point in the future.
 public class Future<S>: Completing {
   public typealias Success = S
-  public typealias Handler = FutureHandler<Success>
-  public typealias CompletionHandler = Handler
 
   /// Returns either completion for complete `Future` or nil otherwise
   public var completion: Fallible<Success>? { assertAbstract() }
@@ -257,36 +255,5 @@ public extension Future {
   /// - Returns: delayed future
   func delayed(timeout: Double) -> Future<Success> {
     return delayedCompletion(timeout: timeout)
-  }
-}
-
-/// **Internal use only**
-///
-/// Each subscription to a future value will be expressed in such handler.
-/// Future will accumulate handlers until completion or deallocacion.
-public class FutureHandler<Success> {
-  typealias Block = (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
-  let executor: Executor
-  let block: Block
-  var owner: Future<Success>?
-
-  init(executor: Executor,
-       block: @escaping Block,
-       owner: Future<Success>)
-  {
-    self.executor = executor
-    self.block = block
-    self.owner = owner
-  }
-
-  func handle(_ value: Fallible<Success>, from originalExecutor: Executor?) {
-    self.executor.execute(from: originalExecutor) {
-      (originalExecutor) in
-      self.block(value, originalExecutor)
-    }
-  }
-
-  func releaseOwner() {
-    self.owner = nil
   }
 }
