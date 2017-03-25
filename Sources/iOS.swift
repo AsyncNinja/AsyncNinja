@@ -661,7 +661,7 @@
     }
   }
 
-  public class UIGestureRecognizerActionReceiver: NSObject {
+  class UIGestureRecognizerActionReceiver: NSObject {
     weak var object: UIGestureRecognizer?
     let producer = Producer<UIGestureRecognizer, Void>(bufferSize: 0)
 

@@ -22,18 +22,31 @@
 
 import Dispatch
 
+/// Context indepedent locking. Non-recursive.
 public protocol Locking {
+
+  /// Locks. Be sure to balance with unlock
   mutating func lock()
+
+  /// Unlocks. Be sure to balance with lock
   mutating func unlock()
 }
 
 public extension Locking {
+
+  /// Locks and performs block
+  ///
+  /// - Parameter locked: locked function to perform
+  /// - Returns: value returned by the locker
   mutating func locker<T>(_ locked: () throws -> T) rethrows -> T {
     lock()
     defer { unlock() }
     return try locked()
   }
 
+  /// Locks and performs block
+  ///
+  /// - Parameter locked: locked function to perform
   mutating func locker(_ locked: () -> Void) -> Void {
     lock()
     locked()
@@ -41,6 +54,10 @@ public extension Locking {
   }
 }
 
+/// Makes a platform independent Locking
+///
+/// - Parameter isFair: determines if locking is fair
+/// - Returns: constructed Locking
 public func makeLocking(isFair: Bool = false) -> Locking {
   #if os(Linux)
     return DispatchSemaphore(value: 1)
@@ -56,21 +73,26 @@ public func makeLocking(isFair: Bool = false) -> Locking {
 }
 
 extension DispatchSemaphore: Locking {
+
+  /// Locks. Be sure to balance with unlock
   public func lock() {
     self.wait()
   }
 
+  /// Unlocks. Be sure to balance with lock
   public func unlock() {
     self.signal()
   }
 }
 
-class PlaceholderLocking: Locking {
-  func lock() { }
-  func unlock() { }
+/// **internal use only** Behaves like a locking but actually does nothing.
+struct PlaceholderLocking: Locking {
+  mutating func lock() { }
+  mutating func unlock() { }
 }
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+/// **internal use only**
 @available(macOS, deprecated: 10.12, message: "Use UnfairLockLocking instead")
 @available(iOS, deprecated: 10.0, message: "Use UnfairLockLocking instead")
 @available(tvOS, deprecated: 10.0, message: "Use UnfairLockLocking instead")
@@ -87,6 +109,7 @@ struct SpinLockLocking: Locking {
   }
 }
 
+/// **internal use only**
 @available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *)
 struct  UnfairLockLocking: Locking {
   private var _lock = os_unfair_lock_s()
