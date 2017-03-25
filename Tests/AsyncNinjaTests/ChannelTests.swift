@@ -232,20 +232,6 @@ class ChannelTests: XCTestCase {
     XCTAssertEqual("Incomplete Channel<Int, String>", channelD.debugDescription)
   }
 
-  class DoubleBindTestActor<T>: TestActor {
-    var dynamicValue: DynamicProperty<T> { return _dynamicValue }
-    var value: T {
-      get { return _dynamicValue.value }
-      set { _dynamicValue.value = newValue }
-    }
-    private var _dynamicValue: DynamicProperty<T>!
-
-    init(initialValue: T) {
-      super.init()
-      _dynamicValue = makeDynamicProperty(initialValue)
-    }
-  }
-
   func testDoubleBind() {
     let majorActor = DoubleBindTestActor<Int>(initialValue: 3)
     let minorActor = DoubleBindTestActor<Int>(initialValue: 4)
@@ -270,5 +256,19 @@ class ChannelTests: XCTestCase {
 
     majorActor.value = 7
     test(value: 7)
+  }
+}
+
+fileprivate class DoubleBindTestActor<T>: TestActor {
+  var dynamicValue: DynamicProperty<T> { return _dynamicValue }
+  var value: T {
+    get { return _dynamicValue.value }
+    set { _dynamicValue.value = newValue }
+  }
+  private var _dynamicValue: DynamicProperty<T>!
+
+  init(initialValue: T) {
+    super.init()
+    _dynamicValue = makeDynamicProperty(initialValue)
   }
 }
