@@ -14,7 +14,7 @@
 		OBJ_101 /* CancellationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_18 /* CancellationToken.swift */; };
 		OBJ_102 /* Channel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_19 /* Channel.swift */; };
 		OBJ_103 /* Channel_makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_20 /* Channel_makers.swift */; };
-		OBJ_104 /* Collection+Futures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_21 /* Collection+Futures.swift */; };
+		OBJ_104 /* Sequence_Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_21 /* Sequence_Extensions.swift */; };
 		OBJ_105 /* Completable_Implementation.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_22 /* Completable_Implementation.swift */; };
 		OBJ_106 /* Completing_Implementation.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_23 /* Completing_Implementation.swift */; };
 		OBJ_107 /* Completing_Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_24 /* Completing_Transform.swift */; };
@@ -110,7 +110,7 @@
 		OBJ_18 /* CancellationToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CancellationToken.swift; sourceTree = "<group>"; };
 		OBJ_19 /* Channel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Channel.swift; sourceTree = "<group>"; };
 		OBJ_20 /* Channel_makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Channel_makers.swift; sourceTree = "<group>"; };
-		OBJ_21 /* Collection+Futures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+Futures.swift"; sourceTree = "<group>"; };
+		OBJ_21 /* Sequence_Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sequence_Extensions.swift; sourceTree = "<group>"; };
 		OBJ_22 /* Completable_Implementation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Completable_Implementation.swift; sourceTree = "<group>"; };
 		OBJ_23 /* Completing_Implementation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Completing_Implementation.swift; sourceTree = "<group>"; };
 		OBJ_24 /* Completing_Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Completing_Transform.swift; sourceTree = "<group>"; };
@@ -262,7 +262,7 @@
 				OBJ_18 /* CancellationToken.swift */,
 				OBJ_19 /* Channel.swift */,
 				OBJ_20 /* Channel_makers.swift */,
-				OBJ_21 /* Collection+Futures.swift */,
+				OBJ_21 /* Sequence_Extensions.swift */,
 				OBJ_22 /* Completable_Implementation.swift */,
 				OBJ_23 /* Completing_Implementation.swift */,
 				OBJ_24 /* Completing_Transform.swift */,
@@ -424,7 +424,7 @@
 				OBJ_101 /* CancellationToken.swift in Sources */,
 				OBJ_102 /* Channel.swift in Sources */,
 				OBJ_103 /* Channel_makers.swift in Sources */,
-				OBJ_104 /* Collection+Futures.swift in Sources */,
+				OBJ_104 /* Sequence_Extensions.swift in Sources */,
 				OBJ_105 /* Completable_Implementation.swift in Sources */,
 				OBJ_106 /* Completing_Implementation.swift in Sources */,
 				OBJ_107 /* Completing_Transform.swift in Sources */,
