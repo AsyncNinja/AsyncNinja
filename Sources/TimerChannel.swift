@@ -96,9 +96,14 @@ public struct TimerSpec {
       }
     }
 
-    cancellationToken?.notifyCancellation { [weak timer] in
-      timer?.cancel()
-    }
+    #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+      cancellationToken?.notifyCancellation { [weak timer] in
+        timer?.cancel()
+      }
+    #else
+      // DispatchSourceTimer is not denoted as a class for some unknown reason
+      cancellationToken?.notifyCancellation { timer.cancel() }
+    #endif
     return timer
   }
 
