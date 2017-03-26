@@ -37,19 +37,16 @@ class TimerChannelTests: XCTestCase {
     let interval = 0.2
     let initialTime = DispatchTime.now()
 
-    weak var weakTimer: TimerChannel? = nil
+    weak var weakTimer: Channel<DispatchTime, Void>? = nil
     weak var weakMappedTimer: Channel<DispatchTime, Void>? = nil
     weak var weakTimesBuffer: Channel<[DispatchTime], Void>? = nil
 
     let times: [DispatchTime] = eval {
-      let timer = makeTimer(interval: interval)
+      let timer = makeTimer(interval: interval, DispatchTime.now)
       weakTimer = timer
       XCTAssertNotNil(weakTimer)
 
-      let mappedTimer = timer.map(executor: .utility) { _ -> DispatchTime in
-        assert(qos: .utility)
-        return DispatchTime.now()
-      }
+      let mappedTimer = timer.map { $0 }
       weakMappedTimer = mappedTimer
       XCTAssertNotNil(weakMappedTimer)
 
