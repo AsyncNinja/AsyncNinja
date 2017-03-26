@@ -1,7 +1,7 @@
 # `ExecutionContext`
 This document describes concept and use of `ExecutionContext`.
 
-**For class reference visit [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/1.0.0-beta6/Protocols/ExecutionContext.html).**
+**For class reference visit [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/1.0.0-beta7/Protocols/ExecutionContext.html).**
 **For more detailed explanation [visit](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md)**
 
 ##### Contents

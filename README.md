@@ -16,7 +16,7 @@
 | 🍳 less boilerplate code       | neat cancellation, threading, memory manament                  |
 | 🕶 extendable                | powerful extensions for `URLSession`, UI controls, `CoreData`, ... |
 | 🍱 all platforms (Swift 3.0+)    |  🖥 macOS 10.10+  📱 iOS 8.0+ 📺 tvOS 9.0+ ⌚️ watchOS 2.0+ 🐧 Linux       |
-| 🤓 documentation             | ~99% + sample code, **[see full documentation](http://cocoadocs.org/docsets/AsyncNinja/1.0.0-beta6/)** |
+| 🤓 documentation             | 100% + sample code, **[see full documentation](http://cocoadocs.org/docsets/AsyncNinja/1.0.0-beta7/)** |
 | 🔩 simple integration        | [SPM](Documentation/Integration.md#using-swift-package-manager), [CocoaPods](Documentation/Integration.md#cocoapods), [Carthage](Documentation/Integration.md#сarthage) |
 
 * Related Articles

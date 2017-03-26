@@ -1,4 +1,4 @@
-# next
+# 1.0.0-beta7
 * `staticCast` for `Future` and `Channel` added
 * future to channel and channel to future transformations added
 * `Cache` and `CachableValue` convenience initializers improved
@@ -6,6 +6,7 @@
 * fixing issue with inconsistent lifetime of the `Future` returned from contextual transformation of `Completing`
 * adding ability to denote transformation as impure an apply different lifetime management for transformations
 * documentation improved
+* `TimerChannel` refactored to improve quality of implementation and to add flexibility
 
 # 1.0.0-beta6
 * documentation updated
