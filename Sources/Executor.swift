@@ -137,7 +137,7 @@ public extension Executor {
 // MARK: implementations
 
 /// **internal use only**
-fileprivate protocol ExecutorImpl: class {
+protocol ExecutorImpl: class {
   var asyncNinja_representedDispatchQueue: DispatchQueue? { get }
   var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { get }
 
@@ -182,24 +182,6 @@ private class MainExecutorImpl: ExecutorImpl {
   }
 
   func asyncNinja_canImmediatelyExecute(from impl: ExecutorImpl) -> Bool {
-    return impl === self
-  }
-}
-
-extension DispatchQueue: ExecutorImpl {
-  var asyncNinja_representedDispatchQueue: DispatchQueue? { return self }
-  var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { return false }
-
-  fileprivate func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
-    self.async(execute: block)
-  }
-
-  fileprivate func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
-    let wallDeadline = DispatchWallTime.now().adding(seconds: timeout)
-    self.asyncAfter(wallDeadline: wallDeadline, execute: block)
-  }
-
-  fileprivate func asyncNinja_canImmediatelyExecute(from impl: ExecutorImpl) -> Bool {
     return impl === self
   }
 }

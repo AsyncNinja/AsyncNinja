@@ -10,6 +10,7 @@
 		F8289C5C1E8522230093FFAA /* BaseProducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8289C5B1E8522230093FFAA /* BaseProducer.swift */; };
 		F8289C5E1E8522620093FFAA /* ProducerProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8289C5D1E8522620093FFAA /* ProducerProxy.swift */; };
 		F8289C601E85227D0093FFAA /* DynamicProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8289C5F1E85227D0093FFAA /* DynamicProperty.swift */; };
+		F89E60651E884A1200322CD7 /* Dispatch_Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F89E60641E884A1200322CD7 /* Dispatch_Extensions.swift */; };
 		OBJ_100 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_17 /* Cache.swift */; };
 		OBJ_101 /* CancellationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_18 /* CancellationToken.swift */; };
 		OBJ_102 /* Channel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_19 /* Channel.swift */; };
@@ -99,6 +100,7 @@
 		F8289C5B1E8522230093FFAA /* BaseProducer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseProducer.swift; sourceTree = "<group>"; };
 		F8289C5D1E8522620093FFAA /* ProducerProxy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProducerProxy.swift; sourceTree = "<group>"; };
 		F8289C5F1E85227D0093FFAA /* DynamicProperty.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DynamicProperty.swift; sourceTree = "<group>"; };
+		F89E60641E884A1200322CD7 /* Dispatch_Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Dispatch_Extensions.swift; sourceTree = "<group>"; };
 		OBJ_10 /* appleOS_ExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_ExecutionContext.swift; sourceTree = "<group>"; };
 		OBJ_11 /* appleOS_Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Notifications.swift; sourceTree = "<group>"; };
 		OBJ_12 /* appleOS_Observation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Observation.swift; sourceTree = "<group>"; };
@@ -258,6 +260,7 @@
 				OBJ_14 /* appleOS_Retainer.swift */,
 				OBJ_15 /* appleOS_URLSession.swift */,
 				OBJ_16 /* CachableValue.swift */,
+				F89E60641E884A1200322CD7 /* Dispatch_Extensions.swift */,
 				OBJ_17 /* Cache.swift */,
 				OBJ_18 /* CancellationToken.swift */,
 				OBJ_19 /* Channel.swift */,
@@ -443,6 +446,7 @@
 				OBJ_120 /* Fallible.swift in Sources */,
 				OBJ_121 /* Future.swift in Sources */,
 				OBJ_122 /* Future_Makers.swift in Sources */,
+				F89E60651E884A1200322CD7 /* Dispatch_Extensions.swift in Sources */,
 				OBJ_123 /* iOS.swift in Sources */,
 				OBJ_124 /* KeyProtocols.swift in Sources */,
 				F8289C5C1E8522230093FFAA /* BaseProducer.swift in Sources */,
