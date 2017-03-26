@@ -27,7 +27,7 @@ import Dispatch
   import Glibc
 #endif
 
-class Channel_Zip2: XCTestCase {
+class EventsSource_Zip2Tests: XCTestCase {
   
   static let allTests = [
     ("testZip", testZip),

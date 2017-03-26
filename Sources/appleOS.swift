@@ -111,7 +111,7 @@
                                   bufferSize: DerivedChannelBufferSize = .default
       ) -> Channel<Update, Success> {
 
-      // Test: Channel_TransformTests.testDistinctNSObjects
+      // Test: EventsSource_TransformTests.testDistinctNSObjects
       return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
         return $0.isEqual($1)
       }
@@ -136,7 +136,7 @@
                                               bufferSize: DerivedChannelBufferSize = .default
       ) -> Channel<Update, Success> {
 
-      // Test: Channel_TransformTests.testDistinctArrayOfNSObjects
+      // Test: EventsSource_TransformTests.testDistinctArrayOfNSObjects
       return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
         return $0.count == $1.count
           && !zip($0, $1).contains { !$0.isEqual($1) }

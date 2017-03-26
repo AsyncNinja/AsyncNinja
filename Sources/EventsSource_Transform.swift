@@ -207,7 +207,7 @@ public extension EventsSource {
                 bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     
-    // Test: Channel_TransformTests.testDebounce
+    // Test: EventsSource_TransformTests.testDebounce
     let bufferSize_ = bufferSize.bufferSize(self)
     let producer = Producer<Update, Success>(bufferSize: bufferSize_)
     var locking = makeLocking()
@@ -336,7 +336,7 @@ extension EventsSource where Update: Equatable {
                        bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     
-    // Test: Channel_TransformTests.testDistinctInts
+    // Test: EventsSource_TransformTests.testDistinctInts
     return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: ==)
   }
 }
@@ -359,7 +359,7 @@ extension EventsSource where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinj
                        bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     
-    // Test: Channel_TransformTests.testDistinctInts
+    // Test: EventsSource_TransformTests.testDistinctInts
     return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
       $0.asyncNinjaOptionalValue == $1.asyncNinjaOptionalValue
     }
@@ -384,7 +384,7 @@ extension EventsSource where Update: Collection, Update.Iterator.Element: Equata
                        bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     
-    // Test: Channel_TransformTests.testDistinctArray
+    // Test: EventsSource_TransformTests.testDistinctArray
     return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
       return $0.count == $1.count
         && !zip($0, $1).contains { $0 != $1 }

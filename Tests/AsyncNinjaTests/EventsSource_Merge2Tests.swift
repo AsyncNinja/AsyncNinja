@@ -27,7 +27,7 @@ import Dispatch
   import Glibc
 #endif
 
-class Channel_Merge2Tests: XCTestCase {
+class EventsSource_Merge2Tests: XCTestCase {
   
   static let allTests = [
     ("testMergeInts", testMergeInts),

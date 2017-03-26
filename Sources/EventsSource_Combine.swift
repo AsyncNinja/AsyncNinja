@@ -39,7 +39,7 @@ public extension EventsSource {
               bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<(Update, P), (Success, S)> {
 
-    // Test: Channel_CombineTests.testSample
+    // Test: EventsSource_CombineTests.testSample
     var locking = makeLocking()
     var latestLeftUpdate: Update? = nil
     var leftSuccess: Success? = nil

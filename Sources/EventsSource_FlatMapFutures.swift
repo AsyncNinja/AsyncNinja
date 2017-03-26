@@ -134,11 +134,11 @@ public extension EventsSource {
     _ transform: @escaping (_ update: Update) throws -> Future<T>
     ) -> Channel<Fallible<T>, Success> {
     
-    // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_KeepUnordered
-    // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_KeepLatestTransform
-    // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_DropResultsOutOfOrder
-    // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_OrderResults
-    // Test: Channel_FlatMapFuturesTests.testFlatMapFutures_TransformSerially
+    // Test: EventsSource_FlatMapFuturesTests.testFlatMapFutures_KeepUnordered
+    // Test: EventsSource_FlatMapFuturesTests.testFlatMapFutures_KeepLatestTransform
+    // Test: EventsSource_FlatMapFuturesTests.testFlatMapFutures_DropResultsOutOfOrder
+    // Test: EventsSource_FlatMapFuturesTests.testFlatMapFutures_OrderResults
+    // Test: EventsSource_FlatMapFuturesTests.testFlatMapFutures_TransformSerially
     
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<Fallible<T>, Success>(bufferSize: bufferSize)

@@ -166,7 +166,7 @@ public extension EventsSource {
     _ transform: @escaping (_ update: Update) throws -> P
     ) -> Channel<P, Success>
   {
-    // Test: Channel_MapTests.testMap
+    // Test: EventsSource_MapTests.testMap
 
     return makeProducer(executor: executor, pure: pure,
                         cancellationToken: cancellationToken,
@@ -547,7 +547,7 @@ public extension EventsSource {
     _ predicate: @escaping (_ update: Update) throws -> Bool
     ) -> Channel<Update, Success> {
 
-    // Test: Channel_MapTests.testFilterUpdate
+    // Test: EventsSource_MapTests.testFilterUpdate
 
     return makeProducer(executor: executor,
                         pure: pure,

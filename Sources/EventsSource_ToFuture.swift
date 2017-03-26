@@ -76,9 +76,9 @@ public extension EventsSource {
              `where` predicate: @escaping(C, Update) throws -> Bool
     ) -> Future<Update?> {
 
-    // Test: Channel_ToFutureTests.testFirstSuccessIncompleteContextual
-    // Test: Channel_ToFutureTests.testFirstNotFoundContextual
-    // Test: Channel_ToFutureTests.testFirstFailureContextual
+    // Test: EventsSource_ToFutureTests.testFirstSuccessIncompleteContextual
+    // Test: EventsSource_ToFutureTests.testFirstNotFoundContextual
+    // Test: EventsSource_ToFutureTests.testFirstFailureContextual
 
     let executor_ = executor ?? context.executor
     let promise = self._first(executor: executor_, cancellationToken: cancellationToken) {
@@ -107,9 +107,9 @@ public extension EventsSource {
              `where` predicate: @escaping(Update) throws -> Bool
     ) -> Future<Update?> {
 
-    // Test: Channel_ToFutureTests.testFirstSuccessIncomplete
-    // Test: Channel_ToFutureTests.testFirstNotFound
-    // Test: Channel_ToFutureTests.testFirstFailure
+    // Test: EventsSource_ToFutureTests.testFirstSuccessIncomplete
+    // Test: EventsSource_ToFutureTests.testFirstNotFound
+    // Test: EventsSource_ToFutureTests.testFirstFailure
 
     return _first(executor: executor,
                   cancellationToken: cancellationToken,
@@ -176,9 +176,9 @@ public extension EventsSource {
             `where` predicate: @escaping(C, Update) throws -> Bool
     ) -> Future<Update?> {
 
-    // Test: Channel_ToFutureTests.testLastSuccessIncompleteContextual
-    // Test: Channel_ToFutureTests.testLastNotFoundContextual
-    // Test: Channel_ToFutureTests.testLastFailureContextual
+    // Test: EventsSource_ToFutureTests.testLastSuccessIncompleteContextual
+    // Test: EventsSource_ToFutureTests.testLastNotFoundContextual
+    // Test: EventsSource_ToFutureTests.testLastFailureContextual
 
     let _executor = executor ?? context.executor
     let promise = self._last(executor: _executor,
@@ -211,9 +211,9 @@ public extension EventsSource {
             `where` predicate: @escaping(Update) throws -> Bool
     ) -> Future<Update?> {
 
-    // Test: Channel_ToFutureTests.testLastSuccessIncomplete
-    // Test: Channel_ToFutureTests.testLastNotFound
-    // Test: Channel_ToFutureTests.testLastFailure
+    // Test: EventsSource_ToFutureTests.testLastSuccessIncomplete
+    // Test: EventsSource_ToFutureTests.testLastNotFound
+    // Test: EventsSource_ToFutureTests.testLastFailure
 
     return _last(executor: executor,
                  cancellationToken: cancellationToken,

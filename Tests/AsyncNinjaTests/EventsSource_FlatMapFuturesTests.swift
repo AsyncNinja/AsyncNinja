@@ -27,7 +27,7 @@ import Dispatch
   import Glibc
 #endif
 
-class Channel_FlatMapFuturesTests: XCTestCase {
+class EventsSource_FlatMapFuturesTests: XCTestCase {
   
   static let allTests = [
     ("testFlatMapFutures_KeepUnordered", testFlatMapFutures_KeepUnordered),

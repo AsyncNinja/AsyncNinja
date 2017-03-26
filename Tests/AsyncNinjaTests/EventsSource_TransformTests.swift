@@ -27,7 +27,7 @@ import Dispatch
   import Glibc
 #endif
 
-class Channel_TransformTests: XCTestCase {
+class EventsSource_TransformTests: XCTestCase {
   
   static let allTests = [
     ("testDebounce", testDebounce),

@@ -95,7 +95,7 @@ public extension EventsSource {
     _ nextPartialResult: @escaping (C, Result, Update) throws -> Result
     ) -> Channel<Result, (Result, Success)>  {
 
-    // Test: Channel_ToFutureTests.testScanContextual
+    // Test: EventsSource_ToFutureTests.testScanContextual
 
     let _executor = executor ?? context.executor
     let promise = _scan(initialResult, executor: _executor, cancellationToken: cancellationToken) {
@@ -137,7 +137,7 @@ public extension EventsSource {
     _ nextPartialResult: @escaping (Result, Update) throws -> Result
     ) -> Channel<Result, (Result, Success)>
   {
-    // Test: Channel_ToFutureTests.testScan
+    // Test: EventsSource_ToFutureTests.testScan
     return _scan(initialResult,
                  executor: executor,
                  cancellationToken: cancellationToken,
@@ -229,7 +229,7 @@ public extension EventsSource {
     ) -> Future<(Result, Success)>
   {
 
-    // Test: Channel_ToFutureTests.testReduceContextual
+    // Test: EventsSource_ToFutureTests.testReduceContextual
 
     let _executor = executor ?? context.executor
     let promise = _reduce(initialResult, executor: _executor, cancellationToken: cancellationToken) {
@@ -263,7 +263,7 @@ public extension EventsSource {
     _ nextPartialResult: @escaping (Result, Update) throws -> Result
     ) -> Future<(Result, Success)>
   {
-    // Test: Channel_ToFutureTests.testReduce
+    // Test: EventsSource_ToFutureTests.testReduce
     return _reduce(initialResult, executor: executor, cancellationToken: cancellationToken, nextPartialResult)
   }
 }
