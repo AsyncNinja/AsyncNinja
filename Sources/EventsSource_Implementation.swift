@@ -23,7 +23,7 @@
 import Dispatch
 
 // MARK: - internal methods
-extension EventsSource {
+extension EventSource {
   /// **internal use only**
   final public func makeCompletionHandler(
     executor: Executor,
@@ -132,7 +132,7 @@ extension EventsSource {
   }
 }
 
-public extension EventsSource {
+public extension EventSource {
   /// **internal use only**
   func _onEvent(
     executor: Executor = .primary,
@@ -278,7 +278,7 @@ public extension EventsSource {
 ///   - transform: for T.Update -> U.Update
 ///   - minorStream: a stream to bind to.
 ///   - reverseTransform: for U.Update -> T.Update
-public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&EventsDestination>(
+public func doubleBind<T: EventSource&EventsDestination, U: EventSource&EventsDestination>(
   _ majorStream: T,
   transform: @escaping (T.Update) -> U.Update,
   _ minorStream: U,
@@ -332,7 +332,7 @@ public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&Events
 /// - Parameters:
 ///   - majorStream: a stream to bind to. This stream has a priority during initial synchronization
 ///   - minorStream: a stream to bind to.
-public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&EventsDestination>(
+public func doubleBind<T: EventSource&EventsDestination, U: EventSource&EventsDestination>(
   _ majorStream: T,
   _ minorStream: U
   ) where T.Update == U.Update

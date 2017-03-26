@@ -21,7 +21,6 @@
 //
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-
   import Foundation
   
   public extension Executor {
@@ -93,7 +92,7 @@
     }
   }
 
-  extension EventsSource where Update: NSObject {
+  extension EventSource where Update: NSObject {
 
     /// Returns channel of distinct update values of original channel.
     /// Works only for collections of equatable values
@@ -111,14 +110,14 @@
                                   bufferSize: DerivedChannelBufferSize = .default
       ) -> Channel<Update, Success> {
 
-      // Test: EventsSource_TransformTests.testDistinctNSObjects
+      // Test: EventSource_TransformTests.testDistinctNSObjects
       return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
         return $0.isEqual($1)
       }
     }
   }
 
-  extension EventsSource where Update: Collection, Update.Iterator.Element: NSObject {
+  extension EventSource where Update: Collection, Update.Iterator.Element: NSObject {
 
     /// Returns channel of distinct update values of original channel.
     /// Works only for collections of NSObjects values
@@ -136,7 +135,7 @@
                                               bufferSize: DerivedChannelBufferSize = .default
       ) -> Channel<Update, Success> {
 
-      // Test: EventsSource_TransformTests.testDistinctArrayOfNSObjects
+      // Test: EventSource_TransformTests.testDistinctArrayOfNSObjects
       return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
         return $0.count == $1.count
           && !zip($0, $1).contains { !$0.isEqual($1) }
@@ -150,7 +149,7 @@
   ///   - majorStream: a stream to bind to. This stream has a priority during initial synchronization
   ///   - minorStream: a stream to bind to.
   ///   - valueTransformer: `ValueTransformer` to use to transform from T.Update to U.Update and reverse
-  public func doubleBind<T: EventsSource&EventsDestination, U: EventsSource&EventsDestination>(
+  public func doubleBind<T: EventSource&EventsDestination, U: EventSource&EventsDestination>(
     _ majorStream: T,
     _ minorStream: U,
     valueTransformer: ValueTransformer)

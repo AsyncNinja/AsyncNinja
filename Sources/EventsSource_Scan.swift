@@ -24,7 +24,7 @@ import Dispatch
 
 // MARK: - scan
 
-public extension EventsSource {
+public extension EventSource {
 
   private func _scan<Result>(
     _ initialResult: Result,
@@ -95,7 +95,7 @@ public extension EventsSource {
     _ nextPartialResult: @escaping (C, Result, Update) throws -> Result
     ) -> Channel<Result, (Result, Success)>  {
 
-    // Test: EventsSource_ToFutureTests.testScanContextual
+    // Test: EventSource_ToFutureTests.testScanContextual
 
     let _executor = executor ?? context.executor
     let promise = _scan(initialResult, executor: _executor, cancellationToken: cancellationToken) {
@@ -137,7 +137,7 @@ public extension EventsSource {
     _ nextPartialResult: @escaping (Result, Update) throws -> Result
     ) -> Channel<Result, (Result, Success)>
   {
-    // Test: EventsSource_ToFutureTests.testScan
+    // Test: EventSource_ToFutureTests.testScan
     return _scan(initialResult,
                  executor: executor,
                  cancellationToken: cancellationToken,
@@ -148,7 +148,7 @@ public extension EventsSource {
 
 // MARK: - reduce
 
-public extension EventsSource {
+public extension EventSource {
 
   /// **internal use only**
   private func _reduce<Result>(
@@ -229,7 +229,7 @@ public extension EventsSource {
     ) -> Future<(Result, Success)>
   {
 
-    // Test: EventsSource_ToFutureTests.testReduceContextual
+    // Test: EventSource_ToFutureTests.testReduceContextual
 
     let _executor = executor ?? context.executor
     let promise = _reduce(initialResult, executor: _executor, cancellationToken: cancellationToken) {
@@ -263,7 +263,7 @@ public extension EventsSource {
     _ nextPartialResult: @escaping (Result, Update) throws -> Result
     ) -> Future<(Result, Success)>
   {
-    // Test: EventsSource_ToFutureTests.testReduce
+    // Test: EventSource_ToFutureTests.testReduce
     return _reduce(initialResult, executor: executor, cancellationToken: cancellationToken, nextPartialResult)
   }
 }

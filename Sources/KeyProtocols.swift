@@ -156,15 +156,15 @@ public extension Updatable {
 // MARK: - Events
 
 /// A base protocol of object aware of Update, Success, Error, Completion
-public protocol EventsController: UpdatesController, CompletionController {
+public protocol EventController: UpdatesController, CompletionController {
 }
 
-public extension EventsController {
+public extension EventController {
   typealias Event = ChannelEvent<Update, Success>
 }
 
 /// A base protocol of object that update and complete
-public protocol EventsSource: EventsController, Completing, Updating, Sequence {
+public protocol EventSource: EventController, Completing, Updating, Sequence {
 
   associatedtype Iterator: IteratorProtocol = ChannelIterator<Update, Success>
 
@@ -181,7 +181,7 @@ public protocol EventsSource: EventsController, Completing, Updating, Sequence {
 }
 
 /// A base protocol of object that can be updated and completed
-public protocol EventsDestination: EventsController, Updatable, Completable {
+public protocol EventsDestination: EventController, Updatable, Completable {
 }
 
 public extension EventsDestination {

@@ -22,7 +22,7 @@
 
 import Dispatch
 
-public extension EventsSource {
+public extension EventSource {
   
   /// Adds indexes to update values of the channel
   ///
@@ -207,7 +207,7 @@ public extension EventsSource {
                 bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     
-    // Test: EventsSource_TransformTests.testDebounce
+    // Test: EventSource_TransformTests.testDebounce
     let bufferSize_ = bufferSize.bufferSize(self)
     let producer = Producer<Update, Success>(bufferSize: bufferSize_)
     var locking = makeLocking()
@@ -269,7 +269,7 @@ public extension EventsSource {
 
 // MARK: - Distinct
 
-extension EventsSource {
+extension EventSource {
   /// Returns channel of distinct update values of original channel.
   /// Requires dedicated equality checking closure
   ///
@@ -318,7 +318,7 @@ extension EventsSource {
   }
 }
 
-extension EventsSource where Update: Equatable {
+extension EventSource where Update: Equatable {
   
   /// Returns channel of distinct update values of original channel.
   /// Works only for equatable update values
@@ -336,12 +336,12 @@ extension EventsSource where Update: Equatable {
                        bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     
-    // Test: EventsSource_TransformTests.testDistinctInts
+    // Test: EventSource_TransformTests.testDistinctInts
     return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: ==)
   }
 }
 
-extension EventsSource where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrapped: Equatable {
+extension EventSource where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrapped: Equatable {
   
   /// Returns channel of distinct update values of original channel.
   /// Works only for equatable wrapped in optionals
@@ -359,14 +359,14 @@ extension EventsSource where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinj
                        bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     
-    // Test: EventsSource_TransformTests.testDistinctInts
+    // Test: EventSource_TransformTests.testDistinctInts
     return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
       $0.asyncNinjaOptionalValue == $1.asyncNinjaOptionalValue
     }
   }
 }
 
-extension EventsSource where Update: Collection, Update.Iterator.Element: Equatable {
+extension EventSource where Update: Collection, Update.Iterator.Element: Equatable {
   
   /// Returns channel of distinct update values of original channel.
   /// Works only for collections of equatable values
@@ -384,7 +384,7 @@ extension EventsSource where Update: Collection, Update.Iterator.Element: Equata
                        bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     
-    // Test: EventsSource_TransformTests.testDistinctArray
+    // Test: EventSource_TransformTests.testDistinctArray
     return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
       return $0.count == $1.count
         && !zip($0, $1).contains { $0 != $1 }

@@ -23,14 +23,14 @@
 import Dispatch
 
 /// Merges channels with completely unrelated types into one
-public func merge<T: EventsSource, U: EventsSource>(
+public func merge<T: EventSource, U: EventSource>(
   _ channelA: T,
   _ channelB: U,
   cancellationToken: CancellationToken? = nil,
   bufferSize: DerivedChannelBufferSize = .default
   ) -> Channel<Either<T.Update, U.Update>, (T.Success, U.Success)> {
 
-  // Tests: EventsSource_Merge2Tests.testMergeIntsAndStrings
+  // Tests: EventSource_Merge2Tests.testMergeIntsAndStrings
 
   let bufferSize_ = bufferSize.bufferSize(channelA, channelB)
   let producer = Producer<Either<T.Update, U.Update>, (T.Success, U.Success)>(bufferSize: bufferSize_)
@@ -83,14 +83,14 @@ public func merge<T: EventsSource, U: EventsSource>(
 }
 
 /// Merges channels into one
-public func merge<T: EventsSource, U: EventsSource>(
+public func merge<T: EventSource, U: EventSource>(
   _ channelA: T,
   _ channelB: U,
   cancellationToken: CancellationToken? = nil,
   bufferSize: DerivedChannelBufferSize = .default
 ) -> Channel<T.Update, (T.Success, U.Success)> where T.Update == U.Update {
 
-  // Tests: EventsSource_Merge2Tests.testMergeInts
+  // Tests: EventSource_Merge2Tests.testMergeInts
 
   let bufferSize_ = bufferSize.bufferSize(channelA, channelB)
   let producer = Producer<T.Update, (T.Success, U.Success)>(bufferSize: bufferSize_)

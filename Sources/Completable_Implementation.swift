@@ -23,6 +23,7 @@
 import Dispatch
 
 public extension Completable {
+
   /// Completes completable when specified completing completes.
   /// `self` will retain specified future until it`s completion
   func complete<T: Completing>(with completing: T) where T.Success == Success {

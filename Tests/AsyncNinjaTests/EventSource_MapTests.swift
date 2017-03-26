@@ -27,7 +27,7 @@ import Dispatch
   import Glibc
 #endif
 
-class EventsSource_MapTests: XCTestCase {
+class EventSource_MapTests: XCTestCase {
   
   static let allTests = [
     ("testMap", testMap),

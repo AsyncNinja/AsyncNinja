@@ -23,7 +23,7 @@
 import Dispatch
 
 /// represents values that updateally arrive followed by failure of completion that completes Channel. Channel oftenly represents result of long running task that is not yet arrived and flow of some intermediate results.
-public class Channel<U, S>: EventsSource {
+public class Channel<U, S>: EventSource {
   public typealias Update = U
   public typealias Success = S
   public typealias Iterator = ChannelIterator<Update, Success>

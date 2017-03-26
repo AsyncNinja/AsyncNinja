@@ -658,7 +658,7 @@
 
   // MARK: - T: Equatable
   extension iOSTests {
-    func testEventsStream<T: EventsDestination&EventsSource, Object: NSObject>(
+    func testEventsStream<T: EventsDestination&EventSource, Object: NSObject>(
       _ stream: T,
       object: Object,
       keyPathOrGetSet: Either<String, (getter: (Object) -> T.Update?, setter: (Object, T.Update?) -> Void)>,
@@ -669,7 +669,7 @@
     {
       testEventsDestination(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
                             values: values, file: file, line: line)
-      testEventsSource(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
+      testEventSource(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
                        values: values, file: file, line: line)
     }
 
@@ -696,8 +696,8 @@
       }
     }
 
-    func testEventsSource<T: EventsSource, Object: NSObject>(
-      _ eventsSource: T,
+    func testEventSource<T: EventSource, Object: NSObject>(
+      _ EventSource: T,
       object: Object,
       keyPathOrSet: Either<String, (Object, T.Update?) -> Void>,
       values: [T.Update],
@@ -705,7 +705,7 @@
       line: UInt = #line
       ) where T.Update: Equatable
     {
-      var updatingIterator = eventsSource.makeIterator()
+      var updatingIterator = EventSource.makeIterator()
       let _ = updatingIterator.next() // skip an initial value
       for value in values {
         switch keyPathOrSet {
@@ -723,7 +723,7 @@
 
   // MARK: - T: Optional<Equatable>
   extension iOSTests {
-    func testEventsStream<T: EventsDestination&EventsSource, Object: NSObject>(
+    func testEventsStream<T: EventsDestination&EventSource, Object: NSObject>(
       _ stream: T,
       object: Object,
       keyPathOrGetSet: Either<String, (getter: (Object) -> T.Update?, setter: (Object, T.Update?) -> Void)>,
@@ -734,7 +734,7 @@
     {
       testEventsDestination(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
                             values: values, file: file, line: line)
-      testEventsSource(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
+      testEventSource(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
                        values: values, file: file, line: line)
     }
 
@@ -762,8 +762,8 @@
       }
     }
     
-    func testEventsSource<T: EventsSource, Object: NSObject>(
-      _ eventsSource: T,
+    func testEventSource<T: EventSource, Object: NSObject>(
+      _ EventSource: T,
       object: Object,
       keyPathOrSet: Either<String, (Object, T.Update?) -> Void>,
       values: [T.Update],
@@ -771,7 +771,7 @@
       line: UInt = #line
       ) where T.Update: AsyncNinjaOptionalAdaptor, T.Update.AsyncNinjaWrapped: Equatable
     {
-      var updatingIterator = eventsSource.makeIterator()
+      var updatingIterator = EventSource.makeIterator()
       let _ = updatingIterator.next() // skip an initial value
       for value in values {
         switch keyPathOrSet {

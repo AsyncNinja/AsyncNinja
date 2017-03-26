@@ -21,7 +21,6 @@
 //
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-  
   import Foundation
   
   /// Conformance URLSessionTask to Cancellable

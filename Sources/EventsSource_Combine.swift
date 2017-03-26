@@ -22,7 +22,8 @@
 
 import Dispatch
 
-public extension EventsSource {
+public extension EventSource {
+
   /// Samples the channel with specified channel
   ///
   /// - Parameters:
@@ -39,7 +40,7 @@ public extension EventsSource {
               bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<(Update, P), (Success, S)> {
 
-    // Test: EventsSource_CombineTests.testSample
+    // Test: EventSource_CombineTests.testSample
     var locking = makeLocking()
     var latestLeftUpdate: Update? = nil
     var leftSuccess: Success? = nil

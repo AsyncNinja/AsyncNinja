@@ -27,7 +27,7 @@ import Dispatch
   import Glibc
 #endif
 
-class EventsSource_ToFutureTests: XCTestCase {
+class EventSource_ToFutureTests: XCTestCase {
 
   static let allTests = [
     ("testFirstSuccessIncomplete", testFirstSuccessIncomplete),

@@ -52,14 +52,14 @@
 		OBJ_139 /* Zip3Futures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_56 /* Zip3Futures.swift */; };
 		OBJ_146 /* BatchFutureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_59 /* BatchFutureTests.swift */; };
 		OBJ_147 /* CachableValueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_60 /* CachableValueTests.swift */; };
-		OBJ_148 /* EventsSource_CombineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_61 /* EventsSource_CombineTests.swift */; };
-		OBJ_149 /* EventsSource_FlatMapFuturesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_62 /* EventsSource_FlatMapFuturesTests.swift */; };
-		OBJ_150 /* EventsSource_MapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_63 /* EventsSource_MapTests.swift */; };
-		OBJ_151 /* EventsSource_Merge2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_64 /* EventsSource_Merge2Tests.swift */; };
-		OBJ_152 /* EventsSource_ScanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_65 /* EventsSource_ScanTests.swift */; };
-		OBJ_153 /* EventsSource_ToFutureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_66 /* EventsSource_ToFutureTests.swift */; };
-		OBJ_154 /* EventsSource_TransformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_67 /* EventsSource_TransformTests.swift */; };
-		OBJ_155 /* EventsSource_Zip2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_68 /* EventsSource_Zip2Tests.swift */; };
+		OBJ_148 /* EventSource_CombineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_61 /* EventSource_CombineTests.swift */; };
+		OBJ_149 /* EventSource_FlatMapFuturesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_62 /* EventSource_FlatMapFuturesTests.swift */; };
+		OBJ_150 /* EventSource_MapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_63 /* EventSource_MapTests.swift */; };
+		OBJ_151 /* EventSource_Merge2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_64 /* EventSource_Merge2Tests.swift */; };
+		OBJ_152 /* EventSource_ScanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_65 /* EventSource_ScanTests.swift */; };
+		OBJ_153 /* EventSource_ToFutureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_66 /* EventSource_ToFutureTests.swift */; };
+		OBJ_154 /* EventSource_TransformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_67 /* EventSource_TransformTests.swift */; };
+		OBJ_155 /* EventSource_Zip2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_68 /* EventSource_Zip2Tests.swift */; };
 		OBJ_156 /* ChannelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_69 /* ChannelTests.swift */; };
 		OBJ_157 /* ExecutionContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_70 /* ExecutionContextTests.swift */; };
 		OBJ_158 /* ExecutorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_71 /* ExecutorTests.swift */; };
@@ -149,14 +149,14 @@
 		OBJ_59 /* BatchFutureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchFutureTests.swift; sourceTree = "<group>"; };
 		OBJ_6 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		OBJ_60 /* CachableValueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachableValueTests.swift; sourceTree = "<group>"; };
-		OBJ_61 /* EventsSource_CombineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_CombineTests.swift; sourceTree = "<group>"; };
-		OBJ_62 /* EventsSource_FlatMapFuturesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_FlatMapFuturesTests.swift; sourceTree = "<group>"; };
-		OBJ_63 /* EventsSource_MapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_MapTests.swift; sourceTree = "<group>"; };
-		OBJ_64 /* EventsSource_Merge2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Merge2Tests.swift; sourceTree = "<group>"; };
-		OBJ_65 /* EventsSource_ScanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_ScanTests.swift; sourceTree = "<group>"; };
-		OBJ_66 /* EventsSource_ToFutureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_ToFutureTests.swift; sourceTree = "<group>"; };
-		OBJ_67 /* EventsSource_TransformTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_TransformTests.swift; sourceTree = "<group>"; };
-		OBJ_68 /* EventsSource_Zip2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Zip2Tests.swift; sourceTree = "<group>"; };
+		OBJ_61 /* EventSource_CombineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_CombineTests.swift; sourceTree = "<group>"; };
+		OBJ_62 /* EventSource_FlatMapFuturesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_FlatMapFuturesTests.swift; sourceTree = "<group>"; };
+		OBJ_63 /* EventSource_MapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_MapTests.swift; sourceTree = "<group>"; };
+		OBJ_64 /* EventSource_Merge2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Merge2Tests.swift; sourceTree = "<group>"; };
+		OBJ_65 /* EventSource_ScanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_ScanTests.swift; sourceTree = "<group>"; };
+		OBJ_66 /* EventSource_ToFutureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_ToFutureTests.swift; sourceTree = "<group>"; };
+		OBJ_67 /* EventSource_TransformTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_TransformTests.swift; sourceTree = "<group>"; };
+		OBJ_68 /* EventSource_Zip2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Zip2Tests.swift; sourceTree = "<group>"; };
 		OBJ_69 /* ChannelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelTests.swift; sourceTree = "<group>"; };
 		OBJ_70 /* ExecutionContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutionContextTests.swift; sourceTree = "<group>"; };
 		OBJ_71 /* ExecutorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutorTests.swift; sourceTree = "<group>"; };
@@ -220,14 +220,14 @@
 			children = (
 				OBJ_59 /* BatchFutureTests.swift */,
 				OBJ_60 /* CachableValueTests.swift */,
-				OBJ_61 /* EventsSource_CombineTests.swift */,
-				OBJ_62 /* EventsSource_FlatMapFuturesTests.swift */,
-				OBJ_63 /* EventsSource_MapTests.swift */,
-				OBJ_64 /* EventsSource_Merge2Tests.swift */,
-				OBJ_65 /* EventsSource_ScanTests.swift */,
-				OBJ_66 /* EventsSource_ToFutureTests.swift */,
-				OBJ_67 /* EventsSource_TransformTests.swift */,
-				OBJ_68 /* EventsSource_Zip2Tests.swift */,
+				OBJ_61 /* EventSource_CombineTests.swift */,
+				OBJ_62 /* EventSource_FlatMapFuturesTests.swift */,
+				OBJ_63 /* EventSource_MapTests.swift */,
+				OBJ_64 /* EventSource_Merge2Tests.swift */,
+				OBJ_65 /* EventSource_ScanTests.swift */,
+				OBJ_66 /* EventSource_ToFutureTests.swift */,
+				OBJ_67 /* EventSource_TransformTests.swift */,
+				OBJ_68 /* EventSource_Zip2Tests.swift */,
 				OBJ_69 /* ChannelTests.swift */,
 				OBJ_70 /* ExecutionContextTests.swift */,
 				OBJ_71 /* ExecutorTests.swift */,
@@ -383,14 +383,14 @@
 			files = (
 				OBJ_146 /* BatchFutureTests.swift in Sources */,
 				OBJ_147 /* CachableValueTests.swift in Sources */,
-				OBJ_148 /* EventsSource_CombineTests.swift in Sources */,
-				OBJ_149 /* EventsSource_FlatMapFuturesTests.swift in Sources */,
-				OBJ_150 /* EventsSource_MapTests.swift in Sources */,
-				OBJ_151 /* EventsSource_Merge2Tests.swift in Sources */,
-				OBJ_152 /* EventsSource_ScanTests.swift in Sources */,
-				OBJ_153 /* EventsSource_ToFutureTests.swift in Sources */,
-				OBJ_154 /* EventsSource_TransformTests.swift in Sources */,
-				OBJ_155 /* EventsSource_Zip2Tests.swift in Sources */,
+				OBJ_148 /* EventSource_CombineTests.swift in Sources */,
+				OBJ_149 /* EventSource_FlatMapFuturesTests.swift in Sources */,
+				OBJ_150 /* EventSource_MapTests.swift in Sources */,
+				OBJ_151 /* EventSource_Merge2Tests.swift in Sources */,
+				OBJ_152 /* EventSource_ScanTests.swift in Sources */,
+				OBJ_153 /* EventSource_ToFutureTests.swift in Sources */,
+				OBJ_154 /* EventSource_TransformTests.swift in Sources */,
+				OBJ_155 /* EventSource_Zip2Tests.swift in Sources */,
 				OBJ_156 /* ChannelTests.swift in Sources */,
 				OBJ_157 /* ExecutionContextTests.swift in Sources */,
 				OBJ_158 /* ExecutorTests.swift in Sources */,

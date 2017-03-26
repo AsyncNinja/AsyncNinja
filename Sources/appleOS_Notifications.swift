@@ -21,7 +21,6 @@
 //
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-  
   import Foundation
   
   /// **Internal use only** `NotificationsObserver` is an object for managing KVO.

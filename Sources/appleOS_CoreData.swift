@@ -21,10 +21,7 @@
 //
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-  
   import Foundation
-  import CoreData
-
   import CoreData
   
   /// NSManagedObjectContext improved with AsyncNinja

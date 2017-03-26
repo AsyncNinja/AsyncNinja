@@ -66,7 +66,7 @@ public enum ChannelFlatteningBehavior {
 }
 
 // MARK: - updates only flattening transformations with futures
-public extension EventsSource {
+public extension EventSource {
   /// Applies transformation to update values of the channel.
   ///
   /// - Parameters:
@@ -134,11 +134,11 @@ public extension EventsSource {
     _ transform: @escaping (_ update: Update) throws -> Future<T>
     ) -> Channel<Fallible<T>, Success> {
     
-    // Test: EventsSource_FlatMapFuturesTests.testFlatMapFutures_KeepUnordered
-    // Test: EventsSource_FlatMapFuturesTests.testFlatMapFutures_KeepLatestTransform
-    // Test: EventsSource_FlatMapFuturesTests.testFlatMapFutures_DropResultsOutOfOrder
-    // Test: EventsSource_FlatMapFuturesTests.testFlatMapFutures_OrderResults
-    // Test: EventsSource_FlatMapFuturesTests.testFlatMapFutures_TransformSerially
+    // Test: EventSource_FlatMapFuturesTests.testFlatMapFutures_KeepUnordered
+    // Test: EventSource_FlatMapFuturesTests.testFlatMapFutures_KeepLatestTransform
+    // Test: EventSource_FlatMapFuturesTests.testFlatMapFutures_DropResultsOutOfOrder
+    // Test: EventSource_FlatMapFuturesTests.testFlatMapFutures_OrderResults
+    // Test: EventSource_FlatMapFuturesTests.testFlatMapFutures_TransformSerially
     
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<Fallible<T>, Success>(bufferSize: bufferSize)
@@ -150,7 +150,7 @@ public extension EventsSource {
 }
 
 // MARK: - updates only flattening transformations with futures
-public extension EventsSource {
+public extension EventSource {
   /// Applies transformation to update values of the channel.
   ///
   /// - Parameters:

@@ -27,38 +27,32 @@ import Dispatch
   import Glibc
 #endif
 
-class EventsSource_CombineTests: XCTestCase {
+class EventSource_Zip2Tests: XCTestCase {
   
   static let allTests = [
-    ("testSample", testSample),
+    ("testZip", testZip),
   ]
 
-  func testSample() {
+  func testZip() {
     let producerOfOdds = Producer<Int, String>()
     let producerOfEvents = Producer<Int, String>()
-    let channelOfNumbers = producerOfOdds.sample(with: producerOfEvents)
-    let expectation = self.expectation(description: "async checks to finish")
+    let expectation = self.expectation(description: "channel to finish")
 
-    channelOfNumbers.extractAll().onSuccess { (pairs, stringsOfError) in
-      let fixturePairs = [
-        (3, 2),
-        (5, 6),
-        (7, 8)
-      ]
+    zip(producerOfOdds, producerOfEvents)
+      .extractAll().onSuccess { (pairs, stringsOfError) in
+        let fixturePairs = [(1, 2), (3, 4), (5, 6), (7, 8)]
+        XCTAssertEqual(fixturePairs.count, pairs.count)
+        for (pair, fixturePair) in zip(pairs, fixturePairs) {
+          XCTAssertEqual(pair.0, fixturePair.0)
+          XCTAssertEqual(pair.1, fixturePair.1)
+        }
 
-      XCTAssertEqual(pairs.count, fixturePairs.count)
-      for (resultPair, fixturePair) in zip(pairs.sorted { $0.0 < $1.0 }, fixturePairs) {
-        XCTAssertEqual(resultPair.0, fixturePair.0)
-        XCTAssertEqual(resultPair.1, fixturePair.1)
-      }
-
-      XCTAssertEqual(stringsOfError.success!.0, "Hello")
-      XCTAssertEqual(stringsOfError.success!.1, "World")
-      expectation.fulfill()
+        XCTAssertEqual(stringsOfError.success!.0, "Hello")
+        XCTAssertEqual(stringsOfError.success!.1, "World")
+        expectation.fulfill()
     }
 
     DispatchQueue.global().async {
-      usleep(100_000)
       producerOfOdds.update(1)
       producerOfOdds.update(3)
       producerOfEvents.update(2)
@@ -68,9 +62,10 @@ class EventsSource_CombineTests: XCTestCase {
       producerOfOdds.update(7)
       producerOfOdds.succeed("Hello")
       producerOfEvents.update(8)
+      producerOfEvents.update(10)
       producerOfEvents.succeed("World")
     }
 
-    self.waitForExpectations(timeout: 1.0, handler: nil)
+    self.waitForExpectations(timeout: 1.0)
   }
 }

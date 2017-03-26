@@ -24,7 +24,7 @@ import Dispatch
 
 // MARK: - channel first(where:)
 
-public extension EventsSource {
+public extension EventSource {
 
   /// **internal use only**
   private func _first(executor: Executor,
@@ -76,9 +76,9 @@ public extension EventsSource {
              `where` predicate: @escaping(C, Update) throws -> Bool
     ) -> Future<Update?> {
 
-    // Test: EventsSource_ToFutureTests.testFirstSuccessIncompleteContextual
-    // Test: EventsSource_ToFutureTests.testFirstNotFoundContextual
-    // Test: EventsSource_ToFutureTests.testFirstFailureContextual
+    // Test: EventSource_ToFutureTests.testFirstSuccessIncompleteContextual
+    // Test: EventSource_ToFutureTests.testFirstNotFoundContextual
+    // Test: EventSource_ToFutureTests.testFirstFailureContextual
 
     let executor_ = executor ?? context.executor
     let promise = self._first(executor: executor_, cancellationToken: cancellationToken) {
@@ -107,9 +107,9 @@ public extension EventsSource {
              `where` predicate: @escaping(Update) throws -> Bool
     ) -> Future<Update?> {
 
-    // Test: EventsSource_ToFutureTests.testFirstSuccessIncomplete
-    // Test: EventsSource_ToFutureTests.testFirstNotFound
-    // Test: EventsSource_ToFutureTests.testFirstFailure
+    // Test: EventSource_ToFutureTests.testFirstSuccessIncomplete
+    // Test: EventSource_ToFutureTests.testFirstNotFound
+    // Test: EventSource_ToFutureTests.testFirstFailure
 
     return _first(executor: executor,
                   cancellationToken: cancellationToken,
@@ -119,7 +119,7 @@ public extension EventsSource {
 
 // MARK: - channel last(where:)
 
-public extension EventsSource {
+public extension EventSource {
 
   /// **internal use only**
   private func _last(executor: Executor,
@@ -176,9 +176,9 @@ public extension EventsSource {
             `where` predicate: @escaping(C, Update) throws -> Bool
     ) -> Future<Update?> {
 
-    // Test: EventsSource_ToFutureTests.testLastSuccessIncompleteContextual
-    // Test: EventsSource_ToFutureTests.testLastNotFoundContextual
-    // Test: EventsSource_ToFutureTests.testLastFailureContextual
+    // Test: EventSource_ToFutureTests.testLastSuccessIncompleteContextual
+    // Test: EventSource_ToFutureTests.testLastNotFoundContextual
+    // Test: EventSource_ToFutureTests.testLastFailureContextual
 
     let _executor = executor ?? context.executor
     let promise = self._last(executor: _executor,
@@ -211,9 +211,9 @@ public extension EventsSource {
             `where` predicate: @escaping(Update) throws -> Bool
     ) -> Future<Update?> {
 
-    // Test: EventsSource_ToFutureTests.testLastSuccessIncomplete
-    // Test: EventsSource_ToFutureTests.testLastNotFound
-    // Test: EventsSource_ToFutureTests.testLastFailure
+    // Test: EventSource_ToFutureTests.testLastSuccessIncomplete
+    // Test: EventSource_ToFutureTests.testLastNotFound
+    // Test: EventSource_ToFutureTests.testLastFailure
 
     return _last(executor: executor,
                  cancellationToken: cancellationToken,

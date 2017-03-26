@@ -23,7 +23,7 @@
 import Dispatch
 
 // MARK: - whole channel transformations
-public extension EventsSource {
+public extension EventSource {
 
   /// Applies transformation to the whole channel. `map` methods
   /// are more convenient if you want to transform updates values only.
@@ -97,7 +97,7 @@ public extension EventsSource {
 
 // MARK: - updates only transformations
 
-public extension EventsSource {
+public extension EventSource {
 
   /// Applies transformation to update values of the channel.
   /// `map` methods are more convenient if you want to transform
@@ -166,7 +166,7 @@ public extension EventsSource {
     _ transform: @escaping (_ update: Update) throws -> P
     ) -> Channel<P, Success>
   {
-    // Test: EventsSource_MapTests.testMap
+    // Test: EventSource_MapTests.testMap
 
     return makeProducer(executor: executor, pure: pure,
                         cancellationToken: cancellationToken,
@@ -185,7 +185,7 @@ public extension EventsSource {
 
 // MARK: - updates only flattening transformations
 
-public extension EventsSource {
+public extension EventSource {
 
   /// Applies transformation to update values of the channel.
   ///
@@ -345,9 +345,9 @@ public extension EventsSource {
 
 // MARK: - map completion
 
-public extension EventsSource {
+public extension EventSource {
 
-  /// Applies transformation to a completion of EventsSource.
+  /// Applies transformation to a completion of EventSource.
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
@@ -386,7 +386,7 @@ public extension EventsSource {
     }
   }
 
-  /// Applies transformation to a success of EventsSource.
+  /// Applies transformation to a success of EventSource.
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
@@ -420,7 +420,7 @@ public extension EventsSource {
     }
   }
 
-  /// Applies transformation to a completion of EventsSource.
+  /// Applies transformation to a completion of EventSource.
   ///
   /// - Parameters:
   ///   - executor: to execute transform on
@@ -453,7 +453,7 @@ public extension EventsSource {
     }
   }
 
-  /// Applies transformation to a success of EventsSource.
+  /// Applies transformation to a success of EventSource.
   ///
   /// - Parameters:
   ///   - executor: to execute transform on
@@ -486,7 +486,7 @@ public extension EventsSource {
 
 // MARK: convenient transformations
 
-public extension EventsSource {
+public extension EventSource {
 
   /// Filters update values of the channel
   ///
@@ -547,7 +547,7 @@ public extension EventsSource {
     _ predicate: @escaping (_ update: Update) throws -> Bool
     ) -> Channel<Update, Success> {
 
-    // Test: EventsSource_MapTests.testFilterUpdate
+    // Test: EventSource_MapTests.testFilterUpdate
 
     return makeProducer(executor: executor,
                         pure: pure,
@@ -569,7 +569,7 @@ public extension EventsSource {
   }
 }
 
-public extension EventsSource where Update: _Fallible {
+public extension EventSource where Update: _Fallible {
   /// makes channel of unsafely unwrapped optional Updates
   var unsafelyUnwrapped: Channel<Update.Success, Success> {
     return map(executor: .immediate) { $0.unsafeSuccess }
