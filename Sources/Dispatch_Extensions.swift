@@ -41,3 +41,57 @@ extension DispatchQueue: ExecutorImpl {
     return impl === self
   }
 }
+
+// MARK: - DispatchGroup
+
+/// DispatchGroup improved with AsyncNinja
+public extension DispatchGroup {
+    /// Makes future from of `DispatchGroups`'s notify after balancing all enters and leaves
+    var completionFuture: Future<Void> {
+        // Test: FutureTests.testGroupCompletionFuture
+        return completionFuture(executor: .primary)
+    }
+    
+    /// Makes future from of `DispatchGroups`'s notify after balancing all enters and leaves
+    /// *Property `DispatchGroup.completionFuture` most cover most of your cases*
+    ///
+    /// - Parameter executor: to notify on
+    /// - Returns: `Future` that completes with balancing enters and leaves of the `DispatchGroup`
+    func completionFuture(executor: Executor) -> Future<Void> {
+        let promise = Promise<Void>()
+        let executor_ = executor.dispatchQueueBasedExecutor
+        self.notify(queue: executor_.representedDispatchQueue!) { [weak promise] in
+            promise?.succeed((), from: executor_)
+        }
+        return promise
+    }
+    
+    /// Convenience method that leaves group on completion of provided Future or Channel
+    func leaveOnComplete<T: Completing>(of completable: T) {
+        completable.onComplete(executor: .immediate) { _ in self.leave() }
+    }
+}
+
+// MARK: - DispatchTime
+
+extension DispatchTime {
+    func adding(seconds: Double) -> DispatchTime {
+        #if arch(x86_64) || arch(arm64)
+            return self + .nanoseconds(Int(seconds * 1_000_000_000.0))
+        #else
+            return self + .milliseconds(Int(seconds * 1_000.0))
+        #endif
+    }
+}
+
+// MARK: - DispatchWallTime
+
+extension DispatchWallTime {
+    func adding(seconds: Double) -> DispatchWallTime {
+        #if arch(x86_64) || arch(arm64)
+            return self + .nanoseconds(Int(seconds * 1_000_000_000.0))
+        #else
+            return self + .milliseconds(Int(seconds * 1_000.0))
+        #endif
+    }
+}

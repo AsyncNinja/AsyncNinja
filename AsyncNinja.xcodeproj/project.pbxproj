@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = F819DC171E8A9F2A0072E0B1 /* Either.swift */; };
 		OBJ_100 /* appleOS_ReactiveProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* appleOS_ReactiveProperties.swift */; };
 		OBJ_101 /* appleOS_Retainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* appleOS_Retainer.swift */; };
 		OBJ_102 /* appleOS_URLSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* appleOS_URLSession.swift */; };
@@ -97,6 +98,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F819DC171E8A9F2A0072E0B1 /* Either.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
 		OBJ_10 /* appleOS_ExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_ExecutionContext.swift; sourceTree = "<group>"; };
 		OBJ_11 /* appleOS_Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Notifications.swift; sourceTree = "<group>"; };
 		OBJ_12 /* appleOS_Observation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Observation.swift; sourceTree = "<group>"; };
@@ -198,7 +200,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -207,7 +209,6 @@
 				OBJ_86 /* Documentation */,
 				OBJ_87 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_61 /* Tests */ = {
@@ -272,6 +273,7 @@
 				OBJ_25 /* ConstantFuture.swift */,
 				OBJ_26 /* Dispatch_Extensions.swift */,
 				OBJ_27 /* DynamicProperty.swift */,
+				F819DC171E8A9F2A0072E0B1 /* Either.swift */,
 				OBJ_28 /* EventsSource_Combine.swift */,
 				OBJ_29 /* EventsSource_FlatMapFutures.swift */,
 				OBJ_30 /* EventsSource_Implementation.swift */,
@@ -369,7 +371,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_87 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -431,6 +433,7 @@
 				OBJ_108 /* Channel_makers.swift in Sources */,
 				OBJ_109 /* Completable_Implementation.swift in Sources */,
 				OBJ_110 /* Completing_Implementation.swift in Sources */,
+				F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */,
 				OBJ_111 /* Completing_Transform.swift in Sources */,
 				OBJ_112 /* ConstantFuture.swift in Sources */,
 				OBJ_113 /* Dispatch_Extensions.swift in Sources */,
