@@ -134,7 +134,7 @@ public extension Executor {
   }
 }
 
-// MARK: implementations
+// MARK: - implementations
 
 /// **internal use only**
 protocol ExecutorImpl: class {

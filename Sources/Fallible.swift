@@ -107,7 +107,7 @@ extension Fallible: CustomStringConvertible, CustomDebugStringConvertible {
   }
 }
 
-/// MARK: - state managers
+// MARK: - state managers
 public extension Fallible {
 
   /// Returns success if Fallible has a success value inside.

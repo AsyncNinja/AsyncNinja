@@ -379,6 +379,8 @@
   
   // MARK: - reactive properties for UIBarButtonItem
   public extension ReactiveProperties where Object: UIBarButtonItem {
+
+    /// Makes or returns cached channel. The channel that will have update on each triggering of action
     func actionChannel() -> Channel<AnyObject?, Void> {
       if let actionReceiver = object.target as? UIBarButtonItemActionReceiver {
         return actionReceiver.producer

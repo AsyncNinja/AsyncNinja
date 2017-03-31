@@ -347,7 +347,7 @@ public extension Sequence where Self.Iterator.Element: Completing {
   }
 }
 
-// MARK: -
+// MARK: - joined
 
 public extension Sequence where Self.Iterator.Element: Completing {
 

@@ -22,7 +22,6 @@
 
 import Dispatch
 
-// MARK: - internal methods
 extension EventSource {
   /// **internal use only**
   final public func makeCompletionHandler(
@@ -270,6 +269,8 @@ public extension EventSource {
     }
   }
 }
+
+// MARK: - double bind
 
 /// Binds two event streams bidirectionally.
 ///

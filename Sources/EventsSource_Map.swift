@@ -484,7 +484,7 @@ public extension EventSource {
   }
 }
 
-// MARK: convenient transformations
+// MARK: - convenient transformations
 
 public extension EventSource {
 
