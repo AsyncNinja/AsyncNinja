@@ -127,6 +127,8 @@ public extension EventSource {
     _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> P
     ) -> Channel<P, Success>
   {
+    // Test: EventSource_MapTests.testMapContextual
+
     return makeProducer(context: context,
                         executor: executor,
                         pure: pure,
@@ -213,6 +215,8 @@ public extension EventSource {
     _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> P?
     ) -> Channel<P, Success>
   {
+    // Test: EventSource_MapTests.testFlatMapOptionalContextual
+
     return makeProducer(context: context,
                         executor: executor,
                         pure: pure,
@@ -249,7 +253,10 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ update: Update) throws -> P?
-    ) -> Channel<P, Success> {
+    ) -> Channel<P, Success>
+  {
+    // Test: EventSource_MapTests.testFlatMapOptional
+
     return makeProducer(executor: executor,
                         pure: pure,
                         cancellationToken: cancellationToken,
@@ -291,7 +298,10 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> PS
-    ) -> Channel<PS.Iterator.Element, Success> {
+    ) -> Channel<PS.Iterator.Element, Success>
+  {
+    // Test: EventSource_MapTests.testFlatMapArrayContextual
+
     return makeProducer(context: context,
                         executor: executor,
                         pure: pure,
@@ -329,6 +339,8 @@ public extension EventSource {
     _ transform: @escaping (_ update: Update) throws -> PS
     ) -> Channel<PS.Iterator.Element, Success>
   {
+    // Test: EventSource_MapTests.testFlatMapArray
+
     return makeProducer(executor: executor, pure: pure,
                         cancellationToken: cancellationToken,
                         bufferSize: bufferSize)
@@ -472,7 +484,8 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (Success) throws -> Transformed
-    ) -> Channel<Update, Transformed> {
+    ) -> Channel<Update, Transformed>
+  {
     return mapCompletion(executor: executor,
                          pure: pure,
                          cancellationToken: cancellationToken,
@@ -507,6 +520,8 @@ public extension EventSource {
     _ predicate: @escaping (_ strongContext: C, _ update: Update) throws -> Bool
     ) -> Channel<Update, Success>
   {
+    // Test: EventSource_MapTests.testFilterContextual
+
     return makeProducer(context: context,
                         executor: executor,
                         pure: pure,
@@ -545,9 +560,9 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ predicate: @escaping (_ update: Update) throws -> Bool
-    ) -> Channel<Update, Success> {
-
-    // Test: EventSource_MapTests.testFilterUpdate
+    ) -> Channel<Update, Success>
+  {
+    // Test: EventSource_MapTests.testFilter
 
     return makeProducer(executor: executor,
                         pure: pure,
