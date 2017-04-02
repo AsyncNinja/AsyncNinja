@@ -106,18 +106,23 @@ extension Either: CustomStringConvertible, CustomDebugStringConvertible {
 
 // MARK: - Equatable
 extension Either where Left: Equatable, Right: Equatable {
-    
-    /// implementation of an "equals" operatior
-    public static func ==(lhs: Either, rhs: Either) -> Bool {
-        switch (lhs, rhs) {
-        case let (.left(valueA), .left(valueB)):
-            return valueA == valueB
-        case let (.right(valueA), .right(valueB)):
-            return valueA == valueB
-        default:
-            return false
-        }
+
+  /// implementation of an "equals" operatior
+  public static func ==(lhs: Either, rhs: Either) -> Bool {
+    switch (lhs, rhs) {
+    case let (.left(valueA), .left(valueB)):
+      return valueA == valueB
+    case let (.right(valueA), .right(valueB)):
+      return valueA == valueB
+    default:
+      return false
     }
+  }
+
+  /// implementation of an "not equals" operatior
+  public static func !=(lhs: Either, rhs: Either) -> Bool {
+    return !(lhs == rhs)
+  }
 }
 
 // MARK: - Channel Event
