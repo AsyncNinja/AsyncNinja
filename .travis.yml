@@ -1,5 +1,5 @@
 language: objective-c
-osx_image: xcode8.2
+osx_image: xcode8.3
 xcode_project: AsyncNinja.xcodeproj
 xcode_scheme: AsyncNinja
 xcode_sdk: macosx10.12
