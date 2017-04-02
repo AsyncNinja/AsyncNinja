@@ -31,7 +31,6 @@ class ChannelTests: XCTestCase {
   
   static let allTests = [
     ("testIterators", testIterators),
-    ("testMakeChannel", testMakeChannel),
     ("testOnValueContextual", testOnValueContextual),
     ("testOnValue", testOnValue),
     ("testBuffering0", testBuffering0),
@@ -62,34 +61,6 @@ class ChannelTests: XCTestCase {
       XCTAssertEqual(iteratorB.next(), index)
     }
     XCTAssertEqual(iteratorB.success, "finished")
-  }
-
-  func testMakeChannel() {
-    let numbers = Array(0..<100)
-
-    let channelA: Channel<Int, String> = channel { (updateUpdate) -> String in
-      for i in numbers {
-        updateUpdate(i)
-      }
-      return "done"
-    }
-
-    var resultNumbers = [Int]()
-    let serialQueue = DispatchQueue(label: "test-queue")
-    let expectation = self.expectation(description: "channel to complete")
-
-    channelA.onUpdate(executor: .queue(serialQueue)) {
-      resultNumbers.append($0)
-    }
-
-    channelA.onSuccess(executor: .queue(serialQueue)) {
-      XCTAssertEqual("done", $0)
-      expectation.fulfill()
-    }
-
-    self.waitForExpectations(timeout: 1.0, handler: nil)
-
-    XCTAssertEqual(resultNumbers, Array(numbers.suffix(resultNumbers.count)))
   }
 
   func testOnValueContextual() {

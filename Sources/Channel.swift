@@ -42,7 +42,9 @@ public class Channel<U, S>: EventSource {
   /// **internal use only**
   public func makeHandler(
     executor: Executor,
-    _ block: @escaping (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void) -> AnyObject? {
+    _ block: @escaping (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void
+    ) -> AnyObject?
+  {
     assertAbstract()
   }
 

@@ -107,5 +107,19 @@ class EitherTests: XCTestCase {
     } else {
       XCTFail()
     }
+
+    let castedA: ChannelEvent<NSNumber, NSString> = ChannelEvent<Int, String>.update(1).staticCast()
+    if case let .update(value) = castedA {
+      XCTAssertEqual(value, NSNumber(value: 1))
+    } else {
+      XCTFail()
+    }
+
+    let castedB: ChannelEvent<NSNumber, NSString> = ChannelEvent<Int, String>.success("success").staticCast()
+    if case let .completion(.success(value)) = castedB {
+      XCTAssertEqual(value, "success" as NSString)
+    } else {
+      XCTFail()
+    }
   }
 }

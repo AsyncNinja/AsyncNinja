@@ -28,6 +28,7 @@ import XCTest
     return [
       testCase(BatchFutureTests.allTests),
       testCase(CachableValueTests.allTests),
+      testCase(ChannelMakersTests.allTests),
       testCase(CancellationTokenTests.allTests),
       testCase(ChannelTests.allTests),
       testCase(EitherTests.allTests),
