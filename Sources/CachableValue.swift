@@ -48,7 +48,7 @@ public class CachableValue<T: CachableCompletable> {
   /// - Parameters:
   ///   - executor: executor to call miss handle on
   ///   - missHandler: block that handles cache misses
-  public init(executor: Executor, missHandler: @escaping MissHandler) {
+  public init(executor: Executor = .primary, missHandler: @escaping MissHandler) {
     _executor = executor
     _missHandler = missHandler
   }

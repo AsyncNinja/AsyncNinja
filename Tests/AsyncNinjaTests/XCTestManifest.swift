@@ -30,6 +30,7 @@ import XCTest
       testCase(CachableValueTests.allTests),
       testCase(ChannelMakersTests.allTests),
       testCase(CancellationTokenTests.allTests),
+      testCase(CacheTests.allTests),
       testCase(ChannelTests.allTests),
       testCase(EitherTests.allTests),
       testCase(EventSource_CombineTests.allTests),

@@ -11,6 +11,7 @@
 		F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */; };
 		F8419BD61E91080A0067701C /* EitherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD51E9108090067701C /* EitherTests.swift */; };
 		F8419BD81E911CF00067701C /* ChannelMakersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD71E911CF00067701C /* ChannelMakersTests.swift */; };
+		F8419BDA1E913B580067701C /* CacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD91E913B580067701C /* CacheTests.swift */; };
 		OBJ_100 /* appleOS_ReactiveProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* appleOS_ReactiveProperties.swift */; };
 		OBJ_101 /* appleOS_Retainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* appleOS_Retainer.swift */; };
 		OBJ_102 /* appleOS_URLSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* appleOS_URLSession.swift */; };
@@ -105,6 +106,7 @@
 		F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancellationTokenTests.swift; sourceTree = "<group>"; };
 		F8419BD51E9108090067701C /* EitherTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EitherTests.swift; sourceTree = "<group>"; };
 		F8419BD71E911CF00067701C /* ChannelMakersTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelMakersTests.swift; sourceTree = "<group>"; };
+		F8419BD91E913B580067701C /* CacheTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CacheTests.swift; sourceTree = "<group>"; };
 		OBJ_10 /* appleOS_ExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_ExecutionContext.swift; sourceTree = "<group>"; };
 		OBJ_11 /* appleOS_Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Notifications.swift; sourceTree = "<group>"; };
 		OBJ_12 /* appleOS_Observation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Observation.swift; sourceTree = "<group>"; };
@@ -230,6 +232,7 @@
 			children = (
 				OBJ_63 /* BatchFutureTests.swift */,
 				OBJ_64 /* CachableValueTests.swift */,
+				F8419BD91E913B580067701C /* CacheTests.swift */,
 				F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */,
 				OBJ_65 /* ChannelTests.swift */,
 				F8419BD71E911CF00067701C /* ChannelMakersTests.swift */,
@@ -410,6 +413,7 @@
 				OBJ_164 /* EventSource_Zip2Tests.swift in Sources */,
 				OBJ_165 /* ExecutionContextTests.swift in Sources */,
 				OBJ_166 /* ExecutorTests.swift in Sources */,
+				F8419BDA1E913B580067701C /* CacheTests.swift in Sources */,
 				F8419BD81E911CF00067701C /* ChannelMakersTests.swift in Sources */,
 				OBJ_167 /* FallibleTests.swift in Sources */,
 				OBJ_168 /* Future_MakersTests.swift in Sources */,
