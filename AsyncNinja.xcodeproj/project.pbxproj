@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = F819DC171E8A9F2A0072E0B1 /* Either.swift */; };
+		F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */; };
 		OBJ_100 /* appleOS_ReactiveProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* appleOS_ReactiveProperties.swift */; };
 		OBJ_101 /* appleOS_Retainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* appleOS_Retainer.swift */; };
 		OBJ_102 /* appleOS_URLSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* appleOS_URLSession.swift */; };
@@ -99,6 +100,7 @@
 
 /* Begin PBXFileReference section */
 		F819DC171E8A9F2A0072E0B1 /* Either.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
+		F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancellationTokenTests.swift; sourceTree = "<group>"; };
 		OBJ_10 /* appleOS_ExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_ExecutionContext.swift; sourceTree = "<group>"; };
 		OBJ_11 /* appleOS_Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Notifications.swift; sourceTree = "<group>"; };
 		OBJ_12 /* appleOS_Observation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Observation.swift; sourceTree = "<group>"; };
@@ -224,6 +226,7 @@
 			children = (
 				OBJ_63 /* BatchFutureTests.swift */,
 				OBJ_64 /* CachableValueTests.swift */,
+				F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */,
 				OBJ_65 /* ChannelTests.swift */,
 				OBJ_66 /* EventSource_CombineTests.swift */,
 				OBJ_67 /* EventSource_FlatMapFuturesTests.swift */,
@@ -403,6 +406,7 @@
 				OBJ_167 /* FallibleTests.swift in Sources */,
 				OBJ_168 /* Future_MakersTests.swift in Sources */,
 				OBJ_169 /* FutureTests.swift in Sources */,
+				F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */,
 				OBJ_170 /* iOSTests.swift in Sources */,
 				OBJ_171 /* ObserversTests.swift in Sources */,
 				OBJ_172 /* ReleasePoolTests.swift in Sources */,

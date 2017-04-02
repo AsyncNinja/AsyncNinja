@@ -96,7 +96,13 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
   ///   on `strictAsync: false` `Executor`s.
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
-  public func tryUpdate(_ update: Update, from originalExecutor: Executor?) -> Bool {
+  public func tryUpdate(
+    _ update: Update,
+    from originalExecutor: Executor?
+    ) -> Bool
+  {
+    // TEST: ChannelTests.testOverUpdate
+
     _locking.lock()
     guard case .none = _completion
       else {
@@ -124,31 +130,34 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
   ///   on `strictAsync: false` `Executor`s.
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
-  public func update<S: Sequence>(_ updates: S,
-                     from originalExecutor: Executor? = nil)
-    where S.Iterator.Element == Update {
-      
-      _locking.lock()
-      guard case .none = _completion
-        else {
-          _locking.unlock()
-          return
+  public func update<S: Sequence>(
+    _ updates: S,
+    from originalExecutor: Executor? = nil
+    ) where S.Iterator.Element == Update
+  {
+    // TEST: ChannelTests.testOverUpdateWithSeqence
+
+    _locking.lock()
+    guard case .none = _completion
+      else {
+        _locking.unlock()
+        return
+    }
+
+    if self.maxBufferSize > 0 {
+      updates.suffix(self.maxBufferSize).forEach(_pushUpdateToBuffer)
+    }
+
+    let handlers = _handlers
+    _locking.unlock()
+
+    handlers.forEach {
+      for update in updates {
+        $0.handle(.update(update), from: originalExecutor)
       }
-      
-      if self.maxBufferSize > 0 {
-        updates.suffix(self.maxBufferSize).forEach(_pushUpdateToBuffer)
-      }
-      
-      let handlers = _handlers
-      _locking.unlock()
-      
-      handlers.forEach {
-        for update in updates {
-          $0.handle(.update(update), from: originalExecutor)
-        }
-      }
+    }
   }
-  
+
   /// Tries to complete the Producer
   ///
   /// - Parameter completion: value to complete Producer with
@@ -160,38 +169,33 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
   /// - Returns: true if Producer was completed with this call,
   ///   false if it was completed before
   @discardableResult
-  public func tryComplete(_ completion: Fallible<Success>,
-                          from originalExecutor: Executor? = nil) -> Bool {
+  public func tryComplete(
+    _ completion: Fallible<Success>,
+    from originalExecutor: Executor? = nil
+    ) -> Bool
+  {
+    // TEST: ChannelTests.testOverComplete
+
     _locking.lock()
-    
+
     guard case .none = _completion
       else {
         _locking.unlock()
         return false
     }
-    
+
     _completion = completion
     let handlers = _handlers
     _locking.unlock()
-    
+
     handlers.forEach(andReset: true) { handler in
       handler.handle(.completion(completion), from: originalExecutor)
       handler.releaseOwner()
     }
-    
+
     return true
   }
-  
-  /// Completes the channel with a competion of specified Future or Channel
-  public func complete<T: Completing>(with completable: T) where T.Success == Success {
-    let handler = completable.makeCompletionHandler(executor: .immediate) {
-      [weak self] (completion, originalExecutor) in
-      self?.complete(completion, from: originalExecutor)
-    }
-    
-    self._asyncNinja_retainHandlerUntilFinalization(handler)
-  }
-  
+
   /// **internal use only** Inserts releasable to an internal release pool
   /// that will be drained on completion
   override public func _asyncNinja_retainUntilFinalization(_ releasable: Releasable) {

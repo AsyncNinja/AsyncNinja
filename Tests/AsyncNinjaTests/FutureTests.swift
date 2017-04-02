@@ -114,7 +114,7 @@ class FutureTests: XCTestCase {
     var futureValue: Future<Int>?
     weak var weakMappedFuture: Future<String>?
     eval { () -> Void in
-      futureValue = future(executor: .queue(qos), after: 1.0) { 1 }
+      futureValue = future(executor: .queue(qos), after: 0.1) { 1 }
       
       var mappedFuture: Future<String>? = futureValue!.map(pure: true) {
         _ in
@@ -133,15 +133,16 @@ class FutureTests: XCTestCase {
 
   func testImpureMapLifetime() {
     let qos = pickQoS()
-    let expectation = self.expectation(description: "impure block executed")
     var futureValue: Future<Int>?
     weak var weakMappedFuture: Future<String>?
+    let sema = DispatchSemaphore(value: 0)
+
     eval { () -> Void in
-      futureValue = future(executor: .queue(qos), after: 1.0) { 1 }
+      futureValue = future(executor: .queue(qos), after: 0.1) { 1 }
       
       var mappedFuture: Future<String>? = futureValue!.map(pure: false) {
         _ in
-        expectation.fulfill()
+        sema.signal()
         return "hello"
       }
       weakMappedFuture = mappedFuture
@@ -151,7 +152,7 @@ class FutureTests: XCTestCase {
     }
     
     XCTAssertNil(weakMappedFuture)
-    self.waitForExpectations(timeout: 1.0)
+    sema.wait()
   }
 
   func testMap_Success() {

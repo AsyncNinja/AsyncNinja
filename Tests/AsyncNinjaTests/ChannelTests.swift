@@ -40,6 +40,9 @@ class ChannelTests: XCTestCase {
     ("testBuffering3", testBuffering3),
     ("testBuffering10", testBuffering10),
     ("testDescription", testDescription),
+    ("testOverUpdate", testOverUpdate),
+    ("testOverUpdateWithSeqence", testOverUpdateWithSeqence),
+    ("testOverComplete", testOverComplete),
     ("testDoubleBind", testDoubleBind),
   ]
 
@@ -230,6 +233,70 @@ class ChannelTests: XCTestCase {
     let channelD: Channel<Int, String> = Producer(bufferSize: 0)
     XCTAssertEqual("Incomplete Channel", channelD.description)
     XCTAssertEqual("Incomplete Channel<Int, String>", channelD.debugDescription)
+  }
+
+  func testOverUpdate() {
+    let expectation = self.expectation(description: "extraction")
+    let producer = Producer<Int, String>()
+
+    producer.extractAll().onSuccess {
+      XCTAssertEqual($0.updates, [1, 2, 3, 4, 5])
+      XCTAssertEqual($0.completion.success, "Done")
+      expectation.fulfill()
+    }
+
+    producer.update(1)
+    producer.update(2)
+    producer.update(3)
+    producer.update(4)
+    producer.update(5)
+    producer.succeed("Done")
+    producer.update(6)
+    producer.update(7)
+    producer.update(8)
+
+    self.waitForExpectations(timeout: 1.0)
+  }
+
+  func testOverUpdateWithSeqence() {
+    let expectation = self.expectation(description: "extraction")
+    let producer = Producer<Int, String>()
+
+    producer.extractAll().onSuccess {
+      XCTAssertEqual($0.updates, [1, 2, 3, 4, 5])
+      XCTAssertEqual($0.completion.success, "Done")
+      expectation.fulfill()
+    }
+
+    producer.update(1...5)
+    producer.succeed("Done")
+    producer.update(6...8)
+
+    self.waitForExpectations(timeout: 1.0)
+  }
+
+  func testOverComplete() {
+    let expectation = self.expectation(description: "extraction")
+    let producer = Producer<Int, String>()
+
+    producer.extractAll().onSuccess {
+      XCTAssertEqual($0.updates, [1, 2, 3, 4, 5])
+      XCTAssertEqual($0.completion.success, "Done")
+      expectation.fulfill()
+    }
+
+    producer.update(1)
+    producer.update(2)
+    producer.update(3)
+    producer.update(4)
+    producer.update(5)
+    producer.succeed("Done")
+    producer.update(6)
+    producer.update(7)
+    producer.update(8)
+    producer.succeed("Done 2")
+
+    self.waitForExpectations(timeout: 1.0)
   }
 
   func testDoubleBind() {

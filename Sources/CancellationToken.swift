@@ -25,40 +25,56 @@ import Dispatch
 /// An object that allows to implement and control cancellation
 public class CancellationToken: Cancellable {
   private var _container = makeThreadSafeContainer()
+  private let _isBackCancelAllowed: Bool
 
   /// Returns state of the object
   public var isCancelled: Bool { return _container.head is CancelledItem }
 
-  /// Designated initializer. Initializes uncancelled token
-  public init() { }
+  /// Designated initializer
+  ///
+  /// - Parameter isBackCancelAllowed: true if cancellation of cancellables
+  ///   after cancellation of the token is allowed. True by default
+  public init(isBackCancelAllowed: Bool = true) {
+    _isBackCancelAllowed = isBackCancelAllowed
+  }
 
   /// Adds block to notify when state changes to cancelled
   /// Specified block will never be called if the token will never be cancelled
   public func notifyCancellation(_ block: @escaping () -> Void) {
-    _container.updateHead {
-      if let nonCancelledItem = $0 as? NonCancelledItem {
-        return NotifyItem(block: block, next: nonCancelledItem)
-      } else {
-        return $0
-      }
+    let (_, newHead) = _container.updateHead {
+      return $0 is CancelledItem
+        ? $0
+        : NotifyItem(block: block, next: $0 as! NonCancelledItem?)
+    }
+
+    if _isBackCancelAllowed, newHead is CancelledItem {
+      block()
     }
   }
 
   /// Automatically cancelles passed cancellable object on cancellation
   public func add(cancellable: Cancellable) {
-    _container.updateHead {
-      if let nonCancelledItem = $0 as? NonCancelledItem {
-        return ContainerOfCancellableItem(cancellable: cancellable, next: nonCancelledItem)
-      } else {
-        return $0
-      }
+    let (_, newHead) = _container.updateHead {
+      return $0 is CancelledItem
+        ? $0
+        : ContainerOfCancellableItem(cancellable: cancellable, next: $0 as! NonCancelledItem?)
+    }
+    
+    if _isBackCancelAllowed, newHead is CancelledItem {
+      cancellable.cancel()
     }
   }
 
   /// Manually cancelles all attached items
   public func cancel() {
-    _container.updateHead { _ in
+    let (oldHead, _) = _container.updateHead { _ in
       return CancelledItem()
+    }
+
+    var maybeItem = oldHead as? NonCancelledItem
+    while let item = maybeItem {
+      item.finalize()
+      maybeItem = item.next
     }
   }
 
@@ -72,6 +88,10 @@ public class CancellationToken: Cancellable {
     init(next: NonCancelledItem?) {
       self.next = next
     }
+
+    func finalize() {
+      assertAbstract()
+    }
   }
 
   private class NotifyItem: NonCancelledItem {
@@ -82,7 +102,7 @@ public class CancellationToken: Cancellable {
       super.init(next: next)
     }
 
-    deinit {
+    override func finalize() {
       _block()
     }
   }
@@ -95,7 +115,7 @@ public class CancellationToken: Cancellable {
       super.init(next: next)
     }
 
-    deinit {
+    override func finalize() {
       _cancellable?.cancel()
     }
   }
