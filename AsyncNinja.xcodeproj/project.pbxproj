@@ -27,15 +27,15 @@
 		OBJ_112 /* ConstantFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_25 /* ConstantFuture.swift */; };
 		OBJ_113 /* Dispatch_Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_26 /* Dispatch_Extensions.swift */; };
 		OBJ_114 /* DynamicProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_27 /* DynamicProperty.swift */; };
-		OBJ_115 /* EventsSource_Combine.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_28 /* EventsSource_Combine.swift */; };
-		OBJ_116 /* EventsSource_FlatMapFutures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_29 /* EventsSource_FlatMapFutures.swift */; };
-		OBJ_117 /* EventsSource_Implementation.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* EventsSource_Implementation.swift */; };
-		OBJ_118 /* EventsSource_Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_31 /* EventsSource_Map.swift */; };
-		OBJ_119 /* EventsSource_Merge2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_32 /* EventsSource_Merge2.swift */; };
-		OBJ_120 /* EventsSource_Scan.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_33 /* EventsSource_Scan.swift */; };
-		OBJ_121 /* EventsSource_ToFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* EventsSource_ToFuture.swift */; };
-		OBJ_122 /* EventsSource_Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_35 /* EventsSource_Transform.swift */; };
-		OBJ_123 /* EventsSource_Zip2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_36 /* EventsSource_Zip2.swift */; };
+		OBJ_115 /* EventSource_Combine.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_28 /* EventSource_Combine.swift */; };
+		OBJ_116 /* EventSource_FlatMapFutures.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_29 /* EventSource_FlatMapFutures.swift */; };
+		OBJ_117 /* EventSource_Implementation.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* EventSource_Implementation.swift */; };
+		OBJ_118 /* EventSource_Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_31 /* EventSource_Map.swift */; };
+		OBJ_119 /* EventSource_Merge2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_32 /* EventSource_Merge2.swift */; };
+		OBJ_120 /* EventSource_Scan.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_33 /* EventSource_Scan.swift */; };
+		OBJ_121 /* EventSource_ToFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* EventSource_ToFuture.swift */; };
+		OBJ_122 /* EventSource_Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_35 /* EventSource_Transform.swift */; };
+		OBJ_123 /* EventSource_Zip2.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_36 /* EventSource_Zip2.swift */; };
 		OBJ_124 /* ExecutionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_37 /* ExecutionContext.swift */; };
 		OBJ_125 /* Executor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_38 /* Executor.swift */; };
 		OBJ_126 /* Fallible.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_39 /* Fallible.swift */; };
@@ -125,15 +125,15 @@
 		OBJ_25 /* ConstantFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstantFuture.swift; sourceTree = "<group>"; };
 		OBJ_26 /* Dispatch_Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dispatch_Extensions.swift; sourceTree = "<group>"; };
 		OBJ_27 /* DynamicProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicProperty.swift; sourceTree = "<group>"; };
-		OBJ_28 /* EventsSource_Combine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Combine.swift; sourceTree = "<group>"; };
-		OBJ_29 /* EventsSource_FlatMapFutures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_FlatMapFutures.swift; sourceTree = "<group>"; };
-		OBJ_30 /* EventsSource_Implementation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Implementation.swift; sourceTree = "<group>"; };
-		OBJ_31 /* EventsSource_Map.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Map.swift; sourceTree = "<group>"; };
-		OBJ_32 /* EventsSource_Merge2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Merge2.swift; sourceTree = "<group>"; };
-		OBJ_33 /* EventsSource_Scan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Scan.swift; sourceTree = "<group>"; };
-		OBJ_34 /* EventsSource_ToFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_ToFuture.swift; sourceTree = "<group>"; };
-		OBJ_35 /* EventsSource_Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Transform.swift; sourceTree = "<group>"; };
-		OBJ_36 /* EventsSource_Zip2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsSource_Zip2.swift; sourceTree = "<group>"; };
+		OBJ_28 /* EventSource_Combine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Combine.swift; sourceTree = "<group>"; };
+		OBJ_29 /* EventSource_FlatMapFutures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_FlatMapFutures.swift; sourceTree = "<group>"; };
+		OBJ_30 /* EventSource_Implementation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Implementation.swift; sourceTree = "<group>"; };
+		OBJ_31 /* EventSource_Map.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Map.swift; sourceTree = "<group>"; };
+		OBJ_32 /* EventSource_Merge2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Merge2.swift; sourceTree = "<group>"; };
+		OBJ_33 /* EventSource_Scan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Scan.swift; sourceTree = "<group>"; };
+		OBJ_34 /* EventSource_ToFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_ToFuture.swift; sourceTree = "<group>"; };
+		OBJ_35 /* EventSource_Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Transform.swift; sourceTree = "<group>"; };
+		OBJ_36 /* EventSource_Zip2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Zip2.swift; sourceTree = "<group>"; };
 		OBJ_37 /* ExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutionContext.swift; sourceTree = "<group>"; };
 		OBJ_38 /* Executor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Executor.swift; sourceTree = "<group>"; };
 		OBJ_39 /* Fallible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fallible.swift; sourceTree = "<group>"; };
@@ -286,15 +286,15 @@
 				OBJ_26 /* Dispatch_Extensions.swift */,
 				OBJ_27 /* DynamicProperty.swift */,
 				F819DC171E8A9F2A0072E0B1 /* Either.swift */,
-				OBJ_28 /* EventsSource_Combine.swift */,
-				OBJ_29 /* EventsSource_FlatMapFutures.swift */,
-				OBJ_30 /* EventsSource_Implementation.swift */,
-				OBJ_31 /* EventsSource_Map.swift */,
-				OBJ_32 /* EventsSource_Merge2.swift */,
-				OBJ_33 /* EventsSource_Scan.swift */,
-				OBJ_34 /* EventsSource_ToFuture.swift */,
-				OBJ_35 /* EventsSource_Transform.swift */,
-				OBJ_36 /* EventsSource_Zip2.swift */,
+				OBJ_28 /* EventSource_Combine.swift */,
+				OBJ_29 /* EventSource_FlatMapFutures.swift */,
+				OBJ_30 /* EventSource_Implementation.swift */,
+				OBJ_31 /* EventSource_Map.swift */,
+				OBJ_32 /* EventSource_Merge2.swift */,
+				OBJ_33 /* EventSource_Scan.swift */,
+				OBJ_34 /* EventSource_ToFuture.swift */,
+				OBJ_35 /* EventSource_Transform.swift */,
+				OBJ_36 /* EventSource_Zip2.swift */,
 				OBJ_37 /* ExecutionContext.swift */,
 				OBJ_38 /* Executor.swift */,
 				OBJ_39 /* Fallible.swift */,
@@ -454,15 +454,15 @@
 				OBJ_112 /* ConstantFuture.swift in Sources */,
 				OBJ_113 /* Dispatch_Extensions.swift in Sources */,
 				OBJ_114 /* DynamicProperty.swift in Sources */,
-				OBJ_115 /* EventsSource_Combine.swift in Sources */,
-				OBJ_116 /* EventsSource_FlatMapFutures.swift in Sources */,
-				OBJ_117 /* EventsSource_Implementation.swift in Sources */,
-				OBJ_118 /* EventsSource_Map.swift in Sources */,
-				OBJ_119 /* EventsSource_Merge2.swift in Sources */,
-				OBJ_120 /* EventsSource_Scan.swift in Sources */,
-				OBJ_121 /* EventsSource_ToFuture.swift in Sources */,
-				OBJ_122 /* EventsSource_Transform.swift in Sources */,
-				OBJ_123 /* EventsSource_Zip2.swift in Sources */,
+				OBJ_115 /* EventSource_Combine.swift in Sources */,
+				OBJ_116 /* EventSource_FlatMapFutures.swift in Sources */,
+				OBJ_117 /* EventSource_Implementation.swift in Sources */,
+				OBJ_118 /* EventSource_Map.swift in Sources */,
+				OBJ_119 /* EventSource_Merge2.swift in Sources */,
+				OBJ_120 /* EventSource_Scan.swift in Sources */,
+				OBJ_121 /* EventSource_ToFuture.swift in Sources */,
+				OBJ_122 /* EventSource_Transform.swift in Sources */,
+				OBJ_123 /* EventSource_Zip2.swift in Sources */,
 				OBJ_124 /* ExecutionContext.swift in Sources */,
 				OBJ_125 /* Executor.swift in Sources */,
 				OBJ_126 /* Fallible.swift in Sources */,
