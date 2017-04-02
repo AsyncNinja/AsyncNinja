@@ -1,3 +1,7 @@
+# 1.0.0
+* better test coverage
+* `CancellationToken` fixed and improved
+
 # 1.0.0-beta7
 * `staticCast` for `Future` and `Channel` added
 * future to channel and channel to future transformations added
