@@ -42,6 +42,7 @@ class ChannelTests: XCTestCase {
     ("testOverUpdate", testOverUpdate),
     ("testOverUpdateWithSeqence", testOverUpdateWithSeqence),
     ("testOverComplete", testOverComplete),
+    ("testStaticCast", testStaticCast),
     ("testDoubleBind", testDoubleBind),
   ]
 
@@ -268,6 +269,42 @@ class ChannelTests: XCTestCase {
     producer.succeed("Done 2")
 
     self.waitForExpectations(timeout: 1.0)
+  }
+
+  func testStaticCast() {
+    let a = Producer<Int, String>()
+    let b: Channel<NSNumber, NSString> = a.staticCast()
+    let c: Future<NSString> = a.staticCast()
+    let sema = DispatchSemaphore(value: 0)
+
+    b.extractAll().onSuccess {
+      let (bUpdate, bCompletion) = $0
+      XCTAssertEqual(bUpdate, [1, 2, 3, 4, 5])
+      if case let .success(value) = bCompletion {
+        XCTAssertEqual("success" as NSString, value)
+      } else {
+        XCTFail()
+      }
+      sema.signal()
+    }
+
+    c.onSuccess {
+      XCTAssertEqual("success" as NSString, $0)
+      sema.signal()
+    }
+
+    a.makeFuture().onSuccess {
+      XCTAssertEqual("success", $0)
+      sema.signal()
+    }
+
+    a.update(1...5)
+    a.succeed("success")
+    a.update(6...8)
+
+    sema.wait()
+    sema.wait()
+    sema.wait()
   }
 
   func testDoubleBind() {

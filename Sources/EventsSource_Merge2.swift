@@ -30,7 +30,7 @@ public func merge<T: EventSource, U: EventSource>(
   bufferSize: DerivedChannelBufferSize = .default
   ) -> Channel<Either<T.Update, U.Update>, (T.Success, U.Success)> {
 
-  // Tests: EventSource_Merge2Tests.testMergeIntsAndStrings
+  // Test: EventSource_Merge2Tests.testMergeIntsAndStrings
 
   let bufferSize_ = bufferSize.bufferSize(channelA, channelB)
   let producer = Producer<Either<T.Update, U.Update>, (T.Success, U.Success)>(bufferSize: bufferSize_)
@@ -90,7 +90,7 @@ public func merge<T: EventSource, U: EventSource>(
   bufferSize: DerivedChannelBufferSize = .default
 ) -> Channel<T.Update, (T.Success, U.Success)> where T.Update == U.Update {
 
-  // Tests: EventSource_Merge2Tests.testMergeInts
+  // Test: EventSource_Merge2Tests.testMergeInts
 
   let bufferSize_ = bufferSize.bufferSize(channelA, channelB)
   let producer = Producer<T.Update, (T.Success, U.Success)>(bufferSize: bufferSize_)

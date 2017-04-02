@@ -71,11 +71,15 @@ public extension Channel {
   /// Transforms the channel to a channel of unrelated type
   /// Correctness of such transformation is left on our behalf
   func staticCast<A, B>() -> Channel<A, B> {
+    // Test: ChannelTests.testStaticCast
+
     return mapEvent(executor: .immediate) { $0.staticCast() }
   }
 
   /// Transforms the channel to a future
   func makeFuture() -> Future<Success> {
+    // Test: ChannelTests.testStaticCast
+
     let promise = Promise<Success>()
     let handler = makeCompletionHandler(executor: .immediate) {
       [weak promise] (completion, originalExecutor) in
@@ -88,6 +92,8 @@ public extension Channel {
   /// Transforms the channel to a future of unrelated type
   /// Correctness of such transformation is left on our behalf
   func staticCast<T>() -> Future<T> {
+    // Test: ChannelTests.testStaticCast
+
     let promise = Promise<T>()
     let handler = makeCompletionHandler(executor: .immediate) {
       [weak promise] (completion, originalExecutor) in
