@@ -27,7 +27,7 @@ let package = Package(
     	),
     ],
 	dependencies: [
-    	.Package(url: "https://github.com/AsyncNinja/AsyncNinja.git", majorVersion: 0),
+    	.Package(url: "https://github.com/AsyncNinja/AsyncNinja.git", majorVersion: 1),
     ]
 )
 ``` 
