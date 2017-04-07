@@ -1,3 +1,7 @@
+# next
+* try execute methods added. They provide an ability to retry async execution multiple times
+* convenience initializers for `Executor` added alongside with constructors to reduce confusion in some cases
+
 # 1.0.0
 * better test coverage
 * `CancellationToken` fixed and improved
