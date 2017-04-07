@@ -12,6 +12,7 @@
 		F8419BD61E91080A0067701C /* EitherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD51E9108090067701C /* EitherTests.swift */; };
 		F8419BD81E911CF00067701C /* ChannelMakersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD71E911CF00067701C /* ChannelMakersTests.swift */; };
 		F8419BDA1E913B580067701C /* CacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD91E913B580067701C /* CacheTests.swift */; };
+		F85659571E97D7FE007EDC98 /* TryExecute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85659561E97D7FE007EDC98 /* TryExecute.swift */; };
 		OBJ_100 /* appleOS_ReactiveProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* appleOS_ReactiveProperties.swift */; };
 		OBJ_101 /* appleOS_Retainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* appleOS_Retainer.swift */; };
 		OBJ_102 /* appleOS_URLSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* appleOS_URLSession.swift */; };
@@ -107,6 +108,7 @@
 		F8419BD51E9108090067701C /* EitherTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EitherTests.swift; sourceTree = "<group>"; };
 		F8419BD71E911CF00067701C /* ChannelMakersTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelMakersTests.swift; sourceTree = "<group>"; };
 		F8419BD91E913B580067701C /* CacheTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CacheTests.swift; sourceTree = "<group>"; };
+		F85659561E97D7FE007EDC98 /* TryExecute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TryExecute.swift; sourceTree = "<group>"; };
 		OBJ_10 /* appleOS_ExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_ExecutionContext.swift; sourceTree = "<group>"; };
 		OBJ_11 /* appleOS_Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Notifications.swift; sourceTree = "<group>"; };
 		OBJ_12 /* appleOS_Observation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Observation.swift; sourceTree = "<group>"; };
@@ -315,6 +317,7 @@
 				OBJ_54 /* Sink.swift */,
 				OBJ_55 /* ThreadSafety.swift */,
 				OBJ_56 /* TimerChannel.swift */,
+				F85659561E97D7FE007EDC98 /* TryExecute.swift */,
 				OBJ_57 /* Util.swift */,
 				OBJ_58 /* watchOS.swift */,
 				OBJ_59 /* Zip2Futures.swift */,
@@ -448,6 +451,7 @@
 				OBJ_107 /* Channel.swift in Sources */,
 				OBJ_108 /* Channel_makers.swift in Sources */,
 				OBJ_109 /* Completable_Implementation.swift in Sources */,
+				F85659571E97D7FE007EDC98 /* TryExecute.swift in Sources */,
 				OBJ_110 /* Completing_Implementation.swift in Sources */,
 				F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */,
 				OBJ_111 /* Completing_Transform.swift in Sources */,

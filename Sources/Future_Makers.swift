@@ -298,7 +298,7 @@ public func flatFuture<T, C: ExecutionContext>(
 
 // MARK: - internal helper methods
 
-/// internal use only
+/// **internal use only**
 private func promise<T>(
   executor: Executor,
   after timeout: Double,
