@@ -36,16 +36,16 @@ class TryExecuteTests: XCTestCase {
     ("testTryExecuteTimesSuccess", testTryExecuteTimesSuccess),
     ("testTryExecuteTimesFailure", testTryExecuteTimesFailure),
     ("testTryFlatExecuteTimesSuccess", testTryFlatExecuteTimesSuccess),
-    ("testTryFlatExecuteTimesFailure", testTryFlateExecuteTimesFailure),
+    ("testTryFlatExecuteTimesFailure", testTryFlatExecuteTimesFailure),
     ]
 
   // MARK: - try execute until
 
   func testTryExecuteUntilToTheFirst() {
     var items = [1, 2, 3, 4, 5]
-    func until(completion: Fallible<String>) -> Bool { return true }
+    func validate(completion: Fallible<String>) -> Bool { return true }
 
-    let result = tryExecute(until: until) {
+    let result = tryExecute(validate: validate) {
       items.removeLast()
       return "hello"
       }
@@ -57,9 +57,9 @@ class TryExecuteTests: XCTestCase {
 
   func testTryExecuteUntilToTheLast() {
     var items = [1, 2, 3, 4, 5]
-    func until(completion: Fallible<String>) -> Bool { return items.isEmpty }
+    func validate(completion: Fallible<String>) -> Bool { return items.isEmpty }
 
-    let result = tryExecute(until: until) {
+    let result = tryExecute(validate: validate) {
       items.removeLast()
       return "hello"
       }
@@ -73,9 +73,9 @@ class TryExecuteTests: XCTestCase {
 
   func testTryFlatExecuteUntilToTheFirst() {
     var items = [1, 2, 3, 4, 5]
-    func until(completion: Fallible<String>) -> Bool { return true }
+    func validate(completion: Fallible<String>) -> Bool { return true }
 
-    let result = tryFlatExecute(until: until) { future(after: 0.1) {
+    let result = tryFlatExecute(validate: validate) { future(after: 0.1) {
       items.removeLast()
       return "hello" } }
       .wait()
@@ -86,9 +86,9 @@ class TryExecuteTests: XCTestCase {
 
   func testTryFlatExecuteUntilToTheLast() {
     var items = [1, 2, 3, 4, 5]
-    func until(completion: Fallible<String>) -> Bool { return items.isEmpty }
+    func validate(completion: Fallible<String>) -> Bool { return items.isEmpty }
 
-    let result = tryFlatExecute(until: until) { future(after: 0.1) {
+    let result = tryFlatExecute(validate: validate) { future(after: 0.1) {
       items.removeLast()
       return "hello" } }
       .wait()
@@ -106,7 +106,7 @@ class TryExecuteTests: XCTestCase {
       .failure(TestError.otherCode),
       .success("hello")
     ]
-    func until(completion: Fallible<String>) -> Bool { return true }
+    func validate(completion: Fallible<String>) -> Bool { return true }
 
     let result = tryExecute(times: 3) { () -> String in
       items.removeLast()
@@ -126,7 +126,7 @@ class TryExecuteTests: XCTestCase {
       .failure(TestError.testCode),
       .success("hello")
     ]
-    func until(completion: Fallible<String>) -> Bool { return true }
+    func validate(completion: Fallible<String>) -> Bool { return true }
 
     let result = tryExecute(times: 3) { () -> String in
       items.removeLast()
@@ -147,7 +147,7 @@ class TryExecuteTests: XCTestCase {
       .failure(TestError.otherCode),
       .success("hello")
     ]
-    func until(completion: Fallible<String>) -> Bool { return true }
+    func validate(completion: Fallible<String>) -> Bool { return true }
 
     let result = tryFlatExecute(times: 3) { () -> Future<String> in
       items.removeLast()
@@ -159,7 +159,7 @@ class TryExecuteTests: XCTestCase {
     XCTAssertEqual(items, [1, 2])
   }
 
-  func testTryFaltExecuteTimesFailure() {
+  func testTryFlatExecuteTimesFailure() {
     var items = [1, 2, 3, 4, 5]
     var completions: [Fallible<String>] = [
       .failure(TestError.testCode),
@@ -167,7 +167,7 @@ class TryExecuteTests: XCTestCase {
       .failure(TestError.testCode),
       .success("hello")
     ]
-    func until(completion: Fallible<String>) -> Bool { return true }
+    func validate(completion: Fallible<String>) -> Bool { return true }
 
     let result = tryFlatExecute(times: 3) { () -> Future<String> in
       items.removeLast()
