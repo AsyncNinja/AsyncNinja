@@ -50,6 +50,7 @@ import XCTest
       // testCase(PerformanceTests.allTests),
       testCase(ReleasePoolTests.allTests),
       testCase(TimerChannelTests.allTests),
+      testCase(TryExecuteTests.allTests),
       testCase(ZipFuturesTest.allTests),
     ]
   }

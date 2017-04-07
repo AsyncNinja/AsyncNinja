@@ -118,7 +118,7 @@ public func tryExecute<T>(
       return true
     case .failure:
       timesLeft -= 1
-      return timesLeft > 0
+      return timesLeft == 0
     }
   }
 
@@ -137,7 +137,7 @@ public func tryFlatExecute<T>(
       return true
     case .failure:
       timesLeft -= 1
-      return timesLeft > 0
+      return timesLeft == 0
     }
   }
 
@@ -159,7 +159,7 @@ public func tryExecute<T, C: ExecutionContext>(
       return true
     case .failure:
       timesLeft -= 1
-      return timesLeft > 0
+      return timesLeft == 0
     }
   }
 
@@ -179,7 +179,7 @@ public func tryFlatExecute<T, C: ExecutionContext>(
       return true
     case .failure:
       timesLeft -= 1
-      return timesLeft > 0
+      return timesLeft == 0
     }
   }
 
