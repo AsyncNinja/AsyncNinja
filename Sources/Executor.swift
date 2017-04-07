@@ -121,7 +121,14 @@ public extension Executor {
   /// - Returns: executor
   static func queue(_ queue: DispatchQueue) -> Executor {
     // Test: ExecutorTests.testCustomQueue
-    return Executor(impl: queue)
+    return Executor(queue: queue)
+  }
+
+  /// initializes executor based on specified queue
+  ///
+  /// - Parameter queue: to execute submitted blocks on
+  init(queue: DispatchQueue) {
+    self.init(impl: queue)
   }
 
   // Test: ExecutorTests.testCustomQoS
@@ -130,7 +137,14 @@ public extension Executor {
   /// - Parameter qos: quality of service for submitted blocks
   /// - Returns: executor
   static func queue(_ qos: DispatchQoS.QoSClass) -> Executor {
-    return Executor.queue(.global(qos: qos))
+    return Executor(qos: qos)
+  }
+
+  /// initializes executor based on global queue with specified QoS class
+  ///
+  /// - Parameter qos: quality of service for submitted blocks
+  init(qos: DispatchQoS.QoSClass) {
+    self.init(queue: .global(qos: qos))
   }
 }
 

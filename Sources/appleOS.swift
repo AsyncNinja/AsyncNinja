@@ -28,17 +28,31 @@
     /// makes an `Executor` from `OperationQueue`
     ///
     /// - Parameters:
-    ///   - queue: an `OperationQueue` to make executor from
+    ///   - operationQueue: an `OperationQueue` to make executor from
     ///   - isStrictAsync: `true` if the `Executor` must execute blocks strictly asynchronously.
     ///     `false` will relax requirements to increase performance
     /// - Returns: constructed `Executor`
     static func operationQueue(
-      _ queue: OperationQueue,
+      _ operationQueue: OperationQueue,
       isStrictAsync: Bool = false
       ) -> Executor
     {
-      return Executor(relaxAsyncWhenLaunchingFrom: isStrictAsync ? nil : ObjectIdentifier(queue),
-                      handler: queue.addOperation)
+      return Executor(operationQueue: operationQueue, isStrictAsync: isStrictAsync)
+    }
+
+    /// initializes an `Executor` with `OperationQueue`
+    ///
+    /// - Parameters:
+    ///   - operationQueue: an `OperationQueue` to make executor from
+    ///   - isStrictAsync: `true` if the `Executor` must execute blocks strictly asynchronously.
+    ///     `false` will relax requirements to increase performance
+    /// - Returns: constructed `Executor`
+    init(
+      operationQueue: OperationQueue,
+      isStrictAsync: Bool = false)
+    {
+      self.init(relaxAsyncWhenLaunchingFrom: isStrictAsync ? nil : ObjectIdentifier(operationQueue),
+                handler: operationQueue.addOperation)
     }
   }
 
