@@ -3,6 +3,7 @@
 * convenience initializers for `Executor` added alongside with constructors to reduce confusion in some cases
 * EventSource.skip implemented
 * EventSource.take implemented
+* EventSource.contains implemented
 
 # 1.0.0
 * better test coverage

@@ -220,3 +220,59 @@ public extension EventSource {
                  where: predicate)
   }
 }
+
+// MARK: - contains
+public extension EventSource {
+  /// Checks each update with predicate. Succeeds returned future with true
+  /// on first found update that matches predicate. Succeeds retured future
+  /// with false if no matching updates were found
+  ///
+  /// - Parameters:
+  ///   - executor: to execute call predicate on
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - predicate: returns true if update value matches
+  ///     and returned future may be completed with it
+  /// - Returns: future
+  func contains(
+    executor: Executor = .primary,
+    cancellationToken: CancellationToken? = nil,
+    where predicate: @escaping (Update) -> Bool
+    ) -> Future<Bool>
+  {
+    // Test: EventSource_ToFutureTests.testContainsTrue
+    // Test: EventSource_ToFutureTests.testContainsFalse
+
+    var locking = makeLocking(isFair: true)
+    let promise = Promise<Bool>()
+    let handler = makeHandler(executor: executor) {
+      [weak promise] (event, originalExecutor) in
+      if let promise = promise {
+        if case .some = promise.completion {
+          return
+        }
+      } else {
+        return
+      }
+
+      let result: Bool? = locking.locker {
+        switch event {
+        case let .update(update):
+          if predicate(update) { return true }
+          else { return nil }
+        case .completion:
+          return false
+        }
+      }
+
+      if let result = result {
+        promise?.succeed(result)
+      }
+    }
+
+    promise._asyncNinja_retainHandlerUntilFinalization(handler)
+    cancellationToken?.add(cancellable: promise)
+    return promise
+  }
+}
