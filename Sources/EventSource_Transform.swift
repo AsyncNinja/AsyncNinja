@@ -458,3 +458,73 @@ public extension EventSource {
                         bufferSize: bufferSize, onEvent)
   }
 }
+
+// MARK: take
+
+public extension EventSource {
+  /// Makes a channel that takes updates specific number of update
+  ///
+  /// - Parameters:
+  ///   - first: number of first updates to take
+  ///   - last: number of last updates to take
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  /// - Returns: channel that takes updates
+  func take(
+    first: Int,
+    last: Int,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success>
+  {
+    // Test: EventSource_TransformTests.testTake
+    var locking = makeLocking(isFair: true)
+    let updatesQueue = Queue<Update>()
+    var numberOfFirstToTake = first
+    let numberOfLastToTake = last
+
+    func onEvent(
+      event: ChannelEvent<Update, Success>,
+      producerBox: WeakBox<BaseProducer<Update, Success>>,
+      originalExecutor: Executor)
+    {
+      switch event {
+      case let .update(update):
+        let updateToPost: Update? = locking.locker {
+          if numberOfFirstToTake > 0 {
+            numberOfFirstToTake -= 1
+            return update
+          } else if numberOfLastToTake > 0 {
+            updatesQueue.push(update)
+            while updatesQueue.count > numberOfLastToTake {
+              let _ = updatesQueue.pop()
+            }
+            return nil
+          } else {
+            return nil
+          }
+        }
+
+        if let updateToPost = updateToPost {
+          producerBox.value?.update(updateToPost, from: originalExecutor)
+        }
+      case let .completion(completion):
+        if let producer = producerBox.value {
+          let queue = locking.locker { updatesQueue.clone() }
+          while let update = queue.pop() {
+            producer.update(update)
+          }
+          producer.complete(completion, from: originalExecutor)
+        }
+      }
+    }
+
+    return makeProducer(executor: .immediate, pure: true,
+                        cancellationToken: cancellationToken,
+                        bufferSize: bufferSize, onEvent)
+  }
+}
