@@ -22,6 +22,8 @@
 
 import Dispatch
 
+// MARK: - sample
+
 public extension EventSource {
 
   /// Samples the channel with specified channel
@@ -106,6 +108,90 @@ public extension EventSource {
       producer._asyncNinja_retainHandlerUntilFinalization(handler)
     }
     
+    return producer
+  }
+}
+
+// MARK: - suspendable
+
+public extension EventSource {
+
+  /// Makes a suspendable channel
+  /// Returned channel will be suspended by a signal from a suspensionController
+  ///
+  /// - Parameters:
+  ///   - suspensionController: EventSource to control suspension with.
+  ///     Updates of the returned channel are delivered when
+  ///     the lates update for suspensionController was `true`.
+  ///   - suspensionBufferSize: amount of updates to buffer when channel is suspended
+  ///   - isSuspendedInitially: tells if returned channel is initially suspended
+  ///   - cancellationToken: `CancellationToken` to use. Keep default value
+  ///     of the argument unless you need an extended cancellation options
+  ///     of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  /// - Returns: suspendable channel.
+  func suspendable<T: EventSource>(
+    _ suspensionController: T,
+    suspensionBufferSize: Int = 1,
+    isSuspendedInitially: Bool = true,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success>
+    where T.Update == Bool
+  {
+    // Test: EventSource_CombineTests.testSuspendable
+    var locking = makeLocking(isFair: true)
+    var isUnsuspended = !isSuspendedInitially
+    let queue = Queue<Update>()
+
+    func onEvent(
+      event: ChannelEvent<Update, Success>,
+      producerBox: WeakBox<BaseProducer<Update, Success>>,
+      originalExecutor: Executor)
+    {
+      switch event {
+      case let .update(update):
+        let update: Update? = locking.locker {
+          if isUnsuspended {
+            return update
+          } else {
+            if suspensionBufferSize > 0 {
+              queue.push(update)
+              while queue.count > suspensionBufferSize {
+                let _ = queue.pop()
+              }
+            }
+            return nil
+          }
+        }
+        if let update = update {
+          producerBox.value?.update(update, from: originalExecutor)
+        }
+      case let .completion(completion):
+        producerBox.value?.complete(completion, from: originalExecutor)
+      }
+    }
+
+    let producer = makeProducer(executor: .immediate, pure: true,
+                        cancellationToken: cancellationToken,
+                        bufferSize: bufferSize, onEvent)
+
+    let handler = suspensionController.makeUpdateHandler(executor: .immediate) {
+      [weak producer] (isUnsuspendedLocal, originalExecutor) in
+      let updates: Queue<Update>? = locking.locker {
+        isUnsuspended = isUnsuspendedLocal
+        guard isUnsuspendedLocal else { return nil }
+        let result = queue.clone()
+        queue.removeAll()
+        return result
+      }
+      if let updates = updates {
+        producer?.update(updates)
+      }
+    }
+    producer._asyncNinja_retainHandlerUntilFinalization(handler)
     return producer
   }
 }

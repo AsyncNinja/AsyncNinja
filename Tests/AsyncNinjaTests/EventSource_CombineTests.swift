@@ -31,6 +31,7 @@ class EventSource_CombineTests: XCTestCase {
   
   static let allTests = [
     ("testSample", testSample),
+    ("testSuspendable", testSuspendable),
   ]
 
   func testSample() {
@@ -72,5 +73,30 @@ class EventSource_CombineTests: XCTestCase {
     }
 
     self.waitForExpectations(timeout: 1.0, handler: nil)
+  }
+
+  func testSuspendable() {
+    let source = Producer<Int, String>()
+    let controller = Producer<Bool, String>()
+    let sema = DispatchSemaphore(value: 0)
+    source.suspendable(controller, suspensionBufferSize: 2).extractAll()
+      .onSuccess { (updates, completion) in
+        XCTAssertEqual([4, 5, 6, 7, 8, 9, 10, 11, 13, 14], updates)
+        XCTAssertEqual("Done", completion.success)
+        sema.signal()
+    }
+
+    source.update(0..<3)
+    controller.update(false)
+    source.update(3..<6)
+    controller.update(true)
+    source.update(6..<9)
+    controller.update(true)
+    source.update(9..<12)
+    controller.update(false)
+    source.update(12..<15)
+    controller.update(true)
+    source.succeed("Done")
+    sema.wait()
   }
 }

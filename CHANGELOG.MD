@@ -4,6 +4,7 @@
 * EventSource.skip implemented
 * EventSource.take implemented
 * EventSource.contains implemented
+* EventSource.suspendable implemented
 
 # 1.0.0
 * better test coverage
