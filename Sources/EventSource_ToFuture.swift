@@ -66,7 +66,7 @@ public extension EventSource {
   ///     to override an executor provided by the context
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned future
   ///   - predicate: returns true if update value matches
   ///     and returned future may be completed with it
   /// - Returns: future
@@ -98,7 +98,7 @@ public extension EventSource {
   ///   - executor: to execute call predicate on
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned future
   ///   - predicate: returns true if update value matches
   ///     and returned future may be completed with it
   /// - Returns: future
@@ -167,7 +167,7 @@ public extension EventSource {
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
   ///   - executor: override of `ExecutionContext`s executor. Keep default value of the argument unless you need to override an executor provided by the context
-  ///   - cancellationToken: `CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned channel
+  ///   - cancellationToken: `CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned future
   ///   - predicate: returns true if update value matches and returned future may be completed with it
   /// - Returns: future
   func last<C: ExecutionContext>(context: C,
@@ -202,7 +202,7 @@ public extension EventSource {
   ///   - executor: to execute call predicate on
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned future
   ///   - predicate: returns true if update value matches
   ///     and returned future may be completed with it
   /// - Returns: future
@@ -231,7 +231,7 @@ public extension EventSource {
   ///   - executor: to execute call predicate on
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned future
   ///   - predicate: returns true if update value matches
   ///     and returned future may be completed with it
   /// - Returns: future
@@ -274,5 +274,27 @@ public extension EventSource {
     promise._asyncNinja_retainHandlerUntilFinalization(handler)
     cancellationToken?.add(cancellable: promise)
     return promise
+  }
+}
+
+extension EventSource where Update: Equatable {
+  /// Checks each EventSource for a specific falue. Succeeds returned
+  /// future with true on first found update that is equal to the value.
+  /// Succeeds retured future with false if no equal updates were found
+  ///
+  /// - Parameters:
+  ///   - value: to check for equality with
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned future
+  /// - Returns: future
+  public func contains(
+    _ value: Update,
+    cancellationToken: CancellationToken? = nil
+    ) -> Future<Bool>
+  {
+    // Test: EventSource_ToFutureTests.testContainsValueTrue
+    // Test: EventSource_ToFutureTests.testContainsValueFalse
+    return contains(executor: .immediate, cancellationToken: cancellationToken) { $0 == value }
   }
 }

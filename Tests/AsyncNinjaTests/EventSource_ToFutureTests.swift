@@ -46,6 +46,8 @@ class EventSource_ToFutureTests: XCTestCase {
     ("testLastDeadContextual", testLastDeadContextual),
     ("testContainsTrue", testContainsTrue),
     ("testContainsFalse", testContainsFalse),
+    ("testContainsValueTrue", testContainsValueTrue),
+    ("testContainsValueFalse", testContainsValueFalse),
     ]
 
   func testFirstSuccessIncomplete() {
@@ -424,6 +426,33 @@ class EventSource_ToFutureTests: XCTestCase {
     let source = Producer<Int, String>()
     let sema = DispatchSemaphore(value: 0)
     source.contains { $0 >= 10 }
+      .onSuccess {
+        XCTAssertFalse($0)
+        sema.signal()
+    }
+    source.update(0..<10)
+    source.succeed("Done")
+    sema.wait()
+  }
+
+  func testContainsValueTrue() {
+    let source = Producer<Int, String>()
+    let sema = DispatchSemaphore(value: 0)
+    source.contains(10)
+      .onSuccess {
+        XCTAssert($0)
+        sema.signal()
+    }
+    source.update(0..<11)
+    sema.wait()
+    source.update(0..<20)
+    source.succeed("Done")
+  }
+
+  func testContainsValueFalse() {
+    let source = Producer<Int, String>()
+    let sema = DispatchSemaphore(value: 0)
+    source.contains(10)
       .onSuccess {
         XCTAssertFalse($0)
         sema.signal()
