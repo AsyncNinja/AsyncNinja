@@ -1,7 +1,7 @@
 # Executor
 This document describes concept and use of `Executor`.
 
-**For class reference visit [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/1.0.0/Structs/Executor.html).** 
+**For class reference visit [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/1.1.0/Structs/Executor.html).** 
 
 ##### Contents
 * [Concept](#concept)

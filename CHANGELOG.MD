@@ -1,4 +1,4 @@
-# next
+# 1.1.0
 * try execute methods added. They provide an ability to retry async execution multiple times
 * convenience initializers for `Executor` added alongside with constructors to reduce confusion in some cases
 * EventSource.skip implemented
