@@ -355,10 +355,12 @@ extension EventSource where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinja
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
   /// - Returns: channel with distinct update values
-  public func distinct(cancellationToken: CancellationToken? = nil,
-                       bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Update, Success> {
-    
+  public func distinct(
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success>
+  {
+
     // Test: EventSource_TransformTests.testDistinctInts
     return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
       $0.asyncNinjaOptionalValue == $1.asyncNinjaOptionalValue
@@ -380,14 +382,79 @@ extension EventSource where Update: Collection, Update.Iterator.Element: Equatab
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
   /// - Returns: channel with distinct update values
-  public func distinct(cancellationToken: CancellationToken? = nil,
-                       bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Update, Success> {
-    
+  public func distinct(
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success>
+  {
     // Test: EventSource_TransformTests.testDistinctArray
     return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
       return $0.count == $1.count
         && !zip($0, $1).contains { $0 != $1 }
     }
+  }
+}
+
+// MARK: - skip
+
+public extension EventSource {
+  /// Makes a channel that skips updates
+  ///
+  /// - Parameters:
+  ///   - first: number of first updates to skip
+  ///   - last: number of last updates to skip
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned channel
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  /// - Returns: channel that skips updates
+  func skip(
+    first: Int,
+    last: Int,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success>
+  {
+    // Test: EventSource_TransformTests.testSkip
+    var locking = makeLocking(isFair: true)
+    let updatesQueue = Queue<Update>()
+    var numberOfFirstToSkip = first
+    let numberOfLastToSkip = last
+
+    func onEvent(
+      event: ChannelEvent<Update, Success>,
+      producerBox: WeakBox<BaseProducer<Update, Success>>,
+      originalExecutor: Executor)
+    {
+      switch event {
+      case let .update(update):
+        let updateToPost: Update? = locking.locker {
+          if numberOfFirstToSkip > 0 {
+            numberOfFirstToSkip -= 1
+            return nil
+          } else if numberOfLastToSkip > 0 {
+            updatesQueue.push(update)
+            while updatesQueue.count > numberOfLastToSkip {
+              return updatesQueue.pop()
+            }
+            return nil
+          } else {
+            return update
+          }
+        }
+
+        if let updateToPost = updateToPost {
+          producerBox.value?.update(updateToPost, from: originalExecutor)
+        }
+      case let .completion(completion):
+        producerBox.value?.complete(completion, from: originalExecutor)
+      }
+    }
+
+    return makeProducer(executor: .immediate, pure: true,
+                        cancellationToken: cancellationToken,
+                        bufferSize: bufferSize, onEvent)
   }
 }

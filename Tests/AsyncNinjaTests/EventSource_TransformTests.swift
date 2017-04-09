@@ -36,6 +36,7 @@ class EventSource_TransformTests: XCTestCase {
     ("testDistinctArrays", testDistinctArrays),
     ("testDistinctNSObjects", testDistinctNSObjects),
     ("testDistinctArrayNSObjects", testDistinctArrayNSObjects),
+    ("testSkip", testSkip),
   ]
 
   func testDebounce() {
@@ -185,5 +186,23 @@ class EventSource_TransformTests: XCTestCase {
       
       self.waitForExpectations(timeout: 1.0)
     #endif
+  }
+
+  func testSkip() {
+    multiTest {
+      let source = Producer<Int, String>()
+      let sema = DispatchSemaphore(value: 0)
+      source.skip(first: 2, last: 3).extractAll().onSuccess {
+        (updates, completion) in
+
+        XCTAssertEqual([2, 3, 4, 5, 6], updates)
+        XCTAssertEqual("Done", completion.success)
+        sema.signal()
+      }
+
+      source.update(0..<10)
+      source.succeed("Done")
+      sema.wait()
+    }
   }
 }
