@@ -24,6 +24,7 @@
   import Foundation
   import SystemConfiguration
 
+  /// **internal use only**
   class NetworkReachabilityManager {
     typealias ProducerBox = WeakBox<Producer<SCNetworkReachabilityFlags, Void>>
 
@@ -31,13 +32,12 @@
     let internalQueue = DispatchQueue(label: "NetworkReachabilityManager")
     var locking = makeLocking()
     var producerBoxesByHostName = [String: ProducerBox]()
-    var producerBoxesByAddress = [sockaddrWrapper: ProducerBox]()
-    var producerBoxesByAddressPair = [AddressPair: ProducerBox]()
+    var producerBoxesByAddress = [NetworkAddress: ProducerBox]()
+    var producerBoxesByAddressPair = [NetworkAddressPair: ProducerBox]()
 
-    init() {
-    }
+    init() { }
 
-    func channel(addressPair: AddressPair) -> Channel<SCNetworkReachabilityFlags, Void> {
+    func channel(addressPair: NetworkAddressPair) -> Channel<SCNetworkReachabilityFlags, Void> {
       func fetch() -> (mustSetup: Bool, producer: Producer<SCNetworkReachabilityFlags, Void>) {
         if let producer = producerBoxesByAddressPair[addressPair]?.value {
           return (false, producer)
@@ -62,10 +62,10 @@
       address.sin_len = __uint8_t(MemoryLayout<sockaddr_in>.size)
       address.sin_family = sa_family_t(AF_INET)
       address.sin_port = 0
-      return channel(address: sockaddrWrapper(sockaddr_in: &address))
+      return channel(address: NetworkAddress(sockaddr_in: &address))
     }
 
-    func channel(address: sockaddrWrapper) -> Channel<SCNetworkReachabilityFlags, Void> {
+    func channel(address: NetworkAddress) -> Channel<SCNetworkReachabilityFlags, Void> {
       func fetch() -> (mustSetup: Bool, producer: Producer<SCNetworkReachabilityFlags, Void>) {
         if let producer = producerBoxesByAddress[address]?.value {
           return (false, producer)
@@ -161,43 +161,61 @@
     }
   }
 
-  public struct sockaddrWrapper: Hashable {
-    let data: Data
-    public var hashValue: Int { return data.hashValue }
+  // MARK: -
 
-    public init(sockaddr: UnsafePointer<sockaddr>) {
-      self.data = Data(bytes: sockaddr, count: Int(sockaddr.pointee.sa_len))
-    }
+  /// Wraps sockaddr and it's derivetives into a convenient swift structure
+  public struct NetworkAddress: Hashable {
+    var data: Data
 
-    public init(sockaddr_in: UnsafePointer<sockaddr_in>) {
-      self = sockaddr_in.withMemoryRebound(to: sockaddr.self, capacity: 1, sockaddrWrapper.init(sockaddr:))
-    }
-
-    public static func ==(lhs: sockaddrWrapper, rhs: sockaddrWrapper) -> Bool {
-      return lhs.data == rhs.data
-    }
-  }
-
-  public extension sockaddrWrapper {
-    var sockaddrRef: UnsafePointer<sockaddr> {
+    /// Reference to a stored sockaddr
+    public var sockaddrRef: UnsafePointer<sockaddr> {
       return data.withUnsafeBytes {
         (bytes: UnsafePointer<sockaddr>) -> UnsafePointer<sockaddr> in
         return bytes
       }
     }
+
+    /// The hash value
+    public var hashValue: Int { return data.hashValue }
+
+    /// Initializes NetworkAddress with any sockaddr
+    ///
+    /// - Parameter sockaddr: to initialize NetworkAddress with
+    public init(sockaddr: UnsafePointer<sockaddr>) {
+      self.data = Data(bytes: sockaddr, count: Int(sockaddr.pointee.sa_len))
+    }
+
+    /// Initializes NetworkAddress with any sockaddr_in
+    ///
+    /// - Parameter sockaddr_in: to initialize NetworkAddress with
+    public init(sockaddr_in: UnsafePointer<sockaddr_in>) {
+      self = sockaddr_in.withMemoryRebound(to: sockaddr.self, capacity: 1, NetworkAddress.init(sockaddr:))
+    }
+
+    /// is equal operator
+    public static func ==(lhs: NetworkAddress, rhs: NetworkAddress) -> Bool {
+      return lhs.data == rhs.data
+    }
   }
 
-  public struct AddressPair: Hashable {
-    public var localAddress: sockaddrWrapper?
-    public var remoteAddress: sockaddrWrapper?
-    public var hashValue: Int { return (localAddress?.hashValue ?? 0) ^ (remoteAddress?.hashValue ?? 0) }
+  // MARK: -
 
-    public static func ==(lhs: AddressPair, rhs: AddressPair) -> Bool {
+  /// **internal use only**
+  struct NetworkAddressPair: Hashable {
+    var localAddress: NetworkAddress?
+    var remoteAddress: NetworkAddress?
+    var hashValue: Int { return (localAddress?.hashValue ?? 0) ^ (remoteAddress?.hashValue ?? 0) }
+
+    static func ==(lhs: NetworkAddressPair, rhs: NetworkAddressPair) -> Bool {
       return lhs.localAddress == rhs.localAddress && lhs.remoteAddress == rhs.remoteAddress
     }
   }
 
+  // MARK: -
+
   extension SCNetworkReachabilityFlags: CustomStringConvertible {
+
+    /// Commonly known description of the flags written on Swift
     public var description: String {
       var spec = [(SCNetworkReachabilityFlags, String)]()
       #if os(iOS)
@@ -219,17 +237,21 @@
         .joined()
     }
 
-    public var isUnconditionallyReachableViaWifi: Bool {
+    /// Returns true if network is reachable unconditionally
+    public var isReachable: Bool {
       return contains(.reachable) && !contains(.connectionRequired)
     }
 
-    public var isConditionallyReachableViaWifi: Bool {
+    /// Returns true if network is not reachable but it is possible to esteblish connection
+    public var isConditionallyReachable: Bool {
       return !contains(.reachable)
       && contains(.connectionRequired)
       && (contains(.connectionOnTraffic) || contains(.connectionOnDemand))
       && !contains(.interventionRequired)
     }
+
     #if os(iOS)
+    /// Returns true if network is reachable via WWAN
     public var isReachableViaWWAN: Bool {
       return contains(.isWWAN)
     }
@@ -238,18 +260,44 @@
 
   // MARK: - public functions
 
-  public func channel(addressPair: AddressPair) -> Channel<SCNetworkReachabilityFlags, Void> {
+  /// Makes or returns cached channel that reports of reachability changes
+  ///
+  /// - Parameters:
+  ///   - localAddress: local address associated with a network connection.
+  ///     If nil, only the remote address is of interest
+  ///   - remoteAddress: remote address associated with a network connection.
+  ///     If nil, only the local address is of interest
+  /// - Returns: channel that reports of reachability changes
+  public func networkReachability(
+    localAddress: NetworkAddress?,
+    remoteAddress: NetworkAddress?
+    ) -> Channel<SCNetworkReachabilityFlags, Void>
+  {
+    let addressPair = NetworkAddressPair(localAddress: localAddress, remoteAddress: remoteAddress)
     return NetworkReachabilityManager.default.channel(addressPair: addressPair)
   }
 
+  /// Makes or returns cached channel that reports of reachability changes
+  /// The channel will report of a internet connection availibility.
+  ///
+  /// - Returns: channel that reports of reachability changes
   public func networkReachabilityForInternetConnection() -> Channel<SCNetworkReachabilityFlags, Void> {
     return NetworkReachabilityManager.default.channelForInternetConnection()
   }
 
-  public func networkReachability(address: sockaddrWrapper) -> Channel<SCNetworkReachabilityFlags, Void> {
+  /// Makes or returns cached channel that reports of reachability changes
+  ///
+  /// - Parameters:
+  ///   - address: associated with a network connection.
+  /// - Returns: channel that reports of reachability changes
+  public func networkReachability(address: NetworkAddress) -> Channel<SCNetworkReachabilityFlags, Void> {
     return NetworkReachabilityManager.default.channel(address: address)
   }
 
+  /// Makes or returns cached channel that reports of reachability changes
+  ///
+  /// - Parameter hostName: associated with a network connection.
+  /// - Returns: channel that reports of reachability changes
   public func networkReachability(hostName: String) -> Channel<SCNetworkReachabilityFlags, Void> {
     return NetworkReachabilityManager.default.channel(hostName: hostName)
   }
