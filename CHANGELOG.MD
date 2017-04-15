@@ -2,6 +2,7 @@
 * [added] network reachability
 * [improved] travis-ci config
 * [fixed] potential leak of handlers in `Promise`
+* [fixed] EventSource.first
 * [fixed] EventSource.last
 * [fixed] multiple flaky unit tests
 

@@ -30,24 +30,54 @@ public extension EventSource {
   private func _first(executor: Executor,
                       cancellationToken: CancellationToken?,
                       `where` predicate: @escaping(Update) throws -> Bool
-    ) -> Promise<Update?> {
-
+    ) -> Promise<Update?>
+  {
     let promise = Promise<Update?>()
-    let handler = self.makeHandler(executor: executor) {
-      [weak promise] (event, originalExecutor) in
-      switch event {
-      case let .update(update):
-        do {
-          if try predicate(update) {
-            promise?.succeed(update, from: originalExecutor)
-          }
-        } catch {
-          promise?.fail(error, from: originalExecutor)
+    let queue = Queue<ChannelEvent<Update, Success>>()
+    var locking = makeLocking(isFair: true)
+    var isComplete = false
+
+    let handler = self.makeHandler(executor: .immediate) {
+      (event, originalExecutor) in
+      let isCompleteLocal: Bool = locking.locker {
+        if isComplete {
+          return true
+        } else {
+          queue.push(event)
+          return false
         }
-      case .completion(.success):
-        promise?.succeed(nil, from: originalExecutor)
-      case let .completion(.failure(failure)):
-        promise?.fail(failure, from: originalExecutor)
+      }
+
+      guard !isCompleteLocal else { return }
+
+      executor.execute(from: originalExecutor) {
+        [weak promise] (originalExecutor) in
+        guard case .some = promise else { return }
+
+        let completion: Fallible<Update?>? = locking.locker {
+          guard !isComplete else { return nil }
+          switch queue.pop()! {
+          case let .update(update):
+            do {
+              if try predicate(update) {
+                isComplete = true
+                return .success(update)
+              } else {
+                return nil
+              }
+            } catch {
+              return .failure(error)
+            }
+          case .completion(.success):
+            return .success(nil)
+          case let .completion(.failure(failure)):
+            return .failure(failure)
+          }
+        }
+
+        if let completion = completion {
+          promise?.complete(completion, from: originalExecutor)
+        }
       }
     }
 

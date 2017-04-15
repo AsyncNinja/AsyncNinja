@@ -51,79 +51,84 @@ class EventSource_ToFutureTests: XCTestCase {
     ]
 
   func testFirstSuccessIncomplete() {
-    let updatable = Producer<Int, Void>()
-    let expectation = self.expectation(description: "future to finish")
-    let qos = pickQoS()
+    multiTest(repeating: 100) {
+      let updatable = Producer<Int, Void>()
+      let sema = DispatchSemaphore(value: 0)
+      let qos = pickQoS()
 
-    updatable.first(executor: .queue(qos)) {
-      assert(nonGlobalQoS: qos)
-      return 0 == $0 % 2
-      }
-      .onSuccess(executor: .queue(qos)) {
+      updatable.first(executor: .queue(qos)) {
         assert(nonGlobalQoS: qos)
-        XCTAssertEqual(8, $0)
-        expectation.fulfill()
+        return 0 == $0 % 2
+        }
+        .onSuccess(executor: .queue(qos)) {
+          assert(nonGlobalQoS: qos)
+          XCTAssertEqual(8, $0)
+          sema.signal()
+      }
+
+      updatable.update(1)
+      updatable.update(3)
+      updatable.update(5)
+      updatable.update(7)
+      updatable.update(8)
+      updatable.update(9)
+      updatable.update(10)
+
+      sema.wait()
     }
-
-    updatable.update(1)
-    updatable.update(3)
-    updatable.update(5)
-    updatable.update(7)
-    updatable.update(8)
-    updatable.update(9)
-    updatable.update(10)
-
-    self.waitForExpectations(timeout: 1.0)
   }
 
   func testFirstNotFound() {
-    let updatable = Producer<Int, Void>()
-    let expectation = self.expectation(description: "future to finish")
-    let qos = pickQoS()
+    multiTest(repeating: 100) {
+      let updatable = Producer<Int, Void>()
+      let sema = DispatchSemaphore(value: 0)
+      let qos = pickQoS()
 
-    updatable.first(executor: .queue(qos)) {
-      assert(nonGlobalQoS: qos)
-      return 0 == $0 % 2
-      }
-      .onSuccess(executor: .queue(qos)) {
+      updatable.first(executor: .queue(qos)) {
         assert(nonGlobalQoS: qos)
-        XCTAssertNil($0)
-        expectation.fulfill()
+        return 0 == $0 % 2
+        }
+        .onSuccess(executor: .queue(qos)) {
+          assert(nonGlobalQoS: qos)
+          XCTAssertNil($0)
+          sema.signal()
+      }
+
+      updatable.update(1)
+      updatable.update(3)
+      updatable.update(5)
+      updatable.update(7)
+      updatable.update(9)
+      updatable.succeed()
+      sema.wait()
     }
-
-    updatable.update(1)
-    updatable.update(3)
-    updatable.update(5)
-    updatable.update(7)
-    updatable.update(9)
-    updatable.succeed()
-
-    self.waitForExpectations(timeout: 1.0)
   }
 
   func testFirstFailure() {
-    let updatable = Producer<Int, Void>()
-    let expectation = self.expectation(description: "future to finish")
-    let qos = pickQoS()
+    multiTest(repeating: 100) {
+      let updatable = Producer<Int, Void>()
+      let sema = DispatchSemaphore(value: 0)
+      let qos = pickQoS()
 
-    updatable.first(executor: .queue(qos)) {
-      assert(nonGlobalQoS: qos)
-      return 0 == $0 % 2
-      }
-      .onFailure(executor: .queue(qos)) {
+      updatable.first(executor: .queue(qos)) {
         assert(nonGlobalQoS: qos)
-        XCTAssertEqual($0 as! TestError, TestError.testCode)
-        expectation.fulfill()
+        return 0 == $0 % 2
+        }
+        .onFailure(executor: .queue(qos)) {
+          assert(nonGlobalQoS: qos)
+          XCTAssertEqual($0 as! TestError, TestError.testCode)
+          sema.signal()
+      }
+
+      updatable.update(1)
+      updatable.update(3)
+      updatable.update(5)
+      updatable.update(7)
+      updatable.update(9)
+      updatable.fail(TestError.testCode)
+
+      sema.wait()
     }
-
-    updatable.update(1)
-    updatable.update(3)
-    updatable.update(5)
-    updatable.update(7)
-    updatable.update(9)
-    updatable.fail(TestError.testCode)
-
-    self.waitForExpectations(timeout: 1.0)
   }
 
   func testFirstSuccessIncompleteContextual() {
