@@ -71,32 +71,37 @@ class ChannelMakersTests: XCTestCase {
   }
 
   func testMakeChannelContextual() {
-    let numbers = Array(0..<100)
-    let actor = TestActor()
-
-    let channelA: Channel<Int, String> = channel(context: actor) { (actor, updateUpdate) -> String in
-      for i in numbers {
-        updateUpdate(i)
+    multiTest(repeating: 100) {
+      let numbers = Array(0..<10)
+      let actor = TestActor()
+      let sema = DispatchSemaphore(value: 0)
+      actor.async { _ in
+        sema.wait()
       }
-      return "done"
+
+      let channelA: Channel<Int, String> = channel(context: actor) { (actor, updateUpdate) -> String in
+        for i in numbers {
+          updateUpdate(i)
+        }
+        return "done"
+      }
+
+      var resultNumbers = [Int]()
+      let serialQueue = DispatchQueue(label: "test-queue")
+
+      channelA.onUpdate(executor: .queue(serialQueue)) {
+        resultNumbers.append($0)
+      }
+
+      channelA.onSuccess(executor: .queue(serialQueue)) {
+        XCTAssertEqual("done", $0)
+        sema.signal()
+      }
+
+      sema.signal()
+      sema.wait()
+      XCTAssertEqual(resultNumbers, Array(numbers.suffix(resultNumbers.count)))
     }
-
-    var resultNumbers = [Int]()
-    let serialQueue = DispatchQueue(label: "test-queue")
-    let expectation = self.expectation(description: "channel to complete")
-
-    channelA.onUpdate(executor: .queue(serialQueue)) {
-      resultNumbers.append($0)
-    }
-
-    channelA.onSuccess(executor: .queue(serialQueue)) {
-      XCTAssertEqual("done", $0)
-      expectation.fulfill()
-    }
-
-    self.waitForExpectations(timeout: 1.0, handler: nil)
-
-    XCTAssertEqual(resultNumbers, Array(numbers.suffix(resultNumbers.count)))
   }
 
   func testCompletedWithFunc() {
