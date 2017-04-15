@@ -1,7 +1,7 @@
 # `Channel`
 This document describes concept and use of `Channel`.
 
-**For class reference visit [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/1.1.0/Classes/Channel.html).**
+**For class reference visit [CocoaPods](http://cocoadocs.org/docsets/AsyncNinja/1.1.1/Classes/Channel.html).**
 
 ##### Contents
 * [Concept](#concept)

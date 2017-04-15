@@ -1,5 +1,9 @@
-# next
-* network reachability added
+# 1.1.1
+* [added] network reachability
+* [improved] travis-ci config
+* [fixed] potential leak of handlers in `Promise`
+* [fixed] EventSource.last
+* [fixed] multiple flaky unit tests
 
 # 1.1.0
 * try execute methods added. They provide an ability to retry async execution multiple times
