@@ -229,30 +229,32 @@ class EventSource_ToFutureTests: XCTestCase {
   }
 
   func testLastSuccess() {
-    let updatable = Producer<Int, Void>()
-    let expectation = self.expectation(description: "future to finish")
-    let qos = pickQoS()
+    multiTest(repeating: 10) {
+      let updatable = Producer<Int, Void>()
+      let sema = DispatchSemaphore(value: 0)
+      let qos = pickQoS()
 
-    updatable.last(executor: .queue(qos)) {
-      assert(nonGlobalQoS: qos)
-      return 0 == $0 % 2
-      }
-      .onSuccess(executor: .queue(qos)) {
+      updatable.last(executor: .queue(qos)) {
         assert(nonGlobalQoS: qos)
-        XCTAssertEqual(10, $0)
-        expectation.fulfill()
+        return 0 == $0 % 2
+        }
+        .onSuccess(executor: .queue(qos)) {
+          assert(nonGlobalQoS: qos)
+          XCTAssertEqual(10, $0)
+          sema.signal()
+      }
+
+      updatable.update(1)
+      updatable.update(3)
+      updatable.update(5)
+      updatable.update(7)
+      updatable.update(8)
+      updatable.update(9)
+      updatable.update(10)
+      updatable.succeed()
+
+      sema.wait()
     }
-
-    updatable.update(1)
-    updatable.update(3)
-    updatable.update(5)
-    updatable.update(7)
-    updatable.update(8)
-    updatable.update(9)
-    updatable.update(10)
-    updatable.succeed()
-
-    self.waitForExpectations(timeout: 1.0)
   }
 
   func testLastNotFound() {

@@ -129,29 +129,41 @@ public extension EventSource {
 
     var latestMatchingUpdate: Update?
     var locking = makeLocking(isFair: true)
-
+    let queue = Queue<ChannelEvent<Update, Success>>()
     let promise = Promise<Update?>()
-    let handler = self.makeHandler(executor: executor) {
-      [weak promise] (event, originalExecutor) in
-      switch event {
-      case let .update(update):
-        do {
-          if try predicate(update) {
-            locking.lock()
-            latestMatchingUpdate = update
-            locking.unlock()
+
+    let handler = self.makeHandler(executor: .immediate) {
+      (event, originalExecutor) in
+      locking.lock()
+      queue.push(event)
+      locking.unlock()
+
+      executor.execute(from: originalExecutor) {
+        [weak promise] (originalExecutor) in
+        guard case .some = promise else { return }
+        let completion: Fallible<Update?>? = locking.locker {
+          let event = queue.pop()!
+          switch event {
+          case let .update(update):
+            do {
+              if try predicate(update) {
+                latestMatchingUpdate = update
+              }
+              return nil
+            } catch { return .failure(error) }
+          case .completion(.success):
+            return .success(latestMatchingUpdate)
+          case let .completion(.failure(failure)):
+            if let success = latestMatchingUpdate {
+              return .success(success)
+            } else {
+              return .failure(failure)
+            }
           }
-        } catch {
-          promise?.fail(error, from: originalExecutor)
         }
-      case .completion(.success):
-        let success = locking.locker { latestMatchingUpdate }
-        promise?.succeed(success, from: originalExecutor)
-      case let .completion(.failure(failure)):
-        if let success = locking.locker({ latestMatchingUpdate }) {
-          promise?.succeed(success, from: originalExecutor)
-        } else {
-          promise?.fail(failure, from: originalExecutor)
+
+        if let completion = completion {
+          promise?.complete(completion, from: originalExecutor)
         }
       }
     }
