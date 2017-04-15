@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = F819DC171E8A9F2A0072E0B1 /* Either.swift */; };
+		F81A3EB51EA232DE009B0144 /* OptionalAdaptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */; };
 		F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */; };
 		F8419BD61E91080A0067701C /* EitherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD51E9108090067701C /* EitherTests.swift */; };
 		F8419BD81E911CF00067701C /* ChannelMakersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD71E911CF00067701C /* ChannelMakersTests.swift */; };
@@ -106,6 +107,7 @@
 
 /* Begin PBXFileReference section */
 		F819DC171E8A9F2A0072E0B1 /* Either.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
+		F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionalAdaptorTests.swift; sourceTree = "<group>"; };
 		F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancellationTokenTests.swift; sourceTree = "<group>"; };
 		F8419BD51E9108090067701C /* EitherTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EitherTests.swift; sourceTree = "<group>"; };
 		F8419BD71E911CF00067701C /* ChannelMakersTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelMakersTests.swift; sourceTree = "<group>"; };
@@ -258,6 +260,7 @@
 				OBJ_78 /* FutureTests.swift */,
 				OBJ_79 /* iOSTests.swift */,
 				OBJ_80 /* ObserversTests.swift */,
+				F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */,
 				OBJ_81 /* ReleasePoolTests.swift */,
 				OBJ_82 /* TestUtilities.swift */,
 				F86BE0621E983DF5008B7BDC /* TryExecuteTests.swift */,
@@ -433,6 +436,7 @@
 				OBJ_171 /* ObserversTests.swift in Sources */,
 				OBJ_172 /* ReleasePoolTests.swift in Sources */,
 				OBJ_173 /* TestUtilities.swift in Sources */,
+				F81A3EB51EA232DE009B0144 /* OptionalAdaptorTests.swift in Sources */,
 				OBJ_174 /* TimerChannelTests.swift in Sources */,
 				OBJ_175 /* XCTestManifest.swift in Sources */,
 				OBJ_176 /* ZipFuturesTest.swift in Sources */,

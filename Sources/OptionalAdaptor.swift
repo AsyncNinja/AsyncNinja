@@ -55,7 +55,7 @@ public extension Channel where U: AsyncNinjaOptionalAdaptor {
   }
 
   /// makes channel of unwrapped optional Updates or noneReplacement values
-  func unwraped(_ noneReplacement: UnwrappedUpdate) -> Channel<Update.AsyncNinjaWrapped, Success> {
+  func unwrapped(_ noneReplacement: UnwrappedUpdate) -> Channel<Update.AsyncNinjaWrapped, Success> {
     return map(executor: .immediate) { (update: Update) -> UnwrappedUpdate in
       return update.asyncNinjaOptionalValue ?? noneReplacement
     }
@@ -72,7 +72,7 @@ public extension Future where S: AsyncNinjaOptionalAdaptor {
   }
 
   /// makes channel of unwrapped optional Updates or noneReplacement values
-  func unwraped(_ noneReplacement: UnwrappedSuccess) -> Future<UnwrappedSuccess> {
+  func unwrapped(_ noneReplacement: UnwrappedSuccess) -> Future<UnwrappedSuccess> {
     return map(executor: .immediate) { (success: Success) -> UnwrappedSuccess in
       return success.asyncNinjaOptionalValue ?? noneReplacement
     }
