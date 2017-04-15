@@ -93,8 +93,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
 
     var nextItem = oldHead
     while let currentItem = nextItem as? SubscribedPromiseState<Success> {
-      currentItem.handler?.handle(completion, from: originalExecutor)
-      currentItem.releaseOwner()
+      currentItem.handle(completion, from: originalExecutor)
       nextItem = currentItem.next
     }
     _releasePool.drain()
@@ -123,6 +122,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
 
 /// **internal use only**
 fileprivate class AbstractPromiseState<Success> {
+  func handle(_ value: Fallible<Success>, from originalExecutor: Executor?) { }
 }
 
 /// **internal use only**
@@ -130,7 +130,7 @@ fileprivate  class SubscribedPromiseState<Success>: AbstractPromiseState<Success
   typealias Value = Fallible<Success>
   typealias Handler = PromiseHandler<Success>
   
-  weak private(set) var handler: Handler?
+  weak private var handler: Handler?
   let next: SubscribedPromiseState<Success>?
 
   init(handler: Handler, next: SubscribedPromiseState<Success>?) {
@@ -138,8 +138,10 @@ fileprivate  class SubscribedPromiseState<Success>: AbstractPromiseState<Success
     self.next = next
   }
 
-  func releaseOwner() {
-    self.handler?.releaseOwner()
+  override func handle(_ value: Fallible<Success>, from originalExecutor: Executor?) {
+    let handler = self.handler
+    handler?.handle(value, from: originalExecutor)
+    handler?.releaseOwner()
   }
 }
 
