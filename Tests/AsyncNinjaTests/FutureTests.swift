@@ -349,32 +349,36 @@ class FutureTests: XCTestCase {
   }
 
   func testOnCompleteContextual_ContextDead() {
-    weak var weakInitialFuture: Future<Int>?
-    weak var weakDelayedFuture: Future<Int>?
+    multiTest(repeating: 100) {
+      weak var weakInitialFuture: Future<Int>?
+      weak var weakDelayedFuture: Future<Int>?
+      let sema = DispatchSemaphore(value: 0)
 
-    let expectation = self.expectation(description: "actor gone out of scope")
+      DispatchQueue.global().async {
+        let value = pickInt()
+        var actor: TestActor? = TestActor()
 
-    DispatchQueue.global().async {
-      let value = pickInt()
-      let actor = TestActor()
+        var initialFuture: Future<Int>? = future(success: value)
+        weakInitialFuture = initialFuture
 
-      let initialFuture = future(success: value)
-      weakInitialFuture = initialFuture
+        var delayedFuture: Future<Int>? = initialFuture!.delayed(timeout: 0.1)
+        weakDelayedFuture = delayedFuture
 
-      let delayedFuture = initialFuture.delayed(timeout: 0.1)
-      weakDelayedFuture = delayedFuture
+        delayedFuture!.onComplete(context: actor!) { (actor, value_) in
+          XCTFail()
+          assert(actor: actor)
+        }
 
-      delayedFuture.onComplete(context: actor) { (actor, value_) in
-        XCTFail()
-        assert(actor: actor)
+        initialFuture = nil
+        delayedFuture = nil
+        actor = nil
+        sema.signal()
       }
 
-      expectation.fulfill()
+      sema.wait()
+      XCTAssertNil(weakInitialFuture)
+      XCTAssertNil(weakDelayedFuture)
     }
-
-    self.waitForExpectations(timeout: 1.0)
-    XCTAssertNil(weakInitialFuture)
-    XCTAssertNil(weakDelayedFuture)
   }
 
   func testFlatten() {

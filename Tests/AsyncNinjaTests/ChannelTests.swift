@@ -100,43 +100,43 @@ class ChannelTests: XCTestCase {
   }
 
   func testOnValue() {
-    var updates = [Int]()
-    var successValue: String? = nil
-    weak var weakProducer: Producer<Int, String>? = nil
+    multiTest(repeating: 100) {
+      var updates = [Int]()
+      var successValue: String? = nil
+      weak var weakProducer: Producer<Int, String>? = nil
 
-    let updatesFixture = pickInts()
-    let successValueFixture = "I am working correctly!"
+      let updatesFixture = pickInts()
+      let successValueFixture = "I am working correctly!"
 
-    let sema = DispatchSemaphore(value: 0)
-    let queue = DispatchQueue(label: "testing queue", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
-
-    DispatchQueue.global().async {
-      let producer = Producer<Int, String>()
-      weakProducer = producer
-      producer.onUpdate(executor: .queue(queue)) { (update) in
-        updates.append(update)
-      }
-
-      producer.onSuccess(executor: .queue(queue)) { (successValue_) in
-        successValue = successValue_
-        sema.signal()
-      }
+      let sema = DispatchSemaphore(value: 0)
+      let queue = DispatchQueue(label: "testing queue", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
 
       DispatchQueue.global().async {
-        guard let producer = weakProducer else {
-          XCTFail()
-          fatalError()
+        let producer = Producer<Int, String>()
+        weakProducer = producer
+        producer.onUpdate(executor: .queue(queue)) { (update) in
+          updates.append(update)
         }
-        producer.update(updatesFixture)
-        producer.succeed(successValueFixture)
+
+        producer.onSuccess(executor: .queue(queue)) { (successValue_) in
+          successValue = successValue_
+          sema.signal()
+        }
+
+        DispatchQueue.global().async {
+          guard let producer = weakProducer else {
+            XCTFail()
+            fatalError()
+          }
+          producer.update(updatesFixture)
+          producer.succeed(successValueFixture)
+        }
       }
+
+      sema.wait()
+      XCTAssertEqual(updates, updatesFixture)
+      XCTAssertEqual(successValue, successValueFixture)
     }
-
-    sema.wait()
-
-    XCTAssertNil(weakProducer)
-    XCTAssertEqual(updates, updatesFixture)
-    XCTAssertEqual(successValue, successValueFixture)
   }
 
   func testBuffering0() {
