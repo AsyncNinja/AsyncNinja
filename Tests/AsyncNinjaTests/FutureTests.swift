@@ -259,27 +259,31 @@ class FutureTests: XCTestCase {
   }
 
   func testMapContextual_Failure_ContextAlive() {
-    let actor = TestActor()
-    let transformExpectation = self.expectation(description: "transform called")
-    weak var weakInitialFuture: Future<Int>?
-    let value = pickInt()
-    //let valueSquared = square(value)
+    multiTest(repeating: 100) {
+      let actor = TestActor()
+      let sema = DispatchSemaphore(value: 0)
+      weak var weakInitialFuture: Future<Int>?
+      let value = pickInt()
 
-    let mappedFuture: Future<Int> = eval {
-      let initialFuture = future(success: value)
-      weakInitialFuture = initialFuture
-      return initialFuture
-        .map(context: actor) { (actor, value) in
-          assert(actor: actor)
-          transformExpectation.fulfill()
-          return try square_failure(value)
+      let result: Fallible<Int> = eval {
+        let initialFuture: Future<Int> = future(success: value)
+        weakInitialFuture = initialFuture
+        let mappedFuture: Future<Int> = initialFuture
+          .map(context: actor) { (actor, value) in
+            assert(actor: actor)
+            sema.signal()
+            return try square_failure(value)
+        }
+
+        sema.wait()
+        let result = mappedFuture.wait()
+        actor.internalQueue.sync { nop() }
+        return result
       }
-    }
 
-    self.waitForExpectations(timeout: 0.1)
-    let result = mappedFuture.wait()
-    XCTAssertNil(weakInitialFuture)
-    XCTAssertEqual(result.failure as? TestError, .testCode)
+      XCTAssertNil(weakInitialFuture)
+      XCTAssertEqual(result.failure as? TestError, .testCode)
+    }
   }
 
   func testMapContextual_Failure_ContextDead() {

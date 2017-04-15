@@ -74,7 +74,7 @@ class ChannelTests: XCTestCase {
     let updatesFixture = pickInts()
     let successValueFixture = "I am working correctly!"
 
-    let successExpectation = self.expectation(description: "success of promise")
+    let sema = DispatchSemaphore(value: 0)
     DispatchQueue.global().async {
       let producer = Producer<Int, String>()
       weakProducer = producer
@@ -84,22 +84,17 @@ class ChannelTests: XCTestCase {
 
       producer.onSuccess(context: actor) { (actor, successValue_) in
         successValue = successValue_
-        successExpectation.fulfill()
+        sema.signal()
       }
 
       DispatchQueue.global().async {
-        guard let producer = weakProducer else {
-          XCTFail()
-          fatalError()
-        }
-        producer.update(updatesFixture)
-        producer.succeed(successValueFixture)
+        weakProducer?.update(updatesFixture)
+        weakProducer?.succeed(successValueFixture)
       }
     }
 
-    self.waitForExpectations(timeout: 0.2, handler: nil)
+    sema.wait()
 
-    XCTAssertNil(weakProducer)
     XCTAssertEqual(updates, updatesFixture)
     XCTAssertEqual(successValue, successValueFixture)
   }
@@ -112,7 +107,7 @@ class ChannelTests: XCTestCase {
     let updatesFixture = pickInts()
     let successValueFixture = "I am working correctly!"
 
-    let successExpectation = self.expectation(description: "success of promise")
+    let sema = DispatchSemaphore(value: 0)
     let queue = DispatchQueue(label: "testing queue", qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0))
 
     DispatchQueue.global().async {
@@ -124,7 +119,7 @@ class ChannelTests: XCTestCase {
 
       producer.onSuccess(executor: .queue(queue)) { (successValue_) in
         successValue = successValue_
-        successExpectation.fulfill()
+        sema.signal()
       }
 
       DispatchQueue.global().async {
@@ -137,7 +132,7 @@ class ChannelTests: XCTestCase {
       }
     }
 
-    self.waitForExpectations(timeout: 0.2, handler: nil)
+    sema.wait()
 
     XCTAssertNil(weakProducer)
     XCTAssertEqual(updates, updatesFixture)
