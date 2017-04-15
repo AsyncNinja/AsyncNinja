@@ -65,6 +65,8 @@ public enum AsyncNinjaError: Swift.Error, Equatable {
   /// An error of failed dynamic cast
   case dynamicCastFailed
 
+  /// This error can be thrown (or complete primitive) if network
+  /// reachability setup failed
   case networkReachabilityDetectionFailed
 }
 
