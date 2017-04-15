@@ -156,8 +156,7 @@ class FutureTests: XCTestCase {
   }
 
   func testMap_Success() {
-    let transformExpectation = self.expectation(description: "transform called")
-    let qos = pickQoS()
+    let queue = DispatchQueue(label: "aaa")
     weak var weakInitialFuture: Future<Int>?
     let value = pickInt()
     let valueSquared = square(value)
@@ -166,39 +165,34 @@ class FutureTests: XCTestCase {
       let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       return initialFuture
-        .map(executor: .queue(qos)) {
-          assert(qos: qos)
-          transformExpectation.fulfill()
+        .map(executor: .queue(queue)) {
+          assert(on: queue)
           return try square_success($0)
       }
     }
 
-    self.waitForExpectations(timeout: 0.1)
     let result = mappedFuture.wait()
+    queue.sync { nop() }
     XCTAssertNil(weakInitialFuture)
     XCTAssertEqual(result.success, valueSquared)
   }
 
   func testMap_Failure() {
-    let transformExpectation = self.expectation(description: "transform called")
-    let qos = pickQoS()
+    let queue = DispatchQueue(label: "aaa")
     weak var weakInitialFuture: Future<Int>?
     let value = pickInt()
-//    let valueSquared = square(value)
-
-    let mappedFuture: Future<Int> = eval {
+    let result: Fallible<Int> = eval {
       let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       return initialFuture
-        .map(executor: .queue(qos)) {
-          assert(qos: qos)
-          transformExpectation.fulfill()
+        .map(executor: .queue(queue)) {
+          assert(on: queue)
           return try square_failure($0)
-      }
+        }
+        .wait()
     }
 
-    self.waitForExpectations(timeout: 0.1)
-    let result = mappedFuture.wait()
+    queue.sync { nop() }
     XCTAssertNil(weakInitialFuture)
     XCTAssertEqual(result.failure as? TestError, .testCode)
   }
@@ -227,6 +221,7 @@ class FutureTests: XCTestCase {
     self.waitForExpectations(timeout: 0.1)
     let result = mappedFuture!.wait()
     mappedFuture = nil
+    actor.internalQueue.sync { nop() }
     XCTAssertNil(weakInitialFuture)
     XCTAssertNil(weakMappedFuture)
     XCTAssertEqual(result.success, valueSquared)
@@ -242,7 +237,7 @@ class FutureTests: XCTestCase {
       let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       let actor = TestActor()
-      return initialFuture
+      let result: Future<Int> = initialFuture
         .delayed(timeout: 0.1)
         .map(context: actor) { (actor, value) in
           assert(actor: actor)
@@ -250,6 +245,8 @@ class FutureTests: XCTestCase {
 //          transformExpectation.fulfill()
           return try square_success(value)
       }
+      actor.internalQueue.sync { nop() }
+      return result
     }
 
     // self.waitForExpectations(timeout: 1.0)
@@ -281,6 +278,7 @@ class FutureTests: XCTestCase {
         return result
       }
 
+      actor.internalQueue.sync { nop() }
       XCTAssertNil(weakInitialFuture)
       XCTAssertEqual(result.failure as? TestError, .testCode)
     }
@@ -296,7 +294,7 @@ class FutureTests: XCTestCase {
       let initialFuture = future(success: value)
       weakInitialFuture = initialFuture
       let actor = TestActor()
-      return initialFuture
+      let result: Future<Int> = initialFuture
         .delayed(timeout: 0.1)
         .map(context: actor) { (actor, value) in
           XCTFail()
@@ -304,6 +302,9 @@ class FutureTests: XCTestCase {
           //transformExpectation.fulfill()
           return try square_failure(value)
       }
+
+      actor.internalQueue.sync { nop() }
+      return result
     }
 
     //self.waitForExpectations(timeout: 0.1)
