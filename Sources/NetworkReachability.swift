@@ -20,7 +20,7 @@
 //  IN THE SOFTWARE.
 //
 
-#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+#if os(macOS) || os(iOS) || os(tvOS)
   import Foundation
   import SystemConfiguration
 
