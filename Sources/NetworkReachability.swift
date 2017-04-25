@@ -189,7 +189,9 @@
     ///
     /// - Parameter sockaddr_in: to initialize NetworkAddress with
     public init(sockaddr_in: UnsafePointer<sockaddr_in>) {
-      self = sockaddr_in.withMemoryRebound(to: sockaddr.self, capacity: 1, NetworkAddress.init(sockaddr:))
+      self = sockaddr_in.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+        NetworkAddress.init(sockaddr: $0)
+      }
     }
 
     /// is equal operator

@@ -123,56 +123,60 @@ import Dispatch
     }
     
     func testReceiveNotifications() {
-      let notificationCenter = NotificationCenter()
-      class MyObject: NSObject {
-      }
+      multiTest {
+        let notificationCenter = NotificationCenter()
+        class MyObject: NSObject {
+        }
 
-      let myObject = MyObject()
-      let name = Notification.Name("my-super-notification")
-      var detectedValues = [Int]()
-      notificationCenter.updatable(object: myObject, name: name)
-        .onUpdate {
-          XCTAssert(myObject === $0.object as AnyObject)
-          XCTAssertEqual(name, $0.name)
-          detectedValues.append($0.userInfo!["myValue"] as! Int)
-      }
-      
-      let values = [1, 2, 3, 4, 5]
-      for value in values {
-        notificationCenter.post(name: name, object: myObject, userInfo: ["myValue": value])
-        usleep(10_000)
-      }
+        let myObject = MyObject()
+        let name = Notification.Name("my-super-notification")
+        var detectedValues = [Int]()
+        notificationCenter.updatable(object: myObject, name: name)
+          .onUpdate {
+            XCTAssert(myObject === $0.object as! NSObject)
+            XCTAssertEqual(name, $0.name)
+            detectedValues.append($0.userInfo!["myValue"] as! Int)
+        }
 
-      usleep(100_000)
-      XCTAssertEqual(detectedValues, values)
+        let values = [1, 2, 3, 4, 5]
+        for value in values {
+          notificationCenter.post(name: name, object: myObject, userInfo: ["myValue": value])
+          usleep(10_000)
+        }
+
+        usleep(100_000)
+        XCTAssertEqual(detectedValues, values)
+      }
     }
     
     func testPostNotifications() {
-      let notificationCenter = NotificationCenter()
-      class MyObject: NSObject {
+      multiTest {
+        let notificationCenter = NotificationCenter()
+        class MyObject: NSObject {
+        }
+
+        let myObject = MyObject()
+        let name = Notification.Name("my-super-notification")
+        var detectedValues = [Int]()
+        let token = notificationCenter.addObserver(forName: name, object: myObject, queue: nil) {
+          XCTAssert(myObject === $0.object as! NSObject)
+          XCTAssertEqual(name, $0.name)
+          detectedValues.append($0.userInfo!["myValue"] as! Int)
+        }
+
+        let updatable = notificationCenter.updatable(object: myObject, name: name)
+
+        let values = [1, 2, 3, 4, 5]
+        for value in values {
+          let notification = Notification(name: name, object: myObject, userInfo: ["myValue": value])
+          updatable.update(notification)
+          usleep(10_000)
+        }
+
+        usleep(100_000)
+        notificationCenter.removeObserver(token)
+        XCTAssertEqual(detectedValues, values)
       }
-      
-      let myObject = MyObject()
-      let name = Notification.Name("my-super-notification")
-      var detectedValues = [Int]()
-      let token = notificationCenter.addObserver(forName: name, object: myObject, queue: nil) {
-        XCTAssert(myObject === $0.object as AnyObject)
-        XCTAssertEqual(name, $0.name)
-        detectedValues.append($0.userInfo!["myValue"] as! Int)
-      }
-      
-      let updatable = notificationCenter.updatable(object: myObject, name: name)
-      
-      let values = [1, 2, 3, 4, 5]
-      for value in values {
-        let notification = Notification(name: name, object: myObject, userInfo: ["myValue": value])
-        updatable.update(notification)
-        usleep(10_000)
-      }
-      
-      usleep(100_000)
-      notificationCenter.removeObserver(token)
-      XCTAssertEqual(detectedValues, values)
     }
   }
 #endif
