@@ -75,13 +75,14 @@ class FutureTests: XCTestCase {
         mappedFutureValue = nil
       }
 
-      queue.asyncAfter(deadline: DispatchTime.now() + .milliseconds(1)) {
-        XCTAssertEqual(result, fixtureResult * 3)
-        XCTAssertNil(weakFuture)
-        XCTAssertNil(weakMappedFuture)
+      queue.sync {
+        // wainting for previus sync to cleanup
+        mysleep(0.0001)
       }
 
-      queue.sync {}
+      XCTAssertEqual(result, fixtureResult * 3)
+      XCTAssertNil(weakFuture)
+      XCTAssertNil(weakMappedFuture)
     }
   }
 

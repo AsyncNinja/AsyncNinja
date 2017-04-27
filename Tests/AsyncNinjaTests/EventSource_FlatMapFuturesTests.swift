@@ -51,16 +51,9 @@ class EventSource_FlatMapFuturesTests: XCTestCase {
     let zipped = zip(expectedResults, channelB)
     DispatchQueue.global().async {
       producerA.update((duration: 0.01, name: "x"))
-      mysleep(0.0001)
-
       producerA.update((duration: 0.03, name: "y"))
-      mysleep(0.0001)
-
       producerA.update((duration: 0.02, name: "z"))
-      mysleep(0.0001)
-
       producerA.update((duration: 0.05, name: "done"))
-      mysleep(0.0001)
     }
 
     var count = 0
@@ -73,7 +66,7 @@ class EventSource_FlatMapFuturesTests: XCTestCase {
   }
 
   func testFlatMapFutures_KeepUnordered() {
-    multiTest {
+    multiTest(repeating: 10) {
       self._testFlatMapFutures(behavior: .keepUnordered, expectedResults: ["t(x)", "t(z)", "t(y)", "t(done)"])
     }
   }
