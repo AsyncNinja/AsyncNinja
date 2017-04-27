@@ -37,29 +37,29 @@ class EitherTests: XCTestCase {
     ]
 
   func testLeft() {
-    let either: Either<Int, String> = .left(1)
-    XCTAssertEqual(either.left, 1)
+    let either: Either<Any, Any> = .left(1)
+    XCTAssertEqual(either.left as! Int, 1)
     XCTAssertNil(either.right)
-    XCTAssertEqual(either.mapLeft { $0 * 2 }.left, 2)
-    XCTAssertEqual(either.mapRight { $0 + "!" }.left, 1)
+    XCTAssertEqual(either.mapLeft { ($0 as! Int) * 2 }.left, 2)
+    XCTAssertEqual(either.mapRight { ($0 as! String) + "!" }.left as! Int, 1)
     XCTAssertEqual(either.description, "left(1)")
-    XCTAssertEqual(either.debugDescription, "left<Int, String>(1)")
+    XCTAssertEqual(either.debugDescription, "left<Any, Any>(1)")
 
-    let nsEither: Either<NSNumber, NSString> = either.staticCast()
-    XCTAssertEqual(nsEither.left, NSNumber(value: 1))
+    let castedEither: Either<Int, String> = either.staticCast()
+    XCTAssertEqual(castedEither.left, 1)
   }
 
   func testRight() {
-    let either: Either<Int, String> = .right("success")
-    XCTAssertEqual(either.right, "success")
+    let either: Either<Any, Any> = .right("success")
+    XCTAssertEqual(either.right as! String, "success")
     XCTAssertNil(either.left)
-    XCTAssertEqual(either.mapRight { $0 + "!" }.right, "success!")
-    XCTAssertEqual(either.mapLeft { $0 * 2 }.right, "success")
+    XCTAssertEqual(either.mapRight { ($0 as! String) + "!" }.right, "success!")
+    XCTAssertEqual(either.mapLeft { ($0 as! Int) * 2 }.right as! String, "success")
     XCTAssertEqual(either.description, "right(success)")
-    XCTAssertEqual(either.debugDescription, "right<Int, String>(success)")
+    XCTAssertEqual(either.debugDescription, "right<Any, Any>(success)")
 
-    let nsEither: Either<NSNumber, NSString> = either.staticCast()
-    XCTAssertEqual(nsEither.right, "success" as NSString)
+    let castedEither: Either<Int, String> = either.staticCast()
+    XCTAssertEqual(castedEither.right, "success")
   }
 
   func testEquals() {
@@ -108,16 +108,16 @@ class EitherTests: XCTestCase {
       XCTFail()
     }
 
-    let castedA: ChannelEvent<NSNumber, NSString> = ChannelEvent<Int, String>.update(1).staticCast()
+    let castedA: ChannelEvent<Int, String> = ChannelEvent<Any, Any>.update(1).staticCast()
     if case let .update(value) = castedA {
-      XCTAssertEqual(value, NSNumber(value: 1))
+      XCTAssertEqual(value, 1)
     } else {
       XCTFail()
     }
 
-    let castedB: ChannelEvent<NSNumber, NSString> = ChannelEvent<Int, String>.success("success").staticCast()
+    let castedB: ChannelEvent<Int, String> = ChannelEvent<Any, Any>.success("success").staticCast()
     if case let .completion(.success(value)) = castedB {
-      XCTAssertEqual(value, "success" as NSString)
+      XCTAssertEqual(value, "success")
     } else {
       XCTFail()
     }

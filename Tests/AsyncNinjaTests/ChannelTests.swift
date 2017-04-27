@@ -267,16 +267,16 @@ class ChannelTests: XCTestCase {
   }
 
   func testStaticCast() {
-    let a = Producer<Int, String>()
-    let b: Channel<NSNumber, NSString> = a.staticCast()
-    let c: Future<NSString> = a.staticCast()
+    let a = Producer<Any, Any>()
+    let b: Channel<Int, String> = a.staticCast()
+    let c: Future<String> = a.staticCast()
     let sema = DispatchSemaphore(value: 0)
 
     b.extractAll().onSuccess {
       let (bUpdate, bCompletion) = $0
       XCTAssertEqual(bUpdate, [1, 2, 3, 4, 5])
       if case let .success(value) = bCompletion {
-        XCTAssertEqual("success" as NSString, value)
+        XCTAssertEqual("success", value)
       } else {
         XCTFail()
       }
@@ -284,18 +284,18 @@ class ChannelTests: XCTestCase {
     }
 
     c.onSuccess {
-      XCTAssertEqual("success" as NSString, $0)
-      sema.signal()
-    }
-
-    a.makeFuture().onSuccess {
       XCTAssertEqual("success", $0)
       sema.signal()
     }
 
-    a.update(1...5)
+    a.makeFuture().onSuccess {
+      XCTAssertEqual("success", $0 as! String)
+      sema.signal()
+    }
+
+    (1...5).forEach(a.update)
     a.succeed("success")
-    a.update(6...8)
+    (6...8).forEach(a.update)
 
     sema.wait()
     sema.wait()
