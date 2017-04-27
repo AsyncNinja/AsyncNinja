@@ -108,10 +108,14 @@ func eval<Result>(_ body: () throws -> Result) rethrows -> Result {
 }
 
 func mysleep(_ duration: Double) {
-  let (seconds, fraction) = modf(duration)
-  var requestedTime = timespec(tv_sec: Int(seconds), tv_nsec: Int(fraction * 1_000_000_000))
-  var remainingTime = timespec()
-  assert(0 == nanosleep(&requestedTime, &remainingTime))
+  #if true
+    usleep(UInt32(duration * 1_000_000))
+  #else
+    let (seconds, fraction) = modf(duration)
+    var requestedTime = timespec(tv_sec: Int(seconds), tv_nsec: Int(fraction * 1_000_000_000))
+    var remainingTime = timespec()
+    assert(0 == nanosleep(&requestedTime, &remainingTime))
+  #endif
 }
 
 enum TestError: Error {
