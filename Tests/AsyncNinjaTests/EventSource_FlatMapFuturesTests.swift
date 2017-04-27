@@ -50,22 +50,17 @@ class EventSource_FlatMapFuturesTests: XCTestCase {
 
     let zipped = zip(expectedResults, channelB)
     DispatchQueue.global().async {
-      let sema = DispatchSemaphore(value: 0)
-      producerA.update((duration: 0.1, name: "x"))
-      let _ = sema.wait(timeout: DispatchTime.now() + .milliseconds(10))
-      sema.signal()
+      producerA.update((duration: 0.01, name: "x"))
+      mysleep(0.0001)
 
-      producerA.update((duration: 0.3, name: "y"))
-      let _ = sema.wait(timeout: DispatchTime.now() + .milliseconds(10))
-      sema.signal()
+      producerA.update((duration: 0.03, name: "y"))
+      mysleep(0.0001)
 
-      producerA.update((duration: 0.2, name: "z"))
-      let _ = sema.wait(timeout: DispatchTime.now() + .milliseconds(10))
-      sema.signal()
+      producerA.update((duration: 0.02, name: "z"))
+      mysleep(0.0001)
 
-      producerA.update((duration: 0.5, name: "done"))
-      let _ = sema.wait(timeout: DispatchTime.now() + .milliseconds(10))
-      sema.signal()
+      producerA.update((duration: 0.05, name: "done"))
+      mysleep(0.0001)
     }
 
     var count = 0

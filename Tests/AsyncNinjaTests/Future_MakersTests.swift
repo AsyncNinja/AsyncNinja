@@ -90,11 +90,11 @@ class Future_MakersTests: XCTestCase {
       return try square_success(value)
     }
 
-    usleep(250_000)
+    mysleep(0.25)
     XCTAssertNil(futureValue.value)
 
     self.waitForExpectations(timeout: 1.0)
-    usleep(100_000)
+    mysleep(0.1)
     XCTAssertEqual(futureValue.success, square(value))
   }
 
@@ -113,7 +113,7 @@ class Future_MakersTests: XCTestCase {
       return try square_failure(value)
     }
 
-    usleep(150_000)
+    mysleep(0.15)
     XCTAssertNil(futureValue.value)
 
     self.waitForExpectations(timeout: 0.5)
@@ -151,7 +151,7 @@ class Future_MakersTests: XCTestCase {
       }
     }
 
-    usleep(100_000)
+    mysleep(0.1)
     XCTAssertEqual(futureValue?.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
@@ -187,7 +187,7 @@ class Future_MakersTests: XCTestCase {
       }
     }
 
-    usleep(100_000)
+    mysleep(0.1)
     XCTAssertEqual(futureValue?.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
@@ -202,7 +202,7 @@ class Future_MakersTests: XCTestCase {
       return try square_success(value)
     }
 
-    usleep(500_000)
+    mysleep(0.5)
     XCTAssertNil(futureValue.value)
 
     self.waitForExpectations(timeout: 2.0)
@@ -219,11 +219,11 @@ class Future_MakersTests: XCTestCase {
       return try square_success(value)
     }
 
-    usleep(150_000)
+    mysleep(0.15)
     XCTAssertNil(futureValue.value)
     actor = nil
 
-    usleep(250_000)
+    mysleep(0.25)
     XCTAssertEqual(futureValue.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
@@ -238,7 +238,7 @@ class Future_MakersTests: XCTestCase {
     }
 
     actor = nil
-    usleep(100_000)
+    mysleep(0.1)
     XCTAssertEqual(futureValue.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
@@ -253,7 +253,7 @@ class Future_MakersTests: XCTestCase {
       return try square_failure(value)
     }
 
-    usleep(150_000)
+    mysleep(0.15)
     XCTAssertNil(futureValue.value)
 
     self.waitForExpectations(timeout: 0.3)
@@ -270,11 +270,11 @@ class Future_MakersTests: XCTestCase {
       return try square_success(value)
     }
 
-    usleep(150_000)
+    mysleep(0.15)
     XCTAssertNil(futureValue.value)
     actor = nil
 
-    usleep(250_000)
+    mysleep(0.25)
     XCTAssertEqual(futureValue.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
@@ -289,7 +289,7 @@ class Future_MakersTests: XCTestCase {
     }
 
     actor = nil
-    usleep(100_000)
+    mysleep(0.1)
     XCTAssertEqual(futureValue.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 }

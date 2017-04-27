@@ -52,23 +52,23 @@ class EventSource_TransformTests: XCTestCase {
     }
 
     DispatchQueue.global().async {
-      usleep(100_000)
+      mysleep(0.1)
       initalProducer.update(1)
       initalProducer.update(2)
       initalProducer.update(3)
-      usleep(250_000)
+      mysleep(0.25)
       initalProducer.update(4)
       initalProducer.update(5)
       initalProducer.update(6)
-      usleep(250_000)
+      mysleep(0.25)
       initalProducer.update(7)
       initalProducer.update(8)
       initalProducer.update(9)
-      usleep(1_000_000)
+      mysleep(1.0)
       initalProducer.update(10)
       initalProducer.update(11)
       initalProducer.update(12)
-      usleep(200_000)
+      mysleep(0.2)
       initalProducer.succeed("Finished!")
     }
 

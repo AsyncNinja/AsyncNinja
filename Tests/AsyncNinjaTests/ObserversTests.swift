@@ -141,10 +141,10 @@ import Dispatch
         let values = [1, 2, 3, 4, 5]
         for value in values {
           notificationCenter.post(name: name, object: myObject, userInfo: ["myValue": value])
-          usleep(10_000)
+          mysleep(0.01)
         }
 
-        usleep(100_000)
+        mysleep(0.1)
         XCTAssertEqual(detectedValues, values)
       }
     }
@@ -170,10 +170,10 @@ import Dispatch
         for value in values {
           let notification = Notification(name: name, object: myObject, userInfo: ["myValue": value])
           updatable.update(notification)
-          usleep(10_000)
+          mysleep(0.01)
         }
 
-        usleep(100_000)
+        mysleep(0.1)
         notificationCenter.removeObserver(token)
         XCTAssertEqual(detectedValues, values)
       }

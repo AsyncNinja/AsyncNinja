@@ -59,7 +59,7 @@ class EventSource_CombineTests: XCTestCase {
     }
 
     DispatchQueue.global().async {
-      usleep(100_000)
+      mysleep(0.1)
       producerOfOdds.update(1)
       producerOfOdds.update(3)
       producerOfEvents.update(2)

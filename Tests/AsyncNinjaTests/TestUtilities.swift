@@ -107,6 +107,13 @@ func eval<Result>(_ body: () throws -> Result) rethrows -> Result {
   return try body()
 }
 
+func mysleep(_ duration: Double) {
+  let (seconds, fraction) = modf(duration)
+  var requestedTime = timespec(tv_sec: __darwin_time_t(seconds), tv_nsec: Int(fraction * 1_000_000_000))
+  var remainingTime = timespec()
+  assert(0 == nanosleep(&requestedTime, &remainingTime))
+}
+
 enum TestError: Error {
   case testCode
   case otherCode

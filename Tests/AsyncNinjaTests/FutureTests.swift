@@ -434,17 +434,17 @@ class FutureTests: XCTestCase {
     let value = pickInt()
     let futureOfChannel = future(after: 0.2) { () -> Channel<String, Int> in
       return channel { (update) -> Int in
-        usleep(50_000)
+        mysleep(0.05)
         update("a")
-        usleep(50_000)
+        mysleep(0.05)
         update("b")
-        usleep(50_000)
+        mysleep(0.05)
         update("c")
-        usleep(50_000)
+        mysleep(0.05)
         update("d")
-        usleep(50_000)
+        mysleep(0.05)
         update("e")
-        usleep(50_000)
+        mysleep(0.05)
         return value
       }
     }
