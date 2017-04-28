@@ -50,10 +50,10 @@ class EventSource_FlatMapFuturesTests: XCTestCase {
 
     let zipped = zip(expectedResults, channelB)
     DispatchQueue.global().async {
-      producerA.update((duration: 0.02, name: "x"))
-      producerA.update((duration: 0.08, name: "y"))
-      producerA.update((duration: 0.04, name: "z"))
-      producerA.update((duration: 0.10, name: "done"))
+      producerA.update((duration: 0.2, name: "x"))
+      producerA.update((duration: 0.8, name: "y"))
+      producerA.update((duration: 0.4, name: "z"))
+      producerA.update((duration: 1.0, name: "done"))
     }
 
     var count = 0
