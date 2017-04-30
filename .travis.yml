@@ -3,7 +3,7 @@ osx_image: xcode8.3
 addons:
   artifacts:
     s3_region: "us-west-2"
-    paths: "Docs"
+    paths: "docs.zip"
 before_install:
   - sudo gem install xcpretty xcpretty-travis-formatter jazzy
 script:
@@ -12,7 +12,8 @@ script:
   - set -o pipefail && xcodebuild build test -project AsyncNinja.xcodeproj -scheme AsyncNinja -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 7' -configuration Release | xcpretty --no-color --no-utf -f `xcpretty-travis-formatter`
   - set -o pipefail && xcodebuild build test -project AsyncNinja.xcodeproj -scheme AsyncNinja -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV 1080p' -configuration Release | xcpretty --no-color --no-utf -f `xcpretty-travis-formatter`
 after_success:
-  - ALT_NAME="$TRAVIS_BRANCH-$TRAVIS_COMMIT"
-  - DOCS_FOLDER=Docs/${TRAVIS_TAG:-ALT_NAME}  
+  - DOCS_FOLDER=docs 
   - jazzy --clean --author AsyncNinja --author_url http://async.ninja --github_url https://github.com/AsyncNinja/AsyncNinja --sdk iphone --output "$DOCS_FOLDER"
   - cp title_image.png "$DOCS_FOLDER"
+  - zip -r docs.zip docs
+
