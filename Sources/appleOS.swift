@@ -145,15 +145,19 @@
     ///     Keep default value of the argument unless you need
     ///     an extended buffering options of returned channel
     /// - Returns: channel with distinct update values
-    public func distinctCollectionOfNSObjects(cancellationToken: CancellationToken? = nil,
-                                              bufferSize: DerivedChannelBufferSize = .default
-      ) -> Channel<Update, Success> {
-
+    public func distinctCollectionOfNSObjects(
+      cancellationToken: CancellationToken? = nil,
+      bufferSize: DerivedChannelBufferSize = .default
+      ) -> Channel<Update, Success>
+    {
       // Test: EventSource_TransformTests.testDistinctArrayOfNSObjects
-      return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
-        return $0.count == $1.count
-          && !zip($0, $1).contains { !$0.isEqual($1) }
+      
+      func isEqual(lhs: Update, rhs: Update) -> Bool {
+        return lhs.count == rhs.count
+          && !zip(lhs, rhs).contains { !$0.isEqual($1) }
       }
+      
+      return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: isEqual)
     }
   }
 

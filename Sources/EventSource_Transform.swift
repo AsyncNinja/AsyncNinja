@@ -282,9 +282,10 @@ extension EventSource {
   ///     an extended buffering options of returned channel
   ///   - isEqual: closure that tells if specified values are equal
   /// - Returns: channel with distinct update values
-  func distinct(cancellationToken: CancellationToken? = nil,
-                bufferSize: DerivedChannelBufferSize = .default,
-                isEqual: @escaping (Update, Update) -> Bool
+  func distinct(
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    isEqual: @escaping (Update, Update) -> Bool
     ) -> Channel<Update, Success>
   {
     var locking = makeLocking()
@@ -332,10 +333,11 @@ extension EventSource where Update: Equatable {
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
   /// - Returns: channel with distinct update values
-  public func distinct(cancellationToken: CancellationToken? = nil,
-                       bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Update, Success> {
-    
+  public func distinct(
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success>
+  {
     // Test: EventSource_TransformTests.testDistinctInts
     return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: ==)
   }
@@ -388,10 +390,12 @@ extension EventSource where Update: Collection, Update.Iterator.Element: Equatab
     ) -> Channel<Update, Success>
   {
     // Test: EventSource_TransformTests.testDistinctArray
-    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
-      return $0.count == $1.count
-        && !zip($0, $1).contains { $0 != $1 }
+    
+    func isEqual(lhs: Update, rhs: Update) -> Bool {
+      return lhs.count == rhs.count
+        && !zip(lhs, rhs).contains { $0 != $1 }
     }
+    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: isEqual)
   }
 }
 

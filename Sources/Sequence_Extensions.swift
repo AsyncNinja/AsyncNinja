@@ -73,7 +73,10 @@ public extension Sequence {
     _ transform: @escaping (_ element: Self.Iterator.Element) throws -> T
     ) -> Promise<[T]>
   {
-    var subvalues: [T?] = self.map { _ in nil }
+    func makeDummy(value: Self.Iterator.Element) -> T? {
+      return nil
+    }
+    var subvalues: [T?] = self.map(makeDummy)
     let promise = Promise<[T]>()
     guard !subvalues.isEmpty else {
       promise.succeed([])
@@ -83,26 +86,27 @@ public extension Sequence {
     var canContinue = true
     var unknownSubvaluesCount = subvalues.count
 
+    func updateAndTest(index: Int, value: T) -> [T]? {
+      subvalues[index] = value
+      unknownSubvaluesCount -= 1
+      guard 0 == unknownSubvaluesCount else { return nil }
+      return subvalues.map { $0! }
+    }
+    
     for (index, value) in self.enumerated() {
       executor.execute(from: nil) {
         [weak promise] (originalExecutor) in
-        guard let promise = promise, canContinue else { return }
+        guard case .some = promise, canContinue else { return }
 
-        let subvalue: T
-        do { subvalue = try transform(value) }
-        catch {
-          promise.fail(error, from: originalExecutor)
+        do {
+          let subvalue = try transform(value)
+          if canContinue, let success = locking.locker(index, subvalue, updateAndTest) {
+            promise?.succeed(success, from: originalExecutor)
+          }
+        } catch {
+          promise?.fail(error, from: originalExecutor)
           canContinue = false
           return
-        }
-
-        locking.lock()
-        defer { locking.unlock() }
-        subvalues[index] = subvalue
-        unknownSubvaluesCount -= 1
-        if 0 == unknownSubvaluesCount {
-          promise.succeed(subvalues.map { $0! },
-                          from: originalExecutor)
         }
       }
     }
@@ -184,37 +188,39 @@ public extension Sequence {
     for (index, value) in self.enumerated() {
       executor.execute(from: nil) {
         [weak promise] (originalExecutor) in
-        guard let promise = promise, canContinue else { return }
+        guard case .some = promise, canContinue else { return }
 
+        func updateAndTest(index: Int, subvalue: Fallible<T.Success>) -> Fallible<[T.Success]>? {
+          switch subvalue {
+          case let .success(success):
+            subvalues[index] = success
+            unknownSubvaluesCount -= 1
+            assert(unknownSubvaluesCount >= 0)
+            return 0 == unknownSubvaluesCount
+              ? .success(subvalues.map { $0! })
+              : nil
+          case let .failure(failure):
+            canContinue = false
+            return .failure(failure)
+          }
+        }
+        
         do {
           let futureSubvalue: T = try transform(value)
           let handler = futureSubvalue.makeCompletionHandler(executor: .immediate)
           { [weak promise] (subvalue, originalExecutor) in
-            guard let promise = promise else { return }
-
-            locking.lock()
-            defer { locking.unlock() }
-
-            guard canContinue else { return }
-            subvalue.onSuccess {
-              subvalues[index] = $0
-              unknownSubvaluesCount -= 1
-              assert(unknownSubvaluesCount >= 0)
-              if 0 == unknownSubvaluesCount {
-                promise.succeed(subvalues.map { $0! },
-                                from: originalExecutor)
-              }
-            }
-
-            subvalue.onFailure {
-              promise.fail($0, from: originalExecutor)
-              canContinue = false
+            if
+              let promise = promise,
+              canContinue,
+              let completion = locking.locker(index, subvalue, updateAndTest)
+            {
+              promise.complete(completion, from: originalExecutor)
             }
           }
           
-          promise._asyncNinja_retainHandlerUntilFinalization(handler)
+          promise?._asyncNinja_retainHandlerUntilFinalization(handler)
         } catch {
-          promise.fail(error, from: originalExecutor)
+          promise?.fail(error, from: originalExecutor)
           canContinue = false
         }
       }
@@ -298,46 +304,47 @@ public extension Sequence where Self.Iterator.Element: Completing {
     var locking = makeLocking(isFair: true)
     var canContinue = true
 
+    func updateAndTest(index: Int, subcompletion: Fallible<Self.Iterator.Element.Success>) -> Fallible<[Self.Iterator.Element.Success?]>? {
+      switch subcompletion {
+      case let .success(success):
+        values[index] = success
+        unknownSubvaluesCount -= 1
+        guard 0 == unknownSubvaluesCount else { return nil }
+        return .just(values)
+      case let .failure(failure):
+        canContinue = false
+        return .failure(failure)
+      }
+    }
+    
+    func _nextPartialResult(_ accumulator: T, _ element: Self.Iterator.Element.Success?) throws -> T {
+      return try nextPartialResult(accumulator, element!)
+    }
+    
     for (index, future) in self.enumerated() {
       let handler = future.makeCompletionHandler(executor: .immediate)
       {
         [weak promise] (completion, originalExecutor) -> Void in
-        locking.lock()
         guard
           canContinue,
-          case .some = promise
-          else {
-            locking.unlock()
-            return
-        }
-        switch completion {
+          case .some = promise,
+          let valuesToReduce = locking.locker(index, completion, updateAndTest)
+          else { return }
+        
+        switch valuesToReduce {
         case let .success(success):
-          values[index] = success
-          unknownSubvaluesCount -= 1
-          let runReduce = 0 == unknownSubvaluesCount
-          locking.unlock()
-
-          if runReduce {
-            executor.execute(from: originalExecutor) { [weak promise] (originalExecutor) in
-              locking.lock()
-              defer { locking.unlock() }
-              do {
-                let result = try values.reduce(initialResult) { (accumulator, value) in
-                  return try nextPartialResult(accumulator, value!)
-                }
-                promise?.succeed(result)
-              } catch {
-                promise?.fail(error)
-              }
+          executor.execute(from: originalExecutor) { [weak promise] (originalExecutor) in
+            do {
+              let result = try success.reduce(initialResult, _nextPartialResult)
+              promise?.succeed(result)
+            } catch {
+              promise?.fail(error)
             }
           }
         case let .failure(failure):
-          canContinue = false
-          locking.unlock()
-
           promise?.fail(failure)
-
         }
+
       }
 
       promise._asyncNinja_retainHandlerUntilFinalization(handler)

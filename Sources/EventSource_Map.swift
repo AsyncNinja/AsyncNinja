@@ -592,14 +592,16 @@ public extension EventSource where Update: _Fallible {
 
   /// makes channel of unsafely unwrapped optional Updates
   var unwrapped: Channel<Update.Success, Success> {
-    return map(executor: .immediate) {
-      if let success = $0.success {
+    func transform(update: Update) throws -> Update.Success {
+      if let success = update.success {
         return success
-      } else if let failure = $0.failure {
+      } else if let failure = update.failure {
         throw failure
       } else {
         fatalError("callback must return either success or failure")
       }
     }
+    
+    return map(executor: .immediate, transform)
   }
 }
