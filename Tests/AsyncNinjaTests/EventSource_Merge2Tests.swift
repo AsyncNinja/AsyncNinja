@@ -28,10 +28,10 @@ import Dispatch
 #endif
 
 class EventSource_Merge2Tests: XCTestCase {
-  
+
   static let allTests = [
     ("testMergeInts", testMergeInts),
-    ("testMergeIntsAndStrings", testMergeIntsAndStrings),
+    ("testMergeIntsAndStrings", testMergeIntsAndStrings)
   ]
 
   func testMergeInts() {
@@ -67,7 +67,11 @@ class EventSource_Merge2Tests: XCTestCase {
   }
 
   func testMergeIntsAndStrings() {
-    let fixtureNumbers: [Either<Int, String>] = [.left(1), .left(3), .right("two"), .right("four"), .left(5), .right("six"), .left(7), .right("eight")]
+    let fixtureNumbers: [Either<Int, String>] = [
+      .left(1), .left(3), .right("two"),
+      .right("four"), .left(5), .right("six"),
+      .left(7), .right("eight")
+    ]
 
     multiTest {
       let producerOfOdds = Producer<Int, String>()

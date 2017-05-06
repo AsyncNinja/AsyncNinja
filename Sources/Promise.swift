@@ -43,7 +43,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
     ) -> AnyObject? {
     let handler = PromiseHandler(executor: executor, block: block, owner: self)
-    
+
     _container.updateHead {
       switch $0 {
       case let completedState as CompletedPromiseState<Success>:
@@ -57,7 +57,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
         fatalError()
       }
     }
-    
+
     return handler
   }
 
@@ -103,13 +103,11 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
 
   /// **internal use only**
   override public func _asyncNinja_retainUntilFinalization(_ releasable: Releasable) {
-    // assert((releasable as? AnyObject) !== self) // Xcode 8 mistreats this. This code is valid
-    // assert((releasable as? Handler)?.owner !== self) // This assertion is no longer valid because we have non-contextual on<Event>
     if !self.isComplete {
       _releasePool.insert(releasable)
     }
   }
-  
+
   /// **internal use only**
   override public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     if self.isComplete {
@@ -129,7 +127,7 @@ fileprivate class AbstractPromiseState<Success> {
 fileprivate  class SubscribedPromiseState<Success>: AbstractPromiseState<Success> {
   typealias Value = Fallible<Success>
   typealias Handler = PromiseHandler<Success>
-  
+
   weak private var handler: Handler?
   let next: SubscribedPromiseState<Success>?
 
@@ -148,7 +146,7 @@ fileprivate  class SubscribedPromiseState<Success>: AbstractPromiseState<Success
 /// **internal use only**
 fileprivate  class CompletedPromiseState<Success>: AbstractPromiseState<Success> {
   let value: Fallible<Success>
-  
+
   init(value: Fallible<Success>) {
     self.value = value
   }
@@ -166,16 +164,16 @@ final fileprivate class PromiseHandler<Success> {
 
   init(executor: Executor,
        block: @escaping Block,
-       owner: Future<Success>)
-  {
+       owner: Future<Success>) {
     self.executor = executor
     self.block = block
     self.owner = owner
   }
 
   func handle(_ value: Fallible<Success>, from originalExecutor: Executor?) {
-    self.executor.execute(from: originalExecutor) {
-      (originalExecutor) in
+    self.executor.execute(
+      from: originalExecutor
+    ) { (originalExecutor) in
       self.block(value, originalExecutor)
     }
   }

@@ -30,7 +30,7 @@ import Dispatch
 class ReleasePoolTests: XCTestCase {
   static let allTests = [
     ("testSequential", testSequential),
-    ("testConcurrent", testConcurrent),
+    ("testConcurrent", testConcurrent)
     ]
 
   func testSequential() {

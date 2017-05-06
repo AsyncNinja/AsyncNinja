@@ -52,7 +52,7 @@ import XCTest
       testCase(ReleasePoolTests.allTests),
       testCase(TimerChannelTests.allTests),
       testCase(TryExecuteTests.allTests),
-      testCase(ZipFuturesTest.allTests),
+      testCase(ZipFuturesTest.allTests)
     ]
   }
 #endif

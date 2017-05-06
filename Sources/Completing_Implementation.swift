@@ -51,8 +51,9 @@ public extension Completing {
   func onComplete(
     executor: Executor = .primary,
     _ block: @escaping (Fallible<Success>) -> Void) {
-    _onComplete(executor: executor) {
-      (completion, originalExecutor) in
+    _onComplete(
+      executor: executor
+    ) { (completion, _) in
       block(completion)
     }
   }
@@ -60,8 +61,9 @@ public extension Completing {
   internal func _onComplete(
     executor: Executor = .primary,
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) {
-    let handler = self.makeCompletionHandler(executor: executor) {
-      (completion, originalExecutor) in
+    let handler = self.makeCompletionHandler(
+      executor: executor
+    ) { (completion, originalExecutor) in
       block(completion, originalExecutor)
     }
     self._asyncNinja_retainHandlerUntilFinalization(handler)
@@ -88,7 +90,9 @@ public extension Completing {
   ///
   /// - Parameters:
   ///   - context: to complete on
-  ///   - executor: override of `ExecutionContext`s executor. Keep default value of the argument unless you need to override an executor provided by the context
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need to override
+  ///     an executor provided by the context
   ///   - block: block to call on completion
   func onComplete<C: ExecutionContext>(
     context: C,
@@ -96,8 +100,9 @@ public extension Completing {
     _ block: @escaping (C, Fallible<Success>) -> Void) {
     // Test: FutureTests.testOnCompleteContextual_ContextAlive
     // Test: FutureTests.testOnCompleteContextual_ContextDead
-    _onComplete(context: context, executor: executor) {
-      (context, completion, originalExecutor) in
+    _onComplete(
+      context: context, executor: executor
+    ) { (context, completion, _) in
       block(context, completion)
     }
   }
@@ -108,10 +113,12 @@ public extension Completing {
     _ block: @escaping (_ context: C, _ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) {
     // Test: FutureTests.testOnCompleteContextual_ContextAlive
     // Test: FutureTests.testOnCompleteContextual_ContextDead
-    let handler = self.makeCompletionHandler(executor: executor ?? context.executor) {
-      [weak context] (completion, originalExecutor) in
-      guard let context = context else { return }
-      block(context, completion, originalExecutor)
+    let handler = self.makeCompletionHandler(
+      executor: executor ?? context.executor
+    ) { [weak context] (completion, originalExecutor) in
+      if let context = context {
+        block(context, completion, originalExecutor)
+      }
     }
 
     if let handler = handler {
@@ -124,8 +131,10 @@ public extension Completing {
     context: C,
     executor: Executor? = nil,
     _ block: @escaping (C, Success) -> Void) {
-    self.onComplete(context: context, executor: executor) {
-      (context, completion) in
+    self.onComplete(
+      context: context,
+      executor: executor
+    ) { (context, completion) in
       if let success = completion.success {
         block(context, success)
       }
@@ -134,11 +143,10 @@ public extension Completing {
 
   /// Performs block when failure becomes available.
   func onFailure<C: ExecutionContext>(
-    context: C, executor:
-    Executor? = nil,
+    context: C, executor: Executor? = nil,
     _ block: @escaping (C, Swift.Error) -> Void) {
-    self.onComplete(context: context, executor: executor) {
-      (context, completion) in
+    self.onComplete(context: context, executor: executor
+    ) { (context, completion) in
       if let failure = completion.failure {
         block(context, failure)
       }
@@ -157,8 +165,9 @@ public extension Completing {
     let sema = DispatchSemaphore(value: 0)
     var result: Fallible<Success>? = nil
 
-    var handler = self.makeCompletionHandler(executor: .immediate) {
-      (completion, originalExecutor) in
+    var handler = self.makeCompletionHandler(
+      executor: .immediate
+    ) { (completion, _) in
       result = completion
       sema.signal()
     }

@@ -22,7 +22,9 @@
 
 import Dispatch
 
-/// represents values that updateally arrive followed by failure of completion that completes Channel. Channel oftenly represents result of long running task that is not yet arrived and flow of some intermediate results.
+/// represents values that updateally arrive followed by failure
+/// of completion that completes Channel. Channel oftenly represents result
+/// of long running task that is not yet arrived and flow of some intermediate results.
 public class Channel<U, S>: EventSource {
   public typealias Update = U
   public typealias Success = S
@@ -43,8 +45,7 @@ public class Channel<U, S>: EventSource {
   public func makeHandler(
     executor: Executor,
     _ block: @escaping (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void
-    ) -> AnyObject?
-  {
+    ) -> AnyObject? {
     assertAbstract()
   }
 
@@ -52,12 +53,12 @@ public class Channel<U, S>: EventSource {
   public func makeIterator() -> Iterator {
     assertAbstract()
   }
-  
+
   /// **Internal use only**.
   public func _asyncNinja_retainUntilFinalization(_ releasable: Releasable) {
     assertAbstract()
   }
-  
+
   /// **Internal use only**.
   public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     assertAbstract()
@@ -81,8 +82,9 @@ public extension Channel {
     // Test: ChannelTests.testStaticCast
 
     let promise = Promise<Success>()
-    let handler = makeCompletionHandler(executor: .immediate) {
-      [weak promise] (completion, originalExecutor) in
+    let handler = makeCompletionHandler(
+      executor: .immediate
+    ) { [weak promise] (completion, _) in
       promise?.complete(completion)
     }
     promise._asyncNinja_retainHandlerUntilFinalization(handler)
@@ -95,8 +97,9 @@ public extension Channel {
     // Test: ChannelTests.testStaticCast
 
     let promise = Promise<T>()
-    let handler = makeCompletionHandler(executor: .immediate) {
-      [weak promise] (completion, originalExecutor) in
+    let handler = makeCompletionHandler(
+      executor: .immediate
+    ) { [weak promise] (completion, _) in
       promise?.complete(completion.staticCast())
     }
     promise._asyncNinja_retainHandlerUntilFinalization(handler)
@@ -140,7 +143,7 @@ extension Channel: CustomStringConvertible, CustomDebugStringConvertible {
 public extension Channel {
   /// Synchronously waits for channel to complete. Returns all updates and completion
   func waitForAll() -> (updates: [Update], completion: Fallible<Success>) {
-    return try! self.extractAll().wait().liftSuccess()
+    return try! self.extractAll().wait().liftSuccess() // swiftlint:disable:this force_try
   }
 
   /// Waits for channel to complete and returns all updates and completion
@@ -148,23 +151,25 @@ public extension Channel {
   /// - Parameter seconds: to wait completion for
   /// - Returns: completion value or nil if `Future` did not complete in specified timeout
   func waitForAll(seconds: Double) -> (updates: [Update], completion: Fallible<Success>)? {
-    return try! self.extractAll().wait(seconds: seconds)?.liftSuccess()
+    return try! self.extractAll().wait(seconds: seconds)?.liftSuccess() // swiftlint:disable:this force_try
   }
 }
 
 // MARK: - Iterators
 
 /// Synchronously iterates over each update value of channel
-public struct ChannelIterator<Update, Success>: IteratorProtocol  {
+public struct ChannelIterator<Update, Success>: IteratorProtocol {
   public typealias Element = Update
-  private var _implBox: Box<ChannelIteratorImpl<Update, Success>> // want to have reference to reference, because impl may actually be retained by some handler
+
+  // want to have reference to reference, because impl may actually be retained by some handler
+  private var _implBox: Box<ChannelIteratorImpl<Update, Success>>
 
   /// completion of the channel. Will be available as soon as the channel completes.
   public var completion: Fallible<Success>? { return _implBox.value.completion }
 
   /// success of the channel. Will be available as soon as the channel completes with success.
   public var success: Success? { return _implBox.value.completion?.success }
-  
+
   /// failure of the channel. Will be available as soon as the channel completes with failure.
   public var filure: Swift.Error? { return _implBox.value.completion?.failure }
 
@@ -185,7 +190,7 @@ public struct ChannelIterator<Update, Success>: IteratorProtocol  {
 }
 
 /// **Internal use only**
-class ChannelIteratorImpl<Update, Success>  {
+class ChannelIteratorImpl<Update, Success> {
   public typealias Element = Update
   var completion: Fallible<Success>? { assertAbstract() }
 

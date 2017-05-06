@@ -28,7 +28,7 @@ import Dispatch
 #endif
 
 class ChannelTests: XCTestCase {
-  
+
   static let allTests = [
     ("testIterators", testIterators),
     ("testOnValueContextual", testOnValueContextual),
@@ -43,7 +43,7 @@ class ChannelTests: XCTestCase {
     ("testOverUpdateWithSeqence", testOverUpdateWithSeqence),
     ("testOverComplete", testOverComplete),
     ("testStaticCast", testStaticCast),
-    ("testDoubleBind", testDoubleBind),
+    ("testDoubleBind", testDoubleBind)
   ]
 
   func testIterators() {
@@ -78,11 +78,11 @@ class ChannelTests: XCTestCase {
     DispatchQueue.global().async {
       let producer = Producer<Int, String>()
       weakProducer = producer
-      producer.onUpdate(context: actor) { (actor, update) in
+      producer.onUpdate(context: actor) { (_, update) in
         updates.append(update)
       }
 
-      producer.onSuccess(context: actor) { (actor, successValue_) in
+      producer.onSuccess(context: actor) { (_, successValue_) in
         successValue = successValue_
         sema.signal()
       }
@@ -178,9 +178,9 @@ class ChannelTests: XCTestCase {
     updatable.onSuccess(executor: .queue(queue)) {
       expectation.fulfill()
     }
-    
+
     self.waitForExpectations(timeout: 1.0, handler: nil)
-    
+
     XCTAssertEqual(updates, fixture, file: file, line: line)
   }
 

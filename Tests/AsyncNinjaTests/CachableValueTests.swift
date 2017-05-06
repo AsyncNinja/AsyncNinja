@@ -28,18 +28,18 @@ import Dispatch
 #endif
 
 class CachableValueTests: XCTestCase {
-  
+
   static let allTests = [
     ("testSingleShotSuccess", testSingleShotSuccess),
     ("testSingleShotFailure", testSingleShotFailure),
     ("testMultiUseSuccess", testMultiUseSuccess),
-    ("testMultiUseFailure", testMultiUseFailure),
+    ("testMultiUseFailure", testMultiUseFailure)
     ]
 
   func testSingleShotSuccess() {
     multiTest {
       let value = pickInt()
-      let holder = CachedValueHolder<Int>() { _ in
+      let holder = CachedValueHolder<Int> { _ in
         return future(after: 0.1) { value }
       }
       let futureA = holder.cachableValue.value()
@@ -51,7 +51,7 @@ class CachableValueTests: XCTestCase {
 
   func testSingleShotFailure() {
     multiTest {
-      let holder = CachedValueHolder<Int>() { _ -> Future<Int> in
+      let holder = CachedValueHolder<Int> { _ -> Future<Int> in
         return future(after: 0.1) { throw TestError.testCode }
       }
       let futureA = holder.cachableValue.value()
@@ -65,7 +65,7 @@ class CachableValueTests: XCTestCase {
     multiTest {
       let firstValue = pickInt()
       var value = firstValue
-      let holder = CachedValueHolder<Int>() { _ in
+      let holder = CachedValueHolder<Int> { _ in
         return future(after: 0.1) { value }
       }
 
@@ -87,7 +87,7 @@ class CachableValueTests: XCTestCase {
       let firstError = TestError.testCode
       var error: Error
       error = firstError
-      let holder = CachedValueHolder<Int>() { _ in
+      let holder = CachedValueHolder<Int> { _ in
         return future(after: 0.1) { throw error }
       }
 

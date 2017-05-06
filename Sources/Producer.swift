@@ -30,18 +30,18 @@ final public class Producer<Update, Success>: BaseProducer<Update, Success>, Cac
   public init() {
     super.init(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
   }
-  
+
   /// designated initializer of Producer. Initializes Producer with specified buffer size
   override public init(bufferSize: Int) {
     super.init(bufferSize: bufferSize)
   }
-  
+
   /// designated initializer of Producer. Initializes Producer with specified buffer size and values
   public init<S: Sequence>(bufferSize: Int, bufferedUpdates: S) where S.Iterator.Element == Update {
     super.init(bufferSize: bufferSize)
     bufferedUpdates.suffix(bufferSize).forEach(_bufferedUpdates.push)
   }
-  
+
   /// designated initializer of Producer. Initializes Producer with specified buffer size and values
   public init<C: Collection>(bufferedUpdates: C) where C.Iterator.Element == Update, C.IndexDistance: Integer {
     super.init(bufferSize: Int(bufferedUpdates.count.toIntMax()))

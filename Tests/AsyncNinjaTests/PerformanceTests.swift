@@ -27,18 +27,18 @@ import Dispatch
   import Glibc
 #endif
 
-class PerformanceTests : XCTestCase {
+class PerformanceTests: XCTestCase {
   static let allTests = [
     ("testConstantFutureWait", testConstantFutureWait),
     ("testMappedFutureWait_Success", testMappedFutureWait_Success),
     ("testMappedFutureWait_Failure", testMappedFutureWait_Failure),
     ("testHugeMapping_Success", testHugeMapping_Success),
     ("testHugeMapping_Failure", testHugeMapping_Failure),
-    ("testPerformanceFuture", testPerformanceFuture),
+    ("testPerformanceFuture", testPerformanceFuture)
     ]
-  
+
   static let runsRange = 0..<100000
-  
+
   func testConstantFutureWait() {
     self.measure {
         for value in PerformanceTests.runsRange {
@@ -66,14 +66,14 @@ class PerformanceTests : XCTestCase {
       }
     }
   }
-  
+
   func testHugeMapping_Success() {
     self.measure {
       var futureValue: Future<Int> = future(success: 0)
       for _ in PerformanceTests.runsRange {
         futureValue = futureValue.map(executor: .immediate) { $0 + 1 }
       }
-      
+
       XCTAssertEqual(futureValue.wait().success, PerformanceTests.runsRange.upperBound)
     }
   }
@@ -84,18 +84,20 @@ class PerformanceTests : XCTestCase {
       for _ in PerformanceTests.runsRange {
         futureValue = futureValue.map(executor: .immediate) { $0 + 1 }
       }
-      
+
       XCTAssertEqual(futureValue.wait().failure as! TestError, TestError.testCode)
     }
   }
-  
+
   func testReduce() {
     self.measure {
       let resultValue = PerformanceTests.runsRange
         .map { future(success: $0).map(executor: .immediate) { $0 * 2 } }
         .reduce(initialResult: 0, +)
         .wait().success!
-      XCTAssertEqual(resultValue, (PerformanceTests.runsRange.lowerBound + PerformanceTests.runsRange.upperBound - 1) * PerformanceTests.runsRange.count)
+      let fixture = (PerformanceTests.runsRange.lowerBound + PerformanceTests.runsRange.upperBound - 1)
+        * PerformanceTests.runsRange.count
+      XCTAssertEqual(resultValue, fixture)
     }
   }
 
@@ -118,7 +120,8 @@ class PerformanceTests : XCTestCase {
       let result2 = future(success: 2)
         .map(executor: .background, makePerformer(globalQOS: .background, multiplier: 5))
         .map(executor: .utility, makePerformer(globalQOS: .utility, multiplier: 4))
-        .map(executor: .default,  makePerformer(globalQOS: .default, multiplier: 3))
+        .map(executor: .default,
+             makePerformer(globalQOS: .default, multiplier: 3))
         .map(executor: .userInteractive, makePerformer(globalQOS: .userInteractive, multiplier: 2))
 
       let result = zip(result1, result2).map { $0 + $1 }.wait().success!

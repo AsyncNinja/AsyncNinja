@@ -33,12 +33,12 @@ class CacheTests: XCTestCase {
     ("testSingleShotFuture", testSingleShotFuture),
     ("testMultiShotFuture", testMultiShotFuture),
     ("testSingleShotFutureContextual", testSingleShotFutureContextual),
-    ("testMultiShotFutureContextual", testMultiShotFutureContextual),
+    ("testMultiShotFutureContextual", testMultiShotFutureContextual)
     ]
 
   func testSingleShotFuture() {
     multiTest {
-      let cache: SimpleCache<String, Int?> = makeCache() { (key) -> Future<Int?> in
+      let cache: SimpleCache<String, Int?> = makeCache { (key) -> Future<Int?> in
         return future(after: 0.1) {
           () -> Int? in
           switch key {

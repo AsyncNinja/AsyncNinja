@@ -96,7 +96,7 @@ extension AsyncNinjaError: CancellationRepresentableError {
       return self.errorCode == URLError.cancelled.rawValue
     }
   }
-  
+
 #endif
 
 extension Dictionary {

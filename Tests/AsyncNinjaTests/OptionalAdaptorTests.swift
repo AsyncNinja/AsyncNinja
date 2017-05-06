@@ -30,7 +30,7 @@ class OptionalAdaptorTests: XCTestCase {
     ("testChannelUnrapped", testChannelUnrapped),
     ("testFutureUnsafelyUnrapped", testFutureUnsafelyUnrapped),
     ("testFutureUnrappedKeep", testFutureUnrappedKeep),
-    ("testFutureUnrappedReplace", testFutureUnrappedReplace),
+    ("testFutureUnrappedReplace", testFutureUnrappedReplace)
     ]
 
   // MARK: - Channel
@@ -39,8 +39,8 @@ class OptionalAdaptorTests: XCTestCase {
     let sema = DispatchSemaphore(value: 0)
     let producer = Producer<Int?, String>()
     let unrapped: Channel<Int, String> = producer.unsafelyUnwrapped
-    unrapped.extractAll().onSuccess {
-      (updates, completion) in
+    unrapped.extractAll()
+      .onSuccess { (updates, completion) in
       XCTAssertEqual(updates, [1, 2, 3, 4, 5])
       XCTAssertEqual(completion.success, "done")
       sema.signal()
@@ -59,8 +59,8 @@ class OptionalAdaptorTests: XCTestCase {
     let sema = DispatchSemaphore(value: 0)
     let producer = Producer<Int?, String>()
     let unrapped: Channel<Int, String> = producer.unwrapped(0)
-    unrapped.extractAll().onSuccess {
-      (updates, completion) in
+    unrapped.extractAll()
+      .onSuccess { (updates, completion) in
       XCTAssertEqual(updates, [1, 0, 3, 0, 5])
       XCTAssertEqual(completion.success, "done")
       sema.signal()

@@ -22,25 +22,23 @@
 
 /// Simple implementation of either monad
 public enum Either<Left, Right> {
-    
+
     /// left case
     case left(Left)
-    
+
     /// right case
     case right(Right)
-    
+
     /// returns left value if there is one
     public var left: Left? {
-        if case let .left(value) = self { return value }
-        else { return nil }
+        if case let .left(value) = self { return value } else { return nil }
     }
-    
+
     /// returns right value if there is one
     public var right: Right? {
-        if case let .right(value) = self { return value }
-        else { return nil }
+        if case let .right(value) = self { return value } else { return nil }
     }
-    
+
     /// Transforms left value of `Either`. Does nothing if the value contains right
     ///
     /// - Parameter transform: closure that transforms Left to T
@@ -54,7 +52,7 @@ public enum Either<Left, Right> {
             return .right(right)
         }
     }
-    
+
     /// Transforms right value of `Either`. Does nothing if the value contains left
     ///
     /// - Parameter transform: closure that transforms Right to T
@@ -68,7 +66,7 @@ public enum Either<Left, Right> {
             return .right(try(transform(right)))
         }
     }
-    
+
     /// Transforms the either to a either of unrelated type
     /// Correctness of such transformation is left on our behalf
     public func staticCast<L, R>() -> Either<L, R> {
@@ -87,12 +85,12 @@ extension Either: CustomStringConvertible, CustomDebugStringConvertible {
     public var description: String {
         return description(withBody: "")
     }
-    
+
     /// A textual representation of this instance, suitable for debugging.
     public var debugDescription: String {
         return description(withBody: "<\(Left.self), \(Right.self)>")
     }
-    
+
     /// **internal use only**
     private func description(withBody body: String) -> String {
         switch self {
@@ -108,7 +106,7 @@ extension Either: CustomStringConvertible, CustomDebugStringConvertible {
 extension Either where Left: Equatable, Right: Equatable {
 
   /// implementation of an "equals" operatior
-  public static func ==(lhs: Either, rhs: Either) -> Bool {
+  public static func == (lhs: Either, rhs: Either) -> Bool {
     switch (lhs, rhs) {
     case let (.left(valueA), .left(valueB)):
       return valueA == valueB
@@ -120,7 +118,7 @@ extension Either where Left: Equatable, Right: Equatable {
   }
 
   /// implementation of an "not equals" operatior
-  public static func !=(lhs: Either, rhs: Either) -> Bool {
+  public static func != (lhs: Either, rhs: Either) -> Bool {
     return !(lhs == rhs)
   }
 }
@@ -131,13 +129,13 @@ extension Either where Left: Equatable, Right: Equatable {
 public enum ChannelEvent<Update, Success> {
     /// A kind of value that can be received multiple times be for the completion one
     case update(Update)
-    
+
     /// A kind of value that can be received once and completes the channel
     case completion(Fallible<Success>)
 }
 
 public extension ChannelEvent {
-    
+
     /// Convenence initializer of ChannelEvent.completion
     ///
     /// - Parameter success: success value to complete with
@@ -145,7 +143,7 @@ public extension ChannelEvent {
     static func success(_ success: Success) -> ChannelEvent {
         return .completion(.success(success))
     }
-    
+
     /// Convenence initializer of ChannelEvent.completion
     ///
     /// - Parameter failure: error to complete with
@@ -153,7 +151,7 @@ public extension ChannelEvent {
     static func failure(_ error: Swift.Error) -> ChannelEvent {
         return .completion(.failure(error))
     }
-    
+
     /// Transforms the event to a event of unrelated type
     /// Correctness of such transformation is left on our behalf
     func staticCast<U, S>() -> ChannelEvent<U, S> {

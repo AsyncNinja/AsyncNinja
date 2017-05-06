@@ -22,7 +22,7 @@
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
   import Foundation
-  
+
   /// `ReactiveProperties` is an adaptor for reactive properties.
   public struct ReactiveProperties<Object: NSObject> where Object: Retainer {
     public typealias CustomGetter<T> = (Object) -> T?
@@ -68,8 +68,7 @@
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T?>? = nil,
       customSetter: CustomSetter<T?>? = nil
-      ) -> ProducerProxy<T?, Void>
-    {
+      ) -> ProducerProxy<T?, Void> {
       return object.updatable(forKeyPath: keyPath,
                               executor: executor,
                               from: originalExecutor,
@@ -109,8 +108,7 @@
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil,
       customSetter: CustomSetter<T>? = nil
-      ) -> ProducerProxy<T, Void>
-    {
+      ) -> ProducerProxy<T, Void> {
       return object.updatable(forKeyPath: keyPath,
                               onNone: onNone,
                               executor: executor,
@@ -141,8 +139,7 @@
       forKeyPath keyPath: String,
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil
-      ) -> Channel<T?, Void>
-    {
+      ) -> Channel<T?, Void> {
       return object.updating(forKeyPath: keyPath,
                              executor: executor,
                              from: originalExecutor,
@@ -173,8 +170,7 @@
       onNone: UpdateWithNoneHandlingPolicy<T>,
       channelBufferSize: Int = 1,
       customGetter: CustomGetter<T>? = nil
-      ) -> Channel<T, Void>
-    {
+      ) -> Channel<T, Void> {
       return object.updating(forKeyPath: keyPath,
                              onNone: onNone,
                              executor: executor,
@@ -194,7 +190,7 @@
   }
 
   public extension Retainer where Self: NSObject {
-    
+
     /// Makes a `ReactiveProperties` bount to `self` that captures specified values
     ///
     /// - Parameter executor: to subscribe and update value on
@@ -239,7 +235,7 @@
 
     /// Short and useful property that returns `ReactiveProperties` and covers `99%` of use cases
     var rp: ReactiveProperties<Self> { return reactiveProperties(from: executor) }
-    
+
     /// The same as `rp` but for those who came from `Rx` world
     var rx: ReactiveProperties<Self> { return reactiveProperties(from: executor) }
   }

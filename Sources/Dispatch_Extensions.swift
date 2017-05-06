@@ -51,7 +51,7 @@ public extension DispatchGroup {
         // Test: FutureTests.testGroupCompletionFuture
         return completionFuture(executor: .primary)
     }
-    
+
     /// Makes future from of `DispatchGroups`'s notify after balancing all enters and leaves
     /// *Property `DispatchGroup.completionFuture` most cover most of your cases*
     ///
@@ -65,7 +65,7 @@ public extension DispatchGroup {
         }
         return promise
     }
-    
+
     /// Convenience method that leaves group on completion of provided Future or Channel
     func leaveOnComplete<T: Completing>(of completable: T) {
         completable.onComplete(executor: .immediate) { _ in self.leave() }

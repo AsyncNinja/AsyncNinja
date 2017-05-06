@@ -30,9 +30,10 @@ import Dispatch
 ///   - futureC: third
 /// - Returns: future of combined results.
 ///   The future will complete right after completion of futureA, futureB, futureC
-public func zip<A, B, C>(_ futureA: Future<A>,
-                _ futureB: Future<B>,
-                _ futureC: Future<C>) -> Future<(A, B, C)> {
+public func zip<A, B, C>(
+  _ futureA: Future<A>,
+  _ futureB: Future<B>,
+  _ futureC: Future<C>) -> Future<(A, B, C)> {
   // Test: ZipFuturesTest.test3Simple
   // Test: ZipFuturesTest.test3Delayed
   // Test: ZipFuturesTest.test3Failure
@@ -42,10 +43,10 @@ public func zip<A, B, C>(_ futureA: Future<A>,
   var subvalueA: A? = nil
   var subvalueB: B? = nil
   var subvalueC: C? = nil
-  
-  let handlerA = futureA.makeCompletionHandler(executor: .immediate)
-  {
-    [weak promise] (localSubvalueA, originalExecutor) in
+
+  let handlerA = futureA.makeCompletionHandler(
+    executor: .immediate
+  ) { [weak promise] (localSubvalueA, originalExecutor) in
     guard let promise = promise else { return }
     locking.lock()
     defer { locking.unlock() }
@@ -64,8 +65,9 @@ public func zip<A, B, C>(_ futureA: Future<A>,
 
   promise._asyncNinja_retainHandlerUntilFinalization(handlerA)
 
-  let handlerB = futureB.makeCompletionHandler(executor: .immediate) {
-    [weak promise] (localSubvalueB, originalExecutor) in
+  let handlerB = futureB.makeCompletionHandler(
+    executor: .immediate
+  ) { [weak promise] (localSubvalueB, originalExecutor) in
     guard let promise = promise else { return }
     locking.lock()
     defer { locking.unlock() }
@@ -84,13 +86,13 @@ public func zip<A, B, C>(_ futureA: Future<A>,
 
   promise._asyncNinja_retainHandlerUntilFinalization(handlerB)
 
-  let handlerC = futureC.makeCompletionHandler(executor: .immediate)
-  {
-    [weak promise] (localSubvalueC, originalExecutor) in
+  let handlerC = futureC.makeCompletionHandler(
+    executor: .immediate
+  ) { [weak promise] (localSubvalueC, originalExecutor) in
     guard let promise = promise else { return }
     locking.lock()
     defer { locking.unlock() }
-    
+
     localSubvalueC.onFailure {
       promise.fail($0, from: originalExecutor)
     }
@@ -102,7 +104,7 @@ public func zip<A, B, C>(_ futureA: Future<A>,
       }
     }
   }
-  
+
   promise._asyncNinja_retainHandlerUntilFinalization(handlerC)
 
   return promise
@@ -116,9 +118,11 @@ public func zip<A, B, C>(_ futureA: Future<A>,
 ///   - valueC: third
 /// - Returns: future of combined results.
 ///   The future will complete right after completion of futureA and futureB.
-public func zip<A, B, C>(_ futureA: Future<A>,
-                _ futureB: Future<B>,
-                _ valueC: C) -> Future<(A, B, C)> {
+public func zip<A, B, C>(
+  _ futureA: Future<A>,
+  _ futureB: Future<B>,
+  _ valueC: C
+  ) -> Future<(A, B, C)> {
   // Test: ZipFuturesTest.test3Constant
   return zip(futureA, futureB).map(executor: .immediate) { ($0, $1, valueC) }
 }
@@ -131,9 +135,11 @@ public func zip<A, B, C>(_ futureA: Future<A>,
 ///   - valueC: third
 /// - Returns: future of combined results. 
 ///   The future will complete right after completion of futureA.
-public func zip<A, B, C>(_ futureA: Future<A>,
-                _ valueB: B,
-                _ valueC: C) -> Future<(A, B, C)> {
+public func zip<A, B, C>(
+  _ futureA: Future<A>,
+  _ valueB: B,
+  _ valueC: C
+  ) -> Future<(A, B, C)> {
   // Test: ZipFuturesTest.test3Constants
   return futureA.map(executor: .immediate) { ($0, valueB, valueC) }
 }

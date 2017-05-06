@@ -33,7 +33,7 @@ class EventSource_ScanTests: XCTestCase {
     ("testScanContextual", testScanContextual),
     ("testScan", testScan),
     ("testReduceContextual", testReduceContextual),
-    ("testReduce", testReduce),
+    ("testReduce", testReduce)
     ]
 
   func testScanContextual() {
@@ -42,7 +42,9 @@ class EventSource_ScanTests: XCTestCase {
       let producer = Producer<String, Int>()
       let sema = DispatchSemaphore(value: 0)
 
-      let channel: Channel<String, (String, Int)> = producer.scan("A", context: actor) { (actor, accumulator, value) -> String in
+      let channel: Channel<String, (String, Int)> = producer.scan("A",
+                                                                  context: actor
+      ) { (actor, accumulator, value) -> String in
         assert(actor: actor)
         return accumulator + value
       }

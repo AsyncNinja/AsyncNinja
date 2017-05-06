@@ -28,8 +28,9 @@ extension EventSource {
     executor: Executor,
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
     ) -> AnyObject? {
-    return self.makeHandler(executor: executor) {
-      (event, originalExecutor) in
+    return self.makeHandler(
+      executor: executor
+    ) { (event, originalExecutor) in
       if case .completion(let completion) = event {
         block(completion, originalExecutor)
       }
@@ -41,8 +42,9 @@ extension EventSource {
     executor: Executor,
     _ block: @escaping (_ update: Update, _ originalExecutor: Executor) -> Void
     ) -> AnyObject? {
-    return self.makeHandler(executor: executor) {
-      (event, originalExecutor) in
+    return self.makeHandler(
+      executor: executor
+    ) { (event, originalExecutor) in
       if case .update(let update) = event {
         block(update, originalExecutor)
       }
@@ -55,9 +57,9 @@ extension EventSource {
     pure: Bool,
     cancellationToken: CancellationToken?,
     bufferSize: DerivedChannelBufferSize,
+    // swiftlint:disable:next line_length
     _ onEvent: @escaping (_ event: Event, _ producer: WeakBox<BaseProducer<P, S>>, _ originalExecutor: Executor) throws -> Void
-    ) -> BaseProducer<P, S>
-  {
+    ) -> BaseProducer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<P, S>(bufferSize: bufferSize)
     self.attach(producer, executor: executor, pure: pure,
@@ -71,14 +73,17 @@ extension EventSource {
     executor: Executor,
     pure: Bool,
     cancellationToken: CancellationToken?,
-    _ onEvent: @escaping (_ event: Event, _ eventsDestination: WeakBox<T>, _ originalExecutor: Executor) throws -> Void)
-  {
+    // swiftlint:disable:next line_length
+    _ onEvent: @escaping (_ event: Event, _ eventsDestination: WeakBox<T>, _ originalExecutor: Executor) throws -> Void
+    ) {
     let weakBoxOfEventsDestination = WeakBox(eventsDestination)
-    let handler = self.makeHandler(executor: executor)
-    { (event, originalExecutor) in
+    let handler = self.makeHandler(executor: executor) { (event, originalExecutor) in
       if pure, case .none = weakBoxOfEventsDestination.value { return }
-      do { try onEvent(event, weakBoxOfEventsDestination, originalExecutor) }
-      catch { weakBoxOfEventsDestination.value?.fail(error, from: originalExecutor) }
+      do {
+        try onEvent(event, weakBoxOfEventsDestination, originalExecutor)
+      } catch {
+        weakBoxOfEventsDestination.value?.fail(error, from: originalExecutor)
+      }
     }
 
     if let handler = handler {
@@ -101,9 +106,9 @@ extension EventSource {
     pure: Bool,
     cancellationToken: CancellationToken?,
     bufferSize: DerivedChannelBufferSize,
+    // swiftlint:disable:next line_length
     _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: WeakBox<BaseProducer<P, S>>, _ originalExecutor: Executor) throws -> Void
-    ) -> BaseProducer<P, S>
-  {
+    ) -> BaseProducer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = BaseProducer<P, S>(bufferSize: bufferSize)
     self.attach(producer, context: context, executor: executor, pure: pure,
@@ -118,13 +123,17 @@ extension EventSource {
     executor: Executor?,
     pure: Bool,
     cancellationToken: CancellationToken?,
-    _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: WeakBox<T>, _ originalExecutor: Executor) throws -> Void)
-  {
+    // swiftlint:disable:next line_length
+    _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: WeakBox<T>, _ originalExecutor: Executor) throws -> Void) {
     let executor_ = executor ?? context.executor
-    self.attach(eventsDestination, executor: executor_, pure: pure, cancellationToken: cancellationToken)
-    { [weak context] (event, producer, originalExecutor) in
-      guard let context = context else { return }
-      try onEvent(context, event, producer, originalExecutor)
+    self.attach(eventsDestination,
+                executor: executor_,
+                pure: pure,
+                cancellationToken: cancellationToken
+    ) { [weak context] (event, producer, originalExecutor) in
+      if let context = context {
+        try onEvent(context, event, producer, originalExecutor)
+      }
     }
 
     context.addDependent(completable: eventsDestination)
@@ -146,8 +155,7 @@ public extension EventSource {
     executor: Executor? = nil,
     _ block: @escaping (_ strongContext: C, _ event: Event, _ originalExecutor: Executor) -> Void) {
 
-    let handler = self.makeHandler(executor: executor ?? context.executor)
-    { [weak context] (event, originalExecutor) in
+    let handler = self.makeHandler(executor: executor ?? context.executor) { [weak context] (event, originalExecutor) in
       if let context = context {
         block(context, event, originalExecutor)
       }
@@ -166,7 +174,7 @@ public extension EventSource {
   func onEvent(
     executor: Executor = .primary,
     _ block: @escaping (_ event: Event) -> Void) {
-    _onEvent { (event, originalExecutor) in
+    _onEvent { (event, _) in
       block(event)
     }
   }
@@ -185,8 +193,10 @@ public extension EventSource {
     context: C,
     executor: Executor? = nil,
     _ block: @escaping (_ strongContext: C, _ event: Event) -> Void) {
-    _onEvent(context: context, executor: executor) {
-      (context, event, originalExecutor) in
+    _onEvent(
+      context: context,
+      executor: executor
+    ) { (context, event, _) in
       block(context, event)
     }
   }
@@ -196,7 +206,7 @@ public extension EventSource {
     var updates = [Update]()
     var locking = makeLocking(isFair: true)
     let promise = Promise<(updates: [Update], completion: Fallible<Success>)>()
-    let handler = self.makeHandler(executor: .immediate) { [weak promise] (event, originalExecutor) in
+    let handler = self.makeHandler(executor: .immediate) { [weak promise] (event, _) in
       switch event {
       case let .update(update):
         locking.lock()
@@ -219,7 +229,7 @@ public extension EventSource {
   ///   - producerProxy: to bind to
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   func bindEvents<T: EventsDestination>(
     _ eventsDestination: T,
     cancellationToken: CancellationToken? = nil
@@ -227,9 +237,8 @@ public extension EventSource {
     self.attach(eventsDestination,
                 executor: .immediate,
                 pure: true,
-                cancellationToken: cancellationToken)
-    {
-      (event, producer, originalExecutor) in
+                cancellationToken: cancellationToken
+    ) { (event, producer, originalExecutor) in
       switch event {
       case let .update(update):
         producer.value?.update(update, from: originalExecutor)
@@ -247,7 +256,7 @@ public extension EventSource {
   ///   - updatableProperty: to bind to
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   func bind<T: EventsDestination>(
     _ eventsDestination: T,
     cancellationToken: CancellationToken? = nil
@@ -255,9 +264,8 @@ public extension EventSource {
     self.attach(eventsDestination,
                 executor: .immediate,
                 pure: true,
-                cancellationToken: cancellationToken)
-    {
-      (event, producer, originalExecutor) in
+                cancellationToken: cancellationToken
+    ) { (event, producer, originalExecutor) in
       switch event {
       case let .update(update):
         producer.value?.update(update, from: originalExecutor)
@@ -283,14 +291,14 @@ public func doubleBind<T: EventSource&EventsDestination, U: EventSource&EventsDe
   _ majorStream: T,
   transform: @escaping (T.Update) -> U.Update,
   _ minorStream: U,
-  reverseTransform: @escaping (U.Update) -> T.Update)
-{
+  reverseTransform: @escaping (U.Update) -> T.Update) {
   var locking = makeLocking(isFair: true)
   var majorRevision = 1
   var minorRevision = 0
 
-  let minorHandler = minorStream.makeUpdateHandler(executor: .immediate) {
-    [weak majorStream] (update, originalExecutor) in
+  let minorHandler = minorStream.makeUpdateHandler(
+    executor: .immediate
+  ) { [weak majorStream] (update, originalExecutor) in
     locking.lock()
     if minorRevision >= majorRevision {
       minorRevision += 1
@@ -308,8 +316,9 @@ public func doubleBind<T: EventSource&EventsDestination, U: EventSource&EventsDe
     minorStream._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
   }
 
-  let majorHandler = majorStream.makeUpdateHandler(executor: .immediate) {
-    [weak minorStream] (update, originalExecutor) in
+  let majorHandler = majorStream.makeUpdateHandler(
+    executor: .immediate
+  ) { [weak minorStream] (update, originalExecutor) in
     locking.lock()
     if majorRevision >= minorRevision {
       majorRevision += 1
@@ -336,7 +345,6 @@ public func doubleBind<T: EventSource&EventsDestination, U: EventSource&EventsDe
 public func doubleBind<T: EventSource&EventsDestination, U: EventSource&EventsDestination>(
   _ majorStream: T,
   _ minorStream: U
-  ) where T.Update == U.Update
-{
+  ) where T.Update == U.Update {
   doubleBind(majorStream, transform: { $0 }, minorStream, reverseTransform: { $0 })
 }

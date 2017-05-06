@@ -59,7 +59,7 @@ public class CancellationToken: Cancellable {
         ? $0
         : ContainerOfCancellableItem(cancellable: cancellable, next: $0 as! NonCancelledItem?)
     }
-    
+
     if _isBackCancelAllowed, newHead is CancelledItem {
       cancellable.cancel()
     }

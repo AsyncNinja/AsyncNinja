@@ -26,7 +26,7 @@
   public extension Retainer where Self: NSObject {
     public typealias CustomGetter<T> = (Self) -> T?
     public typealias CustomSetter<T> = (Self, T) -> Void
-    
+
     /// makes an `UpdatableProperty<T?>` for specified key path.
     ///
     /// `UpdatableProperty` is a kind of `Producer` so you can:
@@ -64,8 +64,10 @@
       customGetter: CustomGetter<T?>? = nil,
       customSetter: CustomSetter<T?>? = nil
       ) -> ProducerProxy<T?, Void> {
-      let producer = ProducerProxy<T?, Void>(updateExecutor: executor, bufferSize: channelBufferSize) {
-        [weak self] (producerProxy, event, originalExecutor) in
+      let producer = ProducerProxy<T?, Void>(
+        updateExecutor: executor,
+        bufferSize: channelBufferSize
+      ) { [weak self] (_, event, _) in
         switch event {
         case let .update(update):
           self?.setValue(update,
@@ -77,18 +79,19 @@
         }
       }
 
-      executor.execute(from: originalExecutor) { (originalExecutor) in
-        let observer = KeyPathObserver(object: self,
-                                       keyPath: keyPath,
-                                       options: [.initial, .new],
-                                       isEnabled: observationSession?.isEnabled ?? true) {
-          [weak producer] (maybeSelf, changes) in
+      executor.execute(from: originalExecutor) { (_) in
+        let observer = KeyPathObserver(
+          object: self,
+          keyPath: keyPath,
+          options: [.initial, .new],
+          isEnabled: observationSession?.isEnabled ?? true
+        ) { [weak producer] (maybeSelf, changes) in
           guard let strongSelf = maybeSelf as? Self,
             let producer = producer
             else { return }
-          
+
           let newValue = strongSelf.getValue(forKeyPath: keyPath, changes: changes, customGetter: customGetter)
-          let _ = producer.tryUpdateWithoutHandling(newValue, from: executor)
+          _ = producer.tryUpdateWithoutHandling(newValue, from: executor)
         }
 
         observationSession?.insert(item: observer)
@@ -141,41 +144,46 @@
       customGetter: CustomGetter<T>? = nil,
       customSetter: CustomSetter<T>? = nil
       ) -> ProducerProxy<T, Void> {
-      let producer = ProducerProxy<T, Void>(updateExecutor: executor, bufferSize: channelBufferSize) {
-        [weak self] (producerProxy, event, originalExecutor) in
+      let producer = ProducerProxy<T, Void>(
+        updateExecutor: executor,
+        bufferSize: channelBufferSize
+      ) { [weak self] (_, event, _) in
         switch event {
         case let .update(update):
-          self?.setValue(update, forKeyPath: keyPath, allowSettingSameValue: allowSettingSameValue, customSetter: customSetter)
+          self?.setValue(update,
+                         forKeyPath: keyPath,
+                         allowSettingSameValue: allowSettingSameValue,
+                         customSetter: customSetter)
         case .completion:
           nop()
         }
       }
-      
-      executor.execute(from: originalExecutor) { (originalExecutor) in
-        let observer = KeyPathObserver(object: self,
-                                       keyPath: keyPath,
-                                       options: [.initial, .new],
-                                       isEnabled: observationSession?.isEnabled ?? true)
-        {
-          [weak producer] (maybeSelf, changes) in
+
+      executor.execute(from: originalExecutor) { _ in
+        let observer = KeyPathObserver(
+          object: self,
+          keyPath: keyPath,
+          options: [.initial, .new],
+          isEnabled: observationSession?.isEnabled ?? true
+        ) { [weak producer] (maybeSelf, changes) in
           guard
             let strongSelf = maybeSelf as? Self,
             let producer = producer
             else { return }
           if let update = strongSelf.getValue(forKeyPath: keyPath, changes: changes, customGetter: customGetter) {
-            let _ = producer.tryUpdateWithoutHandling(update, from: executor)
+            _ = producer.tryUpdateWithoutHandling(update, from: executor)
           } else if case let .replace(update) = onNone {
-            let _ = producer.tryUpdateWithoutHandling(update, from: executor)
+            _ = producer.tryUpdateWithoutHandling(update, from: executor)
           }
         }
-        
+
         observationSession?.insert(item: observer)
         self.notifyDeinit {
           producer.cancelBecauseOfDeallocatedContext(from: nil)
           observer.isEnabled = false
         }
       }
-      
+
       return producer
     }
 
@@ -211,14 +219,14 @@
       ) -> Channel<T?, Void> {
 
       let producer = Producer<T?, Void>(bufferSize: channelBufferSize)
-      
-      executor.execute(from: originalExecutor) { (originalExecutor) in
-        let observer = KeyPathObserver(object: self,
-                                       keyPath: keyPath,
-                                       options: [.initial, .new],
-                                       isEnabled: observationSession?.isEnabled ?? true)
-        {
-          [weak producer] (maybeSelf, changes) in
+
+      executor.execute(from: originalExecutor) { (_) in
+        let observer = KeyPathObserver(
+          object: self,
+          keyPath: keyPath,
+          options: [.initial, .new],
+          isEnabled: observationSession?.isEnabled ?? true
+        ) { [weak producer] (maybeSelf, changes) in
           guard
             let strongSelf = maybeSelf as? Self,
             let producer = producer
@@ -226,14 +234,14 @@
           let update = strongSelf.getValue(forKeyPath: keyPath, changes: changes, customGetter: customGetter)
           producer.update(update, from: executor)
         }
-        
+
         observationSession?.insert(item: observer)
         self.notifyDeinit {
           producer.cancelBecauseOfDeallocatedContext(from: nil)
           observer.isEnabled = false
         }
       }
-      
+
       return producer
     }
 
@@ -271,14 +279,14 @@
       customGetter: CustomGetter<T>? = nil
       ) -> Channel<T, Void> {
       let producer = Producer<T, Void>(bufferSize: channelBufferSize)
-      
-      executor.execute(from: originalExecutor) { (originalExecutor) in
-        let observer = KeyPathObserver(object: self,
-                                       keyPath: keyPath,
-                                       options: [.initial, .new],
-                                       isEnabled: observationSession?.isEnabled ?? true)
-        {
-          [weak producer] (maybeSelf, changes) in
+
+      executor.execute(from: originalExecutor) { (_) in
+        let observer = KeyPathObserver(
+          object: self,
+          keyPath: keyPath,
+          options: [.initial, .new],
+          isEnabled: observationSession?.isEnabled ?? true
+        ) { [weak producer] (maybeSelf, changes) in
           guard
             let strongSelf = maybeSelf as? Self,
             let producer = producer
@@ -289,14 +297,14 @@
             producer.update(update, from: executor)
           }
         }
-        
+
         observationSession?.insert(item: observer)
         self.notifyDeinit {
           producer.cancelBecauseOfDeallocatedContext(from: nil)
           observer.isEnabled = false
         }
       }
-      
+
       return producer
     }
 
@@ -305,8 +313,9 @@
     /// - Parameter setter: to use with sink
     /// - Returns: constructed sink
     func sink<T>(executor: Executor, setter: @escaping CustomSetter<T>) -> Sink<T, Void> {
-      let sink = Sink<T, Void>(updateExecutor: executor) {
-        [weak self] (sink, event, originalExecutor) in
+      let sink = Sink<T, Void>(
+        updateExecutor: executor
+      ) { [weak self] (_, event, _) in
         if let strongSelf = self, case let .update(update) = event {
           setter(strongSelf, update)
         }
@@ -384,13 +393,13 @@
       ) -> Channel<[NSKeyValueChangeKey: Any], Void> {
       let producer = Producer<[NSKeyValueChangeKey: Any], Void>(bufferSize: channelBufferSize)
 
-      executor.execute(from: originalExecutor) { (originalExecutor) in
-        let observer = KeyPathObserver(object: self,
-                                       keyPath: keyPath,
-                                       options: options,
-                                       isEnabled: observationSession?.isEnabled ?? true)
-        {
-          [weak producer] (maybeSelf, changes) in
+      executor.execute(from: originalExecutor) { (_) in
+        let observer = KeyPathObserver(
+          object: self,
+          keyPath: keyPath,
+          options: options,
+          isEnabled: observationSession?.isEnabled ?? true
+        ) { [weak producer] (_, changes) in
           producer?.update(changes, from: executor)
         }
 
@@ -408,8 +417,7 @@
       _ newValue: T,
       forKeyPath keyPath: String,
       allowSettingSameValue: Bool,
-      customSetter: CustomSetter<T>?)
-    {
+      customSetter: CustomSetter<T>?) {
       let nsNewObjectValue: NSObject?
       if let customSetter = customSetter {
         customSetter(self, newValue)
@@ -436,8 +444,7 @@
       forKeyPath keyPath: String,
       changes: [NSKeyValueChangeKey: Any],
       customGetter: CustomGetter<T>?
-      ) -> T?
-    {
+      ) -> T? {
         if let customGetter = customGetter {
             return customGetter(self)
         } else {
@@ -449,8 +456,7 @@
       forKeyPath keyPath: String,
       changes: [NSKeyValueChangeKey: Any],
       customGetter: CustomGetter<T?>?
-      ) -> T?
-    {
+      ) -> T? {
       if let customGetter = customGetter {
         return customGetter(self).flatMap { $0 }
       } else {

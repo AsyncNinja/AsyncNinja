@@ -75,14 +75,18 @@ extension XCTestCase {
           }
         }
 
-        let _ = group.wait(timeout: DispatchTime.now() + .seconds(10))
+        _ = group.wait(timeout: DispatchTime.now() + .seconds(10))
       }
     }
   }
 }
 
 fileprivate struct Constants {
-  static let availableQosClassses: [DispatchQoS.QoSClass] = [/*.background, .utility, */.default, .userInitiated, .userInteractive, ]
+  static let availableQosClassses: [DispatchQoS.QoSClass] = [
+    .default,
+    .userInitiated,
+    .userInteractive
+  ]
 }
 
 func pickQoS() -> DispatchQoS.QoSClass {

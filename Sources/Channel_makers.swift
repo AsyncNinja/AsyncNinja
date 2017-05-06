@@ -28,14 +28,14 @@ public func channel<Update, Success>(
   cancellationToken: CancellationToken? = nil,
   bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize,
   block: @escaping (_ update: @escaping (Update) -> Void) throws -> Success
-  ) -> Channel<Update, Success>
-{
+  ) -> Channel<Update, Success> {
   // TEST: ChannelMakersTests.testMakeChannel
 
   let producer = Producer<Update, Success>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
   cancellationToken?.add(cancellable: producer)
-  executor.execute(from: nil) {
-    [weak producer] (originalExecutor) in
+  executor.execute(
+    from: nil
+  ) { [weak producer] (originalExecutor) in
     let fallibleCompletion = fallible {
       try block { producer?.update($0, from: originalExecutor) }
     }
@@ -51,16 +51,16 @@ public func channel<U: ExecutionContext, Update, Success>(
   cancellationToken: CancellationToken? = nil,
   bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize,
   block: @escaping (_ strongContext: U, _ update: @escaping (Update) -> Void) throws -> Success
-  ) -> Channel<Update, Success>
-{
+  ) -> Channel<Update, Success> {
   // TEST: ChannelMakersTests.testMakeChannelContextual
 
   let producer = Producer<Update, Success>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
   context.addDependent(completable: producer)
   cancellationToken?.add(cancellable: producer)
-  (executor ?? context.executor).execute(from: nil) {
-    [weak context, weak producer] (originalExecutor) in
-    guard nil != producer else { return }
+  (executor ?? context.executor).execute(
+    from: nil
+  ) { [weak context, weak producer] (originalExecutor) in
+    guard case .some = producer else { return }
     guard let context = context else {
       producer?.cancelBecauseOfDeallocatedContext(from: originalExecutor)
       return
@@ -80,8 +80,7 @@ public func channel<C: Collection, Success>(
   updates: C,
   completion: Fallible<Success>
   ) -> Channel<C.Iterator.Element, Success>
-  where C.IndexDistance: Integer
-{
+  where C.IndexDistance: Integer {
   // TEST: ChannelMakersTests.testCompletedWithFunc
 
   let producer = Producer<C.Iterator.Element, Success>(bufferedUpdates: updates)
@@ -94,8 +93,7 @@ public func channel<C: Collection, Success>(
   updates: C,
   success: Success
   ) -> Channel<C.Iterator.Element, Success>
-  where C.IndexDistance: Integer
-{
+  where C.IndexDistance: Integer {
   // TEST: ChannelMakersTests.testSucceededWithFunc
 
   return channel(updates: updates, completion: .success(success))
@@ -106,8 +104,7 @@ public func channel<C: Collection, Success>(
   updates: C,
   failure: Swift.Error
   ) -> Channel<C.Iterator.Element, Success>
-  where C.IndexDistance: Integer
-{
+  where C.IndexDistance: Integer {
   // TEST: ChannelMakersTests.testFailedWithFunc
 
   return channel(updates: updates, completion: .failure(failure))

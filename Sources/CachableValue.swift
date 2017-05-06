@@ -65,8 +65,7 @@ public class CachableValue<T: CachableCompletable> {
   public convenience init<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    missHandler: @escaping (_ strongContext: C) throws -> T.CompletingType)
-  {
+    missHandler: @escaping (_ strongContext: C) throws -> T.CompletingType) {
     self.init(executor: executor ?? context.executor) { [weak context] in
       if let context = context {
         return try missHandler(context)
@@ -89,7 +88,7 @@ public class CachableValue<T: CachableCompletable> {
     mustInvalidateOldValue: Bool = false,
     from originalExecutor: Executor? = nil
     ) -> T.CompletingType {
-    
+
     let (shouldHandle, result): (Bool, T.CompletingType) = _locking.locker {
       switch _state {
       case .initial:
@@ -116,26 +115,27 @@ public class CachableValue<T: CachableCompletable> {
         }
       }
     }
-    
+
     if shouldHandle {
       _executor.execute(from: originalExecutor) { [weak self] (originalExecutor) in
         self?._handleMissOnExecutor(from: originalExecutor)
       }
     }
-    
+
     return result
   }
 
   /// Invalidates cached value
   public func invalidate() {
-    let _ = value(mustStartHandlingMiss: false, mustInvalidateOldValue: true)
+    _ = value(mustStartHandlingMiss: false, mustInvalidateOldValue: true)
   }
 
   private func _handleMissOnExecutor(from originalExecutor: Executor?) {
     do {
       let completable = try _missHandler()
-      completable._onComplete(executor: .immediate) {
-        [weak self] (completion, originalExecutor) in
+      completable._onComplete(
+        executor: .immediate
+      ) { [weak self] (completion, originalExecutor) in
         self?._handle(completion: completion, from: originalExecutor)
       }
     } catch {
@@ -151,7 +151,7 @@ public class CachableValue<T: CachableCompletable> {
     let completing = _completing
     _state = .finished
     _locking.unlock()
-    
+
     switch completion {
     case .success(let success):
       completing.succeed(success as! T.Success, from: originalExecutor)

@@ -50,7 +50,7 @@ class FallibleTests: XCTestCase {
     ("testZip2_SuccessFailure", testZip2_SuccessFailure),
     ("testZip2_FailureSuccess", testZip2_FailureSuccess),
     ("testZip2_FailureFailure", testZip2_FailureFailure),
-    ("testDescription", testDescription),
+    ("testDescription", testDescription)
     ]
 
   func testSuccess() {
@@ -141,7 +141,7 @@ class FallibleTests: XCTestCase {
     let value = Fallible<Int>(success: 2)
     var numberOfCalls = 0
 
-    let nextValue = value.map { (success) -> Int in
+    let nextValue = value.map { _ -> Int in
       numberOfCalls += 1
       throw TestError.testCode
     }

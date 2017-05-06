@@ -28,10 +28,10 @@ import Dispatch
 #endif
 
 class EventSource_CombineTests: XCTestCase {
-  
+
   static let allTests = [
     ("testSample", testSample),
-    ("testSuspendable", testSuspendable),
+    ("testSuspendable", testSuspendable)
   ]
 
   func testSample() {

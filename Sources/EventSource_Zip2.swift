@@ -63,42 +63,44 @@ public func zip<T: EventSource, U: EventSource>(
   }
 
   do {
-    let handlerBlockA: (_ event: T.Event, _ originalExecutor: Executor) -> Void = makeHandlerBlock(
-      updateHandler: {
-        if let updateB = queueOfUpdates.first?.right {
-          let _ = queueOfUpdates.pop()
-          return ($0, updateB)
-        } else {
-          queueOfUpdates.push(.left($0))
-          return nil
-        }
-    }, successHandler: {
-      (success: T.Success) in
+    func updateHandler(update: T.Update) -> (T.Update, U.Update)? {
+      if let updateB = queueOfUpdates.first?.right {
+        _ = queueOfUpdates.pop()
+        return (update, updateB)
+      } else {
+        queueOfUpdates.push(.left(update))
+        return nil
+      }
+    }
+
+    func successHandler(success: T.Success) -> (T.Success, U.Success)? {
       successA = success
       return successB.map { (success, $0) }
-    })
+    }
 
-    let handler = channelA.makeHandler(executor: .immediate, handlerBlockA)
+    let handlerBlock = makeHandlerBlock(updateHandler: updateHandler, successHandler: successHandler)
+    let handler = channelA.makeHandler(executor: .immediate, handlerBlock)
     producer._asyncNinja_retainHandlerUntilFinalization(handler)
   }
 
   do {
-    let handlerBlockB: (_ event: U.Event, _ originalExecutor: Executor) -> Void = makeHandlerBlock(
-      updateHandler: {
-        if let updateA = queueOfUpdates.first?.left {
-          let _ = queueOfUpdates.pop()
-          return (updateA, $0)
-        } else {
-          queueOfUpdates.push(.right($0))
-          return nil
-        }
-    }, successHandler: {
-      (success: U.Success) in
+    func updateHandler(update: U.Update) -> (T.Update, U.Update)? {
+      if let updateA = queueOfUpdates.first?.left {
+        _ = queueOfUpdates.pop()
+        return (updateA, update)
+      } else {
+        queueOfUpdates.push(.right(update))
+        return nil
+      }
+    }
+
+    func successHandler(success: U.Success) -> (T.Success, U.Success)? {
       successB = success
       return successA.map { ($0, success) }
-    })
+    }
 
-    let handler = channelB.makeHandler(executor: .immediate, handlerBlockB)
+    let handlerBlock = makeHandlerBlock(updateHandler: updateHandler, successHandler: successHandler)
+    let handler = channelB.makeHandler(executor: .immediate, handlerBlock)
     producer._asyncNinja_retainHandlerUntilFinalization(handler)
   }
 

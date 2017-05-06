@@ -48,7 +48,7 @@ public class Future<S>: Completing {
   public func _asyncNinja_retainUntilFinalization(_ releasable: Releasable) {
     assertAbstract()
   }
-  
+
   /// **Internal use only**.
   public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     assertAbstract()
@@ -66,8 +66,9 @@ public extension Future {
   /// Transforms the future to a channel
   func makeChannel<Update>(updates: [Update] = []) -> Channel<Update, Success> {
     let producer = Producer<Update, Success>(bufferedUpdates: updates)
-    let handler = makeCompletionHandler(executor: .immediate) {
-      [weak producer] (completion, originalExecutor) in
+    let handler = makeCompletionHandler(
+      executor: .immediate
+    ) { [weak producer] (completion, _) in
       producer?.complete(completion)
     }
     producer._asyncNinja_retainHandlerUntilFinalization(handler)
@@ -78,8 +79,9 @@ public extension Future {
   /// Correctness of such transformation is left on our behalf
   func staticCast<Update, T>(updates: [Update] = []) -> Channel<Update, T> {
     let producer = Producer<Update, T>(bufferedUpdates: updates)
-    let handler = makeCompletionHandler(executor: .immediate) {
-      [weak producer] (completion, originalExecutor) in
+    let handler = makeCompletionHandler(
+      executor: .immediate
+    ) { [weak producer] (completion, _) in
       producer?.complete(completion.staticCast())
     }
     producer._asyncNinja_retainHandlerUntilFinalization(handler)
@@ -128,8 +130,7 @@ public extension Future {
     executor: Executor = .primary,
     pure: Bool = true,
     _ transform: @escaping (_ success: Success) throws -> T
-    ) -> Future<T>
-  {
+    ) -> Future<T> {
     // Test: FutureTests.testMap_Success
     // Test: FutureTests.testMap_Failure
     return mapSuccess(executor: executor, pure: pure, transform)
@@ -149,8 +150,7 @@ public extension Future {
     executor: Executor = .primary,
     pure: Bool = true,
     transform: @escaping (_ success: Success) throws -> T
-    ) -> Future<T.Success>
-  {
+    ) -> Future<T.Success> {
     return flatMapSuccess(executor: executor, pure: pure, transform)
   }
 
@@ -168,8 +168,7 @@ public extension Future {
     executor: Executor = .primary,
     pure: Bool = true,
     transform: @escaping (_ success: Success) throws -> T
-    ) -> Channel<T.Update, T.Success>
-  {
+    ) -> Channel<T.Update, T.Success> {
     return flatMapSuccess(executor: executor, pure: pure, transform)
   }
 
@@ -192,8 +191,7 @@ public extension Future {
     executor: Executor? = nil,
     pure: Bool = true,
     _ transform: @escaping (_ strongContext: C, _ Success: Success) throws -> T
-    ) -> Future<T>
-  {
+    ) -> Future<T> {
     // Test: FutureTests.testMapContextual_Success_ContextAlive
     // Test: FutureTests.testMapContextual_Success_ContextDead
     // Test: FutureTests.testMapContextual_Failure_ContextAlive
@@ -220,8 +218,7 @@ public extension Future {
     executor: Executor? = nil,
     pure: Bool = true,
     transform: @escaping (_ strongContext: C, _ Success: Success) throws -> T
-    ) -> Future<T.Success>
-  {
+    ) -> Future<T.Success> {
     return flatMapSuccess(context: context, executor: executor, pure: pure, transform)
   }
 
@@ -244,8 +241,7 @@ public extension Future {
     executor: Executor? = nil,
     pure: Bool = true,
     transform: @escaping (_ strongContext: C, _ Success: Success) throws -> T
-    ) -> Channel<T.Update, T.Success>
-  {
+    ) -> Channel<T.Update, T.Success> {
     return flatMapSuccess(context: context, executor: executor, pure: pure, transform)
   }
 

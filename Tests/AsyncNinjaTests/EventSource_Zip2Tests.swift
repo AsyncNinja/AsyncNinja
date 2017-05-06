@@ -28,9 +28,9 @@ import Dispatch
 #endif
 
 class EventSource_Zip2Tests: XCTestCase {
-  
+
   static let allTests = [
-    ("testZip", testZip),
+    ("testZip", testZip)
   ]
 
   func testZip() {

@@ -48,7 +48,7 @@ class FutureTests: XCTestCase {
     ("testFlatten_InnerFailure", testFlatten_InnerFailure),
     ("testChannelFlatten", testChannelFlatten),
     ("testGroupCompletionFuture", testGroupCompletionFuture),
-    ("testDescription", testDescription),
+    ("testDescription", testDescription)
     ]
 
   func testLifetime() {
@@ -88,24 +88,23 @@ class FutureTests: XCTestCase {
 
   func testMapLifetime() {
     let qos = pickQoS()
-    
+
     weak var weakFutureValue: Future<Int>?
     weak var weakMappedFuture: Future<String>?
     eval { () -> Void in
       var futureValue: Future<Int>? = future(executor: .queue(qos), after: 1.0) { 1 }
       weakFutureValue = futureValue
-      
-      var mappedFuture: Future<String>? = futureValue!.map {
-        _ in
+
+      var mappedFuture: Future<String>? = futureValue!.map { _ in
         XCTFail()
         return "hello"
       }
       weakMappedFuture = mappedFuture
-      
+
       mappedFuture = nil
       futureValue = nil
     }
-    
+
     XCTAssertNil(weakFutureValue)
     XCTAssertNil(weakMappedFuture)
   }
@@ -116,18 +115,17 @@ class FutureTests: XCTestCase {
     weak var weakMappedFuture: Future<String>?
     eval { () -> Void in
       futureValue = future(executor: .queue(qos), after: 0.1) { 1 }
-      
-      var mappedFuture: Future<String>? = futureValue!.map(pure: true) {
-        _ in
+
+      var mappedFuture: Future<String>? = futureValue!.map(pure: true) { _ in
         XCTFail()
         return "hello"
       }
       weakMappedFuture = mappedFuture
-      
+
       mappedFuture = nil
       futureValue = nil
     }
-    
+
     XCTAssertNil(weakMappedFuture)
     sleep(1)
   }
@@ -140,18 +138,17 @@ class FutureTests: XCTestCase {
 
     eval { () -> Void in
       futureValue = future(executor: .queue(qos), after: 0.1) { 1 }
-      
-      var mappedFuture: Future<String>? = futureValue!.map(pure: false) {
-        _ in
+
+      var mappedFuture: Future<String>? = futureValue!.map(pure: false) { _ in
         sema.signal()
         return "hello"
       }
       weakMappedFuture = mappedFuture
-      
+
       mappedFuture = nil
       futureValue = nil
     }
-    
+
     XCTAssertNil(weakMappedFuture)
     sema.wait()
   }
@@ -315,21 +312,21 @@ class FutureTests: XCTestCase {
   }
 
   func testOnCompleteContextual_ContextAlive_RegularActor() {
-    testOnCompleteContextual_ContextAlive(makeActor: TestActor.init)
+    _testOnCompleteContextual_ContextAlive(makeActor: TestActor.init)
   }
 
   func testOnCompleteContextual_ContextAlive_ObjcActor() {
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-    testOnCompleteContextual_ContextAlive(makeActor: TestObjCActor.init)
+    _testOnCompleteContextual_ContextAlive(makeActor: TestObjCActor.init)
     #endif
   }
 
-  private func testOnCompleteContextual_ContextAlive<T: Actor>(makeActor: @escaping () -> T) {
+  func _testOnCompleteContextual_ContextAlive<T: Actor>(makeActor: @escaping () -> T) {
     multiTest {
       let actor = makeActor()
       weak var weakInitialFuture: Future<Int>?
       let value = pickInt()
-      
+
       let group = DispatchGroup()
       group.enter()
       DispatchQueue.global().async {
@@ -343,7 +340,7 @@ class FutureTests: XCTestCase {
             group.leave()
         }
       }
-      
+
       group.wait()
       XCTAssertNil(weakInitialFuture)
     }
@@ -365,7 +362,7 @@ class FutureTests: XCTestCase {
         var delayedFuture: Future<Int>? = initialFuture!.delayed(timeout: 0.1)
         weakDelayedFuture = delayedFuture
 
-        delayedFuture!.onComplete(context: actor!) { (actor, value_) in
+        delayedFuture!.onComplete(context: actor!) { (actor, _) in
           XCTFail()
           assert(actor: actor)
         }
@@ -397,7 +394,7 @@ class FutureTests: XCTestCase {
       XCTFail("timeout")
     }
   }
-  
+
   func testFlatten_OuterFailure() {
     func fail() throws -> Future<Int> { throw AsyncNinjaError.cancelled }
     let startTime = DispatchTime.now()
@@ -413,7 +410,7 @@ class FutureTests: XCTestCase {
       XCTFail("timeout")
     }
   }
-  
+
   func testFlatten_InnerFailure() {
     func fail() throws -> Future<Int> { throw AsyncNinjaError.cancelled }
     let startTime = DispatchTime.now()

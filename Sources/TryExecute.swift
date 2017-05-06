@@ -35,8 +35,7 @@ import Dispatch
 public func tryExecute<T>(
   executor: Executor = .primary,
   validate: @escaping (_ completion: Fallible<T>) -> Bool,
-  _ block: @escaping () throws -> T) -> Future<T>
-{
+  _ block: @escaping () throws -> T) -> Future<T> {
   let promise = Promise<T>()
   _tryExecute(promise: WeakBox(promise),
               lockingBox: MutableBox(makeLocking()),
@@ -57,8 +56,7 @@ public func tryExecute<T>(
 public func tryFlatExecute<T>(
   executor: Executor = .primary,
   validate: @escaping (_ completion: Fallible<T>) -> Bool,
-  _ block: @escaping () throws -> Future<T>) -> Future<T>
-{
+  _ block: @escaping () throws -> Future<T>) -> Future<T> {
   let promise = Promise<T>()
   _tryFlatExecute(promise: WeakBox(promise),
                   lockingBox: MutableBox(makeLocking()),
@@ -86,21 +84,18 @@ public func tryExecute<T, C: ExecutionContext>(
   context: C,
   executor: Executor? = nil,
   validate: @escaping (_ strongContext: C, _ completion: Fallible<T>) -> Bool,
-  _ block: @escaping (_ strongContext: C) throws -> T) -> Future<T>
-{
+  _ block: @escaping (_ strongContext: C) throws -> T) -> Future<T> {
   let promise = Promise<T>()
   _tryExecute(promise: WeakBox(promise),
               lockingBox: MutableBox(makeLocking()),
               executor: executor ?? context.executor,
-              validate:
-    { [weak context] (completion) in
+              validate: { [weak context] (completion) in
       if let strongContext = context {
         return validate(strongContext, completion)
       } else {
         return false
       }
-    })
-  { [weak context] in
+    }) { [weak context] in
     guard let strongContext = context else { throw AsyncNinjaError.contextDeallocated }
     return try block(strongContext)
   }
@@ -123,21 +118,18 @@ public func tryFlatExecute<T, C: ExecutionContext>(
   context: C,
   executor: Executor? = nil,
   validate: @escaping (_ strongContext: C, _ completion: Fallible<T>) -> Bool,
-  _ block: @escaping (_ strongContext: C) throws -> Future<T>) -> Future<T>
-{
+  _ block: @escaping (_ strongContext: C) throws -> Future<T>) -> Future<T> {
   let promise = Promise<T>()
   _tryFlatExecute(promise: WeakBox(promise),
                   lockingBox: MutableBox(makeLocking()),
                   executor: executor ?? context.executor,
-                  validate:
-    { [weak context] (completion) in
+                  validate: { [weak context] (completion) in
       if let strongContext = context {
         return validate(strongContext, completion)
       } else {
         return false
       }
-    })
-  { [weak context] in
+    }) { [weak context] in
     guard let strongContext = context else { throw AsyncNinjaError.contextDeallocated }
     return try block(strongContext)
   }
@@ -156,8 +148,7 @@ public func tryFlatExecute<T, C: ExecutionContext>(
 public func tryExecute<T>(
   executor: Executor = .primary,
   times: Int,
-  _ block: @escaping () throws -> T) -> Future<T>
-{
+  _ block: @escaping () throws -> T) -> Future<T> {
   var timesLeft = times
   func validate(completion: Fallible<T>) -> Bool {
     switch completion {
@@ -182,8 +173,7 @@ public func tryExecute<T>(
 public func tryFlatExecute<T>(
   executor: Executor = .primary,
   times: Int,
-  _ block: @escaping () throws -> Future<T>) -> Future<T>
-{
+  _ block: @escaping () throws -> Future<T>) -> Future<T> {
   var timesLeft = times
   func validate(completion: Fallible<T>) -> Bool {
     switch completion {
@@ -215,8 +205,7 @@ public func tryExecute<T, C: ExecutionContext>(
   context: C,
   executor: Executor? = nil,
   times: Int,
-  _ block: @escaping (_ strongContext: C) throws -> T) -> Future<T>
-{
+  _ block: @escaping (_ strongContext: C) throws -> T) -> Future<T> {
   var timesLeft = times
   func validate(context: C, completion: Fallible<T>) -> Bool {
     switch completion {
@@ -246,8 +235,7 @@ public func tryFlatExecute<T, C: ExecutionContext>(
   context: C,
   executor: Executor? = nil,
   times: Int,
-  _ block: @escaping (_ strongContext: C) throws -> Future<T>) -> Future<T>
-{
+  _ block: @escaping (_ strongContext: C) throws -> Future<T>) -> Future<T> {
   var timesLeft = times
   func validate(context: C, completion: Fallible<T>) -> Bool {
     switch completion {
@@ -270,10 +258,11 @@ private func _tryExecute<T>(
   lockingBox: MutableBox<Locking>,
   executor: Executor = .primary,
   validate: @escaping (_ completion: Fallible<T>) -> Bool,
-  _ block: @escaping () throws -> T)
-{
-  executor.execute(from: nil) {
-    (originalExecutor) in
+  _ block: @escaping () throws -> T
+  ) {
+  executor.execute(
+    from: nil
+  ) { (originalExecutor) in
     guard case .some = promise.value else { return }
     let completion = fallible(block: block)
     if lockingBox.value.locker({ validate(completion) }) {
@@ -290,10 +279,11 @@ private func _tryFlatExecute<T>(
   lockingBox: MutableBox<Locking>,
   executor: Executor = .primary,
   validate: @escaping (_ completion: Fallible<T>) -> Bool,
-  _ block: @escaping () throws -> Future<T>)
-{
-  executor.execute(from: nil) {
-    (originalExecutor) in
+  _ block: @escaping () throws -> Future<T>
+  ) {
+  executor.execute(
+    from: nil
+  ) { (originalExecutor) in
     guard case .some = promise.value else { return }
     do {
       let future = try block()

@@ -85,8 +85,9 @@ public extension Updating {
   func onUpdate(
     executor: Executor = .primary,
     _ block: @escaping (_ update: Update) -> Void) {
-    let handler = self.makeUpdateHandler(executor: executor) {
-      (update, originalExecutor) in
+    let handler = self.makeUpdateHandler(
+      executor: executor
+    ) { (update, _) in
       block(update)
     }
     self._asyncNinja_retainHandlerUntilFinalization(handler)
@@ -106,9 +107,9 @@ public extension Updating {
     context: C,
     executor: Executor? = nil,
     _ block: @escaping (_ strongContext: C, _ update: Update) -> Void) {
-    let handler = self.makeUpdateHandler(executor: executor ?? context.executor)
-    {
-      [weak context] (update, originalExecutor) in
+    let handler = self.makeUpdateHandler(
+      executor: executor ?? context.executor
+    ) { [weak context] (update, _) in
       guard let context = context else { return }
       block(context, update)
     }
@@ -137,7 +138,7 @@ public extension Updatable {
   ///
   /// - Parameter update: value to update with
   func update(_ update: Update) {
-    let _ = self.tryUpdate(update, from: nil)
+    _ = self.tryUpdate(update, from: nil)
   }
 
   /// Sends specified Update to the Updatable
@@ -149,7 +150,7 @@ public extension Updatable {
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
   func update(_ update: Update, from originalExecutor: Executor?) {
-    let _ = self.tryUpdate(update, from: originalExecutor)
+    _ = self.tryUpdate(update, from: originalExecutor)
   }
 }
 
@@ -195,8 +196,9 @@ public extension EventsDestination {
   ///   on `strictAsync: false` `Executor`s.
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
-  public func post(_ event: ChannelEvent<Update, Success>,
-                    from originalExecutor: Executor? = nil) {
+  public func post(
+    _ event: ChannelEvent<Update, Success>,
+    from originalExecutor: Executor? = nil) {
     switch event {
     case let .update(update):
       self.update(update, from: originalExecutor)

@@ -36,8 +36,7 @@ public extension Sequence {
   func asyncMap<T>(
     executor: Executor = .primary,
     _ transform: @escaping (_ element: Self.Iterator.Element) throws -> T
-    ) -> Future<[T]>
-  {
+    ) -> Future<[T]> {
     return _asyncMap(executor: executor, transform)
   }
 
@@ -55,14 +54,14 @@ public extension Sequence {
     context: C,
     executor: Executor? = nil,
     _ transform: @escaping (_ strongContext: C, _ element: Self.Iterator.Element) throws -> T
-    ) -> Future<[T]>
-  {
-    let promise = _asyncMap(executor: executor ?? context.executor) {
-      [weak context] (value) -> T in
+    ) -> Future<[T]> {
+    let promise = _asyncMap(
+      executor: executor ?? context.executor
+    ) { [weak context] (value) -> T in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, value)
     }
-    
+
     context.addDependent(completable: promise)
     return promise
   }
@@ -71,8 +70,7 @@ public extension Sequence {
   func _asyncMap<T>(
     executor: Executor = .primary,
     _ transform: @escaping (_ element: Self.Iterator.Element) throws -> T
-    ) -> Promise<[T]>
-  {
+    ) -> Promise<[T]> {
     func makeDummy(value: Self.Iterator.Element) -> T? {
       return nil
     }
@@ -92,10 +90,11 @@ public extension Sequence {
       guard 0 == unknownSubvaluesCount else { return nil }
       return subvalues.map { $0! }
     }
-    
+
     for (index, value) in self.enumerated() {
-      executor.execute(from: nil) {
-        [weak promise] (originalExecutor) in
+      executor.execute(
+        from: nil
+      ) { [weak promise] (originalExecutor) in
         guard case .some = promise, canContinue else { return }
 
         do {
@@ -134,8 +133,7 @@ public extension Sequence {
   func asyncFlatMap<T: Completing>(
     executor: Executor = .primary,
     _ transform: @escaping (_ element: Self.Iterator.Element) throws -> T
-    ) -> Future<[T.Success]>
-  {
+    ) -> Future<[T.Success]> {
     return _asyncFlatMap(executor: executor, transform)
   }
 
@@ -154,11 +152,11 @@ public extension Sequence {
     context: C,
     executor: Executor? = nil,
     _ transform: @escaping (_ strongContext: C, _ element: Self.Iterator.Element) throws -> T
-    ) -> Future<[T.Success]>
-  {
+    ) -> Future<[T.Success]> {
     let executor_ = executor ?? context.executor
-    let promise = _asyncFlatMap(executor: executor_) {
-      [weak context] (value) -> T in
+    let promise = _asyncFlatMap(
+      executor: executor_
+    ) { [weak context] (value) -> T in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, value)
     }
@@ -171,8 +169,7 @@ public extension Sequence {
   internal func _asyncFlatMap<T: Completing>(
     executor: Executor,
     _ transform: @escaping (_ element: Self.Iterator.Element) throws -> T
-    ) -> Promise<[T.Success]>
-  {
+    ) -> Promise<[T.Success]> {
     let promise = Promise<[T.Success]>()
     var subvalues: [T.Success?] = self.map { _ in nil }
 
@@ -186,8 +183,9 @@ public extension Sequence {
     var unknownSubvaluesCount = subvalues.count
 
     for (index, value) in self.enumerated() {
-      executor.execute(from: nil) {
-        [weak promise] (originalExecutor) in
+      executor.execute(
+        from: nil
+      ) { [weak promise] (originalExecutor) in
         guard case .some = promise, canContinue else { return }
 
         func updateAndTest(index: Int, subvalue: Fallible<T.Success>) -> Fallible<[T.Success]>? {
@@ -204,11 +202,12 @@ public extension Sequence {
             return .failure(failure)
           }
         }
-        
+
         do {
           let futureSubvalue: T = try transform(value)
-          let handler = futureSubvalue.makeCompletionHandler(executor: .immediate)
-          { [weak promise] (subvalue, originalExecutor) in
+          let handler = futureSubvalue.makeCompletionHandler(
+            executor: .immediate
+          ) { [weak promise] (subvalue, originalExecutor) in
             if
               let promise = promise,
               canContinue,
@@ -217,7 +216,7 @@ public extension Sequence {
               promise.complete(completion, from: originalExecutor)
             }
           }
-          
+
           promise?._asyncNinja_retainHandlerUntilFinalization(handler)
         } catch {
           promise?.fail(error, from: originalExecutor)
@@ -229,7 +228,7 @@ public extension Sequence {
     promise._asyncNinja_notifyFinalization {
       canContinue = false
     }
-    
+
     return promise
   }
 }
@@ -249,8 +248,7 @@ public extension Sequence where Self.Iterator.Element: Completing {
     _ initialResult: T,
     executor: Executor = .primary,
     _ nextPartialResult: @escaping (_ accumulator: T, _ element: Self.Iterator.Element.Success) throws -> T
-    ) -> Promise<T>
-  {
+    ) -> Promise<T> {
     // Test: BatchFutureTests.testReduce
     // Test: BatchFutureTests.testReduceThrows
     return _asyncReduce(initialResult, executor: executor, nextPartialResult)
@@ -270,11 +268,12 @@ public extension Sequence where Self.Iterator.Element: Completing {
     _ initialResult: T,
     context: C,
     executor: Executor? = nil,
+    // swiftlint:disable:next line_length
     _ nextPartialResult: @escaping (_ strongContext: C, _ accumulator: T, _ element: Self.Iterator.Element.Success) throws -> T
-    ) -> Future<T>
-  {
-    let promise = asyncReduce(initialResult, executor: executor ?? context.executor) {
-      [weak context] (accumulator, value) -> T in
+    ) -> Future<T> {
+    let promise = asyncReduce(initialResult,
+                              executor: executor ?? context.executor
+    ) { [weak context] (accumulator, value) -> T in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try nextPartialResult(context, accumulator, value)
     }
@@ -288,13 +287,12 @@ public extension Sequence where Self.Iterator.Element: Completing {
     _ initialResult: T,
     executor: Executor = .primary,
     _ nextPartialResult: @escaping (_ accumulator: T, _ element: Self.Iterator.Element.Success) throws -> T
-    ) -> Promise<T>
-  {
+    ) -> Promise<T> {
     // Test: BatchFutureTests.testReduce
     // Test: BatchFutureTests.testReduceThrows
 
     let promise = Promise<T>()
-    var values: Array<Self.Iterator.Element.Success?> = self.map { _ in nil }
+    var values: [Self.Iterator.Element.Success?] = self.map { _ in nil }
     var unknownSubvaluesCount = values.count
     guard unknownSubvaluesCount > 0 else {
       promise.succeed(initialResult)
@@ -304,7 +302,10 @@ public extension Sequence where Self.Iterator.Element: Completing {
     var locking = makeLocking(isFair: true)
     var canContinue = true
 
-    func updateAndTest(index: Int, subcompletion: Fallible<Self.Iterator.Element.Success>) -> Fallible<[Self.Iterator.Element.Success?]>? {
+    func updateAndTest(
+      index: Int,
+      subcompletion: Fallible<Self.Iterator.Element.Success>
+      ) -> Fallible<[Self.Iterator.Element.Success?]>? {
       switch subcompletion {
       case let .success(success):
         values[index] = success
@@ -316,24 +317,24 @@ public extension Sequence where Self.Iterator.Element: Completing {
         return .failure(failure)
       }
     }
-    
+
     func _nextPartialResult(_ accumulator: T, _ element: Self.Iterator.Element.Success?) throws -> T {
       return try nextPartialResult(accumulator, element!)
     }
-    
+
     for (index, future) in self.enumerated() {
-      let handler = future.makeCompletionHandler(executor: .immediate)
-      {
-        [weak promise] (completion, originalExecutor) -> Void in
+      let handler = future.makeCompletionHandler(
+        executor: .immediate
+      ) { [weak promise] (completion, originalExecutor) -> Void in
         guard
           canContinue,
           case .some = promise,
           let valuesToReduce = locking.locker(index, completion, updateAndTest)
           else { return }
-        
+
         switch valuesToReduce {
         case let .success(success):
-          executor.execute(from: originalExecutor) { [weak promise] (originalExecutor) in
+          executor.execute(from: originalExecutor) { [weak promise] (_) in
             do {
               let result = try success.reduce(initialResult, _nextPartialResult)
               promise?.succeed(result)
@@ -349,7 +350,7 @@ public extension Sequence where Self.Iterator.Element: Completing {
 
       promise._asyncNinja_retainHandlerUntilFinalization(handler)
     }
-    
+
     return promise
   }
 }

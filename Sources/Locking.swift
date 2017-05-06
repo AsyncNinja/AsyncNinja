@@ -53,7 +53,7 @@ public extension Locking {
     defer { unlock() }
     return try locked(a)
   }
-  
+
   /// Locks and performs block with two arugments
   ///
   /// - Parameter locked: locked function to perform
@@ -63,11 +63,11 @@ public extension Locking {
     defer { unlock() }
     return try locked(a, b)
   }
-  
+
   /// Locks and performs block
   ///
   /// - Parameter locked: locked function to perform
-  mutating func locker(_ locked: () -> Void) -> Void {
+  mutating func locker(_ locked: () -> Void) {
     lock()
     locked()
     unlock()

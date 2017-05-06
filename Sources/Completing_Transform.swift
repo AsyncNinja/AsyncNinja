@@ -31,11 +31,10 @@ extension Completing {
     executor: Executor = .primary,
     pure: Bool,
     _ transform: @escaping (_ completion: Fallible<Success>) throws -> T
-    ) -> Promise<T>
-  {
+    ) -> Promise<T> {
     let promise = Promise<T>()
-    let handler = makeCompletionHandler(executor: executor) {
-      [weak promise] (completion, originalExecutor) -> Void in
+    let handler = makeCompletionHandler(executor: executor
+    ) { [weak promise] (completion, originalExecutor) -> Void in
       if pure, case .none = promise { return }
       let transformedValue = fallible { try transform(completion) }
       promise?.complete(transformedValue, from: originalExecutor)
@@ -53,19 +52,18 @@ extension Completing {
     executor: Executor = .primary,
     pure: Bool,
     _ transform: @escaping (_ failure: Swift.Error) throws -> T
-    ) -> Promise<Success> where T.Success == Success
-  {
+    ) -> Promise<Success> where T.Success == Success {
     let promise = Promise<Success>()
-    let handler = makeCompletionHandler(executor: executor) {
-      [weak promise] (completion, originalExecutor) -> Void in
+    let handler = makeCompletionHandler(
+      executor: executor
+    ) { [weak promise] (completion, originalExecutor) -> Void in
       if pure, case .none = promise { return }
-      
+
       switch completion {
       case let .success(success):
         promise?.succeed(success, from: originalExecutor)
       case let .failure(failure):
-        do { promise?.complete(with: try transform(failure)) }
-        catch { promise?.fail(error, from: originalExecutor) }
+        do { promise?.complete(with: try transform(failure)) } catch { promise?.fail(error, from: originalExecutor) }
       }
     }
     promise._asyncNinja_retainHandlerUntilFinalization(handler)
@@ -100,8 +98,7 @@ public extension Completing {
     executor: Executor = .primary,
     pure: Bool = true,
     _ transform: @escaping (_ completion: Fallible<Success>) throws -> T
-    ) -> Future<T>
-  {
+    ) -> Future<T> {
     return _mapCompletion(executor: executor, pure: pure, transform)
   }
 
@@ -123,8 +120,7 @@ public extension Completing {
     executor: Executor = .primary,
     pure: Bool = true,
     _ transform: @escaping (_ completion: Fallible<Success>) throws -> T
-    ) -> Future<T.Success>
-  {
+    ) -> Future<T.Success> {
     return mapCompletion(executor: executor, pure: pure, transform).flatten()
   }
 
@@ -146,8 +142,7 @@ public extension Completing {
     executor: Executor = .primary,
     pure: Bool = true,
     _ transform: @escaping (_ completion: Fallible<Success>) throws -> T
-    ) -> Channel<T.Update, T.Success>
-  {
+    ) -> Channel<T.Update, T.Success> {
     return mapCompletion(executor: executor, pure: pure, transform).flatten()
   }
 
@@ -170,8 +165,7 @@ public extension Completing {
     executor: Executor = .primary,
     pure: Bool = true,
     _ transform: @escaping (_ success: Success) throws -> T
-    ) -> Future<T>
-  {
+    ) -> Future<T> {
     return mapCompletion(executor: executor, pure: pure) {
       try transform(try $0.liftSuccess())
     }
@@ -196,8 +190,7 @@ public extension Completing {
     executor: Executor = .primary,
     pure: Bool = true,
     _ transform: @escaping (_ success: Success) throws -> T
-    ) -> Future<T.Success>
-  {
+    ) -> Future<T.Success> {
     return mapSuccess(executor: executor, pure: pure, transform).flatten()
   }
 
@@ -220,8 +213,7 @@ public extension Completing {
     executor: Executor = .primary,
     pure: Bool = true,
     _ transform: @escaping (_ success: Success) throws -> T
-    ) -> Channel<T.Update, T.Success>
-  {
+    ) -> Channel<T.Update, T.Success> {
     return mapSuccess(executor: executor, pure: pure, transform).flatten()
   }
 
@@ -246,8 +238,7 @@ public extension Completing {
   func recover<E: Swift.Error>(
     from specificError: E,
     with success: Success
-    ) -> Future<Success> where E: Equatable
-  {
+    ) -> Future<Success> where E: Equatable {
     return recover(executor: .immediate) {
       if let myError = $0 as? E,
         myError == specificError {
@@ -277,8 +268,7 @@ public extension Completing {
     executor: Executor = .primary,
     pure: Bool = true,
     _ transform: @escaping (_ failure: Swift.Error) throws -> Success
-    ) -> Future<Success>
-  {
+    ) -> Future<Success> {
     return mapCompletion(executor: executor, pure: pure) {
       switch $0 {
       case .success(let success): return success
@@ -307,8 +297,7 @@ public extension Completing {
     executor: Executor = .primary,
     pure: Bool = true,
     _ transform: @escaping (_ failure: E) throws -> Success
-    ) -> Future<Success> where E: Equatable
-  {
+    ) -> Future<Success> where E: Equatable {
     return recover(executor: executor, pure: pure) {
       if let myError = $0 as? E, myError == specificError {
         return try transform(myError)
@@ -337,11 +326,10 @@ public extension Completing {
     executor: Executor = .primary,
     pure: Bool = true,
     _ transform: @escaping (_ failure: Swift.Error) throws -> T
-    ) -> Future<Success> where T.Success == Success
-  {
+    ) -> Future<Success> where T.Success == Success {
     return _flatRecover(executor: executor, pure: pure, transform)
   }
-  
+
   /// Transforms the `Completing` to a `Future` with transformation `(E) -> Completing`.
   /// Success of the `Completing` will be the success of the returned `Future`.
   ///
@@ -363,8 +351,7 @@ public extension Completing {
     executor: Executor = .primary,
     pure: Bool = true,
     _ transform: @escaping (_ failure: E) throws -> T
-    ) -> Future<Success> where T.Success == Success, E: Equatable
-  {
+    ) -> Future<Success> where T.Success == Success, E: Equatable {
     return flatRecover(executor: executor, pure: pure) { (error: Swift.Error) -> T in
       guard let myError = error as? E, myError == specificError
         else { throw error }
@@ -399,10 +386,11 @@ public extension Completing {
     executor: Executor? = nil,
     pure: Bool = true,
     _ transform: @escaping (C, Fallible<Success>) throws -> Transformed
-    ) -> Future<Transformed>
-  {
-    let promise = _mapCompletion(executor: executor ?? context.executor, pure: pure) {
-      [weak context] (value) -> Transformed in
+    ) -> Future<Transformed> {
+    let promise = _mapCompletion(
+      executor: executor ?? context.executor,
+      pure: pure
+    ) { [weak context] (value) -> Transformed in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, value)
     }
@@ -432,8 +420,7 @@ public extension Completing {
     executor: Executor? = nil,
     pure: Bool = true,
     _ transform: @escaping (C, Fallible<Success>) throws -> T
-    ) -> Future<T.Success>
-  {
+    ) -> Future<T.Success> {
     return mapCompletion(context: context, executor: executor, pure: pure, transform).flatten()
   }
 
@@ -459,8 +446,7 @@ public extension Completing {
     executor: Executor? = nil,
     pure: Bool = true,
     _ transform: @escaping (C, Fallible<Success>) throws -> T
-    ) -> Channel<T.Update, T.Success>
-  {
+    ) -> Channel<T.Update, T.Success> {
     return mapCompletion(context: context, executor: executor, pure: pure, transform).flatten()
   }
 
@@ -487,10 +473,12 @@ public extension Completing {
     executor: Executor? = nil,
     pure: Bool = true,
     _ transform: @escaping (C, Success) throws -> Transformed
-    ) -> Future<Transformed>
-  {
-    return mapCompletion(context: context, executor: executor, pure: pure) {
-      (context, value) -> Transformed in
+    ) -> Future<Transformed> {
+    return mapCompletion(
+      context: context,
+      executor: executor,
+      pure: pure
+    ) { (context, value) -> Transformed in
       let success = try value.liftSuccess()
       return try transform(context, success)
     }
@@ -519,8 +507,7 @@ public extension Completing {
     executor: Executor? = nil,
     pure: Bool = true,
     _ transform: @escaping (C, Success) throws -> T
-    ) -> Future<T.Success>
-  {
+    ) -> Future<T.Success> {
     return mapSuccess(context: context, executor: executor, pure: pure, transform).flatten()
   }
 
@@ -547,8 +534,7 @@ public extension Completing {
     executor: Executor? = nil,
     pure: Bool = true,
     _ transform: @escaping (C, Success) throws -> T
-    ) -> Channel<T.Update, T.Success>
-  {
+    ) -> Channel<T.Update, T.Success> {
     return mapSuccess(context: context, executor: executor, pure: pure, transform).flatten()
   }
 
@@ -575,10 +561,12 @@ public extension Completing {
     executor: Executor? = nil,
     pure: Bool = true,
     _ transform: @escaping (C, Swift.Error) throws -> Success
-    ) -> Future<Success>
-  {
-    return mapCompletion(context: context, executor: executor, pure: pure) {
-      (context, value) -> Success in
+    ) -> Future<Success> {
+    return mapCompletion(
+      context: context,
+      executor: executor,
+      pure: pure
+    ) { (context, value) -> Success in
       switch value {
       case .success(let success):
         return success
@@ -612,10 +600,12 @@ public extension Completing {
     executor: Executor? = nil,
     pure: Bool = true,
     _ transform: @escaping (C, E) throws -> Success
-    ) -> Future<Success> where E: Equatable
-  {
-    return recover(context: context, executor: executor, pure: pure) {
-      (context, error) in
+    ) -> Future<Success> where E: Equatable {
+    return recover(
+      context: context,
+      executor: executor,
+      pure: pure
+    ) { (context, error) in
       if let myError = error as? E, myError == specificError {
         return try transform(context, myError)
       } else {
@@ -623,7 +613,7 @@ public extension Completing {
       }
     }
   }
-  
+
   /// Transforms the `Completing` to a `Future` with transformation `(E) -> Completing`.
   /// Success of the `Completing` will be the success of the returned `Future`.
   ///
@@ -647,17 +637,18 @@ public extension Completing {
     executor: Executor? = nil,
     pure: Bool = true,
     _ transform: @escaping (C, Swift.Error) throws -> T
-    ) -> Future<Success> where T.Success == Success
-  {
-    let promise = _flatRecover(executor: executor ?? context.executor, pure: pure) {
-      [weak context] (failure) -> T in
+    ) -> Future<Success> where T.Success == Success {
+    let promise = _flatRecover(
+      executor: executor ?? context.executor,
+      pure: pure
+    ) { [weak context] (failure) -> T in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try transform(context, failure)
     }
     context.addDependent(completable: promise)
     return promise
   }
-  
+
   /// Transforms the `Completing` to a `Future` with transformation `(E) -> Completing`.
   /// Success of the `Completing` will be the success of the returned `Future`.
   ///
@@ -683,10 +674,12 @@ public extension Completing {
     executor: Executor? = nil,
     pure: Bool = true,
     _ transform: @escaping (C, Swift.Error) throws -> T
-    ) -> Future<Success> where T.Success == Success, E: Equatable
-  {
-    return flatRecover(context: context, executor: executor, pure: pure) {
-      (context, error) -> T in
+    ) -> Future<Success> where T.Success == Success, E: Equatable {
+    return flatRecover(
+      context: context,
+      executor: executor,
+      pure: pure
+    ) { (context, error) -> T in
       guard let myError = error as? E, myError == specificError
         else { throw error }
       return try transform(context, myError)
@@ -702,11 +695,11 @@ public extension Completing {
   func delayedCompletion(
     timeout: Double,
     on executor: Executor = .primary
-    ) -> Future<Success>
-  {
+    ) -> Future<Success> {
     let promise = Promise<Success>()
-    let handler = makeCompletionHandler(executor: .immediate) {
-      [weak promise] (completion, _) in
+    let handler = makeCompletionHandler(
+      executor: .immediate
+    ) { [weak promise] (completion, _) in
       executor.execute(after: timeout) { [weak promise] executor in
         guard let promise = promise else { return }
         promise.complete(completion, from: executor)
@@ -728,13 +721,15 @@ public extension Future where S: Completing {
     // Test: FutureTests.testFlatten_OuterFailure
     // Test: FutureTests.testFlatten_InnerFailure
     let promise = Promise<S.Success>()
-    let handler = makeCompletionHandler(executor: .immediate) {
-      [weak promise] (failure, originalExecutor) in
+    let handler = makeCompletionHandler(
+      executor: .immediate
+    ) { [weak promise] (failure, originalExecutor) in
       guard let promise = promise else { return }
       switch failure {
       case .success(let future):
-        let handler = future.makeCompletionHandler(executor: .immediate) {
-          [weak promise] (completion, originalExecutor) -> Void in
+        let handler = future.makeCompletionHandler(
+          executor: .immediate
+        ) { [weak promise] (completion, originalExecutor) -> Void in
           promise?.complete(completion, from: originalExecutor)
         }
         promise._asyncNinja_retainHandlerUntilFinalization(handler)
@@ -757,19 +752,22 @@ public extension Future where S: Completing, S: Updating {
     // Test: FutureTests.testChannelFlatten
     let producer = Producer<S.Update, S.Success>()
 
-    let handler = makeCompletionHandler(executor: .immediate) {
-      [weak producer] (failure, originalExecutor) in
+    let handler = makeCompletionHandler(
+      executor: .immediate
+    ) { [weak producer] (failure, originalExecutor) in
       guard let producer = producer else { return }
       switch failure {
       case .success(let channel):
-        let completionHandler = channel.makeCompletionHandler(executor: .immediate) {
-          [weak producer] (completion, originalExecutor) -> Void in
+        let completionHandler = channel.makeCompletionHandler(
+          executor: .immediate
+        ) { [weak producer] (completion, originalExecutor) -> Void in
           producer?.complete(completion, from: originalExecutor)
         }
         producer._asyncNinja_retainHandlerUntilFinalization(completionHandler)
 
-        let updateHandler = channel.makeUpdateHandler(executor: .immediate) {
-          [weak producer] (update, originalExecutor) -> Void in
+        let updateHandler = channel.makeUpdateHandler(
+          executor: .immediate
+        ) { [weak producer] (update, originalExecutor) -> Void in
           producer?.update(update, from: originalExecutor)
         }
         producer._asyncNinja_retainHandlerUntilFinalization(updateHandler)

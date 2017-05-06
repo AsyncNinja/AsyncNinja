@@ -31,7 +31,7 @@ class CancellationTokenTests: XCTestCase {
 
   static let allTests = [
     ("testCancel", testCancel),
-    ("testCancelAfter", testCancelAfter),
+    ("testCancelAfter", testCancelAfter)
   ]
 
   func testCancel() {

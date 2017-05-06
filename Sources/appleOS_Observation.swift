@@ -25,10 +25,10 @@
 
   /// A policy for handling `None` (or `nil`) update of `Channel<Update?, Success>`
   public enum UpdateWithNoneHandlingPolicy<T> {
-    
+
     /// drop `None` (or `nil`) update
     case drop
-    
+
     /// replace `None` (or `nil`) with a specified value
     case replace(T)
   }
@@ -36,7 +36,7 @@
   /// **Internal use only** `KeyPathObserver` is an object for managing KVO.
   final class KeyPathObserver: NSObject, ObservationSessionItem {
     typealias ObservationBlock = (_ object: Any?, _ changes: [NSKeyValueChangeKey: Any]) -> Void
-    
+
     let object: Unmanaged<NSObject>
     let keyPath: String
     let options: NSKeyValueObservingOptions
@@ -53,7 +53,11 @@
       }
     }
 
-    init(object: NSObject, keyPath: String, options: NSKeyValueObservingOptions, isEnabled: Bool, observationBlock: @escaping ObservationBlock) {
+    init(object: NSObject,
+         keyPath: String,
+         options: NSKeyValueObservingOptions,
+         isEnabled: Bool,
+         observationBlock: @escaping ObservationBlock) {
       self.object = Unmanaged.passUnretained(object)
       self.keyPath = keyPath
       self.options = options
@@ -79,7 +83,7 @@
       }
     }
   }
-  
+
   @objc protocol ObservationSessionItem: AnyObject {
     var isEnabled: Bool { get set }
   }
@@ -104,7 +108,7 @@
     public init(isEnabled: Bool = true) {
       self.isEnabled = isEnabled
     }
-    
+
     func insert(item: ObservationSessionItem) {
       items.push(item)
     }

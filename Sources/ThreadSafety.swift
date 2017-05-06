@@ -81,7 +81,8 @@ private struct LockingThreadSafeContainer: ThreadSafeContainer {
         let oldPtr = oldRef?.toOpaque() ?? nil
         let newPtr = newRef?.toOpaque() ?? nil
 
-        if OSAtomicCompareAndSwapPtrBarrier(oldPtr, newPtr, UnsafeMutableRawPointer(&self.head).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)) {
+        let thePtr = UnsafeMutableRawPointer(&self.head).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)
+        if OSAtomicCompareAndSwapPtrBarrier(oldPtr, newPtr, thePtr) {
           oldRef?.release()
           return (oldHead, newHead)
         } else {
@@ -91,5 +92,5 @@ private struct LockingThreadSafeContainer: ThreadSafeContainer {
       }
     }
   }
-  
+
 #endif
