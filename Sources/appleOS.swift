@@ -176,7 +176,7 @@
   ///   - majorStream: a stream to bind to. This stream has a priority during initial synchronization
   ///   - minorStream: a stream to bind to.
   ///   - valueTransformer: `ValueTransformer` to use to transform from T.Update to U.Update and reverse
-  public func doubleBind<T: EventSource&EventsDestination, U: EventSource&EventsDestination>(
+  public func doubleBind<T: EventSource&EventDestination, U: EventSource&EventDestination>(
     _ majorStream: T,
     _ minorStream: U,
     valueTransformer: ValueTransformer) {

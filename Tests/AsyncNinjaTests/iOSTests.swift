@@ -326,11 +326,11 @@
                       object: object,
                       keyPathOrGetSet: .left("highlighted"),
                       values: iOSTests.boolFixture)
-      //      self.testEventsDestination(updatable: object.rp.animationImages,
+      //      self.testEventDestination(updatable: object.rp.animationImages,
       //                                 object: object,
       //                                 keyPath: "animationImages",
       //                                 values: iOSTests.arraysOfImagesAndNilsFixture)
-      //      self.testEventsDestination(updatable: object.rp.highlightedAnimationImages,
+      //      self.testEventDestination(updatable: object.rp.highlightedAnimationImages,
       //                                 object: object,
       //                                 keyPath: "highlightedAnimationImages",
       //                                 values: iOSTests.arraysOfImagesAndNilsFixture)
@@ -342,7 +342,7 @@
                       object: object,
                       keyPathOrGetSet: .left("animationRepeatCount"),
                       values: iOSTests.intFixture)
-      //      self.testEventsDestination(updatable: object.rp.isAnimating,
+      //      self.testEventDestination(updatable: object.rp.isAnimating,
       //                                 object: object,
       //                                 keyPath: "animating",
       //                                 values: iOSTests.boolFixture,
@@ -363,19 +363,19 @@
       for state in iOSTests.uiControlStatesFixture {
         let object = UIButton()
 
-        testEventsDestination(object.rp.title(for: state),
+        testEventDestination(object.rp.title(for: state),
                               object: object,
                               keyPathOrGet: .right({ $0.title(for: state) }),
                               values: iOSTests.stringsAndNilsFixture)
-        testEventsDestination(object.rp.image(for: state),
+        testEventDestination(object.rp.image(for: state),
                               object: object,
                               keyPathOrGet: .right({ $0.image(for: state) }),
                               values: iOSTests.imagesAndNilsFixture)
-        testEventsDestination(object.rp.backgroundImage(for: state),
+        testEventDestination(object.rp.backgroundImage(for: state),
                               object: object,
                               keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
                               values: iOSTests.imagesAndNilsFixture)
-        testEventsDestination(object.rp.attributedTitle(for: state),
+        testEventDestination(object.rp.attributedTitle(for: state),
                               object: object,
                               keyPathOrGet: .right({ $0.attributedTitle(for: state) }),
                               values: iOSTests.attributedStringsFixture)
@@ -406,7 +406,7 @@
                       object: object,
                       keyPathOrGetSet: .left("image"),
                       values: iOSTests.imagesAndNilsFixture)
-      //      testEventsDestination(object.rp.titleTextAttributes(for: .normal),
+      //      testEventDestination(object.rp.titleTextAttributes(for: .normal),
       //                            object: object,
       //                            keyPathOrGet: .right({ $0.titleTextAttributes(for: .normal) }),
       //                            values: /*TODO*/)
@@ -494,11 +494,11 @@
                         object: object,
                         keyPathOrGetSet: .left("date"),
                         values: iOSTests.datesFixture)
-        testEventsDestination(object.rp.minimumDate,
+        testEventDestination(object.rp.minimumDate,
                               object: object,
                               keyPathOrGet: .left("minimumDate"),
                               values: iOSTests.datesAndNilsFixture)
-        testEventsDestination(object.rp.maximumDate,
+        testEventDestination(object.rp.maximumDate,
                               object: object,
                               keyPathOrGet: .left("maximumDate"),
                               values: iOSTests.datesAndNilsFixture)
@@ -578,20 +578,20 @@
           let object = UIStepper()
 
           //    TODO: investigate
-          //        testEventsDestination(object.rp.backgroundImage(for: state),
+          //        testEventDestination(object.rp.backgroundImage(for: state),
           //                              object: object,
           //                              keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
           //                              values: testImages)
-          testEventsDestination(object.rp.incrementImage(for: state),
+          testEventDestination(object.rp.incrementImage(for: state),
                                 object: object,
                                 keyPathOrGet: .right({ $0.incrementImage(for: state) }),
                                 values: iOSTests.imagesFixture)
-          testEventsDestination(object.rp.dividerImage(forLeftSegmentState: state, rightSegmentState: state),
+          testEventDestination(object.rp.dividerImage(forLeftSegmentState: state, rightSegmentState: state),
                                 object: object,
                                 keyPathOrGet:
             .right { $0.dividerImage(forLeftSegmentState: state, rightSegmentState: state) },
                                 values: iOSTests.imagesFixture)
-          testEventsDestination(object.rp.decrementImage(for: state),
+          testEventDestination(object.rp.decrementImage(for: state),
                                 object: object,
                                 keyPathOrGet: .right({ $0.decrementImage(for: state) }),
                                 values: iOSTests.imagesFixture)
@@ -642,15 +642,15 @@
         for state in iOSTests.uiControlStatesFixture {
           let object = UISlider()
 
-          testEventsDestination(object.rp.thumbImage(for: state),
+          testEventDestination(object.rp.thumbImage(for: state),
                                 object: object,
                                 keyPathOrGet: .right({ $0.thumbImage(for: state) }),
                                 values: iOSTests.imagesAndNilsFixture)
-          testEventsDestination(object.rp.minimumTrackImage(for: state),
+          testEventDestination(object.rp.minimumTrackImage(for: state),
                                 object: object,
                                 keyPathOrGet: .right({ $0.minimumTrackImage(for: state) }),
                                 values: iOSTests.imagesAndNilsFixture)
-          testEventsDestination(object.rp.maximumTrackImage(for: state),
+          testEventDestination(object.rp.maximumTrackImage(for: state),
                                 object: object,
                                 keyPathOrGet: .right({ $0.maximumTrackImage(for: state) }),
                                 values: iOSTests.imagesAndNilsFixture)
@@ -669,7 +669,7 @@
 
   // MARK: - T: Equatable
   extension iOSTests {
-    func testEventStream<T: EventsDestination&EventSource, Object: NSObject>(
+    func testEventStream<T: EventDestination&EventSource, Object: NSObject>(
       _ stream: T,
       object: Object,
       keyPathOrGetSet: Either<String, (getter: (Object) -> T.Update?, setter: (Object, T.Update?) -> Void)>,
@@ -677,14 +677,14 @@
       file: StaticString = #file,
       line: UInt = #line
       ) where T.Update: Equatable {
-      testEventsDestination(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
+      testEventDestination(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
                             values: values, file: file, line: line)
       testEventSource(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
                       values: values, file: file, line: line)
     }
 
-    func testEventsDestination<T: EventsDestination, Object: NSObject>(
-      _ eventsDestination: T,
+    func testEventDestination<T: EventDestination, Object: NSObject>(
+      _ EventDestination: T,
       object: Object,
       keyPathOrGet: Either<String, (Object) -> T.Update?>,
       values: [T.Update],
@@ -692,7 +692,7 @@
       line: UInt = #line
       ) where T.Update: Equatable {
       for value in values {
-        eventsDestination.update(value, from: .main)
+        EventDestination.update(value, from: .main)
         let objectValue: T.Update? = eval {
           switch keyPathOrGet {
           case let .left(keyPath):
@@ -731,7 +731,7 @@
 
   // MARK: - T: Optional<Equatable>
   extension iOSTests {
-    func testEventStream<T: EventsDestination&EventSource, Object: NSObject>(
+    func testEventStream<T: EventDestination&EventSource, Object: NSObject>(
       _ stream: T,
       object: Object,
       keyPathOrGetSet: Either<String, (getter: (Object) -> T.Update?, setter: (Object, T.Update?) -> Void)>,
@@ -740,14 +740,14 @@
       line: UInt = #line
       ) where T.Update: AsyncNinjaOptionalAdaptor,
       T.Update.AsyncNinjaWrapped: Equatable {
-        testEventsDestination(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
+        testEventDestination(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
                               values: values, file: file, line: line)
         testEventSource(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
                         values: values, file: file, line: line)
     }
 
-    func testEventsDestination<T: EventsDestination, Object: NSObject>(
-      _ eventsDestination: T,
+    func testEventDestination<T: EventDestination, Object: NSObject>(
+      _ EventDestination: T,
       object: Object,
       keyPathOrGet: Either<String, (Object) -> T.Update?>,
       values: [T.Update],
@@ -757,7 +757,7 @@
       ) where T.Update: AsyncNinjaOptionalAdaptor,
       T.Update.AsyncNinjaWrapped: Equatable {
         for value in values {
-          eventsDestination.update(value, from: .main)
+          EventDestination.update(value, from: .main)
           let objectValue: T.Update? = eval {
             switch keyPathOrGet {
             case let .left(keyPath):

@@ -25,7 +25,7 @@ import Dispatch
 /// Mutable subclass of channel
 /// You can update and complete producer manually
 /// **internal use only**
-public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDestination {
+public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDestination {
   private let _maxBufferSize: Int
   let _bufferedUpdates = Queue<Update>()
   private let _releasePool = ReleasePool(locking: PlaceholderLocking())

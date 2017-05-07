@@ -34,7 +34,7 @@ package "Key Protocols" {
     interface EventSource<Update, Success> {
     }
 
-    interface EventsDestination<Update, Success> {
+    interface EventDestination<Update, Success> {
     }
 }
 
@@ -94,7 +94,7 @@ package "Async Primitives" {
 
     class Sink<Update, Success> {
         **updatable object that acts like a setter**
-        **and looks like an EventsDestination**
+        **and looks like an EventDestination**
         ===
         + init(updateExecutor:updateHandler:)
     }
@@ -238,13 +238,13 @@ CompletionController <|.. EventController
 UpdatesController <|.. EventController
 
 EventController <|.. EventSource
-EventController <|.. EventsDestination
+EventController <|.. EventDestination
 
 Updating <|.. EventSource
 Completing <|.. EventSource
 
-Updatable <|.. EventsDestination
-Completable <|.. EventsDestination
+Updatable <|.. EventDestination
+Completable <|.. EventDestination
 
 Completing <|.. Future
 
@@ -255,13 +255,13 @@ Completable <|.. Promise
 EventSource <|.. Channel
 
 Channel <|-- BaseProducer
-EventsDestination <|.. BaseProducer
+EventDestination <|.. BaseProducer
 
 BaseProducer <|-- DynamicProperty
 BaseProducer <|-- Producer
 BaseProducer <|-- ProducerProxy
 
-EventsDestination <|.. Sink
+EventDestination <|.. Sink
 
 Retainer <|.. ExecutionContext
 ExecutionContext *-- Executor

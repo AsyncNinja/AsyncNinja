@@ -182,10 +182,13 @@ public protocol EventSource: EventController, Completing, Updating, Sequence {
 }
 
 /// A base protocol of object that can be updated and completed
-public protocol EventsDestination: EventController, Updatable, Completable {
+public protocol EventDestination: EventController, Updatable, Completable {
 }
 
-public extension EventsDestination {
+/// **This was a typo since 1.0.0. Let's keep the old code working.**
+public typealias EventsDestination = EventDestination
+
+public extension EventDestination {
 
   /// Posts event to the EventDestination
   /// Value will not be applied for completed Producer
