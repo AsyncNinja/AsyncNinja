@@ -44,11 +44,11 @@ public extension EventSource {
     ) -> Channel<(Update, Sampler.Update), (Success, Sampler.Success)> {
 
     // Test: EventSource_CombineTests.testSample
-    typealias Resulting = Producer<(Update, Sampler.Update), (Success, Sampler.Success)>
-    let producer = Resulting(bufferSize: bufferSize.bufferSize(self, sampler))
+    typealias Destination = Producer<(Update, Sampler.Update), (Success, Sampler.Success)>
+    let producer = Destination(bufferSize: bufferSize.bufferSize(self, sampler))
     cancellationToken?.add(cancellable: producer)
 
-    let helper = SamplingHelper<Self, Sampler, Resulting>(resulting: producer)
+    let helper = SamplingHelper<Self, Sampler, Destination>(destination: producer)
     producer._asyncNinja_retainHandlerUntilFinalization(helper.handle(sampled: self))
     producer._asyncNinja_retainHandlerUntilFinalization(helper.handle(sampler: sampler))
     return producer
@@ -57,16 +57,17 @@ public extension EventSource {
 
 /// **internal use only**
 /// Encapsulates sampling behavior
-private class SamplingHelper<Sampled: EventSource, Sampler: EventSource, Resulting: EventDestination>
-where Resulting.Update == (Sampled.Update, Sampler.Update), Resulting.Success == (Sampled.Success, Sampler.Success) {
+private class SamplingHelper<Sampled: EventSource, Sampler: EventSource, Destination: EventDestination> where
+Destination.Update == (Sampled.Update, Sampler.Update),
+Destination.Success == (Sampled.Success, Sampler.Success) {
   var locking = makeLocking()
   var latestLeftUpdate: Sampled.Update?
   var leftSuccess: Sampled.Success?
   var rightSuccess: Sampler.Success?
-  weak var resulting: Resulting?
+  weak var destination: Destination?
 
-  init(resulting: Resulting) {
-    self.resulting = resulting
+  init(destination: Destination) {
+    self.destination = destination
   }
 
   func handle(sampled: Sampled) -> AnyObject? {
@@ -83,12 +84,12 @@ where Resulting.Update == (Sampled.Update, Sampler.Update), Resulting.Success ==
       case let .completion(.success(localLeftSuccess)):
         if let localRightSuccess = self.rightSuccess {
           let success = (localLeftSuccess, localRightSuccess)
-          self.resulting?.succeed(success, from: originalExecutor)
+          self.destination?.succeed(success, from: originalExecutor)
         } else {
           self.leftSuccess = localLeftSuccess
         }
       case let .completion(.failure(error)):
-        self.resulting?.fail(error, from: originalExecutor)
+        self.destination?.fail(error, from: originalExecutor)
       }
     }
   }
@@ -104,18 +105,18 @@ where Resulting.Update == (Sampled.Update, Sampler.Update), Resulting.Success ==
       switch event {
       case let .update(localRightUpdate):
         if let localLeftUpdate = self.latestLeftUpdate {
-          self.resulting?.update((localLeftUpdate, localRightUpdate), from: originalExecutor)
+          self.destination?.update((localLeftUpdate, localRightUpdate), from: originalExecutor)
           self.latestLeftUpdate = nil
         }
       case let .completion(.success(localRightSuccess)):
         if let localLeftSuccess = self.leftSuccess {
           let success = (localLeftSuccess, localRightSuccess)
-          self.resulting?.succeed(success, from: originalExecutor)
+          self.destination?.succeed(success, from: originalExecutor)
         } else {
           self.rightSuccess = localRightSuccess
         }
       case let .completion(.failure(error)):
-        self.resulting?.fail(error, from: originalExecutor)
+        self.destination?.fail(error, from: originalExecutor)
       }
     }
   }
