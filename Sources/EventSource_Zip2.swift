@@ -23,88 +23,104 @@
 import Dispatch
 
 /// Zips two channels into channels of tuples
-public func zip<T: EventSource, U: EventSource>(
-  _ channelA: T,
-  _ channelB: U,
+public func zip<LeftSource: EventSource, RightSource: EventSource>(
+  _ leftSource: LeftSource,
+  _ rightSource: RightSource,
   cancellationToken: CancellationToken? = nil,
   bufferSize: DerivedChannelBufferSize = .default
-  ) -> Channel<(T.Update, U.Update), (T.Success, U.Success)> {
-  let bufferSize_ = bufferSize.bufferSize(channelA, channelB)
-  let producer = Producer<(T.Update, U.Update), (T.Success, U.Success)>(bufferSize: bufferSize_)
+  ) -> Channel<(LeftSource.Update, RightSource.Update), (LeftSource.Success, RightSource.Success)> {
+  // Test: EventSource_Zip2Tests.testZip
+  typealias DestinationUpdate = (LeftSource.Update, RightSource.Update)
+  typealias DestinationSuccess = (LeftSource.Success, RightSource.Success)
+  typealias Destination = Producer<DestinationUpdate, DestinationSuccess>
 
-  var locking = makeLocking()
-  let queueOfUpdates = Queue<Either<T.Update, U.Update>>()
-  var successA: T.Success?
-  var successB: U.Success?
-
-  func makeHandlerBlock<Update, Success>(
-    updateHandler: @escaping (Update) -> (T.Update, U.Update)?,
-    successHandler: @escaping (Success) -> (T.Success, U.Success)?
-    ) -> (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void {
-    return {
-      [weak producer] (event, originalExecutor) in
-      switch event {
-      case let .update(update):
-        locking.lock()
-        defer { locking.unlock() }
-        if let updateAB = updateHandler(update) {
-          producer?.update(updateAB, from: originalExecutor)
-        }
-      case let .completion(.failure(error)):
-        producer?.fail(error, from: originalExecutor)
-      case let .completion(.success(localSuccess)):
-        locking.lock()
-        defer { locking.unlock() }
-        if let success = successHandler(localSuccess) {
-          producer?.succeed(success, from: originalExecutor)
-        }
-      }
-    }
-  }
-
-  do {
-    func updateHandler(update: T.Update) -> (T.Update, U.Update)? {
-      if let updateB = queueOfUpdates.first?.right {
-        _ = queueOfUpdates.pop()
-        return (update, updateB)
-      } else {
-        queueOfUpdates.push(.left(update))
-        return nil
-      }
-    }
-
-    func successHandler(success: T.Success) -> (T.Success, U.Success)? {
-      successA = success
-      return successB.map { (success, $0) }
-    }
-
-    let handlerBlock = makeHandlerBlock(updateHandler: updateHandler, successHandler: successHandler)
-    let handler = channelA.makeHandler(executor: .immediate, handlerBlock)
-    producer._asyncNinja_retainHandlerUntilFinalization(handler)
-  }
-
-  do {
-    func updateHandler(update: U.Update) -> (T.Update, U.Update)? {
-      if let updateA = queueOfUpdates.first?.left {
-        _ = queueOfUpdates.pop()
-        return (updateA, update)
-      } else {
-        queueOfUpdates.push(.right(update))
-        return nil
-      }
-    }
-
-    func successHandler(success: U.Success) -> (T.Success, U.Success)? {
-      successB = success
-      return successA.map { ($0, success) }
-    }
-
-    let handlerBlock = makeHandlerBlock(updateHandler: updateHandler, successHandler: successHandler)
-    let handler = channelB.makeHandler(executor: .immediate, handlerBlock)
-    producer._asyncNinja_retainHandlerUntilFinalization(handler)
-  }
-
+  let producer = Destination(bufferSize: bufferSize.bufferSize(leftSource, rightSource))
   cancellationToken?.add(cancellable: producer)
 
+  let helper = Zip2EventSourcesHelper<LeftSource, RightSource, Destination>(destination: producer)
+  producer._asyncNinja_retainHandlerUntilFinalization(helper.makeHandler(leftSource: leftSource))
+  producer._asyncNinja_retainHandlerUntilFinalization(helper.makeHandler(rightSource: rightSource))
+
   return producer
+}
+
+/// **internal use only**
+/// Encapsulates merging behavior
+private class Zip2EventSourcesHelper<LeftSource: EventSource, RightSource: EventSource, Destination: EventDestination>
+  where Destination.Update == (LeftSource.Update, RightSource.Update),
+        Destination.Success == (LeftSource.Success, RightSource.Success) {
+
+  var locking = makeLocking()
+  let queueOfUpdates = Queue<Either<LeftSource.Update, RightSource.Update>>()
+  var leftSuccess: LeftSource.Success?
+  var rightSuccess: RightSource.Success?
+  weak var destination: Destination?
+
+  init(destination: Destination) {
+    self.destination = destination
+  }
+
+  func makeHandlerBlock<Update, Success>(
+    updateHandler: @escaping (Update) -> (LeftSource.Update, RightSource.Update)?,
+    successHandler: @escaping (Success) -> (LeftSource.Success, RightSource.Success)?
+    ) -> (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void {
+    return { (event, originalExecutor) in
+      switch event {
+      case let .update(update):
+        self.locking.lock()
+        defer { self.locking.unlock() }
+        if let updateAB = updateHandler(update) {
+          self.destination?.update(updateAB, from: originalExecutor)
+        }
+      case let .completion(.failure(error)):
+        self.destination?.fail(error, from: originalExecutor)
+      case let .completion(.success(localSuccess)):
+        self.locking.lock()
+        defer { self.locking.unlock() }
+        if let success = successHandler(localSuccess) {
+          self.destination?.succeed(success, from: originalExecutor)
+        }
+      }
+    }
+  }
+
+  func makeHandler(leftSource: LeftSource) -> AnyObject? {
+    func updateHandler(update: LeftSource.Update) -> (LeftSource.Update, RightSource.Update)? {
+      if let rightUpdate = queueOfUpdates.first?.right {
+        _ = self.queueOfUpdates.pop()
+        return (update, rightUpdate)
+      } else {
+        self.queueOfUpdates.push(.left(update))
+        return nil
+      }
+    }
+
+    func successHandler(success: LeftSource.Success) -> (LeftSource.Success, RightSource.Success)? {
+      self.leftSuccess = success
+      return self.rightSuccess.map { (success, $0) }
+    }
+
+    let handlerBlock = makeHandlerBlock(updateHandler: updateHandler, successHandler: successHandler)
+    return leftSource.makeHandler(executor: .immediate, handlerBlock)
+  }
+
+  func makeHandler(rightSource: RightSource) -> AnyObject? {
+    func updateHandler(update: RightSource.Update) -> (LeftSource.Update, RightSource.Update)? {
+      if let leftUpdate = queueOfUpdates.first?.left {
+        _ = self.queueOfUpdates.pop()
+        return (leftUpdate, update)
+      } else {
+        self.queueOfUpdates.push(.right(update))
+        return nil
+      }
+    }
+
+    func successHandler(success: RightSource.Success) -> (LeftSource.Success, RightSource.Success)? {
+      self.rightSuccess = success
+      return self.leftSuccess.map { ($0, success) }
+    }
+
+    let handlerBlock = makeHandlerBlock(updateHandler: updateHandler, successHandler: successHandler)
+    return rightSource.makeHandler(executor: .immediate, handlerBlock)
+  }
 }
