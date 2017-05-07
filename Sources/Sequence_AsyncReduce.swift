@@ -119,6 +119,7 @@ where Destination.Success == OutputElement {
     executor: Executor,
     nextPartialResult: @escaping (_ accumulator: OutputElement, _ element: InputElement) throws -> OutputElement
     ) {
+    self.destination = destination
     self.values = values
     self.unknownSubvaluesCount = values.count
     self.initialResult = initialResult
