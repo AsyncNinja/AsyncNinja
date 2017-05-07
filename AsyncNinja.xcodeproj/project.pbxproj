@@ -10,6 +10,8 @@
 		B8B5201E1EBF0D18006C27DA /* EventSource_Sample.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */; };
 		B8B520201EBF1604006C27DA /* EventSource_Merge2Unrelated.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B5201F1EBF1604006C27DA /* EventSource_Merge2Unrelated.swift */; };
 		B8B520221EBF2918006C27DA /* EventSource_Debounce.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */; };
+		B8B520241EBF2F54006C27DA /* Sequence_AsyncFlatMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B520231EBF2F54006C27DA /* Sequence_AsyncFlatMap.swift */; };
+		B8B520261EBF3287006C27DA /* Sequence_AsyncReduce.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B520251EBF3287006C27DA /* Sequence_AsyncReduce.swift */; };
 		F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = F819DC171E8A9F2A0072E0B1 /* Either.swift */; };
 		F81A3EB51EA232DE009B0144 /* OptionalAdaptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */; };
 		F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */; };
@@ -59,7 +61,7 @@
 		OBJ_137 /* Promise.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_50 /* Promise.swift */; };
 		OBJ_138 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_51 /* Queue.swift */; };
 		OBJ_139 /* ReleasePool.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_52 /* ReleasePool.swift */; };
-		OBJ_140 /* Sequence_Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_53 /* Sequence_Extensions.swift */; };
+		OBJ_140 /* Sequence_AsyncMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_53 /* Sequence_AsyncMap.swift */; };
 		OBJ_141 /* Sink.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_54 /* Sink.swift */; };
 		OBJ_142 /* ThreadSafety.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_55 /* ThreadSafety.swift */; };
 		OBJ_143 /* TimerChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_56 /* TimerChannel.swift */; };
@@ -112,6 +114,8 @@
 		B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventSource_Sample.swift; sourceTree = "<group>"; };
 		B8B5201F1EBF1604006C27DA /* EventSource_Merge2Unrelated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventSource_Merge2Unrelated.swift; sourceTree = "<group>"; };
 		B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventSource_Debounce.swift; sourceTree = "<group>"; };
+		B8B520231EBF2F54006C27DA /* Sequence_AsyncFlatMap.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sequence_AsyncFlatMap.swift; sourceTree = "<group>"; };
+		B8B520251EBF3287006C27DA /* Sequence_AsyncReduce.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sequence_AsyncReduce.swift; sourceTree = "<group>"; };
 		F819DC171E8A9F2A0072E0B1 /* Either.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
 		F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionalAdaptorTests.swift; sourceTree = "<group>"; };
 		F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancellationTokenTests.swift; sourceTree = "<group>"; };
@@ -164,7 +168,7 @@
 		OBJ_50 /* Promise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Promise.swift; sourceTree = "<group>"; };
 		OBJ_51 /* Queue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
 		OBJ_52 /* ReleasePool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleasePool.swift; sourceTree = "<group>"; };
-		OBJ_53 /* Sequence_Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sequence_Extensions.swift; sourceTree = "<group>"; };
+		OBJ_53 /* Sequence_AsyncMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sequence_AsyncMap.swift; sourceTree = "<group>"; };
 		OBJ_54 /* Sink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sink.swift; sourceTree = "<group>"; };
 		OBJ_55 /* ThreadSafety.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadSafety.swift; sourceTree = "<group>"; };
 		OBJ_56 /* TimerChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerChannel.swift; sourceTree = "<group>"; };
@@ -331,7 +335,9 @@
 				OBJ_50 /* Promise.swift */,
 				OBJ_51 /* Queue.swift */,
 				OBJ_52 /* ReleasePool.swift */,
-				OBJ_53 /* Sequence_Extensions.swift */,
+				B8B520231EBF2F54006C27DA /* Sequence_AsyncFlatMap.swift */,
+				OBJ_53 /* Sequence_AsyncMap.swift */,
+				B8B520251EBF3287006C27DA /* Sequence_AsyncReduce.swift */,
 				OBJ_54 /* Sink.swift */,
 				OBJ_55 /* ThreadSafety.swift */,
 				OBJ_56 /* TimerChannel.swift */,
@@ -519,13 +525,15 @@
 				OBJ_132 /* macOS.swift in Sources */,
 				OBJ_133 /* MergeFutures.swift in Sources */,
 				OBJ_134 /* OptionalAdaptor.swift in Sources */,
+				B8B520241EBF2F54006C27DA /* Sequence_AsyncFlatMap.swift in Sources */,
 				OBJ_135 /* Producer.swift in Sources */,
 				OBJ_136 /* ProducerProxy.swift in Sources */,
 				B8B520201EBF1604006C27DA /* EventSource_Merge2Unrelated.swift in Sources */,
 				OBJ_137 /* Promise.swift in Sources */,
 				OBJ_138 /* Queue.swift in Sources */,
 				OBJ_139 /* ReleasePool.swift in Sources */,
-				OBJ_140 /* Sequence_Extensions.swift in Sources */,
+				OBJ_140 /* Sequence_AsyncMap.swift in Sources */,
+				B8B520261EBF3287006C27DA /* Sequence_AsyncReduce.swift in Sources */,
 				OBJ_141 /* Sink.swift in Sources */,
 				OBJ_142 /* ThreadSafety.swift in Sources */,
 				OBJ_143 /* TimerChannel.swift in Sources */,
