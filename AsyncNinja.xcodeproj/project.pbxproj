@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B8B5201E1EBF0D18006C27DA /* EventSource_Sample.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */; };
 		F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = F819DC171E8A9F2A0072E0B1 /* Either.swift */; };
 		F81A3EB51EA232DE009B0144 /* OptionalAdaptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */; };
 		F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */; };
@@ -106,6 +107,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventSource_Sample.swift; sourceTree = "<group>"; };
 		F819DC171E8A9F2A0072E0B1 /* Either.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
 		F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionalAdaptorTests.swift; sourceTree = "<group>"; };
 		F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancellationTokenTests.swift; sourceTree = "<group>"; };
@@ -297,6 +299,7 @@
 				OBJ_27 /* DynamicProperty.swift */,
 				F819DC171E8A9F2A0072E0B1 /* Either.swift */,
 				OBJ_28 /* EventSource_Combine.swift */,
+				B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */,
 				OBJ_29 /* EventSource_FlatMapFutures.swift */,
 				OBJ_30 /* EventSource_Implementation.swift */,
 				OBJ_31 /* EventSource_Map.swift */,
@@ -496,6 +499,7 @@
 				OBJ_120 /* EventSource_Scan.swift in Sources */,
 				OBJ_121 /* EventSource_ToFuture.swift in Sources */,
 				OBJ_122 /* EventSource_Transform.swift in Sources */,
+				B8B5201E1EBF0D18006C27DA /* EventSource_Sample.swift in Sources */,
 				OBJ_123 /* EventSource_Zip2.swift in Sources */,
 				OBJ_124 /* ExecutionContext.swift in Sources */,
 				OBJ_125 /* Executor.swift in Sources */,
