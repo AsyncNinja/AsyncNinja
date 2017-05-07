@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		B8B5201E1EBF0D18006C27DA /* EventSource_Sample.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */; };
 		B8B520201EBF1604006C27DA /* EventSource_Merge2Unrelated.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B5201F1EBF1604006C27DA /* EventSource_Merge2Unrelated.swift */; };
+		B8B520221EBF2918006C27DA /* EventSource_Debounce.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */; };
 		F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = F819DC171E8A9F2A0072E0B1 /* Either.swift */; };
 		F81A3EB51EA232DE009B0144 /* OptionalAdaptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */; };
 		F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */; };
@@ -110,6 +111,7 @@
 /* Begin PBXFileReference section */
 		B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventSource_Sample.swift; sourceTree = "<group>"; };
 		B8B5201F1EBF1604006C27DA /* EventSource_Merge2Unrelated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventSource_Merge2Unrelated.swift; sourceTree = "<group>"; };
+		B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventSource_Debounce.swift; sourceTree = "<group>"; };
 		F819DC171E8A9F2A0072E0B1 /* Either.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
 		F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionalAdaptorTests.swift; sourceTree = "<group>"; };
 		F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancellationTokenTests.swift; sourceTree = "<group>"; };
@@ -301,12 +303,13 @@
 				OBJ_27 /* DynamicProperty.swift */,
 				F819DC171E8A9F2A0072E0B1 /* Either.swift */,
 				OBJ_28 /* EventSource_Combine.swift */,
-				B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */,
+				B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */,
 				OBJ_29 /* EventSource_FlatMapFutures.swift */,
 				OBJ_30 /* EventSource_Implementation.swift */,
 				OBJ_31 /* EventSource_Map.swift */,
 				OBJ_32 /* EventSource_Merge2.swift */,
 				B8B5201F1EBF1604006C27DA /* EventSource_Merge2Unrelated.swift */,
+				B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */,
 				OBJ_33 /* EventSource_Scan.swift */,
 				OBJ_34 /* EventSource_ToFuture.swift */,
 				OBJ_35 /* EventSource_Transform.swift */,
@@ -486,6 +489,7 @@
 				OBJ_107 /* Channel.swift in Sources */,
 				OBJ_108 /* Channel_makers.swift in Sources */,
 				F87E09221E9C337F006CD1C9 /* NetworkReachability.swift in Sources */,
+				B8B520221EBF2918006C27DA /* EventSource_Debounce.swift in Sources */,
 				OBJ_109 /* Completable_Implementation.swift in Sources */,
 				F85659571E97D7FE007EDC98 /* TryExecute.swift in Sources */,
 				OBJ_110 /* Completing_Implementation.swift in Sources */,
