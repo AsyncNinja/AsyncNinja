@@ -567,6 +567,7 @@
       #endif
     }
 
+    #if os(iOS)
     func _testUISlider(_ object: UISlider, state: UIControlState) {
       testEventDestination(object.rp.thumbImage(for: state), object: object,
                            keyPathOrGet: .right({ $0.thumbImage(for: state) }),
@@ -578,6 +579,7 @@
                            keyPathOrGet: .right({ $0.maximumTrackImage(for: state) }),
                            values: iOSTests.imagesAndNilsFixture)
     }
+    #endif
 
     func testUISlider() {
       #if os(iOS)
