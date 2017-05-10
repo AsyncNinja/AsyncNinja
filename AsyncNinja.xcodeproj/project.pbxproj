@@ -21,6 +21,7 @@
 		F85659571E97D7FE007EDC98 /* TryExecute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85659561E97D7FE007EDC98 /* TryExecute.swift */; };
 		F86BE0641E983E20008B7BDC /* TryExecuteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86BE0621E983DF5008B7BDC /* TryExecuteTests.swift */; };
 		F87E09221E9C337F006CD1C9 /* NetworkReachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87E09211E9C337F006CD1C9 /* NetworkReachability.swift */; };
+		F88DBFF81EC3A3B700FC589E /* Fixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88DBFF61EC3A29000FC589E /* Fixtures.swift */; };
 		OBJ_100 /* appleOS_ReactiveProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* appleOS_ReactiveProperties.swift */; };
 		OBJ_101 /* appleOS_Retainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* appleOS_Retainer.swift */; };
 		OBJ_102 /* appleOS_URLSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* appleOS_URLSession.swift */; };
@@ -125,6 +126,7 @@
 		F85659561E97D7FE007EDC98 /* TryExecute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TryExecute.swift; sourceTree = "<group>"; };
 		F86BE0621E983DF5008B7BDC /* TryExecuteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TryExecuteTests.swift; sourceTree = "<group>"; };
 		F87E09211E9C337F006CD1C9 /* NetworkReachability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkReachability.swift; sourceTree = "<group>"; };
+		F88DBFF61EC3A29000FC589E /* Fixtures.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Fixtures.swift; sourceTree = "<group>"; };
 		OBJ_10 /* appleOS_ExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_ExecutionContext.swift; sourceTree = "<group>"; };
 		OBJ_11 /* appleOS_Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Notifications.swift; sourceTree = "<group>"; };
 		OBJ_12 /* appleOS_Observation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Observation.swift; sourceTree = "<group>"; };
@@ -266,6 +268,7 @@
 				OBJ_74 /* ExecutionContextTests.swift */,
 				OBJ_75 /* ExecutorTests.swift */,
 				OBJ_76 /* FallibleTests.swift */,
+				F88DBFF61EC3A29000FC589E /* Fixtures.swift */,
 				OBJ_77 /* Future_MakersTests.swift */,
 				OBJ_78 /* FutureTests.swift */,
 				OBJ_79 /* iOSTests.swift */,
@@ -467,6 +470,7 @@
 				F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */,
 				OBJ_170 /* iOSTests.swift in Sources */,
 				OBJ_171 /* ObserversTests.swift in Sources */,
+				F88DBFF81EC3A3B700FC589E /* Fixtures.swift in Sources */,
 				OBJ_172 /* ReleasePoolTests.swift in Sources */,
 				OBJ_173 /* TestUtilities.swift in Sources */,
 				F81A3EB51EA232DE009B0144 /* OptionalAdaptorTests.swift in Sources */,
