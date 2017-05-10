@@ -79,8 +79,7 @@ public func channel<U: ExecutionContext, Update, Success>(
 public func channel<C: Collection, Success>(
   updates: C,
   completion: Fallible<Success>
-  ) -> Channel<C.Iterator.Element, Success>
-  where C.IndexDistance: Integer {
+  ) -> Channel<C.Iterator.Element, Success> {
   // TEST: ChannelMakersTests.testCompletedWithFunc
 
   let producer = Producer<C.Iterator.Element, Success>(bufferedUpdates: updates)
@@ -92,8 +91,7 @@ public func channel<C: Collection, Success>(
 public func channel<C: Collection, Success>(
   updates: C,
   success: Success
-  ) -> Channel<C.Iterator.Element, Success>
-  where C.IndexDistance: Integer {
+  ) -> Channel<C.Iterator.Element, Success> {
   // TEST: ChannelMakersTests.testSucceededWithFunc
 
   return channel(updates: updates, completion: .success(success))
@@ -103,8 +101,7 @@ public func channel<C: Collection, Success>(
 public func channel<C: Collection, Success>(
   updates: C,
   failure: Swift.Error
-  ) -> Channel<C.Iterator.Element, Success>
-  where C.IndexDistance: Integer {
+  ) -> Channel<C.Iterator.Element, Success> {
   // TEST: ChannelMakersTests.testFailedWithFunc
 
   return channel(updates: updates, completion: .failure(failure))

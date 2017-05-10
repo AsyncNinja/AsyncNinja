@@ -167,7 +167,7 @@ public extension EventController {
 /// A base protocol of object that update and complete
 public protocol EventSource: EventController, Completing, Updating, Sequence {
 
-  associatedtype Iterator: IteratorProtocol = ChannelIterator<Update, Success>
+  associatedtype Iterator = ChannelIterator<Update, Success>
 
   /// amount of currently stored updates
   var bufferSize: Int { get }

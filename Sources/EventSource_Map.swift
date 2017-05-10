@@ -51,11 +51,13 @@ public extension EventSource {
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ strongContext: C, _ event: Event) throws -> ChannelEvent<P, S>
     ) -> Channel<P, S> {
-    return makeProducer(context: context,
-                             executor: executor,
-                             pure: pure,
-                             cancellationToken: cancellationToken,
-                             bufferSize: bufferSize) { (context, event, producer, originalExecutor) in
+    return makeProducer(
+      context: context,
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (context, event, producer, originalExecutor) in
       let transformedEvent = try transform(context, event)
       producer.value?.post(transformedEvent, from: originalExecutor)
     }
@@ -82,9 +84,12 @@ public extension EventSource {
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ event: Event) throws -> ChannelEvent<P, S>
     ) -> Channel<P, S> {
-    return makeProducer(executor: executor, pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize) { (event, producer, originalExecutor) in
+    return makeProducer(
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (event, producer, originalExecutor) in
       let transformedEvent = try transform(event)
       producer.value?.post(transformedEvent, from: originalExecutor)
     }
@@ -124,11 +129,13 @@ public extension EventSource {
     ) -> Channel<P, Success> {
     // Test: EventSource_MapTests.testMapContextual
 
-    return makeProducer(context: context,
-                        executor: executor,
-                        pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize) { (context, event, producer, originalExecutor) in
+    return makeProducer(
+      context: context,
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (context, event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         let transformedValue = try transform(context, update)
@@ -163,9 +170,12 @@ public extension EventSource {
     ) -> Channel<P, Success> {
     // Test: EventSource_MapTests.testMap
 
-    return makeProducer(executor: executor, pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize) { (event, producer, originalExecutor) in
+    return makeProducer(
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         let transformedValue = try transform(update)
@@ -208,11 +218,13 @@ public extension EventSource {
     ) -> Channel<P, Success> {
     // Test: EventSource_MapTests.testFlatMapOptionalContextual
 
-    return makeProducer(context: context,
-                        executor: executor,
-                        pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize) { (context, event, producer, originalExecutor) in
+    return makeProducer(
+      context: context,
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (context, event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         if let transformedValue = try transform(context, update) {
@@ -246,10 +258,12 @@ public extension EventSource {
     ) -> Channel<P, Success> {
     // Test: EventSource_MapTests.testFlatMapOptional
 
-    return makeProducer(executor: executor,
-                        pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize) { (event, producer, originalExecutor) in
+    return makeProducer(
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         if let transformedValue = try transform(update) {
@@ -289,11 +303,13 @@ public extension EventSource {
     ) -> Channel<PS.Iterator.Element, Success> {
     // Test: EventSource_MapTests.testFlatMapArrayContextual
 
-    return makeProducer(context: context,
-                        executor: executor,
-                        pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize) { (context, event, producer, originalExecutor) in
+    return makeProducer(
+      context: context,
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (context, event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         producer.value?.update(try transform(context, update), from: originalExecutor)
@@ -326,9 +342,12 @@ public extension EventSource {
     ) -> Channel<PS.Iterator.Element, Success> {
     // Test: EventSource_MapTests.testFlatMapArray
 
-    return makeProducer(executor: executor, pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize) { (event, producer, originalExecutor) in
+    return makeProducer(
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         producer.value?.update(try transform(update), from: originalExecutor)
@@ -478,10 +497,12 @@ public extension EventSource {
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (Success) throws -> Transformed
     ) -> Channel<Update, Transformed> {
-    return mapCompletion(executor: executor,
-                         pure: pure,
-                         cancellationToken: cancellationToken,
-                         bufferSize: bufferSize) { (value) -> Transformed in
+    return mapCompletion(
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (value) -> Transformed in
       let transformedValue = try value.liftSuccess()
       return try transform(transformedValue)
     }

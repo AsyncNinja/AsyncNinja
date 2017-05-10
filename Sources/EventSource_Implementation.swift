@@ -24,7 +24,7 @@ import Dispatch
 
 extension EventSource {
   /// **internal use only**
-  final public func makeCompletionHandler(
+  public func makeCompletionHandler(
     executor: Executor,
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
     ) -> AnyObject? {
@@ -38,7 +38,7 @@ extension EventSource {
   }
 
   /// **internal use only**
-  final public func makeUpdateHandler(
+  public func makeUpdateHandler(
     executor: Executor,
     _ block: @escaping (_ update: Update, _ originalExecutor: Executor) -> Void
     ) -> AnyObject? {

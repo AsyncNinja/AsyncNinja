@@ -113,7 +113,7 @@ public typealias SimpleCache<Key: Hashable, Value> = Cache<Key, Promise<Value>>
 public typealias ReportingCache<Key: Hashable, Update, Success> = Cache<Key, Producer<Update, Success>>
 
 /// Convenience function that makes `SimpleCache`
-public func makeCache<Key: Hashable, Value>(
+public func makeCache<Key, Value>(
   executor: Executor = .primary,
   missHandler: @escaping (Key) throws -> Future<Value>
   ) -> SimpleCache<Key, Value> {
@@ -121,7 +121,7 @@ public func makeCache<Key: Hashable, Value>(
 }
 
 /// Convenience function that makes `SimpleCache`
-public func makeCache<Key: Hashable, Value, Context: ExecutionContext>(
+public func makeCache<Key, Value, Context: ExecutionContext>(
   context: Context,
   executor: Executor? = nil,
   _ missHandler: @escaping (Context, Key) throws -> Future<Value>
@@ -130,7 +130,7 @@ public func makeCache<Key: Hashable, Value, Context: ExecutionContext>(
 }
 
 /// Convenience function that makes `ReportingCache`
-public func makeCache<Key: Hashable, Update, Success>(
+public func makeCache<Key, Update, Success>(
   executor: Executor = .primary,
   _ missHandler: @escaping (Key) throws -> Channel<Update, Success>
   ) -> ReportingCache<Key, Update, Success> {
@@ -138,7 +138,7 @@ public func makeCache<Key: Hashable, Update, Success>(
 }
 
 /// Convenience function that makes `ReportingCache`
-public func makeCache<Key: Hashable, Update, Success, Context: ExecutionContext>(
+public func makeCache<Key, Update, Success, Context: ExecutionContext>(
   context: Context,
   executor: Executor? = nil,
   _ missHandler: @escaping (Context, Key) throws -> Channel<Update, Success>
