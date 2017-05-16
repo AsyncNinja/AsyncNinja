@@ -307,7 +307,7 @@ extension EventSource where Update: Collection, Update.Iterator.Element: Equatab
 
     func isEqual(lhs: Update, rhs: Update) -> Bool {
       return lhs.count == rhs.count
-        && !zip(lhs, rhs).contains { $0 != $1 }
+        && !zip(lhs, rhs).contains { $0.0 != $0.1 }
     }
     return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: isEqual)
   }

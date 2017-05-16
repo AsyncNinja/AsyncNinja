@@ -40,10 +40,11 @@ class OptionalAdaptorTests: XCTestCase {
     let producer = Producer<Int?, String>()
     let unrapped: Channel<Int, String> = producer.unsafelyUnwrapped
     unrapped.extractAll()
-      .onSuccess { (updates, completion) in
-      XCTAssertEqual(updates, [1, 2, 3, 4, 5])
-      XCTAssertEqual(completion.success, "done")
-      sema.signal()
+      .onSuccess {
+        let (updates, completion) = $0
+        XCTAssertEqual(updates, [1, 2, 3, 4, 5])
+        XCTAssertEqual(completion.success, "done")
+        sema.signal()
     }
 
     producer.update(1)
@@ -60,10 +61,11 @@ class OptionalAdaptorTests: XCTestCase {
     let producer = Producer<Int?, String>()
     let unrapped: Channel<Int, String> = producer.unwrapped(0)
     unrapped.extractAll()
-      .onSuccess { (updates, completion) in
-      XCTAssertEqual(updates, [1, 0, 3, 0, 5])
-      XCTAssertEqual(completion.success, "done")
-      sema.signal()
+      .onSuccess {
+        let (updates, completion) = $0
+        XCTAssertEqual(updates, [1, 0, 3, 0, 5])
+        XCTAssertEqual(completion.success, "done")
+        sema.signal()
     }
 
     producer.update(1)

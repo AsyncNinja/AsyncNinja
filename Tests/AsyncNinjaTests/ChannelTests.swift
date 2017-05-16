@@ -175,7 +175,7 @@ class ChannelTests: XCTestCase {
     updatable.succeed()
 
     let expectation = self.expectation(description: "completion of producer")
-    updatable.onSuccess(executor: .queue(queue)) {
+    updatable.onSuccess(executor: .queue(queue)) { (_) -> Void in
       expectation.fulfill()
     }
 

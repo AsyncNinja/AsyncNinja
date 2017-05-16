@@ -111,7 +111,7 @@ public func zip<A, B, C>(
   _ valueC: C
   ) -> Future<(A, B, C)> {
   // Test: ZipFuturesTest.test3Constant
-  return zip(futureA, futureB).map(executor: .immediate) { ($0, $1, valueC) }
+  return zip(futureA, futureB).map(executor: .immediate) { ($0.0, $0.1, valueC) }
 }
 
 /// Combines one future and two value

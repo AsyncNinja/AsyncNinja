@@ -49,10 +49,10 @@ class EventSource_ScanTests: XCTestCase {
         return accumulator + value
       }
 
-      channel.extractAll().onSuccess { (updates, completion) in
-        XCTAssertEqual(updates, ["AB", "ABC", "ABCD", "ABCDE", "ABCDEF"])
-        XCTAssertEqual(completion.success!.0, "ABCDEF")
-        XCTAssertEqual(completion.success!.1, 7)
+      channel.extractAll().onSuccess {
+        XCTAssertEqual($0.updates, ["AB", "ABC", "ABCD", "ABCDE", "ABCDEF"])
+        XCTAssertEqual($0.completion.success!.0, "ABCDEF")
+        XCTAssertEqual($0.completion.success!.1, 7)
         sema.signal()
       }
 
@@ -75,10 +75,10 @@ class EventSource_ScanTests: XCTestCase {
         return accumulator + value
       }
 
-      channel.extractAll().onSuccess { (updates, completion) in
-        XCTAssertEqual(updates, ["AB", "ABC", "ABCD", "ABCDE", "ABCDEF"])
-        XCTAssertEqual(completion.success!.0, "ABCDEF")
-        XCTAssertEqual(completion.success!.1, 7)
+      channel.extractAll().onSuccess {
+        XCTAssertEqual($0.updates, ["AB", "ABC", "ABCD", "ABCDE", "ABCDEF"])
+        XCTAssertEqual($0.completion.success!.0, "ABCDEF")
+        XCTAssertEqual($0.completion.success!.1, 7)
         sema.signal()
       }
 
@@ -103,7 +103,8 @@ class EventSource_ScanTests: XCTestCase {
         return accumulator + value
       }
 
-      future.onSuccess { (concatString, successValue) in
+      future.onSuccess {
+        let (concatString, successValue) = $0
         XCTAssertEqual(concatString, "ABCDEF")
         XCTAssertEqual(successValue, 7)
         sema.signal()
@@ -128,7 +129,8 @@ class EventSource_ScanTests: XCTestCase {
         return accumulator + value
       }
 
-      future.onSuccess { (concatString, successValue) in
+      future.onSuccess {
+        let (concatString, successValue) = $0
         XCTAssertEqual(concatString, "ABCDEF")
         XCTAssertEqual(successValue, 7)
         sema.signal()

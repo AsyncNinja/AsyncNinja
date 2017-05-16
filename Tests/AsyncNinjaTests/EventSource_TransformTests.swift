@@ -45,7 +45,8 @@ class EventSource_TransformTests: XCTestCase {
     let derivedProducer = initalProducer.debounce(interval: 0.5)
     let expectation = self.expectation(description: "completion of derived producer")
 
-    derivedProducer.extractAll().onSuccess { (numbers, stringOrError) in
+    derivedProducer.extractAll().onSuccess {
+      let (numbers, stringOrError) = $0
       XCTAssertEqual([1, 6, 9, 12], numbers)
       XCTAssertEqual("Finished!", stringOrError.success!)
       expectation.fulfill()
@@ -79,7 +80,8 @@ class EventSource_TransformTests: XCTestCase {
     let updatable = Producer<Int, String>()
     let expectation = self.expectation(description: "completion of producer")
 
-    updatable.distinct().extractAll().onSuccess { (updates, completion) in
+    updatable.distinct().extractAll().onSuccess {
+      let (updates, completion) = $0
       XCTAssertEqual(updates, [1, 2, 3, 4, 5, 6, 7])
       XCTAssertEqual(completion.success, "done")
       expectation.fulfill()
@@ -98,7 +100,8 @@ class EventSource_TransformTests: XCTestCase {
     let updatable = Producer<Int?, String>()
     let expectation = self.expectation(description: "completion of producer")
 
-    updatable.distinct().extractAll().onSuccess { (updates, completion) in
+    updatable.distinct().extractAll().onSuccess {
+      let (updates, completion) = $0
       let assumedResults: [Int?] = [nil, 1, nil, 2, 3, nil, 3, 4, 5, 6, 7]
       XCTAssertEqual(updates.count, assumedResults.count)
       for (update, result) in zip(updates, assumedResults) {
@@ -121,7 +124,8 @@ class EventSource_TransformTests: XCTestCase {
     let updatable = Producer<[Int], String>()
     let expectation = self.expectation(description: "completion of producer")
 
-    updatable.distinct().extractAll().onSuccess { (updates, completion) in
+    updatable.distinct().extractAll().onSuccess {
+      let (updates, completion) = $0
       let assumedResults: [[Int]] = [[1], [1, 2], [1, 2, 3], [1]]
       XCTAssertEqual(updates.count, assumedResults.count)
       for (update, result) in zip(updates, assumedResults) {
@@ -145,7 +149,8 @@ class EventSource_TransformTests: XCTestCase {
       let updatable = Producer<NSString, String>()
       let expectation = self.expectation(description: "completion of producer")
 
-      updatable.distinctNSObjects().extractAll().onSuccess { (updates, completion) in
+      updatable.distinctNSObjects().extractAll().onSuccess {
+        let (updates, completion) = $0
         let assumedResults: [NSString] = ["objectA", "objectB", "objectC", "objectA"]
         XCTAssertEqual(updates.count, assumedResults.count)
         for (update, result) in zip(updates, assumedResults) {
@@ -174,7 +179,8 @@ class EventSource_TransformTests: XCTestCase {
       let objectB: NSString = "objectB"
       let objectC: NSString = "objectC"
 
-      updatable.distinctCollectionOfNSObjects().extractAll().onSuccess { (updates, completion) in
+      updatable.distinctCollectionOfNSObjects().extractAll().onSuccess {
+        let (updates, completion) = $0
         let assumedResults: [[NSString]] = [[objectA], [objectA, objectB], [objectA, objectB, objectC], [objectA]]
         XCTAssertEqual(updates.count, assumedResults.count)
         for (update, result) in zip(updates, assumedResults) {
@@ -206,11 +212,12 @@ class EventSource_TransformTests: XCTestCase {
       let source = Producer<Int, String>()
       let sema = DispatchSemaphore(value: 0)
       source.skip(first: 2, last: 3).extractAll()
-        .onSuccess { (updates, completion) in
+        .onSuccess {
+          let (updates, completion) = $0
 
-        XCTAssertEqual([2, 3, 4, 5, 6], updates)
-        XCTAssertEqual("Done", completion.success)
-        sema.signal()
+          XCTAssertEqual([2, 3, 4, 5, 6], updates)
+          XCTAssertEqual("Done", completion.success)
+          sema.signal()
       }
 
       source.update(0..<10)
@@ -224,11 +231,12 @@ class EventSource_TransformTests: XCTestCase {
       let source = Producer<Int, String>()
       let sema = DispatchSemaphore(value: 0)
       source.take(first: 2, last: 3).extractAll()
-        .onSuccess { (updates, completion) in
+        .onSuccess {
+          let (updates, completion) = $0
 
-        XCTAssertEqual([0, 1, 7, 8, 9], updates)
-        XCTAssertEqual("Done", completion.success)
-        sema.signal()
+          XCTAssertEqual([0, 1, 7, 8, 9], updates)
+          XCTAssertEqual("Done", completion.success)
+          sema.signal()
       }
 
       source.update(0..<10)

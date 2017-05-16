@@ -44,7 +44,7 @@ final public class Producer<Update, Success>: BaseProducer<Update, Success>, Cac
 
   /// designated initializer of Producer. Initializes Producer with specified buffer size and values
   public init<C: Collection>(bufferedUpdates: C) where C.Iterator.Element == Update {
-    super.init(bufferSize: Int(bufferedUpdates.count.toIntMax()))
+    super.init(bufferSize: numericCast(bufferedUpdates.count))
     bufferedUpdates.forEach(_bufferedUpdates.push)
   }
 }

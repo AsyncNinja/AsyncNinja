@@ -66,8 +66,9 @@ class ReleasePoolTests: XCTestCase {
 
     let group = DispatchGroup()
     boxes.enumerated()
-      .map { ($1, queues[$0 % queues.count]) }
-      .forEach { (box, queue) in
+      .map { ($0.1, queues[$0.0 % queues.count]) }
+      .forEach { (element) in
+        let (box, queue) = element
         queue.async(group: group) { releasePool.insert(box) }
     }
     boxes.removeAll(keepingCapacity: false)

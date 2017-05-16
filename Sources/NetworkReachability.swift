@@ -231,7 +231,10 @@
       ]
 
       return spec
-        .map { (flag, description) -> String in contains(flag) ? description : "-" }
+        .map {
+            let (flag, description) = $0
+            return contains(flag) ? description : "-"
+        }
         .joined()
     }
 

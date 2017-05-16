@@ -45,10 +45,10 @@ class EventSource_FlatMapFuturesTests: XCTestCase {
     ) {
     let producerA = Producer<(duration: Double, name: String), String>()
     let qos = pickQoS()
-    let channelB = producerA.flatMap(executor: .queue(qos), behavior: behavior) { (duration, name) -> Future<String> in
+    let channelB = producerA.flatMap(executor: .queue(qos), behavior: behavior) { (update) -> Future<String> in
       assert(qos: qos)
-      return future(after: duration) {
-        return "t(\(name))"
+      return future(after: update.duration) {
+        return "t(\(update.name))"
       }
     }
 

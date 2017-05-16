@@ -88,7 +88,7 @@ extension EventSource {
 
     if let handler = handler {
       if pure {
-        let box = MutableBox<AnyObject?>(handler)
+        let box = AtomicMutableBox<AnyObject?>(handler)
         self._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
         EventDestination._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
       } else {
@@ -311,7 +311,7 @@ public func doubleBind<T: EventSource&EventDestination, U: EventSource&EventDest
   }
 
   if let minorHandler = minorHandler {
-    let box = MutableBox<AnyObject?>(minorHandler)
+    let box = AtomicMutableBox<AnyObject?>(minorHandler)
     majorStream._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
     minorStream._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
   }
@@ -331,7 +331,7 @@ public func doubleBind<T: EventSource&EventDestination, U: EventSource&EventDest
   }
 
   if let majorHandler = majorHandler {
-    let box = MutableBox<AnyObject?>(majorHandler)
+    let box = AtomicMutableBox<AnyObject?>(majorHandler)
     majorStream._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
     minorStream._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
   }

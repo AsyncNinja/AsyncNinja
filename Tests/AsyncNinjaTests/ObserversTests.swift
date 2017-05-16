@@ -37,7 +37,7 @@ import Dispatch
 
     func testObserver() {
       class MyObject: NSObject, ObjCInjectedRetainer {
-        dynamic var myValue: Int = 0
+        @objc dynamic var myValue: Int = 0
       }
 
       let myObject = MyObject()
@@ -60,7 +60,7 @@ import Dispatch
 
     func testObserverMutation() {
       class MyObject: NSObject, ObjCInjectedRetainer {
-        dynamic var myValue: Int = 0
+        @objc dynamic var myValue: Int = 0
       }
 
       let myObject = MyObject()
@@ -89,7 +89,7 @@ import Dispatch
 
     func testObserverBinding() {
       class MyObject: NSObject, ObjCInjectedRetainer {
-        dynamic var myValue: Int = 0
+        @objc dynamic var myValue: Int = 0
       }
 
       let myObject = MyObject()

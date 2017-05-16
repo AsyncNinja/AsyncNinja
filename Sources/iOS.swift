@@ -104,7 +104,7 @@
       self.control = control
     }
 
-    dynamic func asyncNinjaAction(sender: AnyObject?, forEvent event: UIEvent) {
+    @objc dynamic func asyncNinjaAction(sender: AnyObject?, forEvent event: UIEvent) {
       let update: (sender: AnyObject?, event: UIEvent) = (
         sender: sender,
         event: event
@@ -493,7 +493,7 @@
       self.object = object
     }
 
-    dynamic func asyncNinjaAction(sender: AnyObject?) {
+    @objc dynamic func asyncNinjaAction(sender: AnyObject?) {
       self.producer.update(sender, from: .main)
     }
   }
@@ -706,7 +706,7 @@
       self.object = object
     }
 
-    dynamic func asyncNinjaAction(gestureRecogniser: UIGestureRecognizer) {
+    @objc dynamic func asyncNinjaAction(gestureRecogniser: UIGestureRecognizer) {
       self.producer.update(gestureRecogniser, from: .main)
     }
   }

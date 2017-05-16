@@ -28,13 +28,13 @@ extension DispatchQueue: ExecutorImpl {
   var asyncNinja_representedDispatchQueue: DispatchQueue? { return self }
   var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { return false }
 
-  func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
-    self.async(execute: block)
+  func asyncNinja_execute(_ block: @escaping () -> Void) {
+    self.async { block() }
   }
 
-  func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
+  func asyncNinja_execute(after timeout: Double, _ block: @escaping () -> Void) {
     let wallDeadline = DispatchWallTime.now().adding(seconds: timeout)
-    self.asyncAfter(wallDeadline: wallDeadline, execute: block)
+    self.asyncAfter(wallDeadline: wallDeadline) { block() }
   }
 
   func asyncNinja_canImmediatelyExecute(from impl: ExecutorImpl) -> Bool {

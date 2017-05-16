@@ -464,7 +464,7 @@ class FutureTests: XCTestCase {
     group.leave()
 
     let expectation = self.expectation(description: "completion of future")
-    completionFuture.onSuccess {
+    completionFuture.onSuccess { (_) -> Void in
       expectation.fulfill()
     }
 

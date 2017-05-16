@@ -385,7 +385,7 @@ public func zip<A, B>(
   ) -> Fallible<(A, B)> {
   switch (a, b) {
   case let (.success(successA), .success(successB)):
-    return .success(successA, successB)
+    return .success((successA, successB))
   case let (.failure(error), _),
        let (_, .failure(error)):
     return .failure(error)
@@ -402,7 +402,7 @@ public func zip<A, B, C>(
   ) -> Fallible<(A, B, C)> {
   switch (a, b, c) {
   case let (.success(successA), .success(successB), .success(successC)):
-    return .success(successA, successB, successC)
+    return .success((successA, successB, successC))
   case let (.failure(error), _, _),
        let (_, .failure(error), _),
        let (_, _, .failure(error)):

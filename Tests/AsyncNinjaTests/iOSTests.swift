@@ -88,38 +88,38 @@
                       object: object,
                       keyPathOrGetSet: .left("text"),
                       values: Fixtures.strings)
-      testEventStream(object.rp.attributedText,
-                      object: object,
-                      keyPathOrGetSet: .left("attributedText"),
-                      values: attributedStringsFixtures)
-      testEventStream(object.rp.textColor,
-                      object: object,
-                      keyPathOrGetSet: .left("textColor"),
-                      values: Fixtures.colors)
+      testOptionalEventStream(object.rp.attributedText,
+                              object: object,
+                              keyPathOrGetSet: .left("attributedText"),
+                              values: attributedStringsFixtures)
+      testOptionalEventStream(object.rp.textColor,
+                              object: object,
+                              keyPathOrGetSet: .left("textColor"),
+                              values: Fixtures.colors)
       testEventStream(object.rp.font,
                       object: object,
                       keyPathOrGetSet: .left("font"),
                       values: Fixtures.fonts)
       testEventStream(object.rp.textAlignment,
                       object: object,
-                      keyPathOrGetSet: .right(getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! }),
+                      keyPathOrGetSet: .right((getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! })),
                       values: Fixtures.textAlignements)
-      testEventStream(object.rp.placeholder,
-                      object: object,
-                      keyPathOrGetSet: .left("placeholder"),
-                      values: Fixtures.stringsAndNils)
-      testEventStream(object.rp.attributedPlaceholder,
-                      object: object,
-                      keyPathOrGetSet: .left("attributedPlaceholder"),
-                      values: attributedStringsFixtures)
-      testEventStream(object.rp.background,
-                      object: object,
-                      keyPathOrGetSet: .left("background"),
-                      values: Fixtures.imagesAndNils)
-      testEventStream(object.rp.disabledBackground,
-                      object: object,
-                      keyPathOrGetSet: .left("disabledBackground"),
-                      values: Fixtures.imagesAndNils)
+      testOptionalEventStream(object.rp.placeholder,
+                              object: object,
+                              keyPathOrGetSet: .left("placeholder"),
+                              values: Fixtures.stringsAndNils)
+      testOptionalEventStream(object.rp.attributedPlaceholder,
+                              object: object,
+                              keyPathOrGetSet: .left("attributedPlaceholder"),
+                              values: attributedStringsFixtures)
+      testOptionalEventStream(object.rp.background,
+                              object: object,
+                              keyPathOrGetSet: .left("background"),
+                              values: Fixtures.imagesAndNils)
+      testOptionalEventStream(object.rp.disabledBackground,
+                              object: object,
+                              keyPathOrGetSet: .left("disabledBackground"),
+                              values: Fixtures.imagesAndNils)
     }
 
     func testUITextView() {
@@ -133,13 +133,13 @@
                       object: object,
                       keyPathOrGetSet: .left("font"),
                       values: Fixtures.fonts)
-      testEventStream(object.rp.textColor,
-                      object: object,
-                      keyPathOrGetSet: .left("textColor"),
-                      values: Fixtures.colorsAndNils)
+      testOptionalEventStream(object.rp.textColor,
+                              object: object,
+                              keyPathOrGetSet: .left("textColor"),
+                              values: Fixtures.colorsAndNils)
       testEventStream(object.rp.textAlignment,
                       object: object,
-                      keyPathOrGetSet: .right(getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! }),
+                      keyPathOrGetSet: .right((getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! })),
                       values: Fixtures.textAlignements)
       testEventStream(object.rp.isEditable,
                       object: object,
@@ -164,17 +164,17 @@
         let object = UISearchBar()
 
         testEventStream(object.rp.barStyle, object: object,
-                        keyPathOrGetSet: .right(getter: { $0.barStyle }, setter: { $0.barStyle = $1! }),
+                        keyPathOrGetSet: .right((getter: { $0.barStyle }, setter: { $0.barStyle = $1! })),
                         values: [.default, .default, .black, .black, .default, .black])
         testEventStream(object.rp.text, object: object,
                         keyPathOrGetSet: .left("text"),
                         values: Fixtures.strings)
-        testEventStream(object.rp.prompt, object: object,
-                        keyPathOrGetSet: .left("prompt"),
-                        values: Fixtures.stringsAndNils)
-        testEventStream(object.rp.placeholder, object: object,
-                        keyPathOrGetSet: .left("placeholder"),
-                        values: Fixtures.stringsAndNils)
+        testOptionalEventStream(object.rp.prompt, object: object,
+                                keyPathOrGetSet: .left("prompt"),
+                                values: Fixtures.stringsAndNils)
+        testOptionalEventStream(object.rp.placeholder, object: object,
+                                keyPathOrGetSet: .left("placeholder"),
+                                values: Fixtures.stringsAndNils)
         testEventStream(object.rp.showsBookmarkButton, object: object,
                         keyPathOrGetSet: .left("showsBookmarkButton"),
                         values: Fixtures.bools)
@@ -191,7 +191,7 @@
                         keyPathOrGetSet: .left("barTintColor"),
                         values: Fixtures.colors)
         testEventStream(object.rp.searchBarStyle, object: object,
-                        keyPathOrGetSet: .right(getter: { $0.searchBarStyle }, setter: { $0.searchBarStyle = $1! }),
+                        keyPathOrGetSet: .right((getter: { $0.searchBarStyle }, setter: { $0.searchBarStyle = $1! })),
                         values: [.default, .default, .prominent, .minimal, .minimal, .default])
       #endif
     }
@@ -199,14 +199,14 @@
     func testUIImageView() {
       let object = UIImageView()
 
-      testEventStream(object.rp.image,
-                      object: object,
-                      keyPathOrGetSet: .left("image"),
-                      values: Fixtures.imagesAndNils)
-      testEventStream(object.rp.highlightedImage,
-                      object: object,
-                      keyPathOrGetSet: .left("highlightedImage"),
-                      values: Fixtures.imagesAndNils)
+      testOptionalEventStream(object.rp.image,
+                              object: object,
+                              keyPathOrGetSet: .left("image"),
+                              values: Fixtures.imagesAndNils)
+      testOptionalEventStream(object.rp.highlightedImage,
+                              object: object,
+                              keyPathOrGetSet: .left("highlightedImage"),
+                              values: Fixtures.imagesAndNils)
       testEventStream(object.rp.isHighlighted,
                       object: object,
                       keyPathOrGetSet: .left("highlighted"),
@@ -248,22 +248,22 @@
       for state in Fixtures.uiControlStates {
         let object = UIButton()
 
-        testEventDestination(object.rp.title(for: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.title(for: state) }),
-                              values: Fixtures.stringsAndNils)
-        testEventDestination(object.rp.image(for: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.image(for: state) }),
-                              values: Fixtures.imagesAndNils)
-        testEventDestination(object.rp.backgroundImage(for: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
-                              values: Fixtures.imagesAndNils)
-        testEventDestination(object.rp.attributedTitle(for: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.attributedTitle(for: state) }),
-                              values: Fixtures.attributedStrings)
+        testOptionalEventDestination(object.rp.title(for: state),
+                                     object: object,
+                                     keyPathOrGet: .right({ $0.title(for: state) }),
+                                     values: Fixtures.stringsAndNils)
+        testOptionalEventDestination(object.rp.image(for: state),
+                                     object: object,
+                                     keyPathOrGet: .right({ $0.image(for: state) }),
+                                     values: Fixtures.imagesAndNils)
+        testOptionalEventDestination(object.rp.backgroundImage(for: state),
+                                     object: object,
+                                     keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
+                                     values: Fixtures.imagesAndNils)
+        testOptionalEventDestination(object.rp.attributedTitle(for: state),
+                                     object: object,
+                                     keyPathOrGet: .right({ $0.attributedTitle(for: state) }),
+                                     values: Fixtures.attributedStrings)
       }
     }
 
@@ -273,24 +273,24 @@
                       object: object,
                       keyPathOrGetSet: .left("enabled"),
                       values: Fixtures.bools)
-      testEventStream(object.rp.title,
-                      object: object,
-                      keyPathOrGetSet: .left("title"),
-                      values: Fixtures.stringsAndNils)
-      testEventStream(object.rp.image,
-                      object: object,
-                      keyPathOrGetSet: .left("image"),
-                      values: Fixtures.imagesAndNils)
+      testOptionalEventStream(object.rp.title,
+                              object: object,
+                              keyPathOrGetSet: .left("title"),
+                              values: Fixtures.stringsAndNils)
+      testOptionalEventStream(object.rp.image,
+                              object: object,
+                              keyPathOrGetSet: .left("image"),
+                              values: Fixtures.imagesAndNils)
       if #available(iOS 8.0, *) {
-        testEventStream(object.rp.landscapeImagePhone,
-                        object: object,
-                        keyPathOrGetSet: .left("landscapeImagePhone"),
-                        values: Fixtures.imagesAndNils)
+        testOptionalEventStream(object.rp.landscapeImagePhone,
+                                object: object,
+                                keyPathOrGetSet: .left("landscapeImagePhone"),
+                                values: Fixtures.imagesAndNils)
       }
-      testEventStream(object.rp.image,
-                      object: object,
-                      keyPathOrGetSet: .left("image"),
-                      values: Fixtures.imagesAndNils)
+      testOptionalEventStream(object.rp.image,
+                              object: object,
+                              keyPathOrGetSet: .left("image"),
+                              values: Fixtures.imagesAndNils)
       //      testEventDestination(object.rp.titleTextAttributes(for: .normal),
       //                            object: object,
       //                            keyPathOrGet: .right({ $0.titleTextAttributes(for: .normal) }),
@@ -306,27 +306,27 @@
       testEventStream(object.rp.font, object: object,
                       keyPathOrGetSet: .left("font"),
                       values: Fixtures.fonts)
-      testEventStream(object.rp.textColor, object: object,
-                      keyPathOrGetSet: .left("textColor"),
-                      values: Fixtures.colors)
-      testEventStream(object.rp.shadowColor, object: object,
-                      keyPathOrGetSet: .left("shadowColor"),
-                      values: Fixtures.colorsAndNils)
+      testOptionalEventStream(object.rp.textColor, object: object,
+                              keyPathOrGetSet: .left("textColor"),
+                              values: Fixtures.colors)
+      testOptionalEventStream(object.rp.shadowColor, object: object,
+                              keyPathOrGetSet: .left("shadowColor"),
+                              values: Fixtures.colorsAndNils)
       testEventStream(object.rp.shadowOffset, object: object,
-                      keyPathOrGetSet: .right(getter: { $0.shadowOffset }, setter: { $0.shadowOffset = $1! }),
+                      keyPathOrGetSet: .right((getter: { $0.shadowOffset }, setter: { $0.shadowOffset = $1! })),
                       values: Fixtures.shadowOffsets)
       testEventStream(object.rp.textAlignment, object: object,
-                      keyPathOrGetSet: .right(getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! }),
+                      keyPathOrGetSet: .right((getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! })),
                       values: Fixtures.textAlignements)
       testEventStream(object.rp.lineBreakMode, object: object,
-                      keyPathOrGetSet: .right(getter: { $0.lineBreakMode }, setter: { $0.lineBreakMode = $1! }),
+                      keyPathOrGetSet: .right((getter: { $0.lineBreakMode }, setter: { $0.lineBreakMode = $1! })),
                       values: Fixtures.lineBreakModes)
-      testEventStream(object.rp.attributedText, object: object,
-                      keyPathOrGetSet: .left("attributedText"),
-                      values: Fixtures.attributedStrings)
-      testEventStream(object.rp.highlightedTextColor, object: object,
-                      keyPathOrGetSet: .left("highlightedTextColor"),
-                      values: Fixtures.colorsAndNils)
+      testOptionalEventStream(object.rp.attributedText, object: object,
+                              keyPathOrGetSet: .left("attributedText"),
+                              values: Fixtures.attributedStrings)
+      testOptionalEventStream(object.rp.highlightedTextColor, object: object,
+                              keyPathOrGetSet: .left("highlightedTextColor"),
+                              values: Fixtures.colorsAndNils)
       testEventStream(object.rp.isHighlighted, object: object,
                       keyPathOrGetSet: .left("highlighted"),
                       values: Fixtures.bools)
@@ -334,9 +334,9 @@
                       keyPathOrGetSet: .left("numberOfLines"),
                       values: Fixtures.ints)
       testEventStream(object.rp.baselineAdjustment, object: object,
-                      keyPathOrGetSet: .right(
+                      keyPathOrGetSet: .right((
                         getter: { $0.baselineAdjustment },
-                        setter: { $0.baselineAdjustment = $1! }),
+                        setter: { $0.baselineAdjustment = $1! })),
                       values: Fixtures.baselineAdjustments)
     }
 
@@ -349,7 +349,7 @@
         ]
         testEventStream(object.rp.datePickerMode,
                         object: object,
-                        keyPathOrGetSet: .right(getter: { $0.datePickerMode }, setter: { $0.datePickerMode = $1! }),
+                        keyPathOrGetSet: .right((getter: { $0.datePickerMode }, setter: { $0.datePickerMode = $1! })),
                         values: datePickerModeFixtures)
         testEventStream(object.rp.locale,
                         object: object,
@@ -359,22 +359,22 @@
                         object: object,
                         keyPathOrGetSet: .left("calendar"),
                         values: Fixtures.calendars)
-        testEventStream(object.rp.timeZone,
-                        object: object,
-                        keyPathOrGetSet: .left("timeZone"),
-                        values: Fixtures.timezonesAndNils)
+        testOptionalEventStream(object.rp.timeZone,
+                                object: object,
+                                keyPathOrGetSet: .left("timeZone"),
+                                values: Fixtures.timezonesAndNils)
         testEventStream(object.rp.date,
                         object: object,
                         keyPathOrGetSet: .left("date"),
                         values: Fixtures.dates)
-        testEventDestination(object.rp.minimumDate,
-                              object: object,
-                              keyPathOrGet: .left("minimumDate"),
-                              values: Fixtures.datesAndNils)
-        testEventDestination(object.rp.maximumDate,
-                              object: object,
-                              keyPathOrGet: .left("maximumDate"),
-                              values: Fixtures.datesAndNils)
+        testOptionalEventDestination(object.rp.minimumDate,
+                                     object: object,
+                                     keyPathOrGet: .left("minimumDate"),
+                                     values: Fixtures.datesAndNils)
+        testOptionalEventDestination(object.rp.maximumDate,
+                                     object: object,
+                                     keyPathOrGet: .left("maximumDate"),
+                                     values: Fixtures.datesAndNils)
         //      TODO: Investigate
         //      object.datePickerMode = .countDownTimer
         //      testEventStream(object.rp.countDownDuration,
@@ -396,22 +396,22 @@
                         object: object,
                         keyPathOrGetSet: .left("on"),
                         values: Fixtures.bools)
-        testEventStream(object.rp.onTintColor,
-                        object: object,
-                        keyPathOrGetSet: .left("onTintColor"),
-                        values: Fixtures.colorsAndNils)
-        testEventStream(object.rp.thumbTintColor,
-                        object: object,
-                        keyPathOrGetSet: .left("thumbTintColor"),
-                        values: Fixtures.colorsAndNils)
-        testEventStream(object.rp.onImage,
-                        object: object,
-                        keyPathOrGetSet: .left("onImage"),
-                        values: Fixtures.imagesAndNils)
-        testEventStream(object.rp.offImage,
-                        object: object,
-                        keyPathOrGetSet: .left("offImage"),
-                        values: Fixtures.imagesAndNils)
+        testOptionalEventStream(object.rp.onTintColor,
+                                object: object,
+                                keyPathOrGetSet: .left("onTintColor"),
+                                values: Fixtures.colorsAndNils)
+        testOptionalEventStream(object.rp.thumbTintColor,
+                                object: object,
+                                keyPathOrGetSet: .left("thumbTintColor"),
+                                values: Fixtures.colorsAndNils)
+        testOptionalEventStream(object.rp.onImage,
+                                object: object,
+                                keyPathOrGetSet: .left("onImage"),
+                                values: Fixtures.imagesAndNils)
+        testOptionalEventStream(object.rp.offImage,
+                                object: object,
+                                keyPathOrGetSet: .left("offImage"),
+                                values: Fixtures.imagesAndNils)
       #endif
     }
 
@@ -444,35 +444,35 @@
           let object = UIStepper()
 
           //    TODO: investigate
-//          testEventDestination(object.rp.backgroundImage(for: state), object: object,
-//                               keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
-//                               values: testImages)
-          testEventDestination(object.rp.incrementImage(for: state), object: object,
-                               keyPathOrGet: .right({ $0.incrementImage(for: state) }),
-                               values: Fixtures.images)
-          testEventDestination(object.rp.dividerImage(forLeftSegmentState: state, rightSegmentState: state),
-                               object: object,
-                               keyPathOrGet:
+          //          testEventDestination(object.rp.backgroundImage(for: state), object: object,
+          //                               keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
+          //                               values: testImages)
+          testOptionalEventDestination(object.rp.incrementImage(for: state), object: object,
+                                       keyPathOrGet: .right({ $0.incrementImage(for: state) }),
+                                       values: Fixtures.images)
+          testOptionalEventDestination(object.rp.dividerImage(forLeftSegmentState: state, rightSegmentState: state),
+                                       object: object,
+                                       keyPathOrGet:
             .right { $0.dividerImage(forLeftSegmentState: state, rightSegmentState: state) },
-                               values: Fixtures.images)
-          testEventDestination(object.rp.decrementImage(for: state), object: object,
-                               keyPathOrGet: .right({ $0.decrementImage(for: state) }),
-                               values: Fixtures.images)
+                                       values: Fixtures.images)
+          testOptionalEventDestination(object.rp.decrementImage(for: state), object: object,
+                                       keyPathOrGet: .right({ $0.decrementImage(for: state) }),
+                                       values: Fixtures.images)
         }
       #endif
     }
 
     #if os(iOS)
     func _testUISlider(_ object: UISlider, state: UIControlState) {
-      testEventDestination(object.rp.thumbImage(for: state), object: object,
-                           keyPathOrGet: .right({ $0.thumbImage(for: state) }),
-                           values: Fixtures.imagesAndNils)
-      testEventDestination(object.rp.minimumTrackImage(for: state), object: object,
-                           keyPathOrGet: .right({ $0.minimumTrackImage(for: state) }),
-                           values: Fixtures.imagesAndNils)
-      testEventDestination(object.rp.maximumTrackImage(for: state), object: object,
-                           keyPathOrGet: .right({ $0.maximumTrackImage(for: state) }),
-                           values: Fixtures.imagesAndNils)
+      testOptionalEventDestination(object.rp.thumbImage(for: state), object: object,
+                                   keyPathOrGet: .right({ $0.thumbImage(for: state) }),
+                                   values: Fixtures.imagesAndNils)
+      testOptionalEventDestination(object.rp.minimumTrackImage(for: state), object: object,
+                                   keyPathOrGet: .right({ $0.minimumTrackImage(for: state) }),
+                                   values: Fixtures.imagesAndNils)
+      testOptionalEventDestination(object.rp.maximumTrackImage(for: state), object: object,
+                                   keyPathOrGet: .right({ $0.maximumTrackImage(for: state) }),
+                                   values: Fixtures.imagesAndNils)
     }
     #endif
 
@@ -489,24 +489,24 @@
         testEventStream(object.rp.minimumValue, object: object,
                         keyPathOrGetSet: .left("minimumValue"),
                         values: Fixtures.floats)
-        testEventStream(object.rp.minimumValueImage, object: object,
-                        keyPathOrGetSet: .left("minimumValueImage"),
-                        values: Fixtures.imagesAndNils)
-        testEventStream(object.rp.maximumValueImage, object: object,
-                        keyPathOrGetSet: .left("maximumValueImage"),
-                        values: Fixtures.imagesAndNils)
+        testOptionalEventStream(object.rp.minimumValueImage, object: object,
+                                keyPathOrGetSet: .left("minimumValueImage"),
+                                values: Fixtures.imagesAndNils)
+        testOptionalEventStream(object.rp.maximumValueImage, object: object,
+                                keyPathOrGetSet: .left("maximumValueImage"),
+                                values: Fixtures.imagesAndNils)
         testEventStream(object.rp.isContinuous, object: object,
                         keyPathOrGetSet: .left("continuous"),
                         values: Fixtures.bools)
-        testEventStream(object.rp.minimumTrackTintColor, object: object,
-                        keyPathOrGetSet: .left("minimumTrackTintColor"),
-                        values: Fixtures.colorsAndNils)
-        testEventStream(object.rp.maximumTrackTintColor, object: object,
-                        keyPathOrGetSet: .left("maximumTrackTintColor"),
-                        values: Fixtures.colorsAndNils)
-        testEventStream(object.rp.thumbTintColor, object: object,
-                        keyPathOrGetSet: .left("thumbTintColor"),
-                        values: Fixtures.colorsAndNils)
+        testOptionalEventStream(object.rp.minimumTrackTintColor, object: object,
+                                keyPathOrGetSet: .left("minimumTrackTintColor"),
+                                values: Fixtures.colorsAndNils)
+        testOptionalEventStream(object.rp.maximumTrackTintColor, object: object,
+                                keyPathOrGetSet: .left("maximumTrackTintColor"),
+                                values: Fixtures.colorsAndNils)
+        testOptionalEventStream(object.rp.thumbTintColor, object: object,
+                                keyPathOrGetSet: .left("thumbTintColor"),
+                                values: Fixtures.colorsAndNils)
         for state in Fixtures.uiControlStates {
           _testUISlider(UISlider(), state: state)
         }
@@ -515,10 +515,10 @@
 
     func testUIViewController() {
       let object = UIViewController()
-      testEventStream(object.rp.title,
-                      object: object,
-                      keyPathOrGetSet: .left("title"),
-                      values: Fixtures.stringsAndNils)
+      testOptionalEventStream(object.rp.title,
+                              object: object,
+                              keyPathOrGetSet: .left("title"),
+                              values: Fixtures.stringsAndNils)
     }
   }
 
@@ -533,7 +533,7 @@
       line: UInt = #line
       ) where T.Update: Equatable {
       testEventDestination(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
-                            values: values, file: file, line: line)
+                           values: values, file: file, line: line)
       testEventSource(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
                       values: values, file: file, line: line)
     }
@@ -586,7 +586,7 @@
 
   // MARK: - T: Optional<Equatable>
   extension iOSTests {
-    func testEventStream<T: EventDestination&EventSource, Object: NSObject>(
+    func testOptionalEventStream<T: EventDestination&EventSource, Object: NSObject>(
       _ stream: T,
       object: Object,
       keyPathOrGetSet: Either<String, (getter: (Object) -> T.Update?, setter: (Object, T.Update?) -> Void)>,
@@ -595,13 +595,21 @@
       line: UInt = #line
       ) where T.Update: AsyncNinjaOptionalAdaptor,
       T.Update.AsyncNinjaWrapped: Equatable {
-        testEventDestination(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
-                              values: values, file: file, line: line)
-        testEventSource(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
-                        values: values, file: file, line: line)
+        testOptionalEventDestination(stream,
+                                     object: object,
+                                     keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
+                                     values: values,
+                                     file: file,
+                                     line: line)
+        testOptionalEventSource(stream,
+                                object: object,
+                                keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
+                                values: values,
+                                file: file,
+                                line: line)
     }
 
-    func testEventDestination<T: EventDestination, Object: NSObject>(
+    func testOptionalEventDestination<T: EventDestination, Object: NSObject>(
       _ EventDestination: T,
       object: Object,
       keyPathOrGet: Either<String, (Object) -> T.Update?>,
@@ -625,7 +633,7 @@
         }
     }
 
-    func testEventSource<T: EventSource, Object: NSObject>(
+    func testOptionalEventSource<T: EventSource, Object: NSObject>(
       _ EventSource: T,
       object: Object,
       keyPathOrSet: Either<String, (Object, T.Update?) -> Void>,

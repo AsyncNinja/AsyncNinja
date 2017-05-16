@@ -76,7 +76,7 @@
       self.control = control
     }
 
-    dynamic func asyncNinjaAction(sender: AnyObject?) {
+    @objc dynamic func asyncNinjaAction(sender: AnyObject?) {
       let update: NSControl.ActionChannelUpdate = (
         sender: sender,
         objectValue: self.control?.objectValue

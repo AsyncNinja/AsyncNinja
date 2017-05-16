@@ -93,7 +93,7 @@
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1,
       // swiftlint:disable:next line_length
-      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ object: T, _ isEnabled: Bool) -> Void) = { _ in }
+      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ object: T, _ isEnabled: Bool) -> Void) = { (_, _, _) in }
       ) -> ProducerProxy<Notification, Void> {
       return _updatable(object: object,
                         name: name,
@@ -112,7 +112,8 @@
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1,
-      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ isEnabled: Bool) -> Void) = { _ in }
+      // swiftlint:disable:next line_length
+      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ isEnabled: Bool) -> Void) = { (_, _) in }
       ) -> ProducerProxy<Notification, Void> {
       return _updatable(object: nil,
                         name: name,
@@ -129,7 +130,7 @@
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1,
       // swiftlint:disable:next line_length
-      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ object: T?, _ isEnabled: Bool) -> Void) = { _ in }
+      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ object: T?, _ isEnabled: Bool) -> Void) = { (_, _, _) in }
       ) -> ProducerProxy<Notification, Void> {
 
       let producer = ProducerProxy<Notification, Void>(
