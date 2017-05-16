@@ -8,4 +8,3 @@ script:
   - set -o pipefail && xcodebuild build test -project AsyncNinja.xcodeproj -scheme AsyncNinja -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 5' -configuration Release | xcpretty --no-color --no-utf -f `xcpretty-travis-formatter`
   - set -o pipefail && xcodebuild build test -project AsyncNinja.xcodeproj -scheme AsyncNinja -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 7' -configuration Release | xcpretty --no-color --no-utf -f `xcpretty-travis-formatter`
   - set -o pipefail && xcodebuild build test -project AsyncNinja.xcodeproj -scheme AsyncNinja -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV 1080p' -configuration Release | xcpretty --no-color --no-utf -f `xcpretty-travis-formatter`
-  - swift test --configuration release
