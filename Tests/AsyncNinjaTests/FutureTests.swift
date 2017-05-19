@@ -338,7 +338,8 @@ class FutureTests: XCTestCase {
             assert(actor: actor)
             XCTAssertEqual(value, value_)
             group.leave()
-        }
+          }
+          .onFailure { _ in XCTFail() }
       }
 
       group.wait()
@@ -464,9 +465,9 @@ class FutureTests: XCTestCase {
     group.leave()
 
     let expectation = self.expectation(description: "completion of future")
-    completionFuture.onSuccess { (_) -> Void in
-      expectation.fulfill()
-    }
+    completionFuture
+      .onSuccess { _ in expectation.fulfill() }
+      .onFailure { _ in XCTFail() }
 
     self.waitForExpectations(timeout: 0.2)
   }

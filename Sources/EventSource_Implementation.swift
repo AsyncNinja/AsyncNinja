@@ -143,26 +143,32 @@ extension EventSource {
 public extension EventSource {
   /// **internal use only**
   func _onEvent(
-    executor: Executor = .primary,
-    _ block: @escaping (_ event: Event, _ originalExecutor: Executor) -> Void) {
-    let handler = self.makeHandler(executor: executor, block)
-    self._asyncNinja_retainHandlerUntilFinalization(handler)
+    executor: Executor,
+    _ block: @escaping (_ event: Event, _ originalExecutor: Executor) -> Void
+    ) -> Self {
+    let handler = makeHandler(executor: executor, block)
+    _asyncNinja_retainHandlerUntilFinalization(handler)
+    return self
   }
 
   /// **internal use only**
   func _onEvent<C: ExecutionContext>(
     context: C,
-    executor: Executor? = nil,
-    _ block: @escaping (_ strongContext: C, _ event: Event, _ originalExecutor: Executor) -> Void) {
+    executor: Executor?,
+    _ block: @escaping (_ strongContext: C, _ event: Event, _ originalExecutor: Executor) -> Void
+    ) -> Self {
 
-    let handler = self.makeHandler(executor: executor ?? context.executor) { [weak context] (event, originalExecutor) in
+    let handler = makeHandler(executor: executor ?? context.executor) { [weak context] (event, originalExecutor) in
       if let context = context {
         block(context, event, originalExecutor)
       }
     }
+
     if let handler = handler {
       context.releaseOnDeinit(handler)
     }
+
+    return self
   }
 
   /// Subscribes for buffered and new values (both update and completion) for the channel
@@ -171,10 +177,12 @@ public extension EventSource {
   ///   - executor: to execute block on
   ///   - block: to execute. Will be called multiple times
   ///   - event: received by the channel
+  @discardableResult
   func onEvent(
     executor: Executor = .primary,
-    _ block: @escaping (_ event: Event) -> Void) {
-    _onEvent { (event, _) in
+    _ block: @escaping (_ event: Event) -> Void
+    ) -> Self {
+    return _onEvent(executor: executor) { (event, _) in
       block(event)
     }
   }
@@ -189,14 +197,13 @@ public extension EventSource {
   ///   - block: to execute. Will be called multiple times
   ///   - strongContext: context restored from weak reference to specified context
   ///   - event: received by the channel
+  @discardableResult
   func onEvent<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    _ block: @escaping (_ strongContext: C, _ event: Event) -> Void) {
-    _onEvent(
-      context: context,
-      executor: executor
-    ) { (context, event, _) in
+    _ block: @escaping (_ strongContext: C, _ event: Event) -> Void
+    ) -> Self {
+    return _onEvent(context: context, executor: executor) { (context, event, _) in
       block(context, event)
     }
   }

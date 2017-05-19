@@ -133,7 +133,7 @@ public class CachableValue<T: CachableCompletable> {
   private func _handleMissOnExecutor(from originalExecutor: Executor?) {
     do {
       let completable = try _missHandler()
-      completable._onComplete(
+      _ = completable._onComplete(
         executor: .immediate
       ) { [weak self] (completion, originalExecutor) in
         self?._handle(completion: completion, from: originalExecutor)

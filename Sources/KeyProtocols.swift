@@ -82,15 +82,16 @@ public extension Updating {
   ///   - executor: to execute block on
   ///   - block: to execute. Will be called multiple times
   ///   - update: received by the channel
+  @discardableResult
   func onUpdate(
     executor: Executor = .primary,
-    _ block: @escaping (_ update: Update) -> Void) {
-    let handler = self.makeUpdateHandler(
-      executor: executor
-    ) { (update, _) in
+    _ block: @escaping (_ update: Update) -> Void
+    ) -> Self {
+    let handler = makeUpdateHandler(executor: executor) { (update, _) in
       block(update)
     }
-    self._asyncNinja_retainHandlerUntilFinalization(handler)
+    _asyncNinja_retainHandlerUntilFinalization(handler)
+    return self
   }
 
   /// Subscribes for buffered and new update values for the channel
@@ -103,11 +104,13 @@ public extension Updating {
   ///   - block: to execute. Will be called multiple times
   ///   - strongContext: context restored from weak reference to specified context
   ///   - update: received by the channel
+  @discardableResult
   func onUpdate<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    _ block: @escaping (_ strongContext: C, _ update: Update) -> Void) {
-    let handler = self.makeUpdateHandler(
+    _ block: @escaping (_ strongContext: C, _ update: Update) -> Void
+    ) -> Self {
+    let handler = makeUpdateHandler(
       executor: executor ?? context.executor
     ) { [weak context] (update, _) in
       guard let context = context else { return }
@@ -116,6 +119,8 @@ public extension Updating {
     if let handler = handler {
       context.releaseOnDeinit(handler)
     }
+
+    return self
   }
 }
 

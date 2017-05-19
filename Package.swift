@@ -28,7 +28,7 @@ import PackageDescription
     return Package(
       name: "AsyncNinja",
       targets: [
-  
+
         .target(
           name: "AsyncNinja",
           path: "Sources"),
@@ -53,7 +53,7 @@ import PackageDescription
     )
   }
 #else
-  func makePackage() -> Package {	
+  func makePackage() -> Package {
   	fatalError("This Swift version is not supported")
   }
 #endif
