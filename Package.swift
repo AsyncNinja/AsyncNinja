@@ -36,21 +36,13 @@ import PackageDescription
         .testTarget(
           name: "AsyncNinjaTests",
           dependencies: ["AsyncNinja"],
-          path: "Tests/AsyncNinjaTests",
-          exclude: [
-            "PerformanceTests.swift" // these tests take too much time and do not give enough feedback
-            ])
+          path: "Tests/AsyncNinjaTests")
       ]
     )
   }
 #elseif swift(>=3.0)
   func makePackage() -> Package {
-    return Package(
-      name: "AsyncNinja",
-      exclude: [
-        "Tests/AsyncNinjaTests/PerformanceTests.swift" // these tests take too much time and do not give enough feedback
-      ]
-    )
+    return Package(name: "AsyncNinja")
   }
 #else
   func makePackage() -> Package {

@@ -93,7 +93,7 @@ class PerformanceTests: XCTestCase {
     self.measure {
       let resultValue = PerformanceTests.runsRange
         .map { future(success: $0).map(executor: .immediate) { $0 * 2 } }
-        .reduce(initialResult: 0, +)
+        .asyncReduce(0, +)
         .wait().success!
       let fixture = (PerformanceTests.runsRange.lowerBound + PerformanceTests.runsRange.upperBound - 1)
         * PerformanceTests.runsRange.count

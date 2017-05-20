@@ -46,8 +46,7 @@ import XCTest
       testCase(FallibleTests.allTests),
       testCase(Future_MakersTests.allTests),
       testCase(FutureTests.allTests),
-      // these tests take too much time and do not give enough feedback
-      // testCase(PerformanceTests.allTests),
+      testCase(PerformanceTests.allTests),
       testCase(OptionalAdaptorTests.allTests),
       testCase(ReleasePoolTests.allTests),
       testCase(TimerChannelTests.allTests),
