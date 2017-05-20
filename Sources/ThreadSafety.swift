@@ -22,12 +22,12 @@
 
 import Dispatch
 
-func makeThreadSafeContainer() -> ThreadSafeContainer {
+func makeThreadSafeContainer(head: AnyObject? = nil) -> ThreadSafeContainer {
   #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
     if AsyncNinjaConstants.isLockFreeUseAllowed {
-      return LockFreeThreadSafeContainer()
+      return LockFreeThreadSafeContainer(head: head)
     } else {
-      return LockingThreadSafeContainer(locking: makeLocking())
+      return LockingThreadSafeContainer(locking: makeLocking(), head: head)
     }
   #else
     return LockingThreadSafeContainer(locking: makeLocking())
@@ -47,8 +47,9 @@ private struct LockingThreadSafeContainer: ThreadSafeContainer {
   private var _locking: Locking
   var head: AnyObject?
 
-  init(locking: Locking) {
+  init(locking: Locking, head: AnyObject?) {
     _locking = locking
+    self.head = head
   }
 
   @discardableResult
