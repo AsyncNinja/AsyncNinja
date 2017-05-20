@@ -124,7 +124,9 @@ class PerformanceTests: XCTestCase {
              makePerformer(globalQOS: .default, multiplier: 3))
         .map(executor: .userInteractive, makePerformer(globalQOS: .userInteractive, multiplier: 2))
 
-      let result = zip(result1, result2).map { $0 + $1 }.wait().success!
+      let result = zip(result1, result2)
+        .map { $0.0 + $0.1 }
+        .wait().success!
 
       XCTAssertEqual(result, 360)
     }
