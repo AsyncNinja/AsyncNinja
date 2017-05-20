@@ -48,6 +48,8 @@ struct AsyncNinjaConstants {
   /// This kind of behavior is present in each way of interaction
   /// with `Channel`: transformation, sync enumeration and etc.
   static let defaultChannelBufferSize = 1
+
+  static let isFuturesLazyByDefault = true
 }
 
 /// Errors produced by AsyncNinja
