@@ -1,0 +1,10 @@
+disabled_rules:
+  - large_tuple
+  - identifier_name
+  - type_name
+  - force_cast
+  - file_length
+  - function_parameter_count
+  - todo
+  - type_body_length
+  - nesting

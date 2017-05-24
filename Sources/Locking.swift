@@ -38,16 +38,36 @@ public extension Locking {
   ///
   /// - Parameter locked: locked function to perform
   /// - Returns: value returned by the locker
-  mutating func locker<T>(_ locked: () throws -> T) rethrows -> T {
+  mutating func locker<Result>(_ locked: () throws -> Result) rethrows -> Result {
     lock()
     defer { unlock() }
     return try locked()
   }
 
+  /// Locks and performs block with one arugment
+  ///
+  /// - Parameter locked: locked function to perform
+  /// - Returns: value returned by the locker
+  mutating func locker<A, Result>(_ a: A, _ locked: (A) throws -> Result) rethrows -> Result {
+    lock()
+    defer { unlock() }
+    return try locked(a)
+  }
+
+  /// Locks and performs block with two arugments
+  ///
+  /// - Parameter locked: locked function to perform
+  /// - Returns: value returned by the locker
+  mutating func locker<A, B, Result>(_ a: A, _ b: B, _ locked: (A, B) throws -> Result) rethrows -> Result {
+    lock()
+    defer { unlock() }
+    return try locked(a, b)
+  }
+
   /// Locks and performs block
   ///
   /// - Parameter locked: locked function to perform
-  mutating func locker(_ locked: () -> Void) -> Void {
+  mutating func locker(_ locked: () -> Void) {
     lock()
     locked()
     unlock()

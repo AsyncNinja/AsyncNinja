@@ -31,26 +31,26 @@ public class DynamicProperty<T>: BaseProducer<T, Void> {
     get { return _value }
     set { self.update(newValue) }
   }
-  
+
   private let _updateExecutor: Executor
   private var _value: T
-  
+
   /// designated initializer
   init(initialValue: T,
        updateExecutor: Executor,
-       bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize)
-  {
+       bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize) {
     _updateExecutor = updateExecutor
     _value = initialValue
     super.init(bufferSize: bufferSize)
     _pushUpdateToBuffer(initialValue)
   }
-  
+
   /// Calls update handler instead of sending specified Update to the Producer
   override public func tryUpdate(_ update: Update, from originalExecutor: Executor?) -> Bool {
     if super.tryUpdate(update, from: originalExecutor) {
-      _updateExecutor.execute(from: originalExecutor) {
-        [weak self] (originalExecutor) in
+      _updateExecutor.execute(
+        from: originalExecutor
+      ) { [weak self] _ in
         self?._value = update
       }
       return true

@@ -28,7 +28,7 @@ import Dispatch
 #endif
 
 class EventSource_MapTests: XCTestCase {
-  
+
   static let allTests = [
     ("testMapEvent", testMapEvent),
     ("testMapEventContextual", testMapEventContextual),
@@ -39,7 +39,7 @@ class EventSource_MapTests: XCTestCase {
     ("testFlatMapArray", testFlatMapArray),
     ("testFlatMapArrayContextual", testFlatMapArrayContextual),
     ("testFlatMapOptional", testFlatMapOptional),
-    ("testFlatMapOptionalContextual", testFlatMapOptionalContextual),
+    ("testFlatMapOptionalContextual", testFlatMapOptionalContextual)
   ]
 
   func makeChannel<S: Sequence, T>(updates: S, success: T) -> Channel<S.Iterator.Element, T> {

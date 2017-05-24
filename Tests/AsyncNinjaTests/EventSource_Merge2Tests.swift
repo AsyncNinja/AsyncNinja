@@ -28,10 +28,10 @@ import Dispatch
 #endif
 
 class EventSource_Merge2Tests: XCTestCase {
-  
+
   static let allTests = [
     ("testMergeInts", testMergeInts),
-    ("testMergeIntsAndStrings", testMergeIntsAndStrings),
+    ("testMergeIntsAndStrings", testMergeIntsAndStrings)
   ]
 
   func testMergeInts() {
@@ -41,7 +41,8 @@ class EventSource_Merge2Tests: XCTestCase {
       let channelOfNumbers: Channel = merge(producerOfOdds, producerOfEvents)
       let sema = DispatchSemaphore(value: 0)
 
-      channelOfNumbers.extractAll().onSuccess { (numbers, stringsOfError) in
+      channelOfNumbers.extractAll().onSuccess {
+        let (numbers, stringsOfError) = $0
         XCTAssertEqual(numbers, [1, 3, 2, 4, 5, 6, 7, 8])
         XCTAssertEqual(stringsOfError.success!.0, "Hello")
         XCTAssertEqual(stringsOfError.success!.1, "World")
@@ -67,7 +68,11 @@ class EventSource_Merge2Tests: XCTestCase {
   }
 
   func testMergeIntsAndStrings() {
-    let fixtureNumbers: [Either<Int, String>] = [.left(1), .left(3), .right("two"), .right("four"), .left(5), .right("six"), .left(7), .right("eight")]
+    let fixtureNumbers: [Either<Int, String>] = [
+      .left(1), .left(3), .right("two"),
+      .right("four"), .left(5), .right("six"),
+      .left(7), .right("eight")
+    ]
 
     multiTest {
       let producerOfOdds = Producer<Int, String>()
@@ -75,7 +80,8 @@ class EventSource_Merge2Tests: XCTestCase {
       let channelOfNumbers = merge(producerOfOdds, producerOfEvents, bufferSize: .specific(8))
       let sema = DispatchSemaphore(value: 0)
 
-      channelOfNumbers.extractAll().onSuccess { (numbers, stringsOfError) in
+      channelOfNumbers.extractAll().onSuccess {
+        let (numbers, stringsOfError) = $0
         XCTAssertEqual(numbers.count, fixtureNumbers.count)
         for (number, fixture) in zip(numbers, fixtureNumbers) {
           XCTAssert(number == fixture)

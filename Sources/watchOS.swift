@@ -21,17 +21,17 @@
 //
 
 #if os(watchOS)
-  
+
   import WatchKit
-  
+
   /// Conforms WKInterfaceController to ObjCUIInjectedExecutionContext
   /// that allows using each WKInterfaceController as ExecutionContext
   extension WKInterfaceController: ObjCUIInjectedExecutionContext {
   }
-  
+
   /// Conforms WKInterfaceObject to ObjCUIInjectedExecutionContext
   /// that allows using each WKInterfaceObject as ExecutionContext
   extension WKInterfaceObject: ObjCUIInjectedExecutionContext {
   }
-  
+
 #endif

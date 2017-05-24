@@ -36,7 +36,7 @@ class TryExecuteTests: XCTestCase {
     ("testTryExecuteTimesSuccess", testTryExecuteTimesSuccess),
     ("testTryExecuteTimesFailure", testTryExecuteTimesFailure),
     ("testTryFlatExecuteTimesSuccess", testTryFlatExecuteTimesSuccess),
-    ("testTryFlatExecuteTimesFailure", testTryFlatExecuteTimesFailure),
+    ("testTryFlatExecuteTimesFailure", testTryFlatExecuteTimesFailure)
     ]
 
   // MARK: - try execute until

@@ -22,12 +22,12 @@
 
 import Dispatch
 
-func makeThreadSafeContainer() -> ThreadSafeContainer {
+func makeThreadSafeContainer(head: AnyObject? = nil) -> ThreadSafeContainer {
   #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
     if AsyncNinjaConstants.isLockFreeUseAllowed {
-      return LockFreeThreadSafeContainer()
+      return LockFreeThreadSafeContainer(head: head)
     } else {
-      return LockingThreadSafeContainer(locking: makeLocking())
+      return LockingThreadSafeContainer(locking: makeLocking(), head: head)
     }
   #else
     return LockingThreadSafeContainer(locking: makeLocking())
@@ -47,8 +47,9 @@ private struct LockingThreadSafeContainer: ThreadSafeContainer {
   private var _locking: Locking
   var head: AnyObject?
 
-  init(locking: Locking) {
+  init(locking: Locking, head: AnyObject?) {
     _locking = locking
+    self.head = head
   }
 
   @discardableResult
@@ -81,7 +82,8 @@ private struct LockingThreadSafeContainer: ThreadSafeContainer {
         let oldPtr = oldRef?.toOpaque() ?? nil
         let newPtr = newRef?.toOpaque() ?? nil
 
-        if OSAtomicCompareAndSwapPtrBarrier(oldPtr, newPtr, UnsafeMutableRawPointer(&self.head).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)) {
+        let thePtr = UnsafeMutableRawPointer(&self.head).assumingMemoryBound(to: Optional<UnsafeMutableRawPointer>.self)
+        if OSAtomicCompareAndSwapPtrBarrier(oldPtr, newPtr, thePtr) {
           oldRef?.release()
           return (oldHead, newHead)
         } else {
@@ -91,5 +93,5 @@ private struct LockingThreadSafeContainer: ThreadSafeContainer {
       }
     }
   }
-  
+
 #endif

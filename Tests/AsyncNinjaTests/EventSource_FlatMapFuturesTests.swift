@@ -28,23 +28,27 @@ import Dispatch
 #endif
 
 class EventSource_FlatMapFuturesTests: XCTestCase {
-  
+
   static let allTests = [
     ("testFlatMapFutures_KeepUnordered", testFlatMapFutures_KeepUnordered),
     ("testFlatMapFutures_KeepLatestTransform", testFlatMapFutures_KeepLatestTransform),
     ("testFlatMapFutures_DropResultsOutOfOrder", testFlatMapFutures_DropResultsOutOfOrder),
     ("testFlatMapFutures_OrderResults", testFlatMapFutures_OrderResults),
-    ("testFlatMapFutures_TransformSerially", testFlatMapFutures_TransformSerially),
+    ("testFlatMapFutures_TransformSerially", testFlatMapFutures_TransformSerially)
   ]
 
-  func _testFlatMapFutures(behavior: ChannelFlatteningBehavior, expectedResults: [String],
-                          file: StaticString = #file, line: UInt = #line) {
+  func _testFlatMapFutures(
+    behavior: ChannelFlatteningBehavior,
+    expectedResults: [String],
+    file: StaticString = #file,
+    line: UInt = #line
+    ) {
     let producerA = Producer<(duration: Double, name: String), String>()
     let qos = pickQoS()
-    let channelB = producerA.flatMap(executor: .queue(qos), behavior: behavior) { (duration, name) -> Future<String> in
+    let channelB = producerA.flatMap(executor: .queue(qos), behavior: behavior) { (update) -> Future<String> in
       assert(qos: qos)
-      return future(after: duration) {
-        return "t(\(name))"
+      return future(after: update.duration) {
+        return "t(\(update.name))"
       }
     }
 

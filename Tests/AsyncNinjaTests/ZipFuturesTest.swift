@@ -28,7 +28,7 @@ import Dispatch
 #endif
 
 class ZipFuturesTest: XCTestCase {
-  
+
   static let allTests = [
     ("test2Simple", test2Simple),
     ("test3Simple", test3Simple),
@@ -46,7 +46,7 @@ class ZipFuturesTest: XCTestCase {
     ("testMerge3OfSameTypeSecond", testMerge3OfSameTypeSecond),
     ("testMerge3OfSameTypeThird", testMerge3OfSameTypeThird),
     ("testMerge2OfDifferentTypeFirst", testMerge2OfDifferentTypeFirst),
-    ("testMerge2OfDifferentTypeSecond", testMerge2OfDifferentTypeSecond),
+    ("testMerge2OfDifferentTypeSecond", testMerge2OfDifferentTypeSecond)
     ]
 
   func test2Simple() {
@@ -84,7 +84,7 @@ class ZipFuturesTest: XCTestCase {
     XCTAssertEqual(valueAB.0, valueA)
     XCTAssertEqual(valueAB.1, valueB)
   }
-  
+
   func test3Delayed() {
     let valueA = pickInt()
     let valueB = pickInt()
@@ -98,7 +98,7 @@ class ZipFuturesTest: XCTestCase {
     XCTAssertEqual(valueABC.1, valueB)
     XCTAssertEqual(valueABC.2, valueC)
   }
-  
+
   func test2Constant() {
     let valueA = pickInt()
     let valueB = pickInt()
@@ -170,20 +170,20 @@ class ZipFuturesTest: XCTestCase {
     weak var weakFutureAB = futureAB
     futureA = nil
     futureB = nil
-    
+
     XCTAssertNotNil(weakFutureA)
     XCTAssertNotNil(weakFutureB)
     XCTAssertNotNil(weakFutureAB)
-    
+
     futureAB = nil
-    
+
     XCTAssertNil(weakFutureA)
     XCTAssertNil(weakFutureB)
     XCTAssertNil(weakFutureAB)
 
     sleep(1)
   }
-  
+
   func test3Lifetime() {
     let valueA = pickInt()
     let valueB = pickInt()
@@ -199,14 +199,14 @@ class ZipFuturesTest: XCTestCase {
     futureA = nil
     futureB = nil
     futureC = nil
-    
+
     XCTAssertNotNil(weakFutureA)
     XCTAssertNotNil(weakFutureB)
     XCTAssertNotNil(weakFutureC)
     XCTAssertNotNil(weakFutureABC)
-    
+
     futureABC = nil
-    
+
     XCTAssertNil(weakFutureA)
     XCTAssertNil(weakFutureB)
     XCTAssertNil(weakFutureC)
@@ -214,7 +214,7 @@ class ZipFuturesTest: XCTestCase {
 
     sleep(1)
   }
-  
+
   func testMerge2OfSameTypeFirst() {
     let futureA: Future<String> = future(after: 0.1) { return "Right" }
     let futureB: Future<String> = future(after: 0.3) { return "Wrong" }
@@ -240,7 +240,7 @@ class ZipFuturesTest: XCTestCase {
     let futureC: Future<String> = future(after: 0.5) { return "Wrong 2" }
     XCTAssertEqual(merge(futureA, futureB, futureC).wait().success, "Right")
   }
-  
+
   func testMerge3OfSameTypeThird() {
     let futureA: Future<String> = future(after: 0.3) { return "Wrong" }
     let futureB: Future<String> = future(after: 0.5) { return "Wrong 2" }
@@ -253,7 +253,7 @@ class ZipFuturesTest: XCTestCase {
     let futureB: Future<Int> = future(after: 0.3) { return 0xbad }
     XCTAssert(merge(futureA, futureB).wait().success! == .left("Right"))
   }
-  
+
   func testMerge2OfDifferentTypeSecond() {
     let futureA: Future<Int> = future(after: 0.3) { return 0xbad }
     let futureB: Future<String> = future(after: 0.1) { return "Right" }

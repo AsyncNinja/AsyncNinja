@@ -30,7 +30,7 @@ import Dispatch
 class TimerChannelTests: XCTestCase {
 
   static let allTests = [
-    ("testLifetime", testLifetime),
+    ("testLifetime", testLifetime)
     ]
 
   func testLifetime() {
@@ -73,4 +73,3 @@ class TimerChannelTests: XCTestCase {
     }
   }
 }
-

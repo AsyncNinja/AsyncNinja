@@ -82,14 +82,16 @@ public extension Updating {
   ///   - executor: to execute block on
   ///   - block: to execute. Will be called multiple times
   ///   - update: received by the channel
+  @discardableResult
   func onUpdate(
     executor: Executor = .primary,
-    _ block: @escaping (_ update: Update) -> Void) {
-    let handler = self.makeUpdateHandler(executor: executor) {
-      (update, originalExecutor) in
+    _ block: @escaping (_ update: Update) -> Void
+    ) -> Self {
+    let handler = makeUpdateHandler(executor: executor) { (update, _) in
       block(update)
     }
-    self._asyncNinja_retainHandlerUntilFinalization(handler)
+    _asyncNinja_retainHandlerUntilFinalization(handler)
+    return self
   }
 
   /// Subscribes for buffered and new update values for the channel
@@ -102,19 +104,23 @@ public extension Updating {
   ///   - block: to execute. Will be called multiple times
   ///   - strongContext: context restored from weak reference to specified context
   ///   - update: received by the channel
+  @discardableResult
   func onUpdate<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    _ block: @escaping (_ strongContext: C, _ update: Update) -> Void) {
-    let handler = self.makeUpdateHandler(executor: executor ?? context.executor)
-    {
-      [weak context] (update, originalExecutor) in
+    _ block: @escaping (_ strongContext: C, _ update: Update) -> Void
+    ) -> Self {
+    let handler = makeUpdateHandler(
+      executor: executor ?? context.executor
+    ) { [weak context] (update, _) in
       guard let context = context else { return }
       block(context, update)
     }
     if let handler = handler {
       context.releaseOnDeinit(handler)
     }
+
+    return self
   }
 }
 
@@ -137,7 +143,7 @@ public extension Updatable {
   ///
   /// - Parameter update: value to update with
   func update(_ update: Update) {
-    let _ = self.tryUpdate(update, from: nil)
+    _ = self.tryUpdate(update, from: nil)
   }
 
   /// Sends specified Update to the Updatable
@@ -149,7 +155,7 @@ public extension Updatable {
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
   func update(_ update: Update, from originalExecutor: Executor?) {
-    let _ = self.tryUpdate(update, from: originalExecutor)
+    _ = self.tryUpdate(update, from: originalExecutor)
   }
 }
 
@@ -166,7 +172,7 @@ public extension EventController {
 /// A base protocol of object that update and complete
 public protocol EventSource: EventController, Completing, Updating, Sequence {
 
-  associatedtype Iterator: IteratorProtocol = ChannelIterator<Update, Success>
+  associatedtype Iterator = ChannelIterator<Update, Success>
 
   /// amount of currently stored updates
   var bufferSize: Int { get }
@@ -181,10 +187,13 @@ public protocol EventSource: EventController, Completing, Updating, Sequence {
 }
 
 /// A base protocol of object that can be updated and completed
-public protocol EventsDestination: EventController, Updatable, Completable {
+public protocol EventDestination: EventController, Updatable, Completable {
 }
 
-public extension EventsDestination {
+/// **This was a typo since 1.0.0. Let's keep the old code working.**
+public typealias EventsDestination = EventDestination
+
+public extension EventDestination {
 
   /// Posts event to the EventDestination
   /// Value will not be applied for completed Producer
@@ -195,8 +204,9 @@ public extension EventsDestination {
   ///   on `strictAsync: false` `Executor`s.
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
-  public func post(_ event: ChannelEvent<Update, Success>,
-                    from originalExecutor: Executor? = nil) {
+  public func post(
+    _ event: ChannelEvent<Update, Success>,
+    from originalExecutor: Executor? = nil) {
     switch event {
     case let .update(update):
       self.update(update, from: originalExecutor)

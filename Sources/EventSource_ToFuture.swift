@@ -30,15 +30,15 @@ public extension EventSource {
   private func _first(executor: Executor,
                       cancellationToken: CancellationToken?,
                       `where` predicate: @escaping(Update) throws -> Bool
-    ) -> Promise<Update?>
-  {
+    ) -> Promise<Update?> {
     let promise = Promise<Update?>()
     let queue = Queue<ChannelEvent<Update, Success>>()
     var locking = makeLocking(isFair: true)
     var isComplete = false
 
-    let handler = self.makeHandler(executor: .immediate) {
-      (event, originalExecutor) in
+    let handler = self.makeHandler(
+      executor: .immediate
+    ) { (event, originalExecutor) in
       let isCompleteLocal: Bool = locking.locker {
         if isComplete {
           return true
@@ -50,8 +50,9 @@ public extension EventSource {
 
       guard !isCompleteLocal else { return }
 
-      executor.execute(from: originalExecutor) {
-        [weak promise] (originalExecutor) in
+      executor.execute(
+        from: originalExecutor
+      ) { [weak promise] (originalExecutor) in
         guard case .some = promise else { return }
 
         let completion: Fallible<Update?>? = locking.locker {
@@ -100,10 +101,11 @@ public extension EventSource {
   ///   - predicate: returns true if update value matches
   ///     and returned future may be completed with it
   /// - Returns: future
-  func first<C: ExecutionContext>(context: C,
-             executor: Executor? = nil,
-             cancellationToken: CancellationToken? = nil,
-             `where` predicate: @escaping(C, Update) throws -> Bool
+  func first<C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    cancellationToken: CancellationToken? = nil,
+    `where` predicate: @escaping(C, Update) throws -> Bool
     ) -> Future<Update?> {
 
     // Test: EventSource_ToFutureTests.testFirstSuccessIncompleteContextual
@@ -111,8 +113,10 @@ public extension EventSource {
     // Test: EventSource_ToFutureTests.testFirstFailureContextual
 
     let executor_ = executor ?? context.executor
-    let promise = self._first(executor: executor_, cancellationToken: cancellationToken) {
-      [weak context] (update) -> Bool in
+    let promise = self._first(
+      executor: executor_,
+      cancellationToken: cancellationToken
+    ) { [weak context] (update) -> Bool in
       guard let context = context else { throw AsyncNinjaError.contextDeallocated }
       return try predicate(context, update)
     }
@@ -162,14 +166,16 @@ public extension EventSource {
     let queue = Queue<ChannelEvent<Update, Success>>()
     let promise = Promise<Update?>()
 
-    let handler = self.makeHandler(executor: .immediate) {
-      (event, originalExecutor) in
+    let handler = self.makeHandler(
+      executor: .immediate
+    ) { (event, originalExecutor) in
       locking.lock()
       queue.push(event)
       locking.unlock()
 
-      executor.execute(from: originalExecutor) {
-        [weak promise] (originalExecutor) in
+      executor.execute(
+        from: originalExecutor
+      ) { [weak promise] (originalExecutor) in
         guard case .some = promise else { return }
         let completion: Fallible<Update?>? = locking.locker {
           let event = queue.pop()!
@@ -208,14 +214,19 @@ public extension EventSource {
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
-  ///   - executor: override of `ExecutionContext`s executor. Keep default value of the argument unless you need to override an executor provided by the context
-  ///   - cancellationToken: `CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned future
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need
+  ///     to override an executor provided by the context
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned primitive
   ///   - predicate: returns true if update value matches and returned future may be completed with it
   /// - Returns: future
-  func last<C: ExecutionContext>(context: C,
-            executor: Executor? = nil,
-            cancellationToken: CancellationToken? = nil,
-            `where` predicate: @escaping(C, Update) throws -> Bool
+  func last<C: ExecutionContext>(
+    context: C,
+    executor: Executor? = nil,
+    cancellationToken: CancellationToken? = nil,
+    `where` predicate: @escaping(C, Update) throws -> Bool
     ) -> Future<Update?> {
 
     // Test: EventSource_ToFutureTests.testLastSuccessIncompleteContextual
@@ -223,10 +234,10 @@ public extension EventSource {
     // Test: EventSource_ToFutureTests.testLastFailureContextual
 
     let _executor = executor ?? context.executor
-    let promise = self._last(executor: _executor,
-                             cancellationToken: cancellationToken)
-    {
-      [weak context] (update) -> Bool in
+    let promise = self._last(
+      executor: _executor,
+      cancellationToken: cancellationToken
+    ) { [weak context] (update) -> Bool in
       guard let context = context else {
         throw AsyncNinjaError.contextDeallocated
       }
@@ -281,15 +292,15 @@ public extension EventSource {
     executor: Executor = .primary,
     cancellationToken: CancellationToken? = nil,
     where predicate: @escaping (Update) -> Bool
-    ) -> Future<Bool>
-  {
+    ) -> Future<Bool> {
     // Test: EventSource_ToFutureTests.testContainsTrue
     // Test: EventSource_ToFutureTests.testContainsFalse
 
     var locking = makeLocking(isFair: true)
     let promise = Promise<Bool>()
-    let handler = makeHandler(executor: executor) {
-      [weak promise] (event, originalExecutor) in
+    let handler = makeHandler(
+      executor: executor
+    ) { [weak promise] (event, _) in
       if let promise = promise {
         if case .some = promise.completion {
           return
@@ -301,8 +312,7 @@ public extension EventSource {
       let result: Bool? = locking.locker {
         switch event {
         case let .update(update):
-          if predicate(update) { return true }
-          else { return nil }
+          if predicate(update) { return true } else { return nil }
         case .completion:
           return false
         }
@@ -333,8 +343,7 @@ extension EventSource where Update: Equatable {
   public func contains(
     _ value: Update,
     cancellationToken: CancellationToken? = nil
-    ) -> Future<Bool>
-  {
+    ) -> Future<Bool> {
     // Test: EventSource_ToFutureTests.testContainsValueTrue
     // Test: EventSource_ToFutureTests.testContainsValueFalse
     return contains(executor: .immediate, cancellationToken: cancellationToken) { $0 == value }

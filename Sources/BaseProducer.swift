@@ -25,14 +25,14 @@ import Dispatch
 /// Mutable subclass of channel
 /// You can update and complete producer manually
 /// **internal use only**
-public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDestination {
+public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDestination {
   private let _maxBufferSize: Int
   let _bufferedUpdates = Queue<Update>()
   private let _releasePool = ReleasePool(locking: PlaceholderLocking())
   var _locking = makeLocking()
   private var _handlers = QueueOfWeakElements<ProducerHandler<Update, Success>>()
   private var _completion: Fallible<Success>?
-  
+
   /// amount of currently stored updates
   override public var bufferSize: Int {
     _locking.lock()
@@ -41,36 +41,38 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
   }
   /// maximal amount of updates store
   override public var maxBufferSize: Int { return _maxBufferSize }
-  
+
   /// completion of `Producer`. Returns nil if channel is not complete yet
   override public var completion: Fallible<Success>? {
     _locking.lock()
     defer { _locking.unlock() }
     return _completion
   }
-  
+
   /// designated initializer of Producer. Initializes Producer with specified buffer size
   init(bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize) {
     _maxBufferSize = bufferSize
   }
-  
+
   /// **internal use only**
   override public func makeHandler(
     executor: Executor,
     _ block: @escaping (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void
-    ) -> AnyObject?
-  {
+    ) -> AnyObject? {
     return _locking.locker {
       return _makeHandler(executor: executor, block)
     }
   }
-  
+
   fileprivate func _makeHandler(
     executor: Executor,
     _ block: @escaping (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void
-    ) -> ProducerHandler<Update, Success>?
-  {
-    let handler = ProducerHandler(executor: executor, bufferedUpdates: _bufferedUpdates.clone(), owner: self, block: block)
+    ) -> ProducerHandler<Update, Success>? {
+    let handler = ProducerHandler(
+      executor: executor,
+      bufferedUpdates: _bufferedUpdates.clone(),
+      owner: self,
+      block: block)
     if let completion = _completion {
       handler.handle(.completion(completion), from: nil)
       return nil
@@ -79,14 +81,14 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
     }
     return handler
   }
-  
+
   func _pushUpdateToBuffer(_ update: Update) {
     _bufferedUpdates.push(update)
     if _bufferedUpdates.count > self.maxBufferSize {
-      let _ = _bufferedUpdates.pop()
+      _ = _bufferedUpdates.pop()
     }
   }
-  
+
   /// Sends specified Update to the Producer
   /// Value will not be sent for completed Producer
   ///
@@ -99,8 +101,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
   public func tryUpdate(
     _ update: Update,
     from originalExecutor: Executor?
-    ) -> Bool
-  {
+    ) -> Bool {
     // TEST: ChannelTests.testOverUpdate
 
     _locking.lock()
@@ -109,18 +110,18 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
         _locking.unlock()
         return false
     }
-    
+
     if self.maxBufferSize > 0 {
       _pushUpdateToBuffer(update)
     }
-    
+
     let event = Event.update(update)
     let handlers = _handlers
     _locking.unlock()
     handlers.forEach { $0.handle(event, from: originalExecutor) }
     return true
   }
-  
+
   /// Sends specified sequence of Update to the Producer
   /// Values will not be sent for completed Producer
   ///
@@ -133,8 +134,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
   public func update<S: Sequence>(
     _ updates: S,
     from originalExecutor: Executor? = nil
-    ) where S.Iterator.Element == Update
-  {
+    ) where S.Iterator.Element == Update {
     // TEST: ChannelTests.testOverUpdateWithSeqence
 
     _locking.lock()
@@ -172,8 +172,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
   public func tryComplete(
     _ completion: Fallible<Success>,
     from originalExecutor: Executor? = nil
-    ) -> Bool
-  {
+    ) -> Bool {
     // TEST: ChannelTests.testOverComplete
 
     _locking.lock()
@@ -206,7 +205,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
       _releasePool.insert(releasable)
     }
   }
-  
+
   /// **internal use only** Inserts releasable to an internal release pool
   /// that will be drained on completion
   override public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
@@ -218,7 +217,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
       block()
     }
   }
-  
+
   /// **internal use only**
   func notifyDrain(_ block: @escaping () -> Void) {
     _locking.lock()
@@ -227,7 +226,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventsDest
       _releasePool.notifyDrain(block)
     }
   }
-  
+
   /// Makes an iterator that allows synchronous iteration over update values of the channel
   override public func makeIterator() -> Iterator {
     _locking.lock()
@@ -250,7 +249,7 @@ fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Upd
     return _completion
   }
   var _completion: Fallible<Success>?
-  
+
   init(channel: BaseProducer<Update, Success>, bufferedUpdates: Queue<Update>) {
     _producer = channel
     _bufferedUpdates = bufferedUpdates
@@ -259,19 +258,20 @@ fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Upd
       _sema.signal()
     }
     super.init()
-    _handler = channel._makeHandler(executor: .immediate) {
-      [weak self] (event, originalExecutor) in
+    _handler = channel._makeHandler(
+      executor: .immediate
+    ) { [weak self] (event, originalExecutor) in
       self?.handle(event, from: originalExecutor)
     }
   }
-  
+
   override public func next() -> Update? {
     _sema.wait()
-    
+
     _locking.lock()
     let update = _bufferedUpdates.pop()
     _locking.unlock()
-    
+
     if let update = update {
       return update
     } else {
@@ -279,20 +279,20 @@ fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Upd
       return nil
     }
   }
-  
+
   override func clone() -> ChannelIteratorImpl<Update, Success> {
     return ProducerIteratorImpl(channel: _producer, bufferedUpdates: _bufferedUpdates.clone())
   }
-  
+
   func handle(_ value: ChannelEvent<Update, Success>,
               from originalExecutor: Executor?) {
     _locking.lock()
-    
+
     if case .some = _completion {
       _locking.unlock()
       return
     }
-    
+
     switch value {
     case let .update(update):
       _bufferedUpdates.push(update)
@@ -300,7 +300,7 @@ fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Upd
       _completion = completion
     }
     _locking.unlock()
-    
+
     _sema.signal()
   }
 }
@@ -348,8 +348,9 @@ final fileprivate class ProducerHandler<Update, Success> {
   }
 
   func handle(_ value: Event, from originalExecutor: Executor?) {
-    self.executor.execute(from: originalExecutor) {
-      (originalExecutor) in
+    self.executor.execute(
+      from: originalExecutor
+    ) { (originalExecutor) in
       self.handleBufferedUpdatesIfNeeded(from: originalExecutor)
       self.block(value, originalExecutor)
     }

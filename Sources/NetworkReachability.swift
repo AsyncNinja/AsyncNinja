@@ -106,8 +106,7 @@
     private func channel(
       fetch: () -> (mustSetup: Bool, producer: Producer<SCNetworkReachabilityFlags, Void>),
       makeNetworkReachability: () -> SCNetworkReachability?
-      ) -> Channel<SCNetworkReachabilityFlags, Void>
-    {
+      ) -> Channel<SCNetworkReachabilityFlags, Void> {
       let (mustSetup, producer): (Bool, Producer<SCNetworkReachabilityFlags, Void>) = locking.locker(fetch)
 
       if mustSetup {
@@ -123,8 +122,7 @@
 
     private func setup(
       producer: Producer<SCNetworkReachabilityFlags, Void>,
-      networkReachability: SCNetworkReachability)
-    {
+      networkReachability: SCNetworkReachability) {
       let queue = internalQueue
       queue.async {
         var flags = SCNetworkReachabilityFlags()
@@ -147,8 +145,7 @@
           unmanagedProducerBox.retain().takeUnretainedValue().value?.update(flags)
           unmanagedProducerBox.release()
         }, &context),
-          SCNetworkReachabilitySetDispatchQueue(networkReachability, queue)
-        {
+          SCNetworkReachabilitySetDispatchQueue(networkReachability, queue) {
           producer._asyncNinja_notifyFinalization {
             SCNetworkReachabilitySetCallback(networkReachability, nil, nil)
           }
@@ -169,8 +166,7 @@
 
     /// Reference to a stored sockaddr
     public var sockaddrRef: UnsafePointer<sockaddr> {
-      return data.withUnsafeBytes {
-        (bytes: UnsafePointer<sockaddr>) -> UnsafePointer<sockaddr> in
+      return data.withUnsafeBytes { (bytes: UnsafePointer<sockaddr>) -> UnsafePointer<sockaddr> in
         return bytes
       }
     }
@@ -195,7 +191,7 @@
     }
 
     /// is equal operator
-    public static func ==(lhs: NetworkAddress, rhs: NetworkAddress) -> Bool {
+    public static func == (lhs: NetworkAddress, rhs: NetworkAddress) -> Bool {
       return lhs.data == rhs.data
     }
   }
@@ -208,7 +204,7 @@
     var remoteAddress: NetworkAddress?
     var hashValue: Int { return (localAddress?.hashValue ?? 0) ^ (remoteAddress?.hashValue ?? 0) }
 
-    static func ==(lhs: NetworkAddressPair, rhs: NetworkAddressPair) -> Bool {
+    static func == (lhs: NetworkAddressPair, rhs: NetworkAddressPair) -> Bool {
       return lhs.localAddress == rhs.localAddress && lhs.remoteAddress == rhs.remoteAddress
     }
   }
@@ -231,11 +227,14 @@
         (.interventionRequired, "i"),
         (.connectionOnDemand, "D"),
         (.isLocalAddress, "l"),
-        (.isDirect, "d"),
+        (.isDirect, "d")
       ]
 
       return spec
-        .map { (flag, description) -> String in contains(flag) ? description : "-" }
+        .map {
+            let (flag, description) = $0
+            return contains(flag) ? description : "-"
+        }
         .joined()
     }
 

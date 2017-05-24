@@ -32,20 +32,24 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ nextPartialResult: @escaping (Result, Update) throws -> Result
-    ) -> BaseProducer<Result, (Result, Success)>
-  {
+    ) -> BaseProducer<Result, (Result, Success)> {
     var locking = makeLocking(isFair: true)
     var partialResult = initialResult
     let queue = Queue<Event>()
 
-    return self.makeProducer(executor: .immediate, pure: true, cancellationToken: cancellationToken, bufferSize: bufferSize) {
-      (event, producer, originalExecutor) in
+    return self.makeProducer(
+      executor: .immediate,
+      pure: true,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (event, producer, originalExecutor) in
       locking.lock()
       queue.push(event)
       locking.unlock()
 
-      executor.execute(from: originalExecutor) {
-        (originalExecutor) in
+      executor.execute(
+        from: originalExecutor
+      ) { _ in
         let event: ChannelEvent<Result, (Result, Success)> = locking.locker {
           let event = queue.pop()!
           switch event {
@@ -78,9 +82,9 @@ public extension EventSource {
   ///     Keep default value of the argument unless you need to override
   ///     an executor provided by the context
   ///   - executor: to execute call predicate on accumulation closure on
-  ///   - cancellationToken: CancellationToken` to use.
+  ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - nextPartialResult: A closure that combines an accumulating
   ///     value and a update value of the channel into a new accumulating
   ///     value, to be used in the next call of the `nextPartialResult`
@@ -93,13 +97,15 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ nextPartialResult: @escaping (C, Result, Update) throws -> Result
-    ) -> Channel<Result, (Result, Success)>  {
+    ) -> Channel<Result, (Result, Success)> {
 
     // Test: EventSource_ToFutureTests.testScanContextual
 
     let _executor = executor ?? context.executor
-    let promise = _scan(initialResult, executor: _executor, cancellationToken: cancellationToken) {
-      [weak context] (accumulator, value) -> Result in
+    let promise = _scan(initialResult,
+                        executor: _executor,
+                        cancellationToken: cancellationToken
+    ) { [weak context] (accumulator, value) -> Result in
       guard let context = context
         else { throw AsyncNinjaError.contextDeallocated }
 
@@ -121,9 +127,9 @@ public extension EventSource {
   ///     Keep default value of the argument unless you need to override
   ///     an executor provided by the context
   ///   - executor: to execute call predicate on accumulation closure on
-  ///   - cancellationToken: CancellationToken` to use.
+  ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - nextPartialResult: A closure that combines an accumulating
   ///     value and a update value of the channel into a new accumulating
   ///     value, to be used in the next call of the `nextPartialResult`
@@ -135,8 +141,7 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ nextPartialResult: @escaping (Result, Update) throws -> Result
-    ) -> Channel<Result, (Result, Success)>
-  {
+    ) -> Channel<Result, (Result, Success)> {
     // Test: EventSource_ToFutureTests.testScan
     return _scan(initialResult,
                  executor: executor,
@@ -156,21 +161,22 @@ public extension EventSource {
     executor: Executor,
     cancellationToken: CancellationToken?,
     _ nextPartialResult: @escaping (Result, Update) throws -> Result
-    ) -> Promise<(Result, Success)>
-  {
+    ) -> Promise<(Result, Success)> {
     var locking = makeLocking(isFair: true)
     var partialResult = initialResult
     let queue = Queue<Event>()
 
     let promise = Promise<(Result, Success)>()
-    let handler = self.makeHandler(executor: .immediate) { (event, originalExecutor) in
+    let weakPromise = WeakBox(promise)
+    let handler = makeHandler(executor: .immediate) { (event, originalExecutor) in
       locking.lock()
       queue.push(event)
       locking.unlock()
 
-      executor.execute(from: originalExecutor) {
-        [weak promise] (originalExecutor) in
-        guard case .some = promise else { return }
+      executor.execute(
+        from: originalExecutor
+      ) { _ in
+        guard case .some = weakPromise.value else { return }
 
         let completion: Fallible<(Result, Success)>? = locking.locker {
           let event = queue.pop()!
@@ -190,8 +196,8 @@ public extension EventSource {
           }
         }
 
-        if let completion = completion, let promise = promise {
-          promise.complete(completion)
+        if let completion = completion {
+          weakPromise.value?.complete(completion)
         }
       }
     }
@@ -212,9 +218,9 @@ public extension EventSource {
   ///     Keep default value of the argument unless you need to override
   ///     an executor provided by the context
   ///   - executor: to execute call predicate on accumulation closure on
-  ///   - cancellationToken: CancellationToken` to use.
+  ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - nextPartialResult: A closure that combines an accumulating
   ///     value and a update value of the channel into a new accumulating
   ///     value, to be used in the next call of the `nextPartialResult`
@@ -226,14 +232,16 @@ public extension EventSource {
     executor: Executor? = nil,
     cancellationToken: CancellationToken? = nil,
     _ nextPartialResult: @escaping (C, Result, Update) throws -> Result
-    ) -> Future<(Result, Success)>
-  {
+    ) -> Future<(Result, Success)> {
 
     // Test: EventSource_ToFutureTests.testReduceContextual
 
     let _executor = executor ?? context.executor
-    let promise = _reduce(initialResult, executor: _executor, cancellationToken: cancellationToken) {
-      [weak context] (accumulator, value) -> Result in
+    let promise = _reduce(
+      initialResult,
+      executor: _executor,
+      cancellationToken: cancellationToken
+    ) { [weak context] (accumulator, value) -> Result in
       guard let context = context
         else { throw AsyncNinjaError.contextDeallocated }
 
@@ -251,7 +259,9 @@ public extension EventSource {
   /// - Parameters:
   ///   - initialResult: the initial accumulating value.
   ///   - executor: to execute call accumulation closure on
-  ///   - cancellationToken: CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned channel
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned primitive
   ///   - nextPartialResult: A closure that combines an accumulating
   ///     value and a update value of the channel into a new accumulating
   ///     value, to be used in the next call of the `nextPartialResult` closure or returned to the caller.
@@ -261,8 +271,7 @@ public extension EventSource {
     executor: Executor = .primary,
     cancellationToken: CancellationToken? = nil,
     _ nextPartialResult: @escaping (Result, Update) throws -> Result
-    ) -> Future<(Result, Success)>
-  {
+    ) -> Future<(Result, Success)> {
     // Test: EventSource_ToFutureTests.testReduce
     return _reduce(initialResult, executor: executor, cancellationToken: cancellationToken, nextPartialResult)
   }

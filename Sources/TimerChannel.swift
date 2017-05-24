@@ -129,13 +129,11 @@ public struct TimerSpec {
     timer.setEventHandler { [weak producer] in
       if case .some = executor.representedDispatchQueue {
         guard case .some = producer else { return }
-        do { producer?.update(try maker(), from: executor) }
-        catch { producer?.fail(error) }
+        do { producer?.update(try maker(), from: executor) } catch { producer?.fail(error) }
       } else {
         executor.execute(from: queueExecutor) { (originalExecutor) in
           guard case .some = producer else { return }
-          do { producer?.update(try maker(), from: originalExecutor) }
-          catch { producer?.fail(error) }
+          do { producer?.update(try maker(), from: originalExecutor) } catch { producer?.fail(error) }
         }
       }
     }
@@ -157,8 +155,7 @@ public func makeTimer(
   executor: Executor = .primary,
   interval: Double,
   cancellationToken: CancellationToken? = nil
-  ) -> Channel<Void, Void>
-{
+  ) -> Channel<Void, Void> {
   return TimerSpec(deadline: .time(.now()),
                    interval: .seconds(interval),
                    leeway: nil,
@@ -177,8 +174,7 @@ public func makeTimer<T>(
   interval: Double,
   cancellationToken: CancellationToken? = nil,
   _ maker:  @escaping () throws -> T
-  ) -> Channel<T, Void>
-{
+  ) -> Channel<T, Void> {
   return TimerSpec(deadline: .time(.now()),
                    interval: .seconds(interval),
                    leeway: nil,

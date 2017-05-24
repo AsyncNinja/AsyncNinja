@@ -29,6 +29,7 @@ import Dispatch
 
 class Future_MakersTests: XCTestCase {
 
+  // swiftlint:disable line_length
   static let allTests = [
     ("testMakeFutureOfBlock_Success", testMakeFutureOfBlock_Success),
     ("testMakeFutureOfBlock_Failure", testMakeFutureOfBlock_Failure),
@@ -42,8 +43,9 @@ class Future_MakersTests: XCTestCase {
     ("testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextDead", testMakeFutureOfDelayedContextualFallibleBlock_Success_ContextDead),
     ("testMakeFutureOfDelayedContextualFallibleBlock_Success_EarlyContextDead", testMakeFutureOfDelayedContextualFallibleBlock_Success_EarlyContextDead),
     ("testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextAlive", testMakeFutureOfDelayedContextualFallibleBlock_Failure_ContextAlive),
-    ("testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead", testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead),
+    ("testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead", testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead)
     ]
+  // swiftlint:enable line_length
 
   func testMakeFutureOfBlock_Success() {
     let qos = pickQoS()

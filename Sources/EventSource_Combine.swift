@@ -22,96 +22,6 @@
 
 import Dispatch
 
-// MARK: - sample
-
-public extension EventSource {
-
-  /// Samples the channel with specified channel
-  ///
-  /// - Parameters:
-  ///   - samplerChannel: sampler
-  ///   - cancellationToken: `CancellationToken` to use. Keep default value
-  ///     of the argument unless you need an extended cancellation options
-  ///     of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
-  ///     Keep default value of the argument unless you need
-  ///     an extended buffering options of returned channel
-  /// - Returns: sampled channel
-  func sample<P, S>(with samplerChannel: Channel<P, S>,
-              cancellationToken: CancellationToken? = nil,
-              bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<(Update, P), (Success, S)> {
-
-    // Test: EventSource_CombineTests.testSample
-    var locking = makeLocking()
-    var latestLeftUpdate: Update? = nil
-    var leftSuccess: Success? = nil
-    var rightSuccess: S? = nil
-
-    let bufferSize_ = bufferSize.bufferSize(self, samplerChannel)
-    let producer = Producer<(Update, P), (Success, S)>(bufferSize: bufferSize_)
-
-    do {
-      let handler = makeHandler(executor: .immediate) {
-        [weak producer] (event, originalExecutor) in
-        locking.lock()
-        defer { locking.unlock() }
-
-        switch event {
-        case let .update(localUpdate):
-          latestLeftUpdate = localUpdate
-        case let .completion(leftCompletion):
-          switch leftCompletion {
-          case let .success(localLeftSuccess):
-            if let localRightSuccess = rightSuccess {
-              let success = (localLeftSuccess, localRightSuccess)
-              producer?.succeed(success, from: originalExecutor)
-            } else {
-              leftSuccess = localLeftSuccess
-            }
-          case let .failure(error):
-            producer?.fail(error, from: originalExecutor)
-          }
-        }
-      }
-
-      producer._asyncNinja_retainHandlerUntilFinalization(handler)
-    }
-
-    do {
-      let handler = samplerChannel.makeHandler(executor: .immediate) {
-        [weak producer] (event, originalExecutor) in
-        locking.lock()
-        defer { locking.unlock() }
-
-        switch event {
-        case let .update(localRightUpdate):
-          if let localLeftUpdate = latestLeftUpdate {
-            producer?.update((localLeftUpdate, localRightUpdate), from: originalExecutor)
-            latestLeftUpdate = nil
-          }
-        case let .completion(rightCompletion):
-          switch rightCompletion {
-          case let .success(localRightSuccess):
-            if let localLeftSuccess = leftSuccess {
-              let success = (localLeftSuccess, localRightSuccess)
-              producer?.succeed(success, from: originalExecutor)
-            } else {
-              rightSuccess = localRightSuccess
-            }
-          case let .failure(error):
-            producer?.fail(error, from: originalExecutor)
-          }
-        }
-      }
-
-      producer._asyncNinja_retainHandlerUntilFinalization(handler)
-    }
-    
-    return producer
-  }
-}
-
 // MARK: - suspendable
 
 public extension EventSource {
@@ -125,9 +35,9 @@ public extension EventSource {
   ///     the lates update for suspensionController was `true`.
   ///   - suspensionBufferSize: amount of updates to buffer when channel is suspended
   ///   - isSuspendedInitially: tells if returned channel is initially suspended
-  ///   - cancellationToken: `CancellationToken` to use. Keep default value
-  ///     of the argument unless you need an extended cancellation options
-  ///     of returned channel
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -139,8 +49,7 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success>
-    where T.Update == Bool
-  {
+    where T.Update == Bool {
     // Test: EventSource_CombineTests.testSuspendable
     var locking = makeLocking(isFair: true)
     var isUnsuspended = !isSuspendedInitially
@@ -149,8 +58,7 @@ public extension EventSource {
     func onEvent(
       event: ChannelEvent<Update, Success>,
       producerBox: WeakBox<BaseProducer<Update, Success>>,
-      originalExecutor: Executor)
-    {
+      originalExecutor: Executor) {
       switch event {
       case let .update(update):
         let update: Update? = locking.locker {
@@ -160,7 +68,7 @@ public extension EventSource {
             if suspensionBufferSize > 0 {
               queue.push(update)
               while queue.count > suspensionBufferSize {
-                let _ = queue.pop()
+                _ = queue.pop()
               }
             }
             return nil
@@ -178,20 +86,21 @@ public extension EventSource {
                         cancellationToken: cancellationToken,
                         bufferSize: bufferSize, onEvent)
 
-    let handler = suspensionController.makeUpdateHandler(executor: .immediate) {
-      [weak producer] (isUnsuspendedLocal, originalExecutor) in
-      let updates: Queue<Update>? = locking.locker {
-        isUnsuspended = isUnsuspendedLocal
-        guard isUnsuspendedLocal else { return nil }
-        let result = queue.clone()
-        queue.removeAll()
-        return result
+      let handler = suspensionController.makeUpdateHandler(
+        executor: .immediate
+      ) { [weak producer] (isUnsuspendedLocal, _) in
+        let updates: Queue<Update>? = locking.locker {
+          isUnsuspended = isUnsuspendedLocal
+          guard isUnsuspendedLocal else { return nil }
+          let result = queue.clone()
+          queue.removeAll()
+          return result
+        }
+        if let updates = updates {
+          producer?.update(updates)
+        }
       }
-      if let updates = updates {
-        producer?.update(updates)
-      }
-    }
-    producer._asyncNinja_retainHandlerUntilFinalization(handler)
-    return producer
+      producer._asyncNinja_retainHandlerUntilFinalization(handler)
+      return producer
   }
 }

@@ -24,46 +24,51 @@ import Dispatch
 
 /// ProducerProxy acts like a producer but is actually a proxy for some operation, e.g. setting and oberving property
 public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
-  typealias UpdateHandler = (_ producer: ProducerProxy<Update, Success>, _ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor?) -> Void
+  typealias UpdateHandler = (
+    _ producer: ProducerProxy<Update, Success>,
+    _ event: ChannelEvent<Update, Success>,
+    _ originalExecutor: Executor?
+    ) -> Void
   private let _updateHandler: UpdateHandler
   private let _updateExecutor: Executor
-  
+
   /// designated initializer
   init(updateExecutor: Executor,
        bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize,
-       updateHandler: @escaping UpdateHandler)
-  {
+       updateHandler: @escaping UpdateHandler) {
     _updateHandler = updateHandler
     _updateExecutor = updateExecutor
     super.init(bufferSize: bufferSize)
   }
-  
+
   func tryUpdateWithoutHandling(_ update: Update, from originalExecutor: Executor?) -> Bool {
     return super.tryUpdate(update, from: originalExecutor)
   }
-  
+
   func tryCompleteWithoutHandling(
     with completion: Fallible<Success>,
     from originalExecutor: Executor?) -> Bool {
     return super.tryComplete(completion, from: originalExecutor)
   }
-  
+
   /// Calls update handler instead of sending specified Update to the Producer
   override public func tryUpdate(_ update: Update, from originalExecutor: Executor?) -> Bool {
     guard case .none = self.completion else { return false }
-    _updateExecutor.execute(from: originalExecutor) {
-      (originalExecutor) in
+    _updateExecutor.execute(
+      from: originalExecutor
+    ) { (originalExecutor) in
       self._updateHandler(self, .update(update), originalExecutor)
     }
-    
+
     return true
   }
-  
+
   /// Calls update handler instead of sending specified Complete to the Producer
   override public func tryComplete(_ completion: Fallible<Success>, from originalExecutor: Executor? = nil) -> Bool {
     guard case .none = self.completion else { return false }
-    _updateExecutor.execute(from: originalExecutor) {
-      (originalExecutor) in
+    _updateExecutor.execute(
+      from: originalExecutor
+    ) { (originalExecutor) in
       self._updateHandler(self, .completion(completion), originalExecutor)
     }
     return true

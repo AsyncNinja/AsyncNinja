@@ -1,5 +1,6 @@
+// swift-tools-version:3.0
 //
-//  Copyright (c) 2016 Anton Mironov
+//  Copyright (c) 2016-2017 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -22,7 +23,31 @@
 
 import PackageDescription
 
-let package = Package(
-  name: "AsyncNinja",
-  exclude: ["Tests/AsyncNinjaTests/PerformanceTests.swift"] // these tests take too much time and do not give enough feedback
-)
+#if swift(>=4.0)
+  func makePackage() -> Package {
+    return Package(
+      name: "AsyncNinja",
+      targets: [
+
+        .target(
+          name: "AsyncNinja",
+          path: "Sources"),
+
+        .testTarget(
+          name: "AsyncNinjaTests",
+          dependencies: ["AsyncNinja"],
+          path: "Tests/AsyncNinjaTests")
+      ]
+    )
+  }
+#elseif swift(>=3.0)
+  func makePackage() -> Package {
+    return Package(name: "AsyncNinja")
+  }
+#else
+  func makePackage() -> Package {
+  	fatalError("This Swift version is not supported")
+  }
+#endif
+
+let package = makePackage()

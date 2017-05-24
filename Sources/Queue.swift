@@ -29,8 +29,8 @@ class QueueImpl<Wrapper: QueueElementWrapper>: Sequence {
   typealias Iterator = QueueIterator<Wrapper>
   typealias Element = Wrapper.Element
 
-  private var _first: Wrapper? = nil
-  private var _last: Wrapper? = nil
+  private var _first: Wrapper?
+  private var _last: Wrapper?
   private(set) var count = 0
   var first: Element? { return _first?.element }
   var last: Element? { return _last?.element }

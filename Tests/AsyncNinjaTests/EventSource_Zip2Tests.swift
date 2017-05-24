@@ -28,9 +28,9 @@ import Dispatch
 #endif
 
 class EventSource_Zip2Tests: XCTestCase {
-  
+
   static let allTests = [
-    ("testZip", testZip),
+    ("testZip", testZip)
   ]
 
   func testZip() {
@@ -39,7 +39,8 @@ class EventSource_Zip2Tests: XCTestCase {
     let expectation = self.expectation(description: "channel to finish")
 
     zip(producerOfOdds, producerOfEvents)
-      .extractAll().onSuccess { (pairs, stringsOfError) in
+      .extractAll().onSuccess {
+        let (pairs, stringsOfError) = $0
         let fixturePairs = [(1, 2), (3, 4), (5, 6), (7, 8)]
         XCTAssertEqual(fixturePairs.count, pairs.count)
         for (pair, fixturePair) in zip(pairs, fixturePairs) {

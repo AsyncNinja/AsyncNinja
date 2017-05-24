@@ -22,6 +22,8 @@
 
 import Dispatch
 
+// swiftlint:disable line_length
+
 /// Protocol for concurrency-aware active objects.
 /// Conforming to this protocol helps to avoid boilerplate code related to dispatching and memory management.
 /// See ["Moving to nice asynchronous Swift code"](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md) for complete explanation.
@@ -64,6 +66,8 @@ public protocol ExecutionContext: Retainer {
   var executor: Executor { get }
 }
 
+// swiftlint:enable line_length
+
 public extension ExecutionContext {
   /// Schedules execution of the block
   ///
@@ -73,7 +77,7 @@ public extension ExecutionContext {
   ///   - strongSelf: is `ExecutionContext` restored from weak reference of self
   func async(cancellationToken: CancellationToken? = nil,
              block: @escaping (_ strongContext: Self) -> Void) {
-    self.executor.execute(from: nil) { [weak self] (originalExecutor) in
+    self.executor.execute(from: nil) { [weak self] (_) in
       guard let strongSelf = self else { return }
       block(strongSelf)
     }
@@ -88,7 +92,7 @@ public extension ExecutionContext {
   ///   - strongSelf: is `ExecutionContext` restored from weak reference of self
   func after(_ timeout: Double, cancellationToken: CancellationToken? = nil,
              block: @escaping (_ strongContext: Self) -> Void) {
-    self.executor.execute(after: timeout) { [weak self] (originalExecutor) in
+    self.executor.execute(after: timeout) { [weak self] (_) in
       if cancellationToken?.isCancelled ?? false { return }
       guard let strongSelf = self else { return }
       block(strongSelf)
@@ -122,8 +126,7 @@ public extension ExecutionContext {
   func makeDynamicProperty<T>(
     _ initialValue: T,
     bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize
-    ) -> DynamicProperty<T>
-  {
+    ) -> DynamicProperty<T> {
     return DynamicProperty(
       initialValue: initialValue,
       updateExecutor: executor,

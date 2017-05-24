@@ -22,18 +22,19 @@
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
   import Foundation
-  
+
   /// **Internal use only** `NotificationsObserver` is an object for managing KVO.
   final class NotificationsObserver<T: NSObject>: ObservationSessionItem {
     typealias ObservationBlock = (Notification) -> Void
-    
+    typealias EnablingCallback = (_ notificationCenter: NotificationCenter, _ object: T?, _ isEnabled: Bool) -> Void
+
     let notificationCenter: NotificationCenter
     weak var object: T?
     let objectRef: Unmanaged<T>?
     let name: NSNotification.Name
     let observationBlock: ObservationBlock
-    var observationToken: NSObjectProtocol? = nil
-    let enablingCallback: (_ notificationCenter: NotificationCenter, _ object: T?, _ isEnabled: Bool) -> Void
+    var observationToken: NSObjectProtocol?
+    let enablingCallback: EnablingCallback
     var isEnabled: Bool {
       didSet {
         if isEnabled == oldValue {
@@ -50,14 +51,13 @@
         }
       }
     }
-    
+
     init(notificationCenter: NotificationCenter,
          object: T?,
          name: NSNotification.Name,
          isEnabled: Bool,
-         enablingCallback: @escaping (_ notificationCenter: NotificationCenter, _ object: T?, _ isEnabled: Bool) -> Void,
-         observationBlock: @escaping ObservationBlock)
-    {
+         enablingCallback: @escaping EnablingCallback,
+         observationBlock: @escaping ObservationBlock) {
       self.notificationCenter = notificationCenter
       self.object = object
       self.objectRef = object.map(Unmanaged.passUnretained)
@@ -65,7 +65,7 @@
       self.observationBlock = observationBlock
       self.isEnabled = isEnabled
       self.enablingCallback = enablingCallback
-      
+
       if isEnabled {
         observationToken = notificationCenter.addObserver(forName: name,
                                                           object: object,
@@ -74,12 +74,12 @@
         enablingCallback(notificationCenter, object, isEnabled)
       }
     }
-    
+
     deinit {
       self.isEnabled = false
     }
   }
-  
+
   extension NotificationCenter: ObjCInjectedRetainer {
 
     /// Makes a `ProducerProxy` that transforms notifications to updates
@@ -92,9 +92,9 @@
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1,
-      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ object: T, _ isEnabled: Bool) -> Void) = { _ in}
-      ) -> ProducerProxy<Notification, Void>
-    {
+      // swiftlint:disable:next line_length
+      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ object: T, _ isEnabled: Bool) -> Void) = { (_, _, _) in }
+      ) -> ProducerProxy<Notification, Void> {
       return _updatable(object: object,
                         name: name,
                         from: originalExecutor,
@@ -112,9 +112,9 @@
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1,
-      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ isEnabled: Bool) -> Void) = { _ in}
-      ) -> ProducerProxy<Notification, Void>
-    {
+      // swiftlint:disable:next line_length
+      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ isEnabled: Bool) -> Void) = { (_, _) in }
+      ) -> ProducerProxy<Notification, Void> {
       return _updatable(object: nil,
                         name: name,
                         from: originalExecutor,
@@ -129,12 +129,14 @@
       from originalExecutor: Executor? = nil,
       observationSession: ObservationSession? = nil,
       channelBufferSize: Int = 1,
-      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ object: T?, _ isEnabled: Bool) -> Void) = { _ in}
-      ) -> ProducerProxy<Notification, Void>
-    {
+      // swiftlint:disable:next line_length
+      enablingCallback: @escaping ((_ notificationCenter: NotificationCenter, _ object: T?, _ isEnabled: Bool) -> Void) = { (_, _, _) in }
+      ) -> ProducerProxy<Notification, Void> {
 
-      let producer = ProducerProxy<Notification, Void>(updateExecutor: .immediate, bufferSize: channelBufferSize)
-      { [weak self] (producerProxy, event, originalExecutor) in
+      let producer = ProducerProxy<Notification, Void>(
+        updateExecutor: .immediate,
+        bufferSize: channelBufferSize
+      ) { [weak self] (_, event, _) in
         switch event {
         case let .update(update):
           self?.post(update)
@@ -143,16 +145,15 @@
         }
       }
 
-      let observer = NotificationsObserver(notificationCenter: self,
-                                           object: object,
-                                           name: name,
-                                           isEnabled: observationSession?.isEnabled ?? true,
-                                           enablingCallback: enablingCallback)
-      {
-        [weak producer] (notification) in
-        let _ = producer?.tryUpdateWithoutHandling(notification, from: nil)
+      let observer = NotificationsObserver(
+        notificationCenter: self,
+        object: object,
+        name: name,
+        isEnabled: observationSession?.isEnabled ?? true,
+        enablingCallback: enablingCallback
+      ) { [weak producer] (notification) in
+        _ = producer?.tryUpdateWithoutHandling(notification, from: nil)
       }
-
 
       observationSession?.insert(item: observer)
       self.notifyDeinit { [weak producer] in

@@ -23,7 +23,7 @@
 #if os(macOS)
 
   import AppKit
-  
+
   /// Conforms NSResponer to ObjCUIInjectedExecutionContext that allows
   /// using each NSResponder as ExecutionContext
   extension NSResponder: ObjCUIInjectedExecutionContext {
@@ -33,10 +33,10 @@
   public extension NSControl {
     /// Update of ActionChannel
     typealias ActionChannelUpdate = (sender: AnyObject?, objectValue: Any?)
-    
+
     /// Channel that contains actions sent by the control
     typealias ActionChannel = Channel<ActionChannelUpdate, Void>
-    
+
     /// Makes or returns cached channel. The channel that will have update on each triggering of action
     func actionChannel() -> ActionChannel {
       let actionReceiver = (self.target as? ActionReceiver) ?? {
@@ -47,11 +47,11 @@
         }
         return actionReceiver
         }()
-      
+
       self.action = #selector(ActionReceiver.asyncNinjaAction(sender:))
       return actionReceiver.producer
     }
-    
+
     /// Shortcut that binds block to NSControl event
     ///
     /// - Parameters:
@@ -60,23 +60,23 @@
     func onAction<C: ExecutionContext>(
       context: C,
       _ block: @escaping (C, AnyObject?, Any?) -> Void) {
-      
+
       self.actionChannel()
         .onUpdate(context: context) { (context, update) in
           block(context, update.sender, update.objectValue)
       }
     }
   }
-  
+
   private class ActionReceiver: NSObject {
     weak var control: NSControl?
     let producer = Producer<NSControl.ActionChannelUpdate, Void>(bufferSize: 0)
-    
+
     init(control: NSControl) {
       self.control = control
     }
-    
-    dynamic func asyncNinjaAction(sender: AnyObject?) {
+
+    @objc dynamic func asyncNinjaAction(sender: AnyObject?) {
       let update: NSControl.ActionChannelUpdate = (
         sender: sender,
         objectValue: self.control?.objectValue

@@ -28,10 +28,10 @@ import Dispatch
 #endif
 
 class EventSource_CombineTests: XCTestCase {
-  
+
   static let allTests = [
     ("testSample", testSample),
-    ("testSuspendable", testSuspendable),
+    ("testSuspendable", testSuspendable)
   ]
 
   func testSample() {
@@ -40,7 +40,9 @@ class EventSource_CombineTests: XCTestCase {
     let channelOfNumbers = producerOfOdds.sample(with: producerOfEvents)
     let expectation = self.expectation(description: "async checks to finish")
 
-    channelOfNumbers.extractAll().onSuccess { (pairs, stringsOfError) in
+    channelOfNumbers.extractAll()
+      .onSuccess {
+      let (pairs, stringsOfError) = $0
       let fixturePairs = [
         (3, 2),
         (5, 6),
@@ -80,7 +82,8 @@ class EventSource_CombineTests: XCTestCase {
     let controller = Producer<Bool, String>()
     let sema = DispatchSemaphore(value: 0)
     source.suspendable(controller, suspensionBufferSize: 2).extractAll()
-      .onSuccess { (updates, completion) in
+      .onSuccess {
+        let (updates, completion) = $0
         XCTAssertEqual([4, 5, 6, 7, 8, 9, 10, 11, 13, 14], updates)
         XCTAssertEqual("Done", completion.success)
         sema.signal()

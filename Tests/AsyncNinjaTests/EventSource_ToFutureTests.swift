@@ -47,7 +47,7 @@ class EventSource_ToFutureTests: XCTestCase {
     ("testContainsTrue", testContainsTrue),
     ("testContainsFalse", testContainsFalse),
     ("testContainsValueTrue", testContainsValueTrue),
-    ("testContainsValueFalse", testContainsValueFalse),
+    ("testContainsValueFalse", testContainsValueFalse)
     ]
 
   func testFirstSuccessIncomplete() {

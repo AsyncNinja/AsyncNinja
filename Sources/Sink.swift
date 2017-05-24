@@ -22,23 +22,28 @@
 
 import Dispatch
 
-/// Is a `EventsDestination` you an only apply values to.
+/// Is a `EventDestination` you an only apply values to.
 /// Very useful for write-only reactive properties (you can write to, but they are not observable) 
-public class Sink<U, S>: EventsDestination {
+public class Sink<U, S>: EventDestination {
 
   public typealias Update = U
   public typealias Success = S
-  public typealias UpdateHandler = (_ sink: Sink<U, S>, _ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor?) -> Void
+  public typealias UpdateHandler = (
+    _ sink: Sink<U, S>,
+    _ event: ChannelEvent<Update, Success>,
+    _ originalExecutor: Executor?
+    ) -> Void
   private let _updateHandler: UpdateHandler
   private let _updateExecutor: Executor
   private let _releasePool = ReleasePool(locking: PlaceholderLocking())
-  
+
   private var _locking = makeLocking()
   private var _isCompleted = false
 
   /// designated initializer
-  public init(updateExecutor: Executor,
-       updateHandler: @escaping UpdateHandler) {
+  public init(
+    updateExecutor: Executor,
+    updateHandler: @escaping UpdateHandler) {
     _updateHandler = updateHandler
     _updateExecutor = updateExecutor
   }
@@ -48,7 +53,7 @@ public class Sink<U, S>: EventsDestination {
     _locking.lock()
     let isCompleted = _isCompleted
     _locking.unlock()
-    
+
     if isCompleted {
       return false
     } else {
@@ -63,20 +68,21 @@ public class Sink<U, S>: EventsDestination {
   public func tryComplete(
     _ completion: Fallible<Success>,
     from originalExecutor: Executor? = nil) -> Bool {
-    
+
     _locking.lock()
     let isCompleted = _isCompleted
     _isCompleted = true
     _locking.unlock()
-    
+
     if isCompleted {
       _releasePool.drain()
-      _updateExecutor.execute(from: originalExecutor) {
-        (originalExecutor) in
+      _updateExecutor.execute(
+        from: originalExecutor
+      ) { (originalExecutor) in
         self._updateHandler(self, .completion(completion), originalExecutor)
       }
     }
-    
+
     return isCompleted
   }
 
@@ -88,7 +94,7 @@ public class Sink<U, S>: EventsDestination {
       _releasePool.insert(releasable)
     }
   }
-  
+
   /// **Internal use only**.
   public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     _locking.lock()
@@ -103,7 +109,7 @@ public class Sink<U, S>: EventsDestination {
   /// Transforms the sink to a sink of unrelated type
   /// Correctness of such transformation is left on our behalf
   public func staticCast<A, B>() -> Sink<A, B> {
-    let sink = Sink<A, B>(updateExecutor: _updateExecutor) { [weak self] (sink, event, originalExecutor) in
+    let sink = Sink<A, B>(updateExecutor: _updateExecutor) { [weak self] (_, event, originalExecutor) in
       self?.post(event.staticCast(), from: originalExecutor)
     }
     sink._asyncNinja_retainUntilFinalization(self)

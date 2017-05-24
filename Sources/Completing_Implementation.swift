@@ -48,37 +48,45 @@ public extension Completing {
   /// - Parameters:
   ///   - executor: to call block on
   ///   - block: block to call on completion
+  @discardableResult
   func onComplete(
     executor: Executor = .primary,
-    _ block: @escaping (Fallible<Success>) -> Void) {
-    _onComplete(executor: executor) {
-      (completion, originalExecutor) in
+    _ block: @escaping (Fallible<Success>) -> Void
+    ) -> Self {
+    return _onComplete(executor: executor) { (completion, _) in
       block(completion)
     }
   }
 
   internal func _onComplete(
     executor: Executor = .primary,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) {
-    let handler = self.makeCompletionHandler(executor: executor) {
-      (completion, originalExecutor) in
+    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+    ) -> Self {
+    let handler = self.makeCompletionHandler(
+      executor: executor
+    ) { (completion, originalExecutor) in
       block(completion, originalExecutor)
     }
     self._asyncNinja_retainHandlerUntilFinalization(handler)
+    return self
   }
 
   /// Performs block when competion becomes available.
+  @discardableResult
   func onSuccess(
     executor: Executor = .primary,
-    _ block: @escaping (Success) -> Void) {
-    self.onComplete(executor: executor) { $0.onSuccess(block) }
+    _ block: @escaping (Success) -> Void
+    ) -> Self {
+    return self.onComplete(executor: executor) { $0.onSuccess(block) }
   }
 
   /// Performs block when failure becomes available.
+  @discardableResult
   func onFailure(
     executor: Executor = .primary,
-    _ block: @escaping (Swift.Error) -> Void) {
-    self.onComplete(executor: executor) { $0.onFailure(block) }
+    _ block: @escaping (Swift.Error) -> Void
+    ) -> Self {
+    return self.onComplete(executor: executor) { $0.onFailure(block) }
   }
 }
 
@@ -88,44 +96,59 @@ public extension Completing {
   ///
   /// - Parameters:
   ///   - context: to complete on
-  ///   - executor: override of `ExecutionContext`s executor. Keep default value of the argument unless you need to override an executor provided by the context
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need to override
+  ///     an executor provided by the context
   ///   - block: block to call on completion
+  @discardableResult
   func onComplete<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    _ block: @escaping (C, Fallible<Success>) -> Void) {
+    _ block: @escaping (C, Fallible<Success>) -> Void
+    ) -> Self {
     // Test: FutureTests.testOnCompleteContextual_ContextAlive
     // Test: FutureTests.testOnCompleteContextual_ContextDead
-    _onComplete(context: context, executor: executor) {
-      (context, completion, originalExecutor) in
+    return _onComplete(
+      context: context, executor: executor
+    ) { (context, completion, _) in
       block(context, completion)
     }
   }
 
+  @discardableResult
   internal func _onComplete<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    _ block: @escaping (_ context: C, _ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) {
+    _ block: @escaping (_ context: C, _ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+    ) -> Self {
     // Test: FutureTests.testOnCompleteContextual_ContextAlive
     // Test: FutureTests.testOnCompleteContextual_ContextDead
-    let handler = self.makeCompletionHandler(executor: executor ?? context.executor) {
-      [weak context] (completion, originalExecutor) in
-      guard let context = context else { return }
-      block(context, completion, originalExecutor)
+    let handler = makeCompletionHandler(
+      executor: executor ?? context.executor
+    ) { [weak context] (completion, originalExecutor) in
+      if let context = context {
+        block(context, completion, originalExecutor)
+      }
     }
 
     if let handler = handler {
       context.releaseOnDeinit(handler)
     }
+
+    return self
   }
 
   /// Performs block when completion becomes available.
+  @discardableResult
   func onSuccess<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    _ block: @escaping (C, Success) -> Void) {
-    self.onComplete(context: context, executor: executor) {
-      (context, completion) in
+    _ block: @escaping (C, Success) -> Void
+    ) -> Self {
+    return onComplete(
+      context: context,
+      executor: executor
+    ) { (context, completion) in
       if let success = completion.success {
         block(context, success)
       }
@@ -133,12 +156,13 @@ public extension Completing {
   }
 
   /// Performs block when failure becomes available.
+  @discardableResult
   func onFailure<C: ExecutionContext>(
-    context: C, executor:
-    Executor? = nil,
-    _ block: @escaping (C, Swift.Error) -> Void) {
-    self.onComplete(context: context, executor: executor) {
-      (context, completion) in
+    context: C, executor: Executor? = nil,
+    _ block: @escaping (C, Swift.Error) -> Void
+    ) -> Self {
+    return onComplete(context: context, executor: executor
+    ) { (context, completion) in
       if let failure = completion.failure {
         block(context, failure)
       }
@@ -157,8 +181,9 @@ public extension Completing {
     let sema = DispatchSemaphore(value: 0)
     var result: Fallible<Success>? = nil
 
-    var handler = self.makeCompletionHandler(executor: .immediate) {
-      (completion, originalExecutor) in
+    var handler = self.makeCompletionHandler(
+      executor: .immediate
+    ) { (completion, _) in
       result = completion
       sema.signal()
     }

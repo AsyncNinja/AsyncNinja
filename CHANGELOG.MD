@@ -1,3 +1,7 @@
+# 1.1.2
+* [improved] compile time
+* [improved] code style improved with [SwiftLint](https://github.com/realm/SwiftLint)
+
 # 1.1.1
 * [added] network reachability
 * [improved] travis-ci config

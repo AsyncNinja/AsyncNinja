@@ -35,7 +35,7 @@ public extension EventSource {
   ///     an executor provided by the context
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -50,14 +50,14 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ strongContext: C, _ event: Event) throws -> ChannelEvent<P, S>
-    ) -> Channel<P, S>
-  {
-    return makeProducer(context: context,
-                             executor: executor,
-                             pure: pure,
-                             cancellationToken: cancellationToken,
-                             bufferSize: bufferSize)
-    { (context, event, producer, originalExecutor) in
+    ) -> Channel<P, S> {
+    return makeProducer(
+      context: context,
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (context, event, producer, originalExecutor) in
       let transformedEvent = try transform(context, event)
       producer.value?.post(transformedEvent, from: originalExecutor)
     }
@@ -70,7 +70,7 @@ public extension EventSource {
   ///   - executor: to execute transform on
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -83,12 +83,13 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ event: Event) throws -> ChannelEvent<P, S>
-    ) -> Channel<P, S>
-  {
-    return makeProducer(executor: executor, pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize)
-    { (event, producer, originalExecutor) in
+    ) -> Channel<P, S> {
+    return makeProducer(
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (event, producer, originalExecutor) in
       let transformedEvent = try transform(event)
       producer.value?.post(transformedEvent, from: originalExecutor)
     }
@@ -125,16 +126,16 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> P
-    ) -> Channel<P, Success>
-  {
+    ) -> Channel<P, Success> {
     // Test: EventSource_MapTests.testMapContextual
 
-    return makeProducer(context: context,
-                        executor: executor,
-                        pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize)
-    { (context, event, producer, originalExecutor) in
+    return makeProducer(
+      context: context,
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (context, event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         let transformedValue = try transform(context, update)
@@ -153,7 +154,7 @@ public extension EventSource {
   ///   - executor: to execute transform on
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -166,14 +167,15 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ update: Update) throws -> P
-    ) -> Channel<P, Success>
-  {
+    ) -> Channel<P, Success> {
     // Test: EventSource_MapTests.testMap
 
-    return makeProducer(executor: executor, pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize)
-    { (event, producer, originalExecutor) in
+    return makeProducer(
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         let transformedValue = try transform(update)
@@ -198,7 +200,7 @@ public extension EventSource {
   ///     an executor provided by the context
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -213,16 +215,16 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> P?
-    ) -> Channel<P, Success>
-  {
+    ) -> Channel<P, Success> {
     // Test: EventSource_MapTests.testFlatMapOptionalContextual
 
-    return makeProducer(context: context,
-                        executor: executor,
-                        pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize)
-    { (context, event, producer, originalExecutor) in
+    return makeProducer(
+      context: context,
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (context, event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         if let transformedValue = try transform(context, update) {
@@ -240,7 +242,7 @@ public extension EventSource {
   ///   - executor: to execute transform on
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -253,15 +255,15 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ update: Update) throws -> P?
-    ) -> Channel<P, Success>
-  {
+    ) -> Channel<P, Success> {
     // Test: EventSource_MapTests.testFlatMapOptional
 
-    return makeProducer(executor: executor,
-                        pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize)
-    { (event, producer, originalExecutor) in
+    return makeProducer(
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         if let transformedValue = try transform(update) {
@@ -282,7 +284,7 @@ public extension EventSource {
   ///     to override an executor provided by the context
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -298,16 +300,16 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> PS
-    ) -> Channel<PS.Iterator.Element, Success>
-  {
+    ) -> Channel<PS.Iterator.Element, Success> {
     // Test: EventSource_MapTests.testFlatMapArrayContextual
 
-    return makeProducer(context: context,
-                        executor: executor,
-                        pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize)
-    { (context, event, producer, originalExecutor) in
+    return makeProducer(
+      context: context,
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (context, event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         producer.value?.update(try transform(context, update), from: originalExecutor)
@@ -323,7 +325,7 @@ public extension EventSource {
   ///   - executor: to execute transform on
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -337,14 +339,15 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ update: Update) throws -> PS
-    ) -> Channel<PS.Iterator.Element, Success>
-  {
+    ) -> Channel<PS.Iterator.Element, Success> {
     // Test: EventSource_MapTests.testFlatMapArray
 
-    return makeProducer(executor: executor, pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize)
-    { (event, producer, originalExecutor) in
+    return makeProducer(
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         producer.value?.update(try transform(update), from: originalExecutor)
@@ -368,7 +371,7 @@ public extension EventSource {
   ///     an executor provided by the context
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -383,11 +386,14 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (C, Fallible<Success>) throws -> Transformed
-    ) -> Channel<Update, Transformed>
-  {
-    return makeProducer(context: context, executor: executor, pure: pure,
-                        cancellationToken: cancellationToken, bufferSize: bufferSize)
-    { (context, event, producer, originalExecutor) in
+    ) -> Channel<Update, Transformed> {
+    return makeProducer(
+      context: context,
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (context, event, producer, originalExecutor) in
       switch event {
       case let .update(update):
         producer.value?.update(update, from: originalExecutor)
@@ -407,7 +413,7 @@ public extension EventSource {
   ///     an executor provided by the context
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -422,11 +428,14 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (C, Success) throws -> Transformed
-    ) -> Channel<Update, Transformed>
-  {
-    return mapCompletion(context: context, executor: executor, pure: pure,
-                         cancellationToken: cancellationToken, bufferSize: bufferSize)
-    { (context, value) -> Transformed in
+    ) -> Channel<Update, Transformed> {
+    return mapCompletion(
+      context: context,
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (context, value) -> Transformed in
       let success = try value.liftSuccess()
       return try transform(context, success)
     }
@@ -438,7 +447,7 @@ public extension EventSource {
   ///   - executor: to execute transform on
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -451,10 +460,13 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (Fallible<Success>) throws -> Transformed
-    ) -> Channel<Update, Transformed>
-  {
-    return makeProducer(executor: executor, pure: pure, cancellationToken: cancellationToken, bufferSize: bufferSize)
-    { (event, producer, originalExecutor) in
+    ) -> Channel<Update, Transformed> {
+    return makeProducer(
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (event, producer, originalExecutor) in
       switch event {
       case let .update(update):
         producer.value?.update(update, from: originalExecutor)
@@ -471,7 +483,7 @@ public extension EventSource {
   ///   - executor: to execute transform on
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -484,13 +496,13 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (Success) throws -> Transformed
-    ) -> Channel<Update, Transformed>
-  {
-    return mapCompletion(executor: executor,
-                         pure: pure,
-                         cancellationToken: cancellationToken,
-                         bufferSize: bufferSize)
-    { (value) -> Transformed in
+    ) -> Channel<Update, Transformed> {
+    return mapCompletion(
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (value) -> Transformed in
       let transformedValue = try value.liftSuccess()
       return try transform(transformedValue)
     }
@@ -504,9 +516,15 @@ public extension EventSource {
   /// Filters update values of the channel
   ///
   ///   - context: `ExectionContext` to apply predicate in
-  ///   - executor: override of `ExecutionContext`s executor. Keep default value of the argument unless you need to override an executor provided by the context
-  ///   - cancellationToken: `CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel. Keep default value of the argument unless you need an extended buffering options of returned channel
+  ///   - executor: override of `ExecutionContext`s executor.
+  ///     Keep default value of the argument unless you need to override
+  ///     an executor provided by the context
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned primitive
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
   ///   - predicate: to apply
   ///   - strongContext: context restored from weak reference to specified context
   ///   - update: `Update` to transform
@@ -518,17 +536,16 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ predicate: @escaping (_ strongContext: C, _ update: Update) throws -> Bool
-    ) -> Channel<Update, Success>
-  {
+    ) -> Channel<Update, Success> {
     // Test: EventSource_MapTests.testFilterContextual
 
-    return makeProducer(context: context,
-                        executor: executor,
-                        pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize)
-    {
-      (context, event, producer, originalExecutor) in
+    return makeProducer(
+      context: context,
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (context, event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         do {
@@ -547,7 +564,7 @@ public extension EventSource {
   ///   - executor: to execute transform on
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -560,16 +577,15 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ predicate: @escaping (_ update: Update) throws -> Bool
-    ) -> Channel<Update, Success>
-  {
+    ) -> Channel<Update, Success> {
     // Test: EventSource_MapTests.testFilter
 
-    return makeProducer(executor: executor,
-                        pure: pure,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize)
-    {
-      (event, producer, originalExecutor) in
+    return makeProducer(
+      executor: executor,
+      pure: pure,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         do {
@@ -592,14 +608,16 @@ public extension EventSource where Update: _Fallible {
 
   /// makes channel of unsafely unwrapped optional Updates
   var unwrapped: Channel<Update.Success, Success> {
-    return map(executor: .immediate) {
-      if let success = $0.success {
+    func transform(update: Update) throws -> Update.Success {
+      if let success = update.success {
         return success
-      } else if let failure = $0.failure {
+      } else if let failure = update.failure {
         throw failure
       } else {
         fatalError("callback must return either success or failure")
       }
     }
+
+    return map(executor: .immediate, transform)
   }
 }

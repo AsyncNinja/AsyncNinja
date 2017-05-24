@@ -96,7 +96,7 @@ extension AsyncNinjaError: CancellationRepresentableError {
       return self.errorCode == URLError.cancelled.rawValue
     }
   }
-  
+
 #endif
 
 extension Dictionary {
@@ -175,6 +175,32 @@ class MutableBox<T> {
 }
 
 /// **Internal use only**
+class AtomicMutableBox<T> {
+  var value: T {
+    get {
+      return _locking.locker { self._value }
+    }
+    set {
+      // this tricky code is made to avoid deinitialization with lock
+      // because deinitialization can ask for lock too
+
+      _locking.lock()
+      var oldValue: T? = _value // reference count of old value +1
+      _value = newValue // reference count of old value -1
+      _locking.unlock()
+      _ = oldValue
+      oldValue = nil // reference count of old value -1
+    }
+  }
+  private var _value: T
+  private var _locking = makeLocking()
+
+  init(_ value: T) {
+    _value = value
+  }
+}
+
+/// **Internal use only**
 class WeakBox<T: AnyObject> {
   private(set) weak var value: T?
 
@@ -185,9 +211,9 @@ class WeakBox<T: AnyObject> {
 
 /// **Internal use only**
 class HalfRetainer<T> {
-  let box: MutableBox<T?>
+  let box: AtomicMutableBox<T?>
 
-  init(box: MutableBox<T?>) {
+  init(box: AtomicMutableBox<T?>) {
     self.box = box
   }
 

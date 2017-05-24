@@ -29,7 +29,7 @@ import Dispatch
 /// cache that can report of status of completion updateally
 /// (e.g. download persentage).
 public class Cache<Key: Hashable, T: CachableCompletable> {
-  typealias _CachableValue = CachableValue<T>
+  typealias LocalCachableValue = CachableValue<T>
 
   /// Block that resolves miss
   public typealias MissHandler = (_ key: Key) throws -> T.CompletingType
@@ -37,7 +37,7 @@ public class Cache<Key: Hashable, T: CachableCompletable> {
   private var _locking = makeLocking()
   private let _executor: Executor
   private let _missHandler: (Key) throws -> T.CompletingType
-  private var _cachedValuesByKey = [Key:_CachableValue]()
+  private var _cachedValuesByKey = [Key: LocalCachableValue]()
 
   /// Designated initializer
   ///
@@ -61,8 +61,7 @@ public class Cache<Key: Hashable, T: CachableCompletable> {
   public convenience init<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    _ missHandler: @escaping (_ strongContext: C, _ key: Key) throws -> T.CompletingType)
-  {
+    _ missHandler: @escaping (_ strongContext: C, _ key: Key) throws -> T.CompletingType) {
     self.init(executor: executor ?? context.executor) { [weak context] (key) in
       if let context = context {
         return try missHandler(context, key)
@@ -76,26 +75,26 @@ public class Cache<Key: Hashable, T: CachableCompletable> {
   ///
   /// - Parameters:
   ///   - key: to fetch value for
-  ///   - mustStartHandlingMiss: `true` if handling miss is allowed. `false` is useful if you want to use value if there is one and do not want to handle miss.
+  ///   - mustStartHandlingMiss: `true` if handling miss is allowed.
+  ///     `false` is useful if you want to use value if there is one and do not want to handle miss.
   ///   - mustInvalidateOldValue: `true` if previous value may not be used.
   /// - Returns: `Future` of `Channel`
   public func value(
     forKey key: Key,
     mustStartHandlingMiss: Bool = true,
     mustInvalidateOldValue: Bool = false,
-    from originalExecutor: Executor? = nil) -> T.CompletingType
-  {
-    let cachableValueForKey: _CachableValue = _locking.locker {
-      func makeCachableValue(key: Key) -> _CachableValue {
+    from originalExecutor: Executor? = nil) -> T.CompletingType {
+    let cachableValueForKey: LocalCachableValue = _locking.locker {
+      func makeCachableValue(key: Key) -> LocalCachableValue {
         let missHandler = _missHandler
-        return _CachableValue(executor: _executor) {
+        return CachableValue(executor: _executor) {
           try missHandler(key)
         }
       }
       return self._cachedValuesByKey
         .value(forKey: key, orMake: makeCachableValue(key:))
     }
-    
+
     return cachableValueForKey.value(mustStartHandlingMiss: mustStartHandlingMiss,
                                      mustInvalidateOldValue: mustInvalidateOldValue,
                                      from: originalExecutor)
@@ -103,7 +102,7 @@ public class Cache<Key: Hashable, T: CachableCompletable> {
 
   /// Invalidates cached value for specified key
   public func invalidate(valueForKey key: Key) {
-    let _ = value(forKey: key, mustStartHandlingMiss: false, mustInvalidateOldValue: true)
+    _ = value(forKey: key, mustStartHandlingMiss: false, mustInvalidateOldValue: true)
   }
 }
 
@@ -114,7 +113,7 @@ public typealias SimpleCache<Key: Hashable, Value> = Cache<Key, Promise<Value>>
 public typealias ReportingCache<Key: Hashable, Update, Success> = Cache<Key, Producer<Update, Success>>
 
 /// Convenience function that makes `SimpleCache`
-public func makeCache<Key: Hashable, Value>(
+public func makeCache<Key, Value>(
   executor: Executor = .primary,
   missHandler: @escaping (Key) throws -> Future<Value>
   ) -> SimpleCache<Key, Value> {
@@ -122,7 +121,7 @@ public func makeCache<Key: Hashable, Value>(
 }
 
 /// Convenience function that makes `SimpleCache`
-public func makeCache<Key: Hashable, Value, Context: ExecutionContext>(
+public func makeCache<Key, Value, Context: ExecutionContext>(
   context: Context,
   executor: Executor? = nil,
   _ missHandler: @escaping (Context, Key) throws -> Future<Value>
@@ -131,7 +130,7 @@ public func makeCache<Key: Hashable, Value, Context: ExecutionContext>(
 }
 
 /// Convenience function that makes `ReportingCache`
-public func makeCache<Key: Hashable, Update, Success>(
+public func makeCache<Key, Update, Success>(
   executor: Executor = .primary,
   _ missHandler: @escaping (Key) throws -> Channel<Update, Success>
   ) -> ReportingCache<Key, Update, Success> {
@@ -139,7 +138,7 @@ public func makeCache<Key: Hashable, Update, Success>(
 }
 
 /// Convenience function that makes `ReportingCache`
-public func makeCache<Key: Hashable, Update, Success, Context: ExecutionContext>(
+public func makeCache<Key, Update, Success, Context: ExecutionContext>(
   context: Context,
   executor: Executor? = nil,
   _ missHandler: @escaping (Context, Key) throws -> Channel<Update, Success>

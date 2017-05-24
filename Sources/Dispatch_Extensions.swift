@@ -28,13 +28,13 @@ extension DispatchQueue: ExecutorImpl {
   var asyncNinja_representedDispatchQueue: DispatchQueue? { return self }
   var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { return false }
 
-  func asyncNinja_execute(_ block: @escaping (Void) -> Void) {
-    self.async(execute: block)
+  func asyncNinja_execute(_ block: @escaping () -> Void) {
+    self.async { block() }
   }
 
-  func asyncNinja_execute(after timeout: Double, _ block: @escaping (Void) -> Void) {
+  func asyncNinja_execute(after timeout: Double, _ block: @escaping () -> Void) {
     let wallDeadline = DispatchWallTime.now().adding(seconds: timeout)
-    self.asyncAfter(wallDeadline: wallDeadline, execute: block)
+    self.asyncAfter(wallDeadline: wallDeadline) { block() }
   }
 
   func asyncNinja_canImmediatelyExecute(from impl: ExecutorImpl) -> Bool {
@@ -51,7 +51,7 @@ public extension DispatchGroup {
         // Test: FutureTests.testGroupCompletionFuture
         return completionFuture(executor: .primary)
     }
-    
+
     /// Makes future from of `DispatchGroups`'s notify after balancing all enters and leaves
     /// *Property `DispatchGroup.completionFuture` most cover most of your cases*
     ///
@@ -65,7 +65,7 @@ public extension DispatchGroup {
         }
         return promise
     }
-    
+
     /// Convenience method that leaves group on completion of provided Future or Channel
     func leaveOnComplete<T: Completing>(of completable: T) {
         completable.onComplete(executor: .immediate) { _ in self.leave() }

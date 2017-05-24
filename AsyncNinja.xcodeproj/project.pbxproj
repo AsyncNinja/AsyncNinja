@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B8B5201E1EBF0D18006C27DA /* EventSource_Sample.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */; };
+		B8B520201EBF1604006C27DA /* EventSource_Merge2Unrelated.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B5201F1EBF1604006C27DA /* EventSource_Merge2Unrelated.swift */; };
+		B8B520221EBF2918006C27DA /* EventSource_Debounce.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */; };
+		B8B520241EBF2F54006C27DA /* Sequence_AsyncFlatMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B520231EBF2F54006C27DA /* Sequence_AsyncFlatMap.swift */; };
+		B8B520261EBF3287006C27DA /* Sequence_AsyncReduce.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B520251EBF3287006C27DA /* Sequence_AsyncReduce.swift */; };
+		B8DC12851ED093CF0099893A /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DC12831ED093C60099893A /* PerformanceTests.swift */; };
 		F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = F819DC171E8A9F2A0072E0B1 /* Either.swift */; };
 		F81A3EB51EA232DE009B0144 /* OptionalAdaptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */; };
 		F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */; };
@@ -16,6 +22,7 @@
 		F85659571E97D7FE007EDC98 /* TryExecute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85659561E97D7FE007EDC98 /* TryExecute.swift */; };
 		F86BE0641E983E20008B7BDC /* TryExecuteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86BE0621E983DF5008B7BDC /* TryExecuteTests.swift */; };
 		F87E09221E9C337F006CD1C9 /* NetworkReachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87E09211E9C337F006CD1C9 /* NetworkReachability.swift */; };
+		F88DBFF81EC3A3B700FC589E /* Fixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88DBFF61EC3A29000FC589E /* Fixtures.swift */; };
 		OBJ_100 /* appleOS_ReactiveProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* appleOS_ReactiveProperties.swift */; };
 		OBJ_101 /* appleOS_Retainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* appleOS_Retainer.swift */; };
 		OBJ_102 /* appleOS_URLSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* appleOS_URLSession.swift */; };
@@ -56,7 +63,7 @@
 		OBJ_137 /* Promise.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_50 /* Promise.swift */; };
 		OBJ_138 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_51 /* Queue.swift */; };
 		OBJ_139 /* ReleasePool.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_52 /* ReleasePool.swift */; };
-		OBJ_140 /* Sequence_Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_53 /* Sequence_Extensions.swift */; };
+		OBJ_140 /* Sequence_AsyncMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_53 /* Sequence_AsyncMap.swift */; };
 		OBJ_141 /* Sink.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_54 /* Sink.swift */; };
 		OBJ_142 /* ThreadSafety.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_55 /* ThreadSafety.swift */; };
 		OBJ_143 /* TimerChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_56 /* TimerChannel.swift */; };
@@ -106,6 +113,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventSource_Sample.swift; sourceTree = "<group>"; };
+		B8B5201F1EBF1604006C27DA /* EventSource_Merge2Unrelated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventSource_Merge2Unrelated.swift; sourceTree = "<group>"; };
+		B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventSource_Debounce.swift; sourceTree = "<group>"; };
+		B8B520231EBF2F54006C27DA /* Sequence_AsyncFlatMap.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sequence_AsyncFlatMap.swift; sourceTree = "<group>"; };
+		B8B520251EBF3287006C27DA /* Sequence_AsyncReduce.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sequence_AsyncReduce.swift; sourceTree = "<group>"; };
+		B8DC12831ED093C60099893A /* PerformanceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
 		F819DC171E8A9F2A0072E0B1 /* Either.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
 		F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionalAdaptorTests.swift; sourceTree = "<group>"; };
 		F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancellationTokenTests.swift; sourceTree = "<group>"; };
@@ -115,6 +128,7 @@
 		F85659561E97D7FE007EDC98 /* TryExecute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TryExecute.swift; sourceTree = "<group>"; };
 		F86BE0621E983DF5008B7BDC /* TryExecuteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TryExecuteTests.swift; sourceTree = "<group>"; };
 		F87E09211E9C337F006CD1C9 /* NetworkReachability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkReachability.swift; sourceTree = "<group>"; };
+		F88DBFF61EC3A29000FC589E /* Fixtures.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Fixtures.swift; sourceTree = "<group>"; };
 		OBJ_10 /* appleOS_ExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_ExecutionContext.swift; sourceTree = "<group>"; };
 		OBJ_11 /* appleOS_Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Notifications.swift; sourceTree = "<group>"; };
 		OBJ_12 /* appleOS_Observation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_Observation.swift; sourceTree = "<group>"; };
@@ -158,7 +172,7 @@
 		OBJ_50 /* Promise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Promise.swift; sourceTree = "<group>"; };
 		OBJ_51 /* Queue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
 		OBJ_52 /* ReleasePool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleasePool.swift; sourceTree = "<group>"; };
-		OBJ_53 /* Sequence_Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sequence_Extensions.swift; sourceTree = "<group>"; };
+		OBJ_53 /* Sequence_AsyncMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sequence_AsyncMap.swift; sourceTree = "<group>"; };
 		OBJ_54 /* Sink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sink.swift; sourceTree = "<group>"; };
 		OBJ_55 /* ThreadSafety.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadSafety.swift; sourceTree = "<group>"; };
 		OBJ_56 /* TimerChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerChannel.swift; sourceTree = "<group>"; };
@@ -256,11 +270,13 @@
 				OBJ_74 /* ExecutionContextTests.swift */,
 				OBJ_75 /* ExecutorTests.swift */,
 				OBJ_76 /* FallibleTests.swift */,
+				F88DBFF61EC3A29000FC589E /* Fixtures.swift */,
 				OBJ_77 /* Future_MakersTests.swift */,
 				OBJ_78 /* FutureTests.swift */,
 				OBJ_79 /* iOSTests.swift */,
 				OBJ_80 /* ObserversTests.swift */,
 				F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */,
+				B8DC12831ED093C60099893A /* PerformanceTests.swift */,
 				OBJ_81 /* ReleasePoolTests.swift */,
 				OBJ_82 /* TestUtilities.swift */,
 				F86BE0621E983DF5008B7BDC /* TryExecuteTests.swift */,
@@ -297,10 +313,13 @@
 				OBJ_27 /* DynamicProperty.swift */,
 				F819DC171E8A9F2A0072E0B1 /* Either.swift */,
 				OBJ_28 /* EventSource_Combine.swift */,
+				B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */,
 				OBJ_29 /* EventSource_FlatMapFutures.swift */,
 				OBJ_30 /* EventSource_Implementation.swift */,
 				OBJ_31 /* EventSource_Map.swift */,
 				OBJ_32 /* EventSource_Merge2.swift */,
+				B8B5201F1EBF1604006C27DA /* EventSource_Merge2Unrelated.swift */,
+				B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */,
 				OBJ_33 /* EventSource_Scan.swift */,
 				OBJ_34 /* EventSource_ToFuture.swift */,
 				OBJ_35 /* EventSource_Transform.swift */,
@@ -322,7 +341,9 @@
 				OBJ_50 /* Promise.swift */,
 				OBJ_51 /* Queue.swift */,
 				OBJ_52 /* ReleasePool.swift */,
-				OBJ_53 /* Sequence_Extensions.swift */,
+				B8B520231EBF2F54006C27DA /* Sequence_AsyncFlatMap.swift */,
+				OBJ_53 /* Sequence_AsyncMap.swift */,
+				B8B520251EBF3287006C27DA /* Sequence_AsyncReduce.swift */,
 				OBJ_54 /* Sink.swift */,
 				OBJ_55 /* ThreadSafety.swift */,
 				OBJ_56 /* TimerChannel.swift */,
@@ -370,6 +391,7 @@
 			buildPhases = (
 				OBJ_94 /* Sources */,
 				OBJ_148 /* Frameworks */,
+				B8B5201C1EBE1AF3006C27DA /* Run SwiftLint */,
 			);
 			buildRules = (
 			);
@@ -406,6 +428,23 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		B8B5201C1EBE1AF3006C27DA /* Run SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Run SwiftLint";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftlint >/dev/null; then\nswiftlint\nelse\necho \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		OBJ_153 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -420,6 +459,7 @@
 				OBJ_159 /* EventSource_MapTests.swift in Sources */,
 				OBJ_160 /* EventSource_Merge2Tests.swift in Sources */,
 				OBJ_161 /* EventSource_ScanTests.swift in Sources */,
+				B8DC12851ED093CF0099893A /* PerformanceTests.swift in Sources */,
 				OBJ_162 /* EventSource_ToFutureTests.swift in Sources */,
 				OBJ_163 /* EventSource_TransformTests.swift in Sources */,
 				OBJ_164 /* EventSource_Zip2Tests.swift in Sources */,
@@ -434,6 +474,7 @@
 				F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */,
 				OBJ_170 /* iOSTests.swift in Sources */,
 				OBJ_171 /* ObserversTests.swift in Sources */,
+				F88DBFF81EC3A3B700FC589E /* Fixtures.swift in Sources */,
 				OBJ_172 /* ReleasePoolTests.swift in Sources */,
 				OBJ_173 /* TestUtilities.swift in Sources */,
 				F81A3EB51EA232DE009B0144 /* OptionalAdaptorTests.swift in Sources */,
@@ -462,6 +503,7 @@
 				OBJ_107 /* Channel.swift in Sources */,
 				OBJ_108 /* Channel_makers.swift in Sources */,
 				F87E09221E9C337F006CD1C9 /* NetworkReachability.swift in Sources */,
+				B8B520221EBF2918006C27DA /* EventSource_Debounce.swift in Sources */,
 				OBJ_109 /* Completable_Implementation.swift in Sources */,
 				F85659571E97D7FE007EDC98 /* TryExecute.swift in Sources */,
 				OBJ_110 /* Completing_Implementation.swift in Sources */,
@@ -478,6 +520,7 @@
 				OBJ_120 /* EventSource_Scan.swift in Sources */,
 				OBJ_121 /* EventSource_ToFuture.swift in Sources */,
 				OBJ_122 /* EventSource_Transform.swift in Sources */,
+				B8B5201E1EBF0D18006C27DA /* EventSource_Sample.swift in Sources */,
 				OBJ_123 /* EventSource_Zip2.swift in Sources */,
 				OBJ_124 /* ExecutionContext.swift in Sources */,
 				OBJ_125 /* Executor.swift in Sources */,
@@ -490,12 +533,15 @@
 				OBJ_132 /* macOS.swift in Sources */,
 				OBJ_133 /* MergeFutures.swift in Sources */,
 				OBJ_134 /* OptionalAdaptor.swift in Sources */,
+				B8B520241EBF2F54006C27DA /* Sequence_AsyncFlatMap.swift in Sources */,
 				OBJ_135 /* Producer.swift in Sources */,
 				OBJ_136 /* ProducerProxy.swift in Sources */,
+				B8B520201EBF1604006C27DA /* EventSource_Merge2Unrelated.swift in Sources */,
 				OBJ_137 /* Promise.swift in Sources */,
 				OBJ_138 /* Queue.swift in Sources */,
 				OBJ_139 /* ReleasePool.swift in Sources */,
-				OBJ_140 /* Sequence_Extensions.swift in Sources */,
+				OBJ_140 /* Sequence_AsyncMap.swift in Sources */,
+				B8B520261EBF3287006C27DA /* Sequence_AsyncReduce.swift in Sources */,
 				OBJ_141 /* Sink.swift in Sources */,
 				OBJ_142 /* ThreadSafety.swift in Sources */,
 				OBJ_143 /* TimerChannel.swift in Sources */,
@@ -566,7 +612,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_SWIFT_FLAGS = "-DXcode";
+				OTHER_SWIFT_FLAGS = "-DXcode -Xfrontend -debug-time-function-bodies";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator watchos watchsimulator";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;
@@ -589,7 +635,7 @@
 				GCC_OPTIMIZATION_LEVEL = s;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_SWIFT_FLAGS = "-DXcode";
+				OTHER_SWIFT_FLAGS = "-DXcode -Xfrontend -debug-time-function-bodies";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator watchos watchsimulator";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;

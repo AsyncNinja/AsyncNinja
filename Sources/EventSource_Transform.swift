@@ -23,13 +23,13 @@
 import Dispatch
 
 public extension EventSource {
-  
+
   /// Adds indexes to update values of the channel
   ///
   /// - Parameters:
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -37,42 +37,40 @@ public extension EventSource {
   func enumerated(cancellationToken: CancellationToken? = nil,
                   bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<(Int, Update), Success> {
-    
+
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-      
+
       var index: OSAtomic_int64_aligned64_t = -1
       return self.map(executor: .immediate,
                       cancellationToken: cancellationToken,
-                      bufferSize: bufferSize)
-      {
+                      bufferSize: bufferSize) {
         let localIndex = Int(OSAtomicIncrement64(&index))
         return (localIndex, $0)
       }
-      
+
     #else
-      
+
       var locking = makeLocking()
       var index = 0
       return self.map(executor: .immediate,
                       cancellationToken: cancellationToken,
-                      bufferSize: bufferSize)
-      {
+                      bufferSize: bufferSize) {
         locking.lock()
         defer { locking.unlock() }
         let localIndex = index
         index += 1
         return (localIndex, $0)
       }
-      
+
     #endif
   }
-  
+
   /// Makes channel of pairs of update values
   ///
   /// - Parameters:
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -83,20 +81,20 @@ public extension EventSource {
   {
     var locking = makeLocking()
     var previousUpdate: Update? = nil
-    
-    return makeProducer(executor: .immediate,
-                        pure: true,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize)
-    {
-      (value, producer, originalExecutor) in
+
+    return makeProducer(
+      executor: .immediate,
+      pure: true,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (value, producer, originalExecutor) in
       switch value {
       case let .update(update):
         locking.lock()
         let _previousUpdate = previousUpdate
         previousUpdate = update
         locking.unlock()
-        
+
         if let previousUpdate = _previousUpdate {
           let change = (previousUpdate, update)
           producer.value?.update(change, from: originalExecutor)
@@ -106,7 +104,7 @@ public extension EventSource {
       }
     }
   }
-  
+
   /// Makes channel of arrays of update values
   ///
   /// - Parameters:
@@ -114,7 +112,7 @@ public extension EventSource {
   ///     as update value of derived channel
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -122,20 +120,19 @@ public extension EventSource {
   func buffered(capacity: Int,
                 cancellationToken: CancellationToken? = nil,
                 bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<[Update], Success>
-  {
+    ) -> Channel<[Update], Success> {
     var buffer = [Update]()
     buffer.reserveCapacity(capacity)
     var locking = makeLocking()
-    
-    return makeProducer(executor: .immediate,
-                        pure: true,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize)
-    {
-      (value, producer, originalExecutor) in
+
+    return makeProducer(
+      executor: .immediate,
+      pure: true,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (value, producer, originalExecutor) in
       locking.lock()
-      
+
       switch value {
       case let .update(update):
         buffer.append(update)
@@ -151,7 +148,7 @@ public extension EventSource {
         let localBuffer = buffer
         buffer.removeAll(keepingCapacity: false)
         locking.unlock()
-        
+
         if !localBuffer.isEmpty {
           producer.value?.update(localBuffer, from: originalExecutor)
         }
@@ -159,14 +156,14 @@ public extension EventSource {
       }
     }
   }
-  
+
   /// Makes channel that delays each value produced by originial channel
   ///
   /// - Parameters:
   ///   - timeout: in seconds to delay original channel by
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -176,94 +173,16 @@ public extension EventSource {
                      cancellationToken: CancellationToken? = nil,
                      bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
-    return makeProducer(executor: .immediate, pure: true,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize)
-    {
-      (event: Event, producer, originalExecutor: Executor) -> Void in
+    return makeProducer(
+      executor: .immediate,
+      pure: true,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (event: Event, producer, originalExecutor: Executor) -> Void in
       delayingExecutor.execute(after: timeout) { (originalExecutor) in
         producer.value?.post(event, from: originalExecutor)
       }
     }
-  }
-  
-  /// Picks latest update value of the channel every interval and sends it
-  ///
-  /// - Parameters:
-  ///   - deadline: to start picking peridic values after
-  ///   - interval: interfal for picking latest update values
-  ///   - leeway: leeway for timer
-  ///   - cancellationToken: `CancellationToken` to use.
-  ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
-  ///     Keep default value of the argument unless you need
-  /// - Returns: channel
-  func debounce(deadline: DispatchTime = DispatchTime.now(),
-                interval: Double,
-                leeway: DispatchTimeInterval? = nil,
-                qos: DispatchQoS.QoSClass = .default,
-                cancellationToken: CancellationToken? = nil,
-                bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Update, Success> {
-    
-    // Test: EventSource_TransformTests.testDebounce
-    let bufferSize_ = bufferSize.bufferSize(self)
-    let producer = Producer<Update, Success>(bufferSize: bufferSize_)
-    var locking = makeLocking()
-    var latestUpdate: Update? = nil
-    var didSendFirstUpdate = false
-
-    let queue = DispatchQueue.global(qos: qos)
-    let executor = Executor.queue(queue)
-    let timer = DispatchSource.makeTimerSource(queue: queue)
-    if let leeway = leeway {
-      timer.scheduleRepeating(deadline: DispatchTime.now(), interval: interval, leeway: leeway)
-    } else {
-      timer.scheduleRepeating(deadline: DispatchTime.now(), interval: interval)
-    }
-    
-    timer.setEventHandler { [weak producer] in
-      locking.lock()
-      if let update = latestUpdate {
-        latestUpdate = nil
-        locking.unlock()
-        producer?.update(update, from: executor)
-      } else {
-        locking.unlock()
-      }
-    }
-    
-    timer.resume()
-    producer._asyncNinja_retainUntilFinalization(timer)
-    
-    let handler = self.makeHandler(executor: .immediate) {
-      [weak producer] (event, originalExecutor) in
-      
-      locking.lock()
-      defer { locking.unlock() }
-      
-      switch event {
-      case let .completion(completion):
-        if let update = latestUpdate {
-          producer?.update(update, from: originalExecutor)
-          latestUpdate = nil
-        }
-        producer?.complete(completion, from: originalExecutor)
-      case let .update(update):
-        if didSendFirstUpdate {
-          latestUpdate = update
-        } else {
-          didSendFirstUpdate = true
-          producer?.update(update, from: originalExecutor)
-        }
-      }
-    }
-    
-    self._asyncNinja_retainHandlerUntilFinalization(handler)
-    cancellationToken?.add(cancellable: producer)
-    
-    return producer
   }
 }
 
@@ -276,34 +195,33 @@ extension EventSource {
   /// - Parameters:
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
   ///   - isEqual: closure that tells if specified values are equal
   /// - Returns: channel with distinct update values
-  func distinct(cancellationToken: CancellationToken? = nil,
-                bufferSize: DerivedChannelBufferSize = .default,
-                isEqual: @escaping (Update, Update) -> Bool
-    ) -> Channel<Update, Success>
-  {
+  func distinct(
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default,
+    isEqual: @escaping (Update, Update) -> Bool
+    ) -> Channel<Update, Success> {
     var locking = makeLocking()
     var previousUpdate: Update? = nil
-    
-    return makeProducer(executor: .immediate,
-                        pure: true,
-                        cancellationToken: cancellationToken,
-                        bufferSize: bufferSize)
-    {
-      (value, producer, originalExecutor) in
+
+    return makeProducer(
+      executor: .immediate,
+      pure: true,
+      cancellationToken: cancellationToken,
+      bufferSize: bufferSize
+    ) { (value, producer, originalExecutor) in
       switch value {
       case let .update(update):
         locking.lock()
         let _previousUpdate = previousUpdate
         previousUpdate = update
         locking.unlock()
-        
-        
+
         if let previousUpdate = _previousUpdate {
           if !isEqual(previousUpdate, update) {
             producer.value?.update(update, from: originalExecutor)
@@ -319,7 +237,7 @@ extension EventSource {
 }
 
 extension EventSource where Update: Equatable {
-  
+
   /// Returns channel of distinct update values of original channel.
   /// Works only for equatable update values
   /// [0, 0, 1, 2, 3, 3, 4, 3] => [0, 1, 2, 3, 4, 3]
@@ -327,30 +245,7 @@ extension EventSource where Update: Equatable {
   /// - Parameters:
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
-  ///     Keep default value of the argument unless you need
-  ///     an extended buffering options of returned channel
-  /// - Returns: channel with distinct update values
-  public func distinct(cancellationToken: CancellationToken? = nil,
-                       bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Update, Success> {
-    
-    // Test: EventSource_TransformTests.testDistinctInts
-    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: ==)
-  }
-}
-
-extension EventSource where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrapped: Equatable {
-  
-  /// Returns channel of distinct update values of original channel.
-  /// Works only for equatable wrapped in optionals
-  /// [nil, 1, nil, nil, 2, 2, 3, nil, 3, 3, 4, 5, 6, 6, 7] => [nil, 1, nil, 2, 3, nil, 3, 4, 5, 6, 7]
-  ///
-  /// - Parameters:
-  ///   - cancellationToken: `CancellationToken` to use.
-  ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -358,8 +253,30 @@ extension EventSource where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinja
   public func distinct(
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Update, Success>
-  {
+    ) -> Channel<Update, Success> {
+    // Test: EventSource_TransformTests.testDistinctInts
+    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: ==)
+  }
+}
+
+extension EventSource where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrapped: Equatable {
+
+  /// Returns channel of distinct update values of original channel.
+  /// Works only for equatable wrapped in optionals
+  /// [nil, 1, nil, nil, 2, 2, 3, nil, 3, 3, 4, 5, 6, 6, 7] => [nil, 1, nil, 2, 3, nil, 3, 4, 5, 6, 7]
+  ///
+  /// - Parameters:
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned primitive
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  /// - Returns: channel with distinct update values
+  public func distinct(
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success> {
 
     // Test: EventSource_TransformTests.testDistinctInts
     return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
@@ -369,7 +286,7 @@ extension EventSource where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinja
 }
 
 extension EventSource where Update: Collection, Update.Iterator.Element: Equatable {
-  
+
   /// Returns channel of distinct update values of original channel.
   /// Works only for collections of equatable values
   /// [[1], [1], [1, 2], [1, 2, 3], [1, 2, 3], [1]] => [[1], [1, 2], [1, 2, 3], [1]]
@@ -377,7 +294,7 @@ extension EventSource where Update: Collection, Update.Iterator.Element: Equatab
   /// - Parameters:
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -385,13 +302,14 @@ extension EventSource where Update: Collection, Update.Iterator.Element: Equatab
   public func distinct(
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Update, Success>
-  {
+    ) -> Channel<Update, Success> {
     // Test: EventSource_TransformTests.testDistinctArray
-    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
-      return $0.count == $1.count
-        && !zip($0, $1).contains { $0 != $1 }
+
+    func isEqual(lhs: Update, rhs: Update) -> Bool {
+      return lhs.count == rhs.count
+        && !zip(lhs, rhs).contains { $0.0 != $0.1 }
     }
+    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: isEqual)
   }
 }
 
@@ -405,7 +323,7 @@ public extension EventSource {
   ///   - last: number of last updates to skip
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -415,8 +333,7 @@ public extension EventSource {
     last: Int,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Update, Success>
-  {
+    ) -> Channel<Update, Success> {
     // Test: EventSource_TransformTests.testSkip
     var locking = makeLocking(isFair: true)
     let updatesQueue = Queue<Update>()
@@ -426,8 +343,7 @@ public extension EventSource {
     func onEvent(
       event: ChannelEvent<Update, Success>,
       producerBox: WeakBox<BaseProducer<Update, Success>>,
-      originalExecutor: Executor)
-    {
+      originalExecutor: Executor) {
       switch event {
       case let .update(update):
         let updateToPost: Update? = locking.locker {
@@ -469,7 +385,7 @@ public extension EventSource {
   ///   - last: number of last updates to take
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned channel
+  ///     an extended cancellation options of returned primitive
   ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
   ///     Keep default value of the argument unless you need
   ///     an extended buffering options of returned channel
@@ -479,8 +395,7 @@ public extension EventSource {
     last: Int,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Update, Success>
-  {
+    ) -> Channel<Update, Success> {
     // Test: EventSource_TransformTests.testTake
     var locking = makeLocking(isFair: true)
     let updatesQueue = Queue<Update>()
@@ -490,8 +405,7 @@ public extension EventSource {
     func onEvent(
       event: ChannelEvent<Update, Success>,
       producerBox: WeakBox<BaseProducer<Update, Success>>,
-      originalExecutor: Executor)
-    {
+      originalExecutor: Executor) {
       switch event {
       case let .update(update):
         let updateToPost: Update? = locking.locker {
@@ -501,7 +415,7 @@ public extension EventSource {
           } else if numberOfLastToTake > 0 {
             updatesQueue.push(update)
             while updatesQueue.count > numberOfLastToTake {
-              let _ = updatesQueue.pop()
+              _ = updatesQueue.pop()
             }
             return nil
           } else {

@@ -39,7 +39,7 @@ class ChannelMakersTests: XCTestCase {
     ("testSucceededWithJust", testSucceededWithJust),
     ("testFailedWithFunc", testFailedWithFunc),
     ("testFailedWithStatic", testFailedWithStatic),
-    ("testCancelled", testCancelled),
+    ("testCancelled", testCancelled)
     ]
 
   func testMakeChannel() {
@@ -79,7 +79,7 @@ class ChannelMakersTests: XCTestCase {
         sema.wait()
       }
 
-      let channelA: Channel<Int, String> = channel(context: actor) { (actor, updateUpdate) -> String in
+      let channelA: Channel<Int, String> = channel(context: actor) { (_, updateUpdate) -> String in
         for i in numbers {
           updateUpdate(i)
         }

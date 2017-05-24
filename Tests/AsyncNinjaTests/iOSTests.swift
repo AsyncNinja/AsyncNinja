@@ -41,303 +41,196 @@
       ("testUISwitch", testUISwitch),
       ("testUIStepper", testUIStepper),
       ("testUISlider", testUISlider),
-      ("testUIViewController", testUIViewController),
-      ]
-
-    static let intFixture: [Int] = [1, 1, 2, 2, 3, 1, 4]
-    static let timeIntervalFixture: [TimeInterval] = [2, 2, 4, 8, 8, 16, 16]
-    static let cgFloatFixture: [CGFloat] = [0.0, 0.0, 0.25, 0.5, 0.5, 1.0, 1.0]
-    static let floatFixture: [Float] = [0.0, 0.0, 0.25, 0.5, 0.5, 1.0, 1.0]
-    static let doubleFixture: [Double] = [0.0, 0.0, 0.25, 0.5, 0.5, 1.0, 1.0]
-    static let boolFixture: [Bool] = [true, true, false, false, true]
-    static let stringsAndNilsFixture: [String?] = ["1", nil, "1", "1", "2", "2", nil, nil, "3", "1", "4"]
-    static let stringsFixture: [String] = stringsAndNilsFixture.flatMap { $0 }
-    static let attributedStringsFixture = iOSTests.stringsFixture
-      .map {
-        NSAttributedString(string: $0,
-                           attributes: [
-                            NSFontAttributeName : UIFont.systemFont(ofSize: 14.0)
-        ])
-    }
-    static let colorsAndNilsFiture: [UIColor?] = [.white, .white, nil, .red, nil, nil, .green, nil, .green, .blue, .blue]
-    static let colorsFiture: [UIColor] = iOSTests.colorsAndNilsFiture.flatMap { $0 }
-    static let fontTextStyleFixture: [UIFontTextStyle] = [.headline, .subheadline, .body, .footnote, .caption1, .caption2]
-    static let fontsFiture: [UIFont] = iOSTests.fontTextStyleFixture
-      .map(UIFont.preferredFont(forTextStyle:))
-    static let textAlignementFixture: [NSTextAlignment] = [.center, .left, .left, .center, .right, .right, .natural, .natural]
-    static let lineBreakModeFixture: [NSLineBreakMode] = [.byWordWrapping, .byWordWrapping, .byCharWrapping, .byCharWrapping, .byClipping, .byTruncatingHead, .byWordWrapping, .byTruncatingMiddle, .byTruncatingTail]
-    static let baselineAdjustmentFixture: [UIBaselineAdjustment] = [.alignBaselines, .alignBaselines, .alignCenters, .alignCenters, .none, .alignBaselines, .alignCenters]
-    static let localesFixture: [Locale] = [
-      Locale(identifier: "uk"),
-      Locale(identifier: "uk"),
-      Locale(identifier: "nl"),
-      Locale(identifier: "nl"),
-      Locale(identifier: "en_US"),
-      Locale(identifier: "nl"),
-      ]
-    static let calendarsFixture: [Calendar] = [
-      Calendar.current,
-      Calendar.current,
-      Calendar(identifier: .iso8601),
-      Calendar(identifier: .japanese),
-      Calendar.current,
-      ]
-    static let timezonesAndNilsFixture: [TimeZone?] = [
-      TimeZone.current,
-      nil,
-      TimeZone.current,
-      nil,
-      TimeZone(secondsFromGMT: 0),
-      TimeZone(secondsFromGMT: 0),
-      TimeZone(secondsFromGMT: 60 * 60),
-      nil,
-      TimeZone.current,
-      ]
-
-    static func drawTestImage(_ text: String, width: CGFloat = 100, height: CGFloat = 100) -> UIImage {
-      return UIImage.draw(size: CGSize(width: width, height: height)) { _ in
-        text.draw(at: CGPoint(x: 0, y: 0), withAttributes: [:])
-      }
-    }
-    static let datesAndNilsFixture: [Date?] = [
-      Date(timeInterval: 10.0, since: Date()),
-      Date(timeInterval: 10.0, since: Date()),
-      nil,
-      Date(timeInterval: 20.0, since: Date()),
-      nil,
-      Date(timeInterval: 20.0, since: Date()),
-      Date(timeInterval: 10.0, since: Date()),
-      nil,
-      nil,
-      Date(timeInterval: 30.0, since: Date()),
-      ]
-    static let datesFixture: [Date] = iOSTests.datesAndNilsFixture.flatMap { $0 }
-    static let shadowOffsetsFixture: [CGSize] = [
-      CGSize(width: 0, height: 0),
-      CGSize(width: 0, height: 0),
-      CGSize(width: 2, height: 3),
-      CGSize(width: 2, height: 3),
-      CGSize(width: -2, height: -3),
-      CGSize(width: 2, height: 3),
-      CGSize(width: 0, height: 0),
-      ]
-
-    static let imageOne = drawTestImage("1")
-    static let imageTwo = drawTestImage("2")
-    static let imageThree = drawTestImage("3")
-    static let imageFour = drawTestImage("4")
-    static let imagesAndNilsFixture: [UIImage?] = [imageOne, nil, imageOne,
-                                                   imageOne, imageTwo, imageTwo,
-                                                   nil, nil, imageThree,
-                                                   imageOne, imageFour]
-    static let imagesFixture: [UIImage] = iOSTests.imagesAndNilsFixture.flatMap { $0 }
-    static let arraysOfImagesAndNilsFixture: [[UIImage]?] = iOSTests.imagesAndNilsFixture
-      .map { $0.map { [$0] } }
-    static let uiControlStatesFixture: [UIControlState] = eval {
-      var result: [UIControlState] = [.normal, .highlighted, .disabled, .selected]
-      if #available(iOS 9.0, *) {
-        result.append(.focused)
-      }
-      return result
-    }
+      ("testUIViewController", testUIViewController)
+    ]
 
     func testUIView() {
       let object = UIView()
       testEventStream(object.rp.alpha,
-                       object: object,
-                       keyPathOrGetSet: .left("alpha"),
-                       values: iOSTests.cgFloatFixture)
+                      object: object,
+                      keyPathOrGetSet: .left("alpha"),
+                      values: Fixtures.cgFloats)
       testEventStream(object.rp.tintColor,
-                       object: object,
-                       keyPathOrGetSet: .left("tintColor"),
-                       values: iOSTests.colorsFiture)
+                      object: object,
+                      keyPathOrGetSet: .left("tintColor"),
+                      values: Fixtures.colors)
       testEventStream(object.rp.isHidden,
-                       object: object,
-                       keyPathOrGetSet: .left("hidden"),
-                       values: iOSTests.boolFixture)
+                      object: object,
+                      keyPathOrGetSet: .left("hidden"),
+                      values: Fixtures.bools)
       testEventStream(object.rp.isOpaque,
-                       object: object,
-                       keyPathOrGetSet: .left("opaque"),
-                       values: iOSTests.boolFixture)
+                      object: object,
+                      keyPathOrGetSet: .left("opaque"),
+                      values: Fixtures.bools)
       testEventStream(object.rp.isUserInteractionEnabled,
-                       object: object,
-                       keyPathOrGetSet: .left("userInteractionEnabled"),
-                       values: iOSTests.boolFixture)
+                      object: object,
+                      keyPathOrGetSet: .left("userInteractionEnabled"),
+                      values: Fixtures.bools)
     }
 
     func testUIControl() {
       let object = UIControl()
       testEventStream(object.rp.isEnabled,
-                       object: object,
-                       keyPathOrGetSet: .left("enabled"),
-                       values: iOSTests.boolFixture)
+                      object: object,
+                      keyPathOrGetSet: .left("enabled"),
+                      values: Fixtures.bools)
       testEventStream(object.rp.isSelected,
-                       object: object,
-                       keyPathOrGetSet: .left("selected"),
-                       values: iOSTests.boolFixture)
+                      object: object,
+                      keyPathOrGetSet: .left("selected"),
+                      values: Fixtures.bools)
     }
 
     func testUITextField() {
       let object = UITextField()
-      let attributedStringsFixture = iOSTests.stringsFixture
+      let attributedStringsFixtures = Fixtures.strings
         .map { NSAttributedString(string: $0, attributes: object.defaultTextAttributes) }
       testEventStream(object.rp.text,
-                       object: object,
-                       keyPathOrGetSet: .left("text"),
-                       values: iOSTests.stringsFixture)
-      testEventStream(object.rp.attributedText,
-                       object: object,
-                       keyPathOrGetSet: .left("attributedText"),
-                       values: attributedStringsFixture)
-      testEventStream(object.rp.textColor,
-                       object: object,
-                       keyPathOrGetSet: .left("textColor"),
-                       values: iOSTests.colorsFiture)
+                      object: object,
+                      keyPathOrGetSet: .left("text"),
+                      values: Fixtures.strings)
+      testOptionalEventStream(object.rp.attributedText,
+                              object: object,
+                              keyPathOrGetSet: .left("attributedText"),
+                              values: attributedStringsFixtures)
+      testOptionalEventStream(object.rp.textColor,
+                              object: object,
+                              keyPathOrGetSet: .left("textColor"),
+                              values: Fixtures.colors)
       testEventStream(object.rp.font,
-                       object: object,
-                       keyPathOrGetSet: .left("font"),
-                       values: iOSTests.fontsFiture)
+                      object: object,
+                      keyPathOrGetSet: .left("font"),
+                      values: Fixtures.fonts)
       testEventStream(object.rp.textAlignment,
-                       object: object,
-                       keyPathOrGetSet: .right(getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! }),
-                       values: iOSTests.textAlignementFixture)
-      testEventStream(object.rp.placeholder,
-                       object: object,
-                       keyPathOrGetSet: .left("placeholder"),
-                       values: iOSTests.stringsAndNilsFixture)
-      testEventStream(object.rp.attributedPlaceholder,
-                       object: object,
-                       keyPathOrGetSet: .left("attributedPlaceholder"),
-                       values: attributedStringsFixture)
-      testEventStream(object.rp.background,
-                       object: object,
-                       keyPathOrGetSet: .left("background"),
-                       values: iOSTests.imagesAndNilsFixture)
-      testEventStream(object.rp.disabledBackground,
-                       object: object,
-                       keyPathOrGetSet: .left("disabledBackground"),
-                       values: iOSTests.imagesAndNilsFixture)
+                      object: object,
+                      keyPathOrGetSet: .right((getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! })),
+                      values: Fixtures.textAlignements)
+      testOptionalEventStream(object.rp.placeholder,
+                              object: object,
+                              keyPathOrGetSet: .left("placeholder"),
+                              values: Fixtures.stringsAndNils)
+      testOptionalEventStream(object.rp.attributedPlaceholder,
+                              object: object,
+                              keyPathOrGetSet: .left("attributedPlaceholder"),
+                              values: attributedStringsFixtures)
+      testOptionalEventStream(object.rp.background,
+                              object: object,
+                              keyPathOrGetSet: .left("background"),
+                              values: Fixtures.imagesAndNils)
+      testOptionalEventStream(object.rp.disabledBackground,
+                              object: object,
+                              keyPathOrGetSet: .left("disabledBackground"),
+                              values: Fixtures.imagesAndNils)
     }
 
     func testUITextView() {
       let object = UITextView()
 
       testEventStream(object.rp.text,
-                       object: object,
-                       keyPathOrGetSet: .left("text"),
-                       values: iOSTests.stringsFixture)
+                      object: object,
+                      keyPathOrGetSet: .left("text"),
+                      values: Fixtures.strings)
       testEventStream(object.rp.font,
-                       object: object,
-                       keyPathOrGetSet: .left("font"),
-                       values: iOSTests.fontsFiture)
-      testEventStream(object.rp.textColor,
-                       object: object,
-                       keyPathOrGetSet: .left("textColor"),
-                       values: iOSTests.colorsAndNilsFiture)
+                      object: object,
+                      keyPathOrGetSet: .left("font"),
+                      values: Fixtures.fonts)
+      testOptionalEventStream(object.rp.textColor,
+                              object: object,
+                              keyPathOrGetSet: .left("textColor"),
+                              values: Fixtures.colorsAndNils)
       testEventStream(object.rp.textAlignment,
-                       object: object,
-                       keyPathOrGetSet: .right(getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! }),
-                       values: iOSTests.textAlignementFixture)
+                      object: object,
+                      keyPathOrGetSet: .right((getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! })),
+                      values: Fixtures.textAlignements)
       testEventStream(object.rp.isEditable,
-                       object: object,
-                       keyPathOrGetSet: .left("editable"),
-                       values: iOSTests.boolFixture)
+                      object: object,
+                      keyPathOrGetSet: .left("editable"),
+                      values: Fixtures.bools)
       testEventStream(object.rp.isSelectable,
-                       object: object,
-                       keyPathOrGetSet: .left("selectable"),
-                       values: iOSTests.boolFixture)
+                      object: object,
+                      keyPathOrGetSet: .left("selectable"),
+                      values: Fixtures.bools)
       testEventStream(object.rp.attributedText,
-                       object: object,
-                       keyPathOrGetSet: .left("attributedText"),
-                       values: iOSTests.attributedStringsFixture)
+                      object: object,
+                      keyPathOrGetSet: .left("attributedText"),
+                      values: Fixtures.attributedStrings)
       testEventStream(object.rp.clearsOnInsertion,
-                       object: object,
-                       keyPathOrGetSet: .left("clearsOnInsertion"),
-                       values: iOSTests.boolFixture)
+                      object: object,
+                      keyPathOrGetSet: .left("clearsOnInsertion"),
+                      values: Fixtures.bools)
     }
 
     func testUISearchBar() {
       #if os(iOS)
         let object = UISearchBar()
 
-        testEventStream(object.rp.barStyle,
-                         object: object,
-                         keyPathOrGetSet: .right(getter: { $0.barStyle }, setter: { $0.barStyle = $1! }),
-                         values: [.default, .default, .black, .black, .default, .black])
-        testEventStream(object.rp.text,
-                         object: object,
-                         keyPathOrGetSet: .left("text"),
-                         values: iOSTests.stringsFixture)
-        testEventStream(object.rp.prompt,
-                         object: object,
-                         keyPathOrGetSet: .left("prompt"),
-                         values: iOSTests.stringsAndNilsFixture)
-        testEventStream(object.rp.placeholder,
-                         object: object,
-                         keyPathOrGetSet: .left("placeholder"),
-                         values: iOSTests.stringsAndNilsFixture)
-        testEventStream(object.rp.showsBookmarkButton,
-                         object: object,
-                         keyPathOrGetSet: .left("showsBookmarkButton"),
-                         values: iOSTests.boolFixture)
-        testEventStream(object.rp.showsCancelButton,
-                         object: object,
-                         keyPathOrGetSet: .left("showsCancelButton"),
-                         values: iOSTests.boolFixture)
-        testEventStream(object.rp.showsSearchResultsButton,
-                         object: object,
-                         keyPathOrGetSet: .left("showsSearchResultsButton"),
-                         values: iOSTests.boolFixture)
-        testEventStream(object.rp.isSearchResultsButtonSelected,
-                         object: object,
-                         keyPathOrGetSet: .left("searchResultsButtonSelected"),
-                         values: iOSTests.boolFixture)
-        testEventStream(object.rp.barTintColor,
-                         object: object,
-                         keyPathOrGetSet: .left("barTintColor"),
-                         values: iOSTests.colorsFiture)
-        testEventStream(object.rp.searchBarStyle,
-                         object: object,
-                         keyPathOrGetSet: .right(getter: { $0.searchBarStyle }, setter: { $0.searchBarStyle = $1! }),
-                         values: [.default, .default, .prominent, .minimal, .minimal, .default])
+        testEventStream(object.rp.barStyle, object: object,
+                        keyPathOrGetSet: .right((getter: { $0.barStyle }, setter: { $0.barStyle = $1! })),
+                        values: [.default, .default, .black, .black, .default, .black])
+        testEventStream(object.rp.text, object: object,
+                        keyPathOrGetSet: .left("text"),
+                        values: Fixtures.strings)
+        testOptionalEventStream(object.rp.prompt, object: object,
+                                keyPathOrGetSet: .left("prompt"),
+                                values: Fixtures.stringsAndNils)
+        testOptionalEventStream(object.rp.placeholder, object: object,
+                                keyPathOrGetSet: .left("placeholder"),
+                                values: Fixtures.stringsAndNils)
+        testEventStream(object.rp.showsBookmarkButton, object: object,
+                        keyPathOrGetSet: .left("showsBookmarkButton"),
+                        values: Fixtures.bools)
+        testEventStream(object.rp.showsCancelButton, object: object,
+                        keyPathOrGetSet: .left("showsCancelButton"),
+                        values: Fixtures.bools)
+        testEventStream(object.rp.showsSearchResultsButton, object: object,
+                        keyPathOrGetSet: .left("showsSearchResultsButton"),
+                        values: Fixtures.bools)
+        testEventStream(object.rp.isSearchResultsButtonSelected, object: object,
+                        keyPathOrGetSet: .left("searchResultsButtonSelected"),
+                        values: Fixtures.bools)
+        testEventStream(object.rp.barTintColor, object: object,
+                        keyPathOrGetSet: .left("barTintColor"),
+                        values: Fixtures.colors)
+        testEventStream(object.rp.searchBarStyle, object: object,
+                        keyPathOrGetSet: .right((getter: { $0.searchBarStyle }, setter: { $0.searchBarStyle = $1! })),
+                        values: [.default, .default, .prominent, .minimal, .minimal, .default])
       #endif
     }
 
     func testUIImageView() {
       let object = UIImageView()
 
-      testEventStream(object.rp.image,
-                       object: object,
-                       keyPathOrGetSet: .left("image"),
-                       values: iOSTests.imagesAndNilsFixture)
-      testEventStream(object.rp.highlightedImage,
-                       object: object,
-                       keyPathOrGetSet: .left("highlightedImage"),
-                       values: iOSTests.imagesAndNilsFixture)
+      testOptionalEventStream(object.rp.image,
+                              object: object,
+                              keyPathOrGetSet: .left("image"),
+                              values: Fixtures.imagesAndNils)
+      testOptionalEventStream(object.rp.highlightedImage,
+                              object: object,
+                              keyPathOrGetSet: .left("highlightedImage"),
+                              values: Fixtures.imagesAndNils)
       testEventStream(object.rp.isHighlighted,
-                       object: object,
-                       keyPathOrGetSet: .left("highlighted"),
-                       values: iOSTests.boolFixture)
-      //      self.testEventsDestination(updatable: object.rp.animationImages,
+                      object: object,
+                      keyPathOrGetSet: .left("highlighted"),
+                      values: Fixtures.bools)
+      //      self.testEventDestination(updatable: object.rp.animationImages,
       //                                 object: object,
       //                                 keyPath: "animationImages",
-      //                                 values: iOSTests.arraysOfImagesAndNilsFixture)
-      //      self.testEventsDestination(updatable: object.rp.highlightedAnimationImages,
+      //                                 values: Fixtures.arraysOfImagesAndNilsFixture)
+      //      self.testEventDestination(updatable: object.rp.highlightedAnimationImages,
       //                                 object: object,
       //                                 keyPath: "highlightedAnimationImages",
-      //                                 values: iOSTests.arraysOfImagesAndNilsFixture)
+      //                                 values: Fixtures.arraysOfImagesAndNilsFixture)
       testEventStream(object.rp.animationDuration,
-                       object: object,
-                       keyPathOrGetSet: .left("animationDuration"),
-                       values: iOSTests.timeIntervalFixture)
+                      object: object,
+                      keyPathOrGetSet: .left("animationDuration"),
+                      values: Fixtures.timeIntervals)
       testEventStream(object.rp.animationRepeatCount,
-                       object: object,
-                       keyPathOrGetSet: .left("animationRepeatCount"),
-                       values: iOSTests.intFixture)
-      //      self.testEventsDestination(updatable: object.rp.isAnimating,
+                      object: object,
+                      keyPathOrGetSet: .left("animationRepeatCount"),
+                      values: Fixtures.ints)
+      //      self.testEventDestination(updatable: object.rp.isAnimating,
       //                                 object: object,
       //                                 keyPath: "animating",
-      //                                 values: iOSTests.boolFixture,
+      //                                 values: Fixtures.boolFixture,
       //                                 customGetter: { $0.isAnimating },
       //                                 customSetter:
       //        {
@@ -352,53 +245,53 @@
     }
 
     func testUIButton() {
-      for state in iOSTests.uiControlStatesFixture {
+      for state in Fixtures.uiControlStates {
         let object = UIButton()
 
-        testEventsDestination(object.rp.title(for: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.title(for: state) }),
-                              values: iOSTests.stringsAndNilsFixture)
-        testEventsDestination(object.rp.image(for: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.image(for: state) }),
-                              values: iOSTests.imagesAndNilsFixture)
-        testEventsDestination(object.rp.backgroundImage(for: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
-                              values: iOSTests.imagesAndNilsFixture)
-        testEventsDestination(object.rp.attributedTitle(for: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.attributedTitle(for: state) }),
-                              values: iOSTests.attributedStringsFixture)
+        testOptionalEventDestination(object.rp.title(for: state),
+                                     object: object,
+                                     keyPathOrGet: .right({ $0.title(for: state) }),
+                                     values: Fixtures.stringsAndNils)
+        testOptionalEventDestination(object.rp.image(for: state),
+                                     object: object,
+                                     keyPathOrGet: .right({ $0.image(for: state) }),
+                                     values: Fixtures.imagesAndNils)
+        testOptionalEventDestination(object.rp.backgroundImage(for: state),
+                                     object: object,
+                                     keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
+                                     values: Fixtures.imagesAndNils)
+        testOptionalEventDestination(object.rp.attributedTitle(for: state),
+                                     object: object,
+                                     keyPathOrGet: .right({ $0.attributedTitle(for: state) }),
+                                     values: Fixtures.attributedStrings)
       }
     }
 
     func testUIBarItem() {
       let object = UIBarButtonItem()
       testEventStream(object.rp.isEnabled,
-                       object: object,
-                       keyPathOrGetSet: .left("enabled"),
-                       values: iOSTests.boolFixture)
-      testEventStream(object.rp.title,
-                       object: object,
-                       keyPathOrGetSet: .left("title"),
-                       values: iOSTests.stringsAndNilsFixture)
-      testEventStream(object.rp.image,
-                       object: object,
-                       keyPathOrGetSet: .left("image"),
-                       values: iOSTests.imagesAndNilsFixture)
+                      object: object,
+                      keyPathOrGetSet: .left("enabled"),
+                      values: Fixtures.bools)
+      testOptionalEventStream(object.rp.title,
+                              object: object,
+                              keyPathOrGetSet: .left("title"),
+                              values: Fixtures.stringsAndNils)
+      testOptionalEventStream(object.rp.image,
+                              object: object,
+                              keyPathOrGetSet: .left("image"),
+                              values: Fixtures.imagesAndNils)
       if #available(iOS 8.0, *) {
-        testEventStream(object.rp.landscapeImagePhone,
-                         object: object,
-                         keyPathOrGetSet: .left("landscapeImagePhone"),
-                         values: iOSTests.imagesAndNilsFixture)
+        testOptionalEventStream(object.rp.landscapeImagePhone,
+                                object: object,
+                                keyPathOrGetSet: .left("landscapeImagePhone"),
+                                values: Fixtures.imagesAndNils)
       }
-      testEventStream(object.rp.image,
-                       object: object,
-                       keyPathOrGetSet: .left("image"),
-                       values: iOSTests.imagesAndNilsFixture)
-      //      testEventsDestination(object.rp.titleTextAttributes(for: .normal),
+      testOptionalEventStream(object.rp.image,
+                              object: object,
+                              keyPathOrGetSet: .left("image"),
+                              values: Fixtures.imagesAndNils)
+      //      testEventDestination(object.rp.titleTextAttributes(for: .normal),
       //                            object: object,
       //                            keyPathOrGet: .right({ $0.titleTextAttributes(for: .normal) }),
       //                            values: /*TODO*/)
@@ -407,54 +300,44 @@
     func testUILabel() {
       let object = UILabel()
 
-      testEventStream(object.rp.text,
-                       object: object,
-                       keyPathOrGetSet: .left("text"),
-                       values: iOSTests.stringsFixture)
-      testEventStream(object.rp.font,
-                       object: object,
-                       keyPathOrGetSet: .left("font"),
-                       values: iOSTests.fontsFiture)
-      testEventStream(object.rp.textColor,
-                       object: object,
-                       keyPathOrGetSet: .left("textColor"),
-                       values: iOSTests.colorsFiture)
-      testEventStream(object.rp.shadowColor,
-                       object: object,
-                       keyPathOrGetSet: .left("shadowColor"),
-                       values: iOSTests.colorsAndNilsFiture)
-      testEventStream(object.rp.shadowOffset,
-                       object: object,
-                       keyPathOrGetSet: .right(getter: { $0.shadowOffset }, setter: { $0.shadowOffset = $1! }),
-                       values: iOSTests.shadowOffsetsFixture)
-      testEventStream(object.rp.textAlignment,
-                       object: object,
-                       keyPathOrGetSet: .right(getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! }),
-                       values: iOSTests.textAlignementFixture)
-      testEventStream(object.rp.lineBreakMode,
-                       object: object,
-                       keyPathOrGetSet: .right(getter: { $0.lineBreakMode }, setter: { $0.lineBreakMode = $1! }),
-                       values: iOSTests.lineBreakModeFixture)
-      testEventStream(object.rp.attributedText,
-                       object: object,
-                       keyPathOrGetSet: .left("attributedText"),
-                       values: iOSTests.attributedStringsFixture)
-      testEventStream(object.rp.highlightedTextColor,
-                       object: object,
-                       keyPathOrGetSet: .left("highlightedTextColor"),
-                       values: iOSTests.colorsAndNilsFiture)
-      testEventStream(object.rp.isHighlighted,
-                       object: object,
-                       keyPathOrGetSet: .left("highlighted"),
-                       values: iOSTests.boolFixture)
-      testEventStream(object.rp.numberOfLines,
-                       object: object,
-                       keyPathOrGetSet: .left("numberOfLines"),
-                       values: iOSTests.intFixture)
-      testEventStream(object.rp.baselineAdjustment,
-                       object: object,
-                       keyPathOrGetSet: .right(getter: { $0.baselineAdjustment }, setter: { $0.baselineAdjustment = $1! }),
-                       values: iOSTests.baselineAdjustmentFixture)
+      testEventStream(object.rp.text, object: object,
+                      keyPathOrGetSet: .left("text"),
+                      values: Fixtures.strings)
+      testEventStream(object.rp.font, object: object,
+                      keyPathOrGetSet: .left("font"),
+                      values: Fixtures.fonts)
+      testOptionalEventStream(object.rp.textColor, object: object,
+                              keyPathOrGetSet: .left("textColor"),
+                              values: Fixtures.colors)
+      testOptionalEventStream(object.rp.shadowColor, object: object,
+                              keyPathOrGetSet: .left("shadowColor"),
+                              values: Fixtures.colorsAndNils)
+      testEventStream(object.rp.shadowOffset, object: object,
+                      keyPathOrGetSet: .right((getter: { $0.shadowOffset }, setter: { $0.shadowOffset = $1! })),
+                      values: Fixtures.shadowOffsets)
+      testEventStream(object.rp.textAlignment, object: object,
+                      keyPathOrGetSet: .right((getter: { $0.textAlignment }, setter: { $0.textAlignment = $1! })),
+                      values: Fixtures.textAlignements)
+      testEventStream(object.rp.lineBreakMode, object: object,
+                      keyPathOrGetSet: .right((getter: { $0.lineBreakMode }, setter: { $0.lineBreakMode = $1! })),
+                      values: Fixtures.lineBreakModes)
+      testOptionalEventStream(object.rp.attributedText, object: object,
+                              keyPathOrGetSet: .left("attributedText"),
+                              values: Fixtures.attributedStrings)
+      testOptionalEventStream(object.rp.highlightedTextColor, object: object,
+                              keyPathOrGetSet: .left("highlightedTextColor"),
+                              values: Fixtures.colorsAndNils)
+      testEventStream(object.rp.isHighlighted, object: object,
+                      keyPathOrGetSet: .left("highlighted"),
+                      values: Fixtures.bools)
+      testEventStream(object.rp.numberOfLines, object: object,
+                      keyPathOrGetSet: .left("numberOfLines"),
+                      values: Fixtures.ints)
+      testEventStream(object.rp.baselineAdjustment, object: object,
+                      keyPathOrGetSet: .right((
+                        getter: { $0.baselineAdjustment },
+                        setter: { $0.baselineAdjustment = $1! })),
+                      values: Fixtures.baselineAdjustments)
     }
 
     func testUIDatePicker() {
@@ -465,225 +348,206 @@
           .time, .time, .date, .date, .dateAndTime, .countDownTimer, .countDownTimer, .dateAndTime
         ]
         testEventStream(object.rp.datePickerMode,
-                         object: object,
-                         keyPathOrGetSet: .right(getter: { $0.datePickerMode }, setter: { $0.datePickerMode = $1! }),
-                         values: datePickerModeFixtures)
+                        object: object,
+                        keyPathOrGetSet: .right((getter: { $0.datePickerMode }, setter: { $0.datePickerMode = $1! })),
+                        values: datePickerModeFixtures)
         testEventStream(object.rp.locale,
-                         object: object,
-                         keyPathOrGetSet: .left("locale"),
-                         values: iOSTests.localesFixture)
+                        object: object,
+                        keyPathOrGetSet: .left("locale"),
+                        values: Fixtures.locales)
         testEventStream(object.rp.calendar,
-                         object: object,
-                         keyPathOrGetSet: .left("calendar"),
-                         values: iOSTests.calendarsFixture)
-        testEventStream(object.rp.timeZone,
-                         object: object,
-                         keyPathOrGetSet: .left("timeZone"),
-                         values: iOSTests.timezonesAndNilsFixture)
+                        object: object,
+                        keyPathOrGetSet: .left("calendar"),
+                        values: Fixtures.calendars)
+        testOptionalEventStream(object.rp.timeZone,
+                                object: object,
+                                keyPathOrGetSet: .left("timeZone"),
+                                values: Fixtures.timezonesAndNils)
         testEventStream(object.rp.date,
-                         object: object,
-                         keyPathOrGetSet: .left("date"),
-                         values: iOSTests.datesFixture)
-        testEventsDestination(object.rp.minimumDate,
-                              object: object,
-                              keyPathOrGet: .left("minimumDate"),
-                              values: iOSTests.datesAndNilsFixture)
-        testEventsDestination(object.rp.maximumDate,
-                              object: object,
-                              keyPathOrGet: .left("maximumDate"),
-                              values: iOSTests.datesAndNilsFixture)
+                        object: object,
+                        keyPathOrGetSet: .left("date"),
+                        values: Fixtures.dates)
+        testOptionalEventDestination(object.rp.minimumDate,
+                                     object: object,
+                                     keyPathOrGet: .left("minimumDate"),
+                                     values: Fixtures.datesAndNils)
+        testOptionalEventDestination(object.rp.maximumDate,
+                                     object: object,
+                                     keyPathOrGet: .left("maximumDate"),
+                                     values: Fixtures.datesAndNils)
         //      TODO: Investigate
         //      object.datePickerMode = .countDownTimer
         //      testEventStream(object.rp.countDownDuration,
         //               object: object,
         //               keyPathOrGetSet: .left("countDownDuration"),
-        //               values: iOSTests.timeIntervalFixture)
+        //               values: Fixtures.timeIntervalFixture)
         testEventStream(object.rp.minuteInterval,
-                         object: object,
-                         keyPathOrGetSet: .left("minuteInterval"),
-                         values: iOSTests.intFixture)
+                        object: object,
+                        keyPathOrGetSet: .left("minuteInterval"),
+                        values: Fixtures.ints)
       #endif
     }
 
     func testUISwitch() {
       #if os(iOS)
-      let object = UISwitch()
+        let object = UISwitch()
 
-      testEventStream(object.rp.isOn,
-                       object: object,
-                       keyPathOrGetSet: .left("on"),
-                       values: iOSTests.boolFixture)
-      testEventStream(object.rp.onTintColor,
-                       object: object,
-                       keyPathOrGetSet: .left("onTintColor"),
-                       values: iOSTests.colorsAndNilsFiture)
-      testEventStream(object.rp.thumbTintColor,
-                       object: object,
-                       keyPathOrGetSet: .left("thumbTintColor"),
-                       values: iOSTests.colorsAndNilsFiture)
-      testEventStream(object.rp.onImage,
-                       object: object,
-                       keyPathOrGetSet: .left("onImage"),
-                       values: iOSTests.imagesAndNilsFixture)
-      testEventStream(object.rp.offImage,
-                       object: object,
-                       keyPathOrGetSet: .left("offImage"),
-                       values: iOSTests.imagesAndNilsFixture)
+        testEventStream(object.rp.isOn,
+                        object: object,
+                        keyPathOrGetSet: .left("on"),
+                        values: Fixtures.bools)
+        testOptionalEventStream(object.rp.onTintColor,
+                                object: object,
+                                keyPathOrGetSet: .left("onTintColor"),
+                                values: Fixtures.colorsAndNils)
+        testOptionalEventStream(object.rp.thumbTintColor,
+                                object: object,
+                                keyPathOrGetSet: .left("thumbTintColor"),
+                                values: Fixtures.colorsAndNils)
+        testOptionalEventStream(object.rp.onImage,
+                                object: object,
+                                keyPathOrGetSet: .left("onImage"),
+                                values: Fixtures.imagesAndNils)
+        testOptionalEventStream(object.rp.offImage,
+                                object: object,
+                                keyPathOrGetSet: .left("offImage"),
+                                values: Fixtures.imagesAndNils)
       #endif
     }
 
     func testUIStepper() {
       #if os(iOS)
-      let object = UIStepper()
-
-      testEventStream(object.rp.isContinuous,
-                       object: object,
-                       keyPathOrGetSet: .left("continuous"),
-                       values: iOSTests.boolFixture)
-      testEventStream(object.rp.autorepeat,
-                       object: object,
-                       keyPathOrGetSet: .left("autorepeat"),
-                       values: iOSTests.boolFixture)
-      testEventStream(object.rp.wraps,
-                       object: object,
-                       keyPathOrGetSet: .left("wraps"),
-                       values: iOSTests.boolFixture)
-      testEventStream(object.rp.value,
-                       object: object,
-                       keyPathOrGetSet: .left("value"),
-                       values: iOSTests.doubleFixture)
-      testEventStream(object.rp.minimumValue,
-                       object: object,
-                       keyPathOrGetSet: .left("minimumValue"),
-                       values: iOSTests.doubleFixture)
-      testEventStream(object.rp.maximumValue,
-                       object: object,
-                       keyPathOrGetSet: .left("maximumValue"),
-                       values: iOSTests.doubleFixture.map { $0 + 100.0 })
-      testEventStream(object.rp.stepValue,
-                       object: object,
-                       keyPathOrGetSet: .left("stepValue"),
-                       values: iOSTests.doubleFixture.map { $0 + 0.1 })
-      for state in iOSTests.uiControlStatesFixture {
         let object = UIStepper()
 
-//    TODO: investigate
-//        testEventsDestination(object.rp.backgroundImage(for: state),
-//                              object: object,
-//                              keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
-//                              values: testImages)
-        testEventsDestination(object.rp.incrementImage(for: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.incrementImage(for: state) }),
-                              values: iOSTests.imagesFixture)
-        testEventsDestination(object.rp.dividerImage(forLeftSegmentState: state, rightSegmentState: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.dividerImage(forLeftSegmentState: state, rightSegmentState: state) }),
-                              values: iOSTests.imagesFixture)
-        testEventsDestination(object.rp.decrementImage(for: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.decrementImage(for: state) }),
-                              values: iOSTests.imagesFixture)
-      }
+        testEventStream(object.rp.isContinuous, object: object,
+                        keyPathOrGetSet: .left("continuous"),
+                        values: Fixtures.bools)
+        testEventStream(object.rp.autorepeat, object: object,
+                        keyPathOrGetSet: .left("autorepeat"),
+                        values: Fixtures.bools)
+        testEventStream(object.rp.wraps, object: object,
+                        keyPathOrGetSet: .left("wraps"),
+                        values: Fixtures.bools)
+        testEventStream(object.rp.value, object: object,
+                        keyPathOrGetSet: .left("value"),
+                        values: Fixtures.doubles)
+        testEventStream(object.rp.minimumValue, object: object,
+                        keyPathOrGetSet: .left("minimumValue"),
+                        values: Fixtures.doubles)
+        testEventStream(object.rp.maximumValue, object: object,
+                        keyPathOrGetSet: .left("maximumValue"),
+                        values: Fixtures.doubles.map { $0 + 100.0 })
+        testEventStream(object.rp.stepValue, object: object,
+                        keyPathOrGetSet: .left("stepValue"),
+                        values: Fixtures.doubles.map { $0 + 0.1 })
+        for state in Fixtures.uiControlStates {
+          let object = UIStepper()
+
+          //    TODO: investigate
+          //          testEventDestination(object.rp.backgroundImage(for: state), object: object,
+          //                               keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
+          //                               values: testImages)
+          testOptionalEventDestination(object.rp.incrementImage(for: state), object: object,
+                                       keyPathOrGet: .right({ $0.incrementImage(for: state) }),
+                                       values: Fixtures.images)
+          testOptionalEventDestination(object.rp.dividerImage(forLeftSegmentState: state, rightSegmentState: state),
+                                       object: object,
+                                       keyPathOrGet:
+            .right { $0.dividerImage(forLeftSegmentState: state, rightSegmentState: state) },
+                                       values: Fixtures.images)
+          testOptionalEventDestination(object.rp.decrementImage(for: state), object: object,
+                                       keyPathOrGet: .right({ $0.decrementImage(for: state) }),
+                                       values: Fixtures.images)
+        }
       #endif
     }
 
+    #if os(iOS)
+    func _testUISlider(_ object: UISlider, state: UIControlState) {
+      testOptionalEventDestination(object.rp.thumbImage(for: state), object: object,
+                                   keyPathOrGet: .right({ $0.thumbImage(for: state) }),
+                                   values: Fixtures.imagesAndNils)
+      testOptionalEventDestination(object.rp.minimumTrackImage(for: state), object: object,
+                                   keyPathOrGet: .right({ $0.minimumTrackImage(for: state) }),
+                                   values: Fixtures.imagesAndNils)
+      testOptionalEventDestination(object.rp.maximumTrackImage(for: state), object: object,
+                                   keyPathOrGet: .right({ $0.maximumTrackImage(for: state) }),
+                                   values: Fixtures.imagesAndNils)
+    }
+    #endif
+
     func testUISlider() {
       #if os(iOS)
-      let object = UISlider()
-
-      testEventStream(object.rp.value,
-                       object: object,
-                       keyPathOrGetSet: .left("value"),
-                       values: iOSTests.floatFixture)
-      testEventStream(object.rp.minimumValue,
-                       object: object,
-                       keyPathOrGetSet: .left("minimumValue"),
-                       values: iOSTests.floatFixture)
-      testEventStream(object.rp.minimumValue,
-                       object: object,
-                       keyPathOrGetSet: .left("minimumValue"),
-                       values: iOSTests.floatFixture)
-      testEventStream(object.rp.minimumValueImage,
-                       object: object,
-                       keyPathOrGetSet: .left("minimumValueImage"),
-                       values: iOSTests.imagesAndNilsFixture)
-      testEventStream(object.rp.maximumValueImage,
-                       object: object,
-                       keyPathOrGetSet: .left("maximumValueImage"),
-                       values: iOSTests.imagesAndNilsFixture)
-      testEventStream(object.rp.isContinuous,
-                       object: object,
-                       keyPathOrGetSet: .left("continuous"),
-                       values: iOSTests.boolFixture)
-      testEventStream(object.rp.minimumTrackTintColor,
-                       object: object,
-                       keyPathOrGetSet: .left("minimumTrackTintColor"),
-                       values: iOSTests.colorsAndNilsFiture)
-      testEventStream(object.rp.maximumTrackTintColor,
-                       object: object,
-                       keyPathOrGetSet: .left("maximumTrackTintColor"),
-                       values: iOSTests.colorsAndNilsFiture)
-      testEventStream(object.rp.thumbTintColor,
-                       object: object,
-                       keyPathOrGetSet: .left("thumbTintColor"),
-                       values: iOSTests.colorsAndNilsFiture)
-      for state in iOSTests.uiControlStatesFixture {
         let object = UISlider()
 
-        testEventsDestination(object.rp.thumbImage(for: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.thumbImage(for: state) }),
-                              values: iOSTests.imagesAndNilsFixture)
-        testEventsDestination(object.rp.minimumTrackImage(for: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.minimumTrackImage(for: state) }),
-                              values: iOSTests.imagesAndNilsFixture)
-        testEventsDestination(object.rp.maximumTrackImage(for: state),
-                              object: object,
-                              keyPathOrGet: .right({ $0.maximumTrackImage(for: state) }),
-                              values: iOSTests.imagesAndNilsFixture)
-      }
+        testEventStream(object.rp.value, object: object,
+                        keyPathOrGetSet: .left("value"),
+                        values: Fixtures.floats)
+        testEventStream(object.rp.minimumValue, object: object,
+                        keyPathOrGetSet: .left("minimumValue"),
+                        values: Fixtures.floats)
+        testEventStream(object.rp.minimumValue, object: object,
+                        keyPathOrGetSet: .left("minimumValue"),
+                        values: Fixtures.floats)
+        testOptionalEventStream(object.rp.minimumValueImage, object: object,
+                                keyPathOrGetSet: .left("minimumValueImage"),
+                                values: Fixtures.imagesAndNils)
+        testOptionalEventStream(object.rp.maximumValueImage, object: object,
+                                keyPathOrGetSet: .left("maximumValueImage"),
+                                values: Fixtures.imagesAndNils)
+        testEventStream(object.rp.isContinuous, object: object,
+                        keyPathOrGetSet: .left("continuous"),
+                        values: Fixtures.bools)
+        testOptionalEventStream(object.rp.minimumTrackTintColor, object: object,
+                                keyPathOrGetSet: .left("minimumTrackTintColor"),
+                                values: Fixtures.colorsAndNils)
+        testOptionalEventStream(object.rp.maximumTrackTintColor, object: object,
+                                keyPathOrGetSet: .left("maximumTrackTintColor"),
+                                values: Fixtures.colorsAndNils)
+        testOptionalEventStream(object.rp.thumbTintColor, object: object,
+                                keyPathOrGetSet: .left("thumbTintColor"),
+                                values: Fixtures.colorsAndNils)
+        for state in Fixtures.uiControlStates {
+          _testUISlider(UISlider(), state: state)
+        }
       #endif
     }
 
     func testUIViewController() {
       let object = UIViewController()
-      testEventStream(object.rp.title,
-                       object: object,
-                       keyPathOrGetSet: .left("title"),
-                       values: iOSTests.stringsAndNilsFixture)
+      testOptionalEventStream(object.rp.title,
+                              object: object,
+                              keyPathOrGetSet: .left("title"),
+                              values: Fixtures.stringsAndNils)
     }
   }
 
   // MARK: - T: Equatable
   extension iOSTests {
-    func testEventStream<T: EventsDestination&EventSource, Object: NSObject>(
+    func testEventStream<T: EventDestination&EventSource, Object: NSObject>(
       _ stream: T,
       object: Object,
       keyPathOrGetSet: Either<String, (getter: (Object) -> T.Update?, setter: (Object, T.Update?) -> Void)>,
       values: [T.Update],
       file: StaticString = #file,
       line: UInt = #line
-      ) where T.Update: Equatable
-    {
-      testEventsDestination(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
-                            values: values, file: file, line: line)
+      ) where T.Update: Equatable {
+      testEventDestination(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
+                           values: values, file: file, line: line)
       testEventSource(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
-                       values: values, file: file, line: line)
+                      values: values, file: file, line: line)
     }
 
-    func testEventsDestination<T: EventsDestination, Object: NSObject>(
-      _ eventsDestination: T,
+    func testEventDestination<T: EventDestination, Object: NSObject>(
+      _ EventDestination: T,
       object: Object,
       keyPathOrGet: Either<String, (Object) -> T.Update?>,
       values: [T.Update],
       file: StaticString = #file,
       line: UInt = #line
-      ) where T.Update: Equatable
-    {
+      ) where T.Update: Equatable {
       for value in values {
-        eventsDestination.update(value, from: .main)
+        EventDestination.update(value, from: .main)
         let objectValue: T.Update? = eval {
           switch keyPathOrGet {
           case let .left(keyPath):
@@ -703,10 +567,9 @@
       values: [T.Update],
       file: StaticString = #file,
       line: UInt = #line
-      ) where T.Update: Equatable
-    {
+      ) where T.Update: Equatable {
       var updatingIterator = EventSource.makeIterator()
-      let _ = updatingIterator.next() // skip an initial value
+      _ = updatingIterator.next() // skip an initial value
       for value in values {
         switch keyPathOrSet {
         case let .left(keyPath):
@@ -723,76 +586,76 @@
 
   // MARK: - T: Optional<Equatable>
   extension iOSTests {
-    func testEventStream<T: EventsDestination&EventSource, Object: NSObject>(
+    func testOptionalEventStream<T: EventDestination&EventSource, Object: NSObject>(
       _ stream: T,
       object: Object,
       keyPathOrGetSet: Either<String, (getter: (Object) -> T.Update?, setter: (Object, T.Update?) -> Void)>,
       values: [T.Update],
       file: StaticString = #file,
       line: UInt = #line
-      ) where T.Update: AsyncNinjaOptionalAdaptor, T.Update.AsyncNinjaWrapped: Equatable
-    {
-      testEventsDestination(stream, object: object, keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
-                            values: values, file: file, line: line)
-      testEventSource(stream, object: object, keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
-                       values: values, file: file, line: line)
+      ) where T.Update: AsyncNinjaOptionalAdaptor,
+      T.Update.AsyncNinjaWrapped: Equatable {
+        testOptionalEventDestination(stream,
+                                     object: object,
+                                     keyPathOrGet: keyPathOrGetSet.mapRight { $0.getter },
+                                     values: values,
+                                     file: file,
+                                     line: line)
+        testOptionalEventSource(stream,
+                                object: object,
+                                keyPathOrSet: keyPathOrGetSet.mapRight { $0.setter },
+                                values: values,
+                                file: file,
+                                line: line)
     }
 
-    func testEventsDestination<T: EventsDestination, Object: NSObject>(
-      _ eventsDestination: T,
+    func testOptionalEventDestination<T: EventDestination, Object: NSObject>(
+      _ EventDestination: T,
       object: Object,
       keyPathOrGet: Either<String, (Object) -> T.Update?>,
       values: [T.Update],
       file: StaticString = #file,
       line: UInt = #line,
       customGetter: ((Object) -> T.Update?)? = nil
-      ) where T.Update: AsyncNinjaOptionalAdaptor, T.Update.AsyncNinjaWrapped: Equatable
-    {
-      for value in values {
-        eventsDestination.update(value, from: .main)
-        let objectValue: T.Update? = eval {
-          switch keyPathOrGet {
-          case let .left(keyPath):
-            return object.value(forKeyPath: keyPath) as? T.Update
-          case let .right(getter):
-            return getter(object)
+      ) where T.Update: AsyncNinjaOptionalAdaptor,
+      T.Update.AsyncNinjaWrapped: Equatable {
+        for value in values {
+          EventDestination.update(value, from: .main)
+          let objectValue: T.Update? = eval {
+            switch keyPathOrGet {
+            case let .left(keyPath):
+              return object.value(forKeyPath: keyPath) as? T.Update
+            case let .right(getter):
+              return getter(object)
+            }
           }
+          XCTAssertEqual(objectValue?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue, file: file, line: line)
         }
-        XCTAssertEqual(objectValue?.asyncNinjaOptionalValue, value.asyncNinjaOptionalValue, file: file, line: line)
-      }
     }
-    
-    func testEventSource<T: EventSource, Object: NSObject>(
+
+    func testOptionalEventSource<T: EventSource, Object: NSObject>(
       _ EventSource: T,
       object: Object,
       keyPathOrSet: Either<String, (Object, T.Update?) -> Void>,
       values: [T.Update],
       file: StaticString = #file,
       line: UInt = #line
-      ) where T.Update: AsyncNinjaOptionalAdaptor, T.Update.AsyncNinjaWrapped: Equatable
-    {
-      var updatingIterator = EventSource.makeIterator()
-      let _ = updatingIterator.next() // skip an initial value
-      for value in values {
-        switch keyPathOrSet {
-        case let .left(keyPath):
-          object.setValue(value.asyncNinjaOptionalValue, forKeyPath: keyPath)
-        case let .right(setter):
-          setter(object, value)
+      ) where T.Update: AsyncNinjaOptionalAdaptor,
+      T.Update.AsyncNinjaWrapped: Equatable {
+        var updatingIterator = EventSource.makeIterator()
+        _ = updatingIterator.next() // skip an initial value
+        for value in values {
+          switch keyPathOrSet {
+          case let .left(keyPath):
+            object.setValue(value.asyncNinjaOptionalValue, forKeyPath: keyPath)
+          case let .right(setter):
+            setter(object, value)
+          }
+
+          XCTAssertEqual((updatingIterator.next() as! T.Update?)?.asyncNinjaOptionalValue,
+                         value.asyncNinjaOptionalValue, file: file, line: line)
         }
-        
-        XCTAssertEqual((updatingIterator.next() as! T.Update?)?.asyncNinjaOptionalValue , value.asyncNinjaOptionalValue, file: file, line: line)
-      }
     }
   }
-  
-  extension UIImage {
-    class func draw(size: CGSize, opaque: Bool = false, scale: CGFloat = 0.0, drawer: (CGContext) -> Void) -> UIImage {
-      UIGraphicsBeginImageContextWithOptions(size, opaque, scale);
-      defer { UIGraphicsEndImageContext(); }
-      drawer(UIGraphicsGetCurrentContext()!)
-      return UIGraphicsGetImageFromCurrentImageContext()!
-    }
-  }
-  
+
 #endif

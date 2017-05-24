@@ -33,7 +33,7 @@ struct SimpleResponse {}
 class ExecutionContextTests: XCTestCase {
 
   static let allTests = [
-    ("testFailure", testFailure),
+    ("testFailure", testFailure)
     ]
 
   func testFailure() {

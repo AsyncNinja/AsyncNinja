@@ -33,7 +33,7 @@ class EitherTests: XCTestCase {
     ("testLeft", testLeft),
     ("testRight", testRight),
     ("testEquals", testEquals),
-    ("testChannelEvent", testChannelEvent),
+    ("testChannelEvent", testChannelEvent)
     ]
 
   func testLeft() {

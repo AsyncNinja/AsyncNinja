@@ -113,8 +113,7 @@ public extension Fallible {
   /// Returns success if Fallible has a success value inside.
   /// Returns nil otherwise
   var success: Success? {
-    if case let .success(success) = self { return success }
-    else { return nil }
+    if case let .success(success) = self { return success } else { return nil }
   }
 
   /// Returns success if Fallible has a success value inside.
@@ -126,8 +125,7 @@ public extension Fallible {
   /// Returns failure if Fallible has a failure value inside.
   /// Returns nil otherwise
   var failure: Swift.Error? {
-    if case let .failure(failure) = self { return failure }
-    else { return nil }
+    if case let .failure(failure) = self { return failure } else { return nil }
   }
 
   /// This method is convenient when you want to transfer back
@@ -176,7 +174,8 @@ public extension Fallible {
   ///   - transform: block to apply.
   ///     A success value returned from block will be a success value of the transformed Fallible.
   ///     An error thrown from block will be a failure value of a transformed Fallible
-  ///     **This block will not be executed if an original Fallible contains a failure. That failure will become a failure value of a transfomed Fallible**
+  ///     **This block will not be executed if an original Fallible contains a failure.**
+  ///     **That failure will become a failure value of a transfomed Fallible**
   ///   - success: success value of original Fallible
   /// - Returns: transformed Fallible
   func map<T>(_ transform: (_ success: Success) throws -> T) -> Fallible<T> {
@@ -189,7 +188,8 @@ public extension Fallible {
   ///   - transform: block to apply.
   ///     A fallible value returned from block will be a value (after flattening) of the transformed Fallible.
   ///     An error thrown from block will be a failure value of the transformed Fallible.
-  ///     **This block will not be executed if an original Fallible contains a failure. That failure will become a failure value of a transfomed Fallible**
+  ///     **This block will not be executed if an original Fallible contains a failure.**
+  ///     **That failure will become a failure value of a transfomed Fallible**
   ///   - success: success value of original Fallible
   /// - Returns: transformed Fallible
   func flatMap<T>(_ transform: (_ success: Success) throws -> Fallible<T>) -> Fallible<T> {
@@ -207,7 +207,8 @@ public extension Fallible {
   ///   - transform: block to apply.
   ///     A success value returned from block will be a success value of the transformed Fallible.
   ///     An error thrown from block will be a failure value of a transformed Fallible.
-  ///     **This block will not be executed if an original Fallible contains a success value. That success value will become a success value of a transfomed Fallible**
+  ///     **This block will not be executed if an original Fallible contains a success value.**
+  ///    **That success value will become a success value of a transfomed Fallible**
   ///   - failure: failure value of original Fallible
   /// - Returns: transformed Fallible
   func tryRecover(_ transform: (_ failure: Swift.Error) throws -> Success) -> Fallible<Success> {
@@ -215,8 +216,7 @@ public extension Fallible {
     case let .success(success):
       return .success(success)
     case let .failure(error):
-      do { return .success(try transform(error)) }
-      catch { return .failure(error) }
+      do { return .success(try transform(error)) } catch { return .failure(error) }
     }
   }
 
@@ -225,7 +225,8 @@ public extension Fallible {
   /// - Parameters:
   ///   - transform: block to apply.
   ///     A success value returned from block will be returned from method.
-  ///     **This block will not be executed if an original Fallible contains a success value. That success value will become a success value of a transfomed Fallible**
+  ///     **This block will not be executed if an original Fallible contains a success value.**
+  ///     **That success value will become a success value of a transfomed Fallible**
   ///   - failure: failure value of original Fallible
   /// - Returns: success value
   func recover(_ transform: (_ failure: Swift.Error) -> Success) -> Success {
@@ -261,8 +262,7 @@ public extension Fallible {
 ///   A thrown error will become failure value of returned Fallible.
 /// - Returns: fallible constructed of a returned value or a thrown error with Fallible
 public func fallible<T>(block: () throws -> T) -> Fallible<T> {
-  do { return Fallible(success: try block()) }
-  catch { return Fallible(failure: error) }
+  do { return Fallible(success: try block()) } catch { return Fallible(failure: error) }
 }
 
 /// Executes specified block and returns returned Fallible or wraps a thrown error with Fallible
@@ -272,8 +272,7 @@ public func fallible<T>(block: () throws -> T) -> Fallible<T> {
 ///   A thrown error will become failure value of returned Fallible.
 /// - Returns: returned Fallible or a thrown error wrapped with Fallible
 public func flatFallible<T>(block: () throws -> Fallible<T>) -> Fallible<T> {
-  do { return try block() }
-  catch { return Fallible(failure: error) }
+  do { return try block() } catch { return Fallible(failure: error) }
 }
 
 // MARK: - flattening
@@ -346,13 +345,13 @@ extension Fallible where Success: Equatable {
 
   /// Partial implementation of equality opeator for Fallibles
   /// You should check equalitu of unwrapped values rather then use this function
-  public static func ==(lhs: Fallible, rhs: Fallible) -> Bool {
+  public static func == (lhs: Fallible, rhs: Fallible) -> Bool {
     switch (lhs, rhs) {
     case let (.success(leftSuccess), .success(rightSuccess)):
       return leftSuccess == rightSuccess
     case let (.failure(leftFailure), .failure(rightFailure)):
-      let _ = leftFailure
-      let _ = rightFailure
+      _ = leftFailure
+      _ = rightFailure
       // TODO: figure out how to check equality of failures
       return false
     default:
@@ -372,7 +371,7 @@ extension Fallible where Success: Hashable {
     case let .success(value):
       return value.hashValue
     case let .failure(error):
-      let _ = error
+      _ = error
       // TODO: figure out how to hash failures
       return 0
     }
@@ -380,12 +379,13 @@ extension Fallible where Success: Hashable {
 }
 
 /// Combines successes of two failables or returns fallible with first error
-public func zip<A, B>(_ a: Fallible<A>,
-                _ b: Fallible<B>
+public func zip<A, B>(
+  _ a: Fallible<A>,
+  _ b: Fallible<B>
   ) -> Fallible<(A, B)> {
   switch (a, b) {
   case let (.success(successA), .success(successB)):
-    return .success(successA, successB)
+    return .success((successA, successB))
   case let (.failure(error), _),
        let (_, .failure(error)):
     return .failure(error)
@@ -395,13 +395,14 @@ public func zip<A, B>(_ a: Fallible<A>,
 }
 
 /// Combines successes of tree failables or returns fallible with first error
-public func zip<A, B, C>(_ a: Fallible<A>,
-                _ b: Fallible<B>,
-                _ c: Fallible<C>
+public func zip<A, B, C>(
+  _ a: Fallible<A>,
+  _ b: Fallible<B>,
+  _ c: Fallible<C>
   ) -> Fallible<(A, B, C)> {
   switch (a, b, c) {
   case let (.success(successA), .success(successB), .success(successC)):
-    return .success(successA, successB, successC)
+    return .success((successA, successB, successC))
   case let (.failure(error), _, _),
        let (_, .failure(error), _),
        let (_, _, .failure(error)):

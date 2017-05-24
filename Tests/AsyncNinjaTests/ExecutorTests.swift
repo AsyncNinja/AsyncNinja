@@ -39,7 +39,7 @@ class ExecutorTests: XCTestCase {
     ("testImmediate", testImmediate),
     ("testCustomQueue", testCustomQueue),
     ("testCustomQoS", testCustomQoS),
-    ("testCustomHandler", testCustomHandler),
+    ("testCustomHandler", testCustomHandler)
   ]
 
   func testPrimary() {
