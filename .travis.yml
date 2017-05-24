@@ -3,6 +3,7 @@ osx_image: xcode8.3
 before_install:
   - sudo gem install xcpretty xcpretty-travis-formatter jazzy
   - brew install swiftlint
+  - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
 jobs:
   include:
     - script: set -o pipefail && xcodebuild build test -project AsyncNinja.xcodeproj -scheme AsyncNinja -sdk macosx -configuration Release | xcpretty --no-color --no-utf -f `xcpretty-travis-formatter`
