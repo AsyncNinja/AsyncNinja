@@ -12,9 +12,8 @@ jobs:
     - script: set -o pipefail && xcodebuild build test -project AsyncNinja.xcodeproj -scheme AsyncNinja -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV 1080p' -configuration Release | xcpretty --no-color --no-utf -f `xcpretty-travis-formatter`
     - stage: generate documentation
       script:
-        - DOCS_FOLDER=docs 
-        - jazzy --clean --author AsyncNinja --author_url http://async.ninja --github_url https://github.com/AsyncNinja/AsyncNinja --sdk iphone --output "$DOCS_FOLDER"
-        - cp title_image.png "$DOCS_FOLDER"
-        - zip -r docs.zip docs
-        - artifacts upload
+        - jazzy --clean --author AsyncNinja --author_url http://async.ninja --github_url https://github.com/AsyncNinja/AsyncNinja --sdk iphone --output generated_docs
+        - cp title_image.png generated_docs
+        - zip -r docs.zip generated_docs
+        - artifacts upload generated_docs/ docs.zip
           
