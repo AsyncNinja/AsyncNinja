@@ -37,7 +37,7 @@ class PerformanceTests: XCTestCase {
     ("testPerformanceFuture", testPerformanceFuture)
     ]
 
-  static let runsRange = 0..<100000
+  static let runsRange: CountableRange<Int64> = 0..<100000
 
   func testConstantFutureWait() {
     self.measure {
@@ -69,7 +69,7 @@ class PerformanceTests: XCTestCase {
 
   func testHugeMapping_Success() {
     self.measure {
-      var futureValue: Future<Int> = future(success: 0)
+      var futureValue: Future<Int64> = future(success: 0)
       for _ in PerformanceTests.runsRange {
         futureValue = futureValue.map(executor: .immediate) { $0 + 1 }
       }
@@ -80,7 +80,7 @@ class PerformanceTests: XCTestCase {
 
   func testHugeMapping_Failure() {
     self.measure {
-      var futureValue: Future<Int> = future(failure: TestError.testCode)
+      var futureValue: Future<Int64> = future(failure: TestError.testCode)
       for _ in PerformanceTests.runsRange {
         futureValue = futureValue.map(executor: .immediate) { $0 + 1 }
       }
@@ -96,7 +96,7 @@ class PerformanceTests: XCTestCase {
         .asyncReduce(0, +)
         .wait().success!
       let fixture = (PerformanceTests.runsRange.lowerBound + PerformanceTests.runsRange.upperBound - 1)
-        * PerformanceTests.runsRange.count
+        * Int64(PerformanceTests.runsRange.count)
       XCTAssertEqual(resultValue, fixture)
     }
   }
