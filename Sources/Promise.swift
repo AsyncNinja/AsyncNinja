@@ -35,14 +35,41 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
   }
 
   /// Designated initializer of promise
-  override public init() {
-    _container = makeThreadSafeContainer(head: InitialPromiseState<Success>(notifyBlock: { _ in }))
+  private init(head: InitialPromiseState<Success>) {
+    _container = makeThreadSafeContainer(head: head)
     super.init()
   }
 
-  init(notifyBlock: @escaping (_ promise: Promise<Success>, _ isCompleted: Bool) -> Void) {
-    _container = makeThreadSafeContainer(head: InitialPromiseState<Success>(notifyBlock: notifyBlock))
-    super.init()
+  override public convenience init() {
+    self.init(head: InitialPromiseState<Success>(notifyFirstSubscription: { _ in }))
+  }
+
+  convenience init(
+    lazy: Bool,
+    cancellationToken: CancellationToken?,
+    initializer: @escaping (_ promise: Promise<Success>) -> Void
+    ) {
+    self.init(head: lazy
+      ? InitialPromiseState<Success>(notifyFirstSubscription: initializer)
+      : InitialPromiseState<Success>(notifyFirstSubscription: { _ in }) )
+    cancellationToken?.add(cancellable: self)
+    if !lazy {
+      initializer(self)
+    }
+  }
+
+  convenience init<Context: ExecutionContext>(
+    context: Context,
+    lazy: Bool,
+    cancellationToken: CancellationToken?,
+    initializer: @escaping (_ strongContext: Context, _ promise: Promise<Success>) -> Void
+    ) {
+    self.init(lazy: lazy, cancellationToken: cancellationToken) { [weak context] (promise) in
+      if let context = context {
+        initializer(context, promise)
+      }
+    }
+    context.addDependent(completable: self)
   }
 
   /// **internal use only**
@@ -142,9 +169,9 @@ fileprivate class AbstractPromiseState<Success> {
 }
 
 fileprivate class InitialPromiseState<Success>: AbstractPromiseState<Success> {
-  let notifyBlock: (_ owner: Promise<Success>, _ isCompleted: Bool) -> Void
-  init(notifyBlock: @escaping (_ owner: Promise<Success>, _ isCompleted: Bool) -> Void) {
-    self.notifyBlock = notifyBlock
+  let notifyFirstSubscription: (_ owner: Promise<Success>) -> Void
+  init(notifyFirstSubscription: @escaping (_ owner: Promise<Success>) -> Void) {
+    self.notifyFirstSubscription = notifyFirstSubscription
   }
 
   override func subscribe(
@@ -163,16 +190,7 @@ fileprivate class InitialPromiseState<Success>: AbstractPromiseState<Success> {
     executor: Executor,
     _ block: @escaping (_ completion: Fallible<Success>,
     _ originalExecutor: Executor) -> Void) {
-    notifyBlock(owner, false)
-  }
-
-  override func didComplete(
-    owner: Promise<Success>,
-    completion: Fallible<Success>,
-    from originalExecutor: Executor?
-    ) -> AbstractPromiseState<Success>? {
-    notifyBlock(owner, true)
-    return nil
+    notifyFirstSubscription(owner)
   }
 }
 

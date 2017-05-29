@@ -35,7 +35,7 @@ import Dispatch
 ///
 /// - Parameters:
 ///   - executor: is `Executor` to execute block on
-///   - isLazy: indicates if the block will be lazily executed.
+///   - lazy: indicates if the block will be lazily executed.
 ///     Lazy execution means that execution will occur on first subscription.
 ///     False by default
 ///   - cancellationToken: is optional `CancellationToken` able to cancel
@@ -46,34 +46,22 @@ import Dispatch
 /// - Returns: future
 public func future<T>(
   executor: Executor = .primary,
-  isLazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+  lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
   cancellationToken: CancellationToken? = nil,
   _ block: @escaping () throws -> T
   ) -> Future<T> {
   // Test: FutureTests.testMakeFutureOfBlock_Success
   // Test: FutureTests.testMakeFutureOfBlock_Failure
 
-  func scheduleExecution(for promise: Promise<T>) {
+  return Promise<T>(
+    lazy: lazy,
+    cancellationToken: cancellationToken
+  ) { (promise: Promise<T>) in
     executor.execute(from: nil) { [weak promise] (originalExecutor) in
       guard !(promise?.isComplete ?? true) else { return }
       let value = fallible(block: block)
       promise?.complete(value, from: originalExecutor)
     }
-  }
-
-  if isLazy {
-    let promise = Promise<T> { (promise: Promise<T>, isSubscribed: Bool) -> Void in
-      if isSubscribed {
-        scheduleExecution(for: promise)
-      }
-    }
-    cancellationToken?.add(cancellable: promise)
-    return promise
-  } else {
-    let promise = Promise<T>()
-    scheduleExecution(for: promise)
-    cancellationToken?.add(cancellable: promise)
-    return promise
   }
 }
 
@@ -81,7 +69,7 @@ public func future<T>(
 ///
 /// - Parameters:
 ///   - executor: is `Executor` to execute block on
-///   - isLazy: indicates if the block will be lazily executed.
+///   - lazy: indicates if the block will be lazily executed.
 ///     Lazy execution means that execution will occur on first subscription.
 ///     False by default
 ///   - cancellationToken: is optional `CancellationToken` able to cancel
@@ -91,12 +79,15 @@ public func future<T>(
 /// - Returns: future
 public func flatFuture<T>(
   executor: Executor = .primary,
-  isLazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+  lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
   cancellationToken: CancellationToken? = nil,
   _ block: @escaping () throws -> Future<T>
   ) -> Future<T> {
 
-  func scheduleExecution(for promise: Promise<T>) {
+  return Promise<T>(
+    lazy: lazy,
+    cancellationToken: cancellationToken
+  ) { (promise: Promise<T>) in
     executor.execute(from: nil) { [weak promise] (originalExecutor) in
       guard !(promise?.isComplete ?? true) else { return }
       do {
@@ -105,21 +96,6 @@ public func flatFuture<T>(
         promise?.fail(error, from: originalExecutor)
       }
     }
-  }
-
-  if isLazy {
-    let promise = Promise<T> { (promise: Promise<T>, isSubscribed: Bool) -> Void in
-      if isSubscribed {
-        scheduleExecution(for: promise)
-      }
-    }
-    cancellationToken?.add(cancellable: promise)
-    return promise
-  } else {
-    let promise = Promise<T>()
-    scheduleExecution(for: promise)
-    cancellationToken?.add(cancellable: promise)
-    return promise
   }
 }
 
@@ -133,7 +109,7 @@ public func flatFuture<T>(
 ///     Block will not be executed if executor was deallocated before execution,
 ///     returned future will fail with `AsyncNinjaError.contextDeallocated` error
 ///   - executor: is `Executor` to override executor provided by context
-///   - isLazy: indicates if the block will be lazily executed.
+///   - lazy: indicates if the block will be lazily executed.
 ///     Lazy execution means that execution will occur on first subscription.
 ///     False by default
 ///   - cancellationToken: is optional `CancellationToken` able to cancel
@@ -147,7 +123,7 @@ public func flatFuture<T>(
 public func future<T, Context: ExecutionContext>(
   context: Context,
   executor: Executor? = nil,
-  isLazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+  lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
   cancellationToken: CancellationToken? = nil,
   _ block: @escaping (_ strongContext: Context) throws -> T
   ) -> Future<T> {
@@ -156,36 +132,21 @@ public func future<T, Context: ExecutionContext>(
   // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive
   // Test: FutureTests.testMakeFutureOfContextualFallibleBlock_Failure_ContextDead
 
-  let weakContext = WeakBox(context)
-  let localExecutor = executor ?? context.executor
-  func scheduleExecution(promise: Promise<T>) {
-    localExecutor.execute(from: nil) { [weak promise] (originalExecutor) in
+  return Promise(
+    context: context,
+    lazy: lazy,
+    cancellationToken: cancellationToken
+  ) { (context: Context, promise: Promise<T>) in
+    (executor ?? context.executor).execute(from: nil) { [weak promise, weak context] (originalExecutor) in
       guard !(promise?.isComplete ?? true) else { return }
 
       let completion = fallible { () -> T in
-        guard let context = weakContext.value
+        guard let context = context
           else { throw AsyncNinjaError.contextDeallocated }
         return try block(context)
       }
       promise?.complete(completion, from: originalExecutor)
     }
-  }
-
-  if isLazy {
-    let promise = Promise<T> { (promise, isSubscribed) in
-      if isSubscribed {
-        scheduleExecution(promise: promise)
-      }
-    }
-    context.addDependent(completable: promise)
-    cancellationToken?.add(cancellable: promise)
-    return promise
-  } else {
-    let promise = Promise<T>()
-    scheduleExecution(promise: promise)
-    context.addDependent(completable: promise)
-    cancellationToken?.add(cancellable: promise)
-    return promise
   }
 }
 
@@ -197,7 +158,7 @@ public func future<T, Context: ExecutionContext>(
 ///     Block will not be executed if executor was deallocated before execution,
 ///     returned future will fail with `AsyncNinjaError.contextDeallocated` error
 ///   - executor: is `Executor` to override executor provided by context
-///   - isLazy: indicates if the block will be lazily executed.
+///   - lazy: indicates if the block will be lazily executed.
 ///     Lazy execution means that execution will occur on first subscription.
 ///     False by default
 ///   - cancellationToken: is optional `CancellationToken` able to cancel
@@ -207,46 +168,30 @@ public func future<T, Context: ExecutionContext>(
 ///     Throw from block will complete returned future with failure.
 ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
 /// - Returns: future
-public func flatFuture<T, C: ExecutionContext>(
-  context: C,
+public func flatFuture<T, Context: ExecutionContext>(
+  context: Context,
   executor: Executor? = nil,
-  isLazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+  lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
   cancellationToken: CancellationToken? = nil,
-  _ block: @escaping (_ strongContext: C) throws -> Future<T>
+  _ block: @escaping (_ strongContext: Context) throws -> Future<T>
   ) -> Future<T> {
 
-  let weakContext = WeakBox(context)
-  let localExecutor = executor ?? context.executor
-  func scheduleExecution(promise: Promise<T>) {
-    localExecutor.execute(from: nil) { [weak promise] (originalExecutor) in
+  return Promise<T>(
+    context: context,
+    lazy: lazy,
+    cancellationToken: cancellationToken
+  ) { (context: Context, promise: Promise<T>) in
+    (executor ?? context.executor).execute(from: nil) { [weak promise, weak context] (originalExecutor) in
       guard !(promise?.isComplete ?? true) else { return }
 
       do {
-        guard let context = weakContext.value else {
-          throw AsyncNinjaError.contextDeallocated
-        }
+        guard let context = context
+          else { throw AsyncNinjaError.contextDeallocated }
         promise?.complete(with: try block(context))
       } catch {
         promise?.fail(error, from: originalExecutor)
       }
     }
-  }
-
-  if isLazy {
-    let promise = Promise<T> { (promise, isSubscribed) in
-      if isSubscribed {
-        scheduleExecution(promise: promise)
-      }
-    }
-    context.addDependent(completable: promise)
-    cancellationToken?.add(cancellable: promise)
-    return promise
-  } else {
-    let promise = Promise<T>()
-    scheduleExecution(promise: promise)
-    context.addDependent(completable: promise)
-    cancellationToken?.add(cancellable: promise)
-    return promise
   }
 }
 

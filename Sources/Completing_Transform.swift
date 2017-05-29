@@ -28,51 +28,134 @@ extension Completing {
 
   /// **internal use only**
   func _mapCompletion<T>(
-    executor: Executor = .primary,
+    executor: Executor,
     pure: Bool,
+    lazy: Bool,
+    cancellationToken: CancellationToken?,
     _ transform: @escaping (_ completion: Fallible<Success>) throws -> T
     ) -> Promise<T> {
-    let promise = Promise<T>()
-    let handler = makeCompletionHandler(executor: executor
-    ) { [weak promise] (completion, originalExecutor) -> Void in
-      if pure, case .none = promise { return }
-      let transformedValue = fallible { try transform(completion) }
-      promise?.complete(transformedValue, from: originalExecutor)
+    return Promise<T>(lazy: lazy, cancellationToken: cancellationToken) { (promise) in
+      let handler = self.makeCompletionHandler(executor: executor
+      ) { [weak promise] (completion, originalExecutor) in
+        if pure, case .none = promise { return }
+        let transformedValue = fallible { try transform(completion) }
+        promise?.complete(transformedValue, from: originalExecutor)
+      }
+      if pure {
+        promise._asyncNinja_retainHandlerUntilFinalization(handler)
+      } else {
+        self._asyncNinja_retainHandlerUntilFinalization(handler)
+      }
     }
-    if pure {
-      promise._asyncNinja_retainHandlerUntilFinalization(handler)
-    } else {
-      self._asyncNinja_retainHandlerUntilFinalization(handler)
+  }
+
+  /// **internal use only**
+  func _mapCompletion<T, Context: ExecutionContext>(
+    context: Context,
+    executor: Executor?,
+    pure: Bool,
+    lazy: Bool,
+    cancellationToken: CancellationToken?,
+    _ transform: @escaping (_ strongContext: Context, _ completion: Fallible<Success>) throws -> T
+    ) -> Promise<T> {
+    return Promise<T>(
+      context: context,
+      lazy: lazy,
+      cancellationToken: cancellationToken
+    ) { (context: Context, promise: Promise<T>) in
+      let handler = self.makeCompletionHandler(
+        executor: executor ?? context.executor
+      ) { [weak promise, weak context] (completion, originalExecutor) in
+        if pure, case .none = promise { return }
+        let transformedValue: Fallible<T> = fallible {
+          if let context = context {
+            return try transform(context, completion)
+          } else {
+            throw AsyncNinjaError.contextDeallocated
+          }
+        }
+        promise?.complete(transformedValue, from: originalExecutor)
+      }
+
+      context.addDependent(completable: promise)
+      if pure {
+        promise._asyncNinja_retainHandlerUntilFinalization(handler)
+      } else {
+        self._asyncNinja_retainHandlerUntilFinalization(handler)
+      }
     }
-    return promise
   }
 
   /// **internal use only**
   func _flatRecover<T: Completing>(
-    executor: Executor = .primary,
+    executor: Executor,
     pure: Bool,
+    lazy: Bool,
+    cancellationToken: CancellationToken?,
     _ transform: @escaping (_ failure: Swift.Error) throws -> T
     ) -> Promise<Success> where T.Success == Success {
-    let promise = Promise<Success>()
-    let handler = makeCompletionHandler(
-      executor: executor
-    ) { [weak promise] (completion, originalExecutor) -> Void in
-      if pure, case .none = promise { return }
+    return Promise<Success>(lazy: lazy, cancellationToken: cancellationToken) { (promise) in
+      let handler = self.makeCompletionHandler(
+        executor: executor
+      ) { [weak promise] (completion, originalExecutor) -> Void in
+        if pure, case .none = promise { return }
 
-      switch completion {
-      case let .success(success):
-        promise?.succeed(success, from: originalExecutor)
-      case let .failure(failure):
-        do { promise?.complete(with: try transform(failure)) } catch { promise?.fail(error, from: originalExecutor) }
+        switch completion {
+        case let .success(success):
+          promise?.succeed(success, from: originalExecutor)
+        case let .failure(failure):
+          do {
+            promise?.complete(with: try transform(failure))
+          } catch {
+            promise?.fail(error, from: originalExecutor)
+          }
+        }
+      }
+      if pure {
+        promise._asyncNinja_retainHandlerUntilFinalization(handler)
+      } else {
+        self._asyncNinja_retainHandlerUntilFinalization(handler)
       }
     }
-    promise._asyncNinja_retainHandlerUntilFinalization(handler)
-    if pure {
-      promise._asyncNinja_retainHandlerUntilFinalization(handler)
-    } else {
-      self._asyncNinja_retainHandlerUntilFinalization(handler)
+  }
+
+  /// **internal use only**
+  func _flatRecover<T: Completing, Context: ExecutionContext>(
+    context: Context,
+    executor: Executor?,
+    pure: Bool,
+    lazy: Bool,
+    cancellationToken: CancellationToken?,
+    _ transform: @escaping (_ strongContext: Context, _ failure: Swift.Error) throws -> T
+    ) -> Promise<Success> where T.Success == Success {
+    return Promise<Success>(context: context, lazy: lazy, cancellationToken: cancellationToken) { (context, promise) in
+      let handler = self.makeCompletionHandler(
+        executor: executor ?? context.executor
+      ) { [weak context, weak promise] (completion, originalExecutor) -> Void in
+        if pure, case .none = promise { return }
+
+        switch completion {
+        case let .success(success):
+          promise?.succeed(success, from: originalExecutor)
+        case let .failure(failure):
+          do {
+            guard let context = context else {
+              throw AsyncNinjaError.contextDeallocated
+            }
+            promise?.complete(with: try transform(context, failure))
+          } catch {
+            promise?.fail(error, from: originalExecutor)
+          }
+        }
+      }
+
+      context.addDependent(completable: promise)
+      if pure {
+        promise._asyncNinja_retainHandlerUntilFinalization(handler)
+      } else {
+        self._asyncNinja_retainHandlerUntilFinalization(handler)
+      }
     }
-    return promise
   }
 }
 
@@ -96,10 +179,17 @@ public extension Completing {
   /// - Returns: `Future` that will complete with transformed value
   func mapCompletion<T>(
     executor: Executor = .primary,
-    pure: Bool = true,
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
     _ transform: @escaping (_ completion: Fallible<Success>) throws -> T
     ) -> Future<T> {
-    return _mapCompletion(executor: executor, pure: pure, transform)
+    return _mapCompletion(
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken,
+      transform)
   }
 
   /// Transforms the `Completing` to a `Future` with transformation `(Fallible<Success>) -> Completing`.
@@ -118,10 +208,17 @@ public extension Completing {
   /// - Returns: `Future` that will complete with completion of returned `Completing`
   func flatMapCompletion<T: Completing>(
     executor: Executor = .primary,
-    pure: Bool = true,
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
     _ transform: @escaping (_ completion: Fallible<Success>) throws -> T
     ) -> Future<T.Success> {
-    return mapCompletion(executor: executor, pure: pure, transform).flatten()
+    return mapCompletion(
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken,
+      transform).flatten()
   }
 
   /// Transforms the `Completing` to a `Channel` with transformation `(Fallible<Success>) -> Completing&Updating`.
@@ -140,10 +237,17 @@ public extension Completing {
   /// - Returns: `Channel` that will complete with completion of returned `Completing&Updating`
   func flatMapCompletion<T: Completing&Updating>(
     executor: Executor = .primary,
-    pure: Bool = true,
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
     _ transform: @escaping (_ completion: Fallible<Success>) throws -> T
     ) -> Channel<T.Update, T.Success> {
-    return mapCompletion(executor: executor, pure: pure, transform).flatten()
+    return mapCompletion(
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken,
+      transform).flatten()
   }
 
   /// Transforms the `Completing` to a `Future` with transformation `(Success) -> T`.
@@ -163,10 +267,17 @@ public extension Completing {
   /// - Returns: `Future` that will complete with transformed value
   func mapSuccess<T>(
     executor: Executor = .primary,
-    pure: Bool = true,
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
     _ transform: @escaping (_ success: Success) throws -> T
     ) -> Future<T> {
-    return mapCompletion(executor: executor, pure: pure) {
+    return mapCompletion(
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken
+    ) {
       try transform(try $0.liftSuccess())
     }
   }
@@ -188,10 +299,17 @@ public extension Completing {
   /// - Returns: `Future` that will complete with completion of returned `Completing`
   func flatMapSuccess<T: Completing>(
     executor: Executor = .primary,
-    pure: Bool = true,
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
     _ transform: @escaping (_ success: Success) throws -> T
     ) -> Future<T.Success> {
-    return mapSuccess(executor: executor, pure: pure, transform).flatten()
+    return mapSuccess(
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken,
+      transform).flatten()
   }
 
   /// Transforms the `Completing` to a `Channel` with transformation `(Success) -> Completing&Updating`.
@@ -211,10 +329,17 @@ public extension Completing {
   /// - Returns: `Channel` that will complete with completion of returned `Completing&Updating`
   func flatMapSuccess<T: Completing&Updating>(
     executor: Executor = .primary,
-    pure: Bool = true,
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
     _ transform: @escaping (_ success: Success) throws -> T
     ) -> Channel<T.Update, T.Success> {
-    return mapSuccess(executor: executor, pure: pure, transform).flatten()
+    return mapSuccess(
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken,
+      transform).flatten()
   }
 
   /// Recovers from all failures with specified success.
@@ -266,10 +391,17 @@ public extension Completing {
   /// - Returns: `Future` that will complete with transformed value
   func recover(
     executor: Executor = .primary,
-    pure: Bool = true,
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
     _ transform: @escaping (_ failure: Swift.Error) throws -> Success
     ) -> Future<Success> {
-    return mapCompletion(executor: executor, pure: pure) {
+    return mapCompletion(
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken
+    ) {
       switch $0 {
       case .success(let success): return success
       case .failure(let failure): return try transform(failure)
@@ -295,10 +427,17 @@ public extension Completing {
   func recover<E: Swift.Error>(
     from specificError: E,
     executor: Executor = .primary,
-    pure: Bool = true,
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
     _ transform: @escaping (_ failure: E) throws -> Success
     ) -> Future<Success> where E: Equatable {
-    return recover(executor: executor, pure: pure) {
+    return recover(
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken
+    ) {
       if let myError = $0 as? E, myError == specificError {
         return try transform(myError)
       } else {
@@ -324,10 +463,17 @@ public extension Completing {
   /// - Returns: `Future` that will complete with transformed value
   func flatRecover<T: Completing>(
     executor: Executor = .primary,
-    pure: Bool = true,
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
     _ transform: @escaping (_ failure: Swift.Error) throws -> T
     ) -> Future<Success> where T.Success == Success {
-    return _flatRecover(executor: executor, pure: pure, transform)
+    return _flatRecover(
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken,
+      transform)
   }
 
   /// Transforms the `Completing` to a `Future` with transformation `(E) -> Completing`.
@@ -349,10 +495,17 @@ public extension Completing {
   func flatRecover<T: Completing, E: Swift.Error>(
     from specificError: E,
     executor: Executor = .primary,
-    pure: Bool = true,
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
     _ transform: @escaping (_ failure: E) throws -> T
     ) -> Future<Success> where T.Success == Success, E: Equatable {
-    return flatRecover(executor: executor, pure: pure) { (error: Swift.Error) -> T in
+    return flatRecover(
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken
+    ) { (error: Swift.Error) -> T in
       guard let myError = error as? E, myError == specificError
         else { throw error }
       return try transform(myError)
@@ -381,21 +534,21 @@ public extension Completing {
   ///   - transform: transformation to perform
   ///   - completion: of the `Completing`
   /// - Returns: `Future` that will complete with transformed value
-  func mapCompletion<Transformed, C: ExecutionContext>(
-    context: C,
+  func mapCompletion<Transformed, Context: ExecutionContext>(
+    context: Context,
     executor: Executor? = nil,
-    pure: Bool = true,
-    _ transform: @escaping (C, Fallible<Success>) throws -> Transformed
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
+    _ transform: @escaping (Context, Fallible<Success>) throws -> Transformed
     ) -> Future<Transformed> {
-    let promise = _mapCompletion(
-      executor: executor ?? context.executor,
-      pure: pure
-    ) { [weak context] (value) -> Transformed in
-      guard let context = context else { throw AsyncNinjaError.contextDeallocated }
-      return try transform(context, value)
-    }
-    context.addDependent(completable: promise)
-    return promise
+    return _mapCompletion(
+      context: context,
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken,
+      transform)
   }
 
   /// Transforms the `Completing` to a `Future` with transformation `(Fallible<Success>) -> Completing`.
@@ -415,13 +568,21 @@ public extension Completing {
   ///   - transform: transformation to perform
   ///   - completion: of the `Completing`
   /// - Returns: `Future` that will complete with completion of returned `Completing`
-  func flatMapCompletion<T: Completing, C: ExecutionContext>(
-    context: C,
+  func flatMapCompletion<T: Completing, Context: ExecutionContext>(
+    context: Context,
     executor: Executor? = nil,
-    pure: Bool = true,
-    _ transform: @escaping (C, Fallible<Success>) throws -> T
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
+    _ transform: @escaping (Context, Fallible<Success>) throws -> T
     ) -> Future<T.Success> {
-    return mapCompletion(context: context, executor: executor, pure: pure, transform).flatten()
+    return _mapCompletion(
+      context: context,
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken,
+      transform).flatten()
   }
 
   /// Transforms the `Completing` to a `Channel` with transformation `(Fallible<Success>) -> Completing&Updating`.
@@ -441,13 +602,21 @@ public extension Completing {
   ///   - transform: transformation to perform
   ///   - completion: of the `Completing`
   /// - Returns: `Channel` that will complete with completion of returned `Completing&Updating`
-  func flatMapCompletion<T: Completing&Updating, C: ExecutionContext>(
-    context: C,
+  func flatMapCompletion<T: Completing&Updating, Context: ExecutionContext>(
+    context: Context,
     executor: Executor? = nil,
-    pure: Bool = true,
-    _ transform: @escaping (C, Fallible<Success>) throws -> T
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
+    _ transform: @escaping (Context, Fallible<Success>) throws -> T
     ) -> Channel<T.Update, T.Success> {
-    return mapCompletion(context: context, executor: executor, pure: pure, transform).flatten()
+    return _mapCompletion(
+      context: context,
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken,
+      transform).flatten()
   }
 
   /// Transforms the `Completing` to a `Future` with transformation `(Success) -> T`.
@@ -468,18 +637,22 @@ public extension Completing {
   ///   - transform: transformation to perform
   ///   - success: of the `Completing`
   /// - Returns: `Future` that will complete with transformed value
-  func mapSuccess<Transformed, C: ExecutionContext>(
-    context: C,
+  func mapSuccess<Transformed, Context: ExecutionContext>(
+    context: Context,
     executor: Executor? = nil,
-    pure: Bool = true,
-    _ transform: @escaping (C, Success) throws -> Transformed
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
+    _ transform: @escaping (Context, Success) throws -> Transformed
     ) -> Future<Transformed> {
-    return mapCompletion(
+    return _mapCompletion(
       context: context,
       executor: executor,
-      pure: pure
-    ) { (context, value) -> Transformed in
-      let success = try value.liftSuccess()
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken
+    ) { (context, completion) -> Transformed in
+      let success = try completion.liftSuccess()
       return try transform(context, success)
     }
   }
@@ -502,13 +675,21 @@ public extension Completing {
   ///   - transform: transformation to perform
   ///   - success: of the `Completing`
   /// - Returns: `Future` that will complete with completion of returned `Completing`
-  func flatMapSuccess<T: Completing, C: ExecutionContext>(
-    context: C,
+  func flatMapSuccess<T: Completing, Context: ExecutionContext>(
+    context: Context,
     executor: Executor? = nil,
-    pure: Bool = true,
-    _ transform: @escaping (C, Success) throws -> T
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
+    _ transform: @escaping (Context, Success) throws -> T
     ) -> Future<T.Success> {
-    return mapSuccess(context: context, executor: executor, pure: pure, transform).flatten()
+    return mapSuccess(
+      context: context,
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken,
+      transform).flatten()
   }
 
   /// Transforms the `Completing` to a `Channel` with transformation `(Success) -> Completing&Updating`.
@@ -529,13 +710,21 @@ public extension Completing {
   ///   - transform: transformation to perform
   ///   - success: of the `Completing`
   /// - Returns: `Channel` that will complete with completion of returned `Completing&Updating`
-  func flatMapSuccess<T: Completing&Updating, C: ExecutionContext>(
-    context: C,
+  func flatMapSuccess<T: Completing&Updating, Context: ExecutionContext>(
+    context: Context,
     executor: Executor? = nil,
-    pure: Bool = true,
-    _ transform: @escaping (C, Success) throws -> T
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
+    _ transform: @escaping (Context, Success) throws -> T
     ) -> Channel<T.Update, T.Success> {
-    return mapSuccess(context: context, executor: executor, pure: pure, transform).flatten()
+    return mapSuccess(
+      context: context,
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken,
+      transform).flatten()
   }
 
   /// Transforms the `Completing` to a `Future` with transformation `(Error) -> Success`.
@@ -556,18 +745,22 @@ public extension Completing {
   ///   - transform: transformation to perform
   ///   - failure: of the `Completing`
   /// - Returns: `Future` that will complete with transformed value
-  func recover<C: ExecutionContext>(
-    context: C,
+  func recover<Context: ExecutionContext>(
+    context: Context,
     executor: Executor? = nil,
-    pure: Bool = true,
-    _ transform: @escaping (C, Swift.Error) throws -> Success
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
+    _ transform: @escaping (Context, Swift.Error) throws -> Success
     ) -> Future<Success> {
     return mapCompletion(
       context: context,
       executor: executor,
-      pure: pure
-    ) { (context, value) -> Success in
-      switch value {
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken
+    ) { (context, completion) -> Success in
+      switch completion {
       case .success(let success):
         return success
       case .failure(let failure):
@@ -594,17 +787,21 @@ public extension Completing {
   ///   - transform: transformation to perform
   ///   - failure: of the `Completing`
   /// - Returns: `Future` that will complete with transformed value
-  func recover<E: Swift.Error, C: ExecutionContext>(
+  func recover<E: Swift.Error, Context: ExecutionContext>(
     from specificError: E,
-    context: C,
+    context: Context,
     executor: Executor? = nil,
-    pure: Bool = true,
-    _ transform: @escaping (C, E) throws -> Success
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
+    _ transform: @escaping (Context, E) throws -> Success
     ) -> Future<Success> where E: Equatable {
     return recover(
       context: context,
       executor: executor,
-      pure: pure
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken
     ) { (context, error) in
       if let myError = error as? E, myError == specificError {
         return try transform(context, myError)
@@ -632,21 +829,21 @@ public extension Completing {
   ///   - transform: transformation to perform
   ///   - failure: of the `Completing`
   /// - Returns: `Future` that will complete with transformed value
-  func flatRecover<T: Completing, C: ExecutionContext>(
-    context: C,
+  func flatRecover<T: Completing, Context: ExecutionContext>(
+    context: Context,
     executor: Executor? = nil,
-    pure: Bool = true,
-    _ transform: @escaping (C, Swift.Error) throws -> T
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
+    _ transform: @escaping (Context, Swift.Error) throws -> T
     ) -> Future<Success> where T.Success == Success {
-    let promise = _flatRecover(
-      executor: executor ?? context.executor,
-      pure: pure
-    ) { [weak context] (failure) -> T in
-      guard let context = context else { throw AsyncNinjaError.contextDeallocated }
-      return try transform(context, failure)
-    }
-    context.addDependent(completable: promise)
-    return promise
+    return _flatRecover(
+      context: context,
+      executor: executor,
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken,
+      transform)
   }
 
   /// Transforms the `Completing` to a `Future` with transformation `(E) -> Completing`.
@@ -668,17 +865,21 @@ public extension Completing {
   ///   - transform: transformation to perform
   ///   - failure: of the `Completing`
   /// - Returns: `Future` that will complete with transformed value
-  func flatRecover<T: Completing, E: Swift.Error, C: ExecutionContext>(
+  func flatRecover<T: Completing, E: Swift.Error, Context: ExecutionContext>(
     from specificError: E,
-    context: C,
+    context: Context,
     executor: Executor? = nil,
-    pure: Bool = true,
-    _ transform: @escaping (C, Swift.Error) throws -> T
+    pure: Bool = AsyncNinjaConstants.isFuturesPureByDefault,
+    lazy: Bool = AsyncNinjaConstants.isFuturesLazyByDefault,
+    cancellationToken: CancellationToken? = nil,
+    _ transform: @escaping (Context, Swift.Error) throws -> T
     ) -> Future<Success> where T.Success == Success, E: Equatable {
     return flatRecover(
       context: context,
       executor: executor,
-      pure: pure
+      pure: pure,
+      lazy: lazy,
+      cancellationToken: cancellationToken
     ) { (context, error) -> T in
       guard let myError = error as? E, myError == specificError
         else { throw error }
@@ -694,7 +895,8 @@ public extension Completing {
   /// Returns future that completes after a timeout after completion of self
   func delayedCompletion(
     timeout: Double,
-    on executor: Executor = .primary
+    on executor: Executor = .primary,
+    cancellationToken: CancellationToken? = nil
     ) -> Future<Success> {
     let promise = Promise<Success>()
     let handler = makeCompletionHandler(
@@ -706,6 +908,7 @@ public extension Completing {
       }
     }
     promise._asyncNinja_retainHandlerUntilFinalization(handler)
+    cancellationToken?.add(cancellable: promise)
     return promise
   }
 }

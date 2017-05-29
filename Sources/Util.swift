@@ -49,6 +49,9 @@ struct AsyncNinjaConstants {
   /// with `Channel`: transformation, sync enumeration and etc.
   static let defaultChannelBufferSize = 1
 
+  /// Tells if futures are pure by default
+  static let isFuturesPureByDefault = true
+
   /// Tells if futures are lazy by default
   static let isFuturesLazyByDefault = false
 }
