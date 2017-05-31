@@ -6,7 +6,7 @@ Use original [API Design Guidelines](https://swift.org/documentation/api-design-
 
 ## Code Style
 
-Use [code style guide](https://github.com/raywenderlich/swift-style-guide)
+Enforced by [SwiftLint](https://github.com/realm/SwiftLint)
 
 ## Versioning
 
@@ -20,11 +20,9 @@ Use semantic version with caveats.
 | `SWIFT_MINOR `     | discouraged                 |
 | `ASYNCNINJA_PATCH` | denied                      |
 
-The current version is prerelease `0.x.x`. This means that backward compatibility can be broken much oftener but backward compatibility will be kept through patches of the same minor version.
-
 ## Documentation
 
-* At least 90% of public interfaces
+* At least 99% of public interfaces
 
 ## Test
 
