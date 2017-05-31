@@ -7,17 +7,19 @@
 [![CocoaPods](https://img.shields.io/cocoapods/v/AsyncNinja.svg)](https://cocoapods.org/pods/AsyncNinja)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 
+## **Supports latest Swift 4.0 toolchain**
+
 |   | Features   |
 |---|---|
-| 🦄 powerful primitives       | `Future`, `Channel`, `DynamicProperty`, `Cache`, ...           |
-| 🤘 versatile transformations | `map`, `filter`, `recover`, `debounce`, `distinct`, ...   |
-| ✌️ convenient combination    | `flatMap`, `merge`, `zip`, `sample`, `scan`, `reduce`, ...   |
-| 🙌 improves existing things  | Key-Value Observing,  target-action, notifications, bindings            |
-| 🍳 less boilerplate code       | neat cancellation, threading, memory manament                  |
-| 🕶 extendable                | powerful extensions for `URLSession`, UI controls, `CoreData`, ... |
-| 🍱 all platforms (Swift 3.0+)    |  🖥 macOS 10.10+  📱 iOS 8.0+ 📺 tvOS 9.0+ ⌚️ watchOS 2.0+ 🐧 Linux       |
-| 🤓 documentation             | 100% + sample code, **[see full documentation](http://docs.async.ninja/)** |
-| 🔩 simple integration        | [SPM](Documentation/Integration.md#using-swift-package-manager), [CocoaPods](Documentation/Integration.md#cocoapods), [Carthage](Documentation/Integration.md#сarthage) |
+| 🦄 <br/> powerful primitives       | `Future`, `Promise`, `Channel`, `Producer`, `Sink`, `Cache`, ...           |
+| 🤘 <br/> versatile transformations | `map`, `filter`, `recover`, `debounce`, `distinct`, ...   |
+| ✌️ <br/> convenient combination    | `flatMap`, `merge`, `zip`, `sample`, `scan`, `reduce`, ...   |
+| 🙌 <br/> improves existing things  | Key-Value Observing,  target-action, notifications, bindings            |
+| 🍳 <br/> less boilerplate code     | neat cancellation, threading, memory manament                  |
+| 🕶 <br/> extendable                | powerful extensions for `URLSession`, UI controls, `CoreData`, ... |
+| 🍱 <br/> all platforms <br/> (Swift 3.0-4.0)  |  🖥 macOS 10.10+  📱 iOS 8.0+ 📺 tvOS 9.0+ ⌚️ watchOS 2.0+ 🐧 Linux       |
+| 🤓 <br/> documentation             | 100% + sample code, **[see full documentation](http://docs.async.ninja/)** |
+| 🔩 <br/> simple integration        | [SPM](Documentation/Integration.md#using-swift-package-manager), [CocoaPods](Documentation/Integration.md#cocoapods), [Carthage](Documentation/Integration.md#сarthage) |
 
 * Related Articles
 	* Moving to nice asynchronous Swift code: [GitHub](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md), [Medium](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
@@ -78,6 +80,9 @@ class MyViewController: NSViewController {
       }
       .onSuccess(context: self) { (self, items) in
         self.present(items: items)
+      }
+      .onFailure(context: self) { (self, error) in
+        self.present(error: error)
       }
   }
   
@@ -179,9 +184,11 @@ extension MyService {
 extension MyViewController {
   func present(personWithID identifier: String) {
     myService.fetch(personWithID: identifier)
-      .onComplete(context: self) { (self, completion) in
-        completion.onSuccess(self.present(person:))
-        completion.onFailure(self.present(error:))
+      .onSuccess(context: self) { (self, person) in
+        self.present(person: person)
+      }
+      .onFailure(context: self) { (self, error) in
+        self.present(error: error)
       }
   }
 }

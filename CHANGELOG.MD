@@ -1,3 +1,10 @@
+# next
+* [added] documentation generation infrastructure
+* [added] primitive subscription chaining (`future.onSuccess { /* handle success */ }.onFailure { /* handle failure */ }`)
+* [improved] parallel CI jobs
+* [improved] `Promise` internals updated
+* [fixed] warnings and erros introduced by Swift 4 toolchain
+
 # 1.1.2
 * [improved] compile time
 * [improved] code style improved with [SwiftLint](https://github.com/realm/SwiftLint)
