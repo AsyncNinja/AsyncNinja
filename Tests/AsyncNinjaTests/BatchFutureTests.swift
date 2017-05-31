@@ -58,24 +58,36 @@ class BatchFutureTests: XCTestCase {
   }
 
   func testReduce() {
+    func asyncTransform(value: Int) -> Future<Int> {
+        return future(after: Double(value) / 10.0) { value }
+    }
+
     let value: Int = (1...5)
-      .map { value in future(after: Double(value) / 10.0) { value } }
-      .asyncReduce(5) { $0 + $1 }
+      .map(asyncTransform)
+      .asyncReduce(5, +)
       .wait().success!
     XCTAssertEqual(20, value)
   }
 
   func testEmptyReduce() {
+    func asyncTransform(value: Int) -> Future<Int> {
+      return future(after: Double(value) / 10.0) { value }
+    }
+
     let value: Int = [Int]()
-      .map { value in future(after: Double(value) / 10.0) { value } }
+      .map(asyncTransform)
       .asyncReduce(5) { $0 + $1 }
       .wait().success!
     XCTAssertEqual(5, value)
   }
 
   func testReduceThrows() {
+    func asyncTransform(value: Int) -> Future<Int> {
+        return future(after: Double(value) / 10.0) { value }
+    }
+
     let value = (1...5)
-      .map { value in future(after: Double(value) / 10.0) { value } }
+      .map(asyncTransform)
       .asyncReduce(5) {
         if 3 == $1 {
           throw TestError.testCode
@@ -96,8 +108,8 @@ class BatchFutureTests: XCTestCase {
     fixture
       .asyncFlatMap { value in future(after: Double(value) / 200.0) { value } }
       .map { $0.reduce(0, +) }
-      .onSuccess { (value) in
-        XCTAssertEqual(sum, value)
+      .onSuccess {
+        XCTAssertEqual(sum, $0)
         expectation.fulfill()
       }
 

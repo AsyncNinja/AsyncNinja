@@ -196,17 +196,28 @@
   public extension ReactiveProperties where Object: WKWebView {
 
     /// `Sink` that refers to write-only `WKWebView.load(_:)`
-    var loadRequest: Sink<URLRequest, Void> { return sink { $0.load($1) } }
+    var loadRequest: Sink<URLRequest, Void> {
+      func setter(webView: WKWebView, request: URLRequest) {
+        webView.load(request)
+      }
+      return sink(setter: setter)
+    }
 
     /// `Sink` that refers to write-only `WKWebView.loadFileURL(_:, allowingReadAccessTo:)`
     @available(OSX 10.11, iOS 9, *)
     var loadFileURL: Sink<(url: URL, readAccessURL: URL), Void> {
-      return sink { $0.loadFileURL($1.url, allowingReadAccessTo: $1.readAccessURL) }
+      func setter(webView: WKWebView, values: (url: URL, readAccessURL: URL)) {
+        webView.loadFileURL(values.url, allowingReadAccessTo: values.readAccessURL)
+      }
+      return sink(setter: setter)
     }
 
     /// `Sink` that refers to write-only `WKWebView.loadHTMLString(_:, baseURL:)`
     var loadHTMLString: Sink<(string: String, baseURL: URL?), Void> {
-      return sink { $0.loadHTMLString($1.string, baseURL: $1.baseURL) }
+      func setter(webView: WKWebView, values: (string: String, baseURL: URL?)) {
+        webView.loadHTMLString(values.string, baseURL: values.baseURL)
+      }
+      return sink(setter: setter)
     }
 
     /// `Sink` that refers to write-only `load(_:, mimeType:, characterEncodingName:, baseURL:)`

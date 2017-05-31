@@ -90,9 +90,13 @@ class PerformanceTests: XCTestCase {
   }
 
   func testReduce() {
+    func asyncTransform(value: Int64) -> Future<Int64> {
+      return future { value * 2 }
+    }
+
     self.measure {
       let resultValue = PerformanceTests.runsRange
-        .map { future(success: $0).map(executor: .immediate) { $0 * 2 } }
+        .map(asyncTransform)
         .asyncReduce(0, +)
         .wait().success!
       let fixture = (PerformanceTests.runsRange.lowerBound + PerformanceTests.runsRange.upperBound - 1)
