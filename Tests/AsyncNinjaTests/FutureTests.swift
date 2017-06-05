@@ -254,7 +254,7 @@ class FutureTests: XCTestCase {
   }
 
   func testMapContextual_Failure_ContextAlive() {
-    multiTest(repeating: 100) {
+    multiTest(repeating: 1000) {
       let actor = TestActor()
       let sema = DispatchSemaphore(value: 0)
       weak var weakInitialFuture: Future<Int>?

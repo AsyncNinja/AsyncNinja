@@ -1,4 +1,4 @@
-# next
+# 1.1.3
 * [added] documentation generation infrastructure
 * [added] primitive subscription chaining (`future.onSuccess { /* handle success */ }.onFailure { /* handle failure */ }`)
 * [improved] parallel CI jobs

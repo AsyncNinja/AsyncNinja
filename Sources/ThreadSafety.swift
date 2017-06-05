@@ -30,7 +30,7 @@ func makeThreadSafeContainer(head: AnyObject? = nil) -> ThreadSafeContainer {
       return LockingThreadSafeContainer(locking: makeLocking(), head: head)
     }
   #else
-    return LockingThreadSafeContainer(locking: makeLocking())
+    return LockingThreadSafeContainer(locking: makeLocking(), head: head)
   #endif
 }
 

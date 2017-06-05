@@ -207,7 +207,7 @@
 		OBJ_85 /* ZipFuturesTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipFuturesTest.swift; sourceTree = "<group>"; };
 		OBJ_86 /* Documentation */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Documentation; sourceTree = SOURCE_ROOT; };
 		OBJ_88 /* AsyncNinja.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AsyncNinja.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		OBJ_89 /* AsyncNinjaTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = AsyncNinjaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		OBJ_89 /* AsyncNinjaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = AsyncNinjaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_9 /* appleOS_CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOS_CoreData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -409,6 +409,14 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 9999;
+				TargetAttributes = {
+					OBJ_149 = {
+						LastSwiftMigration = 0900;
+					};
+					OBJ_90 = {
+						LastSwiftMigration = 0900;
+					};
+				};
 			};
 			buildConfigurationList = OBJ_2 /* Build configuration list for PBXProject "AsyncNinja" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -575,7 +583,6 @@
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = AsyncNinja.xcodeproj/AsyncNinjaTests_Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks @loader_path/Frameworks";
-				OTHER_LDFLAGS = "$(inherited)";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
 				TARGET_NAME = AsyncNinjaTests;
 			};
@@ -593,7 +600,6 @@
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = AsyncNinja.xcodeproj/AsyncNinjaTests_Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks @loader_path/Frameworks";
-				OTHER_LDFLAGS = "$(inherited)";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
 				TARGET_NAME = AsyncNinjaTests;
 			};
@@ -612,11 +618,12 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_SWIFT_FLAGS = "-DXcode -Xfrontend -debug-time-function-bodies";
+				OTHER_SWIFT_FLAGS = "-DXcode -Xfrontend -warn-long-function-bodies=200";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator watchos watchsimulator";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 				SWIFT_VERSION = 3.0;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				USE_HEADERMAP = NO;
@@ -635,11 +642,12 @@
 				GCC_OPTIMIZATION_LEVEL = s;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_SWIFT_FLAGS = "-DXcode -Xfrontend -debug-time-function-bodies";
+				OTHER_SWIFT_FLAGS = "-DXcode -Xfrontend -warn-long-function-bodies=200";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator watchos watchsimulator";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 				SWIFT_VERSION = 3.0;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				USE_HEADERMAP = NO;
@@ -655,10 +663,8 @@
 					"$(inherited)",
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
 				);
-				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = AsyncNinja.xcodeproj/AsyncNinja_Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks @loader_path/Frameworks";
-				OTHER_LDFLAGS = "$(inherited)";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = AsyncNinja;
 				PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -676,10 +682,8 @@
 					"$(inherited)",
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
 				);
-				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = AsyncNinja.xcodeproj/AsyncNinja_Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks @loader_path/Frameworks";
-				OTHER_LDFLAGS = "$(inherited)";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = AsyncNinja;
 				PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
