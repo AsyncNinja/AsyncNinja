@@ -1,3 +1,4 @@
+language: objective-c
 osx_image: xcode9.0
 before_install:
   - sudo gem install xcpretty xcpretty-travis-formatter jazzy
