@@ -26,7 +26,6 @@ import Dispatch
 final class ConstantFuture<Success>: Future<Success> {
   private var _completion: Fallible<Success>
   override public var completion: Fallible<Success>? { return _completion }
-  let releasePool = ReleasePool()
 
   init(completion: Fallible<Success>) {
     _completion = completion
@@ -36,7 +35,10 @@ final class ConstantFuture<Success>: Future<Success> {
     executor: Executor,
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
     ) -> AnyObject? {
-    executor.execute(from: nil) { (originalExecutor) in block(self._completion, originalExecutor) }
+    let completion = _completion
+    executor.execute(from: nil) { (originalExecutor) in
+      block(completion, originalExecutor)
+    }
     return nil
   }
 

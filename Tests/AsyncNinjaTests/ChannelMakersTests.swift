@@ -74,9 +74,10 @@ class ChannelMakersTests: XCTestCase {
     multiTest(repeating: 100) {
       let numbers = Array(0..<10)
       let actor = TestActor()
+      let supportingSema = DispatchSemaphore(value: 0)
       let sema = DispatchSemaphore(value: 0)
       actor.async { _ in
-        sema.wait()
+        supportingSema.wait()
       }
 
       let channelA: Channel<Int, String> = channel(context: actor) { (_, updateUpdate) -> String in
@@ -98,7 +99,7 @@ class ChannelMakersTests: XCTestCase {
         sema.signal()
       }
 
-      sema.signal()
+      supportingSema.signal()
       sema.wait()
       XCTAssertEqual(resultNumbers, Array(numbers.suffix(resultNumbers.count)))
     }

@@ -32,7 +32,7 @@ public extension Completable {
     ) { [weak self] (completion, originalExecutor) in
       self?.complete(completion, from: originalExecutor)
     }
-    self._asyncNinja_retainHandlerUntilFinalization(handler)
+    _asyncNinja_retainHandlerUntilFinalization(handler)
   }
 
   /// Shorthand to tryComplete(with:) that does not return value
@@ -44,14 +44,14 @@ public extension Completable {
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
   func complete(_ completion: Fallible<Success>, from originalExecutor: Executor?) {
-    self.tryComplete(completion, from: originalExecutor)
+    tryComplete(completion, from: originalExecutor)
   }
 
   /// Shorthand to tryComplete(with:) that does not return value
   ///
   /// - Parameter completion: value to compete `Completing` with
   func complete(_ completion: Fallible<Success>) {
-    self.tryComplete(completion, from: nil)
+    tryComplete(completion, from: nil)
   }
 
   /// Tries to complete self with success
@@ -65,7 +65,7 @@ public extension Completable {
   /// - Returns: true if this call completed `Completable`
   @discardableResult
   func trySucceed(_ success: Success, from originalExecutor: Executor? = nil) -> Bool {
-    return self.tryComplete(Fallible(success: success), from: originalExecutor)
+    return tryComplete(Fallible(success: success), from: originalExecutor)
   }
 
   /// Shorthand to trySucceed(with:) that does not return value
@@ -77,14 +77,14 @@ public extension Completable {
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
   func succeed(_ success: Success, from originalExecutor: Executor?) {
-    self.complete(Fallible(success: success), from: originalExecutor)
+    complete(Fallible(success: success), from: originalExecutor)
   }
 
   /// Shorthand to trySucceed(with:) that does not return value
   ///
   /// - Parameter success: value to succeed `Completing` with
   func succeed(_ success: Success) {
-    self.complete(Fallible(success: success))
+    complete(Fallible(success: success))
   }
 
   /// Tries to complete self with failure vlue
@@ -98,7 +98,7 @@ public extension Completable {
   /// - Returns: true if this call completed `Completable`
   @discardableResult
   public func tryFail(_ failure: Swift.Error, from originalExecutor: Executor? = nil) -> Bool {
-    return self.tryComplete(Fallible(failure: failure), from: originalExecutor)
+    return tryComplete(Fallible(failure: failure), from: originalExecutor)
   }
 
   /// Shorthand to tryFail(with:) that does not return value
@@ -110,19 +110,19 @@ public extension Completable {
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
   public func fail(_ failure: Swift.Error, from originalExecutor: Executor?) {
-    self.complete(Fallible(failure: failure), from: originalExecutor)
+    complete(Fallible(failure: failure), from: originalExecutor)
   }
 
   /// Shorthand to tryFail(with:) that does not return value
   ///
   /// - Parameter failure: error to fail `Completing` with
   public func fail(_ failure: Swift.Error) {
-    self.complete(Fallible(failure: failure))
+    complete(Fallible(failure: failure))
   }
 
   /// Completes with cancellation (AsyncNinjaError.cancelled)
   public func cancel() {
-    self.fail(AsyncNinjaError.cancelled)
+    fail(AsyncNinjaError.cancelled)
   }
 
   /// Completes with cancellation (AsyncNinjaError.cancelled)
@@ -133,7 +133,7 @@ public extension Completable {
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
   public func cancel(from originalExecutor: Executor?) {
-    self.fail(AsyncNinjaError.cancelled, from: originalExecutor)
+    fail(AsyncNinjaError.cancelled, from: originalExecutor)
   }
 
   /// Completes with error of deallocated context (AsyncNinjaError.contextDeallocated)
@@ -144,7 +144,7 @@ public extension Completable {
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
   func cancelBecauseOfDeallocatedContext(from originalExecutor: Executor?) {
-    self.fail(AsyncNinjaError.contextDeallocated, from: originalExecutor)
+    fail(AsyncNinjaError.contextDeallocated, from: originalExecutor)
   }
 
   /// Completes with error of deallocated context (AsyncNinjaError.contextDeallocated)
@@ -155,7 +155,7 @@ public extension Completable {
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
   func cancelBecauseOfDeallocatedContext() {
-    self.fail(AsyncNinjaError.contextDeallocated)
+    fail(AsyncNinjaError.contextDeallocated)
   }
 }
 
@@ -169,7 +169,7 @@ extension Completable where Success == Void {
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
   public func succeed(from originalExecutor: Executor? = nil) {
-    self.succeed((), from: originalExecutor)
+    succeed((), from: originalExecutor)
   }
 }
 
@@ -187,6 +187,6 @@ public extension Completable where Success: AsyncNinjaOptionalAdaptor {
         self?.fail(failure, from: originalExecutor)
       }
     }
-    self._asyncNinja_retainHandlerUntilFinalization(handler)
+    _asyncNinja_retainHandlerUntilFinalization(handler)
   }
 }

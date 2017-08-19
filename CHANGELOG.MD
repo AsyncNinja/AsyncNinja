@@ -1,3 +1,7 @@
+# 1.2
+* [changed] lock-free implementation of `Future` and `CancellationToken` changed to regular locking-based
+* [fixed] multiple Xcode 9.0 beta 5 compile time issues
+
 # 1.1.3
 * [added] documentation generation infrastructure
 * [added] primitive subscription chaining (`future.onSuccess { /* handle success */ }.onFailure { /* handle failure */ }`)

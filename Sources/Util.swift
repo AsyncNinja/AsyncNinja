@@ -24,10 +24,10 @@ import Dispatch
 
 /// Constatns used my AsyncNinja
 /// Values of these constants were carefully considered
-struct AsyncNinjaConstants {
+public struct AsyncNinjaConstants {
   #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
   /// Defines whether usage of lock-free structures is allowed
-  static let isLockFreeUseAllowed = true
+  public static let isLockFreeUseAllowed = true
   #endif
 
   /// Defines size of buffer for channels.
@@ -47,7 +47,7 @@ struct AsyncNinjaConstants {
   ///
   /// This kind of behavior is present in each way of interaction
   /// with `Channel`: transformation, sync enumeration and etc.
-  static let defaultChannelBufferSize = 1
+  public static let defaultChannelBufferSize = 1
 }
 
 /// Errors produced by AsyncNinja
@@ -98,6 +98,24 @@ extension AsyncNinjaError: CancellationRepresentableError {
   }
 
 #endif
+
+extension Optional {
+  var isSome: Bool {
+    if case .some = self {
+      return true
+    } else {
+      return false
+    }
+  }
+
+  var isNone: Bool {
+    if case .none = self {
+      return true
+    } else {
+      return false
+    }
+  }
+}
 
 extension Dictionary {
   mutating func value(forKey key: Key,

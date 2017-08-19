@@ -25,12 +25,7 @@ import Dispatch
 public extension Completing {
 
   /// Shorthand property that returns true if `Completing` is complete
-  var isComplete: Bool {
-    switch self.completion {
-    case .some: return true
-    case .none: return false
-    }
-  }
+  var isComplete: Bool { return completion.isSome }
 
   /// Shorthand property that returns success
   /// if `Completing` is completed with success or nil otherwise
@@ -62,12 +57,12 @@ public extension Completing {
     executor: Executor = .primary,
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
     ) -> Self {
-    let handler = self.makeCompletionHandler(
+    let handler = makeCompletionHandler(
       executor: executor
     ) { (completion, originalExecutor) in
       block(completion, originalExecutor)
     }
-    self._asyncNinja_retainHandlerUntilFinalization(handler)
+    _asyncNinja_retainHandlerUntilFinalization(handler)
     return self
   }
 
@@ -77,7 +72,7 @@ public extension Completing {
     executor: Executor = .primary,
     _ block: @escaping (Success) -> Void
     ) -> Self {
-    return self.onComplete(executor: executor) { $0.onSuccess(block) }
+    return onComplete(executor: executor) { $0.onSuccess(block) }
   }
 
   /// Performs block when failure becomes available.
@@ -86,7 +81,7 @@ public extension Completing {
     executor: Executor = .primary,
     _ block: @escaping (Swift.Error) -> Void
     ) -> Self {
-    return self.onComplete(executor: executor) { $0.onFailure(block) }
+    return onComplete(executor: executor) { $0.onFailure(block) }
   }
 }
 
@@ -181,9 +176,7 @@ public extension Completing {
     let sema = DispatchSemaphore(value: 0)
     var result: Fallible<Success>? = nil
 
-    var handler = self.makeCompletionHandler(
-      executor: .immediate
-    ) { (completion, _) in
+    var handler = makeCompletionHandler(executor: .immediate) { (completion, _) in
       result = completion
       sema.signal()
     }

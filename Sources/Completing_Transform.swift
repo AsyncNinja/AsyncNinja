@@ -35,7 +35,7 @@ extension Completing {
     let promise = Promise<T>()
     let handler = makeCompletionHandler(executor: executor
     ) { [weak promise] (completion, originalExecutor) -> Void in
-      if pure, case .none = promise { return }
+      if pure, promise.isNone { return }
       let transformedValue = fallible { try transform(completion) }
       promise?.complete(transformedValue, from: originalExecutor)
     }
