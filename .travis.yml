@@ -2,7 +2,7 @@ language: objective-c
 osx_image: xcode9.0
 before_install:
   - sudo gem install xcpretty xcpretty-travis-formatter jazzy
-  - brew install swiftlint
+  - brew install swiftlint || true
   - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
 jobs:
   include:
