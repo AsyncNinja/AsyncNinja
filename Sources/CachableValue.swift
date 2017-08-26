@@ -24,7 +24,7 @@ import Dispatch
 
 /// Protocol for a Completable that can be used for cachable
 public protocol CachableCompletable: Completable {
-  associatedtype CompletingType: Completing
+  associatedtype CompletingType: Completing where CompletingType.Success == Success
 
   /// Required initializer
   init()
@@ -154,7 +154,7 @@ public class CachableValue<T: CachableCompletable> {
 
     switch completion {
     case .success(let success):
-      completing.succeed(success as! T.Success, from: originalExecutor)
+      completing.succeed(success, from: originalExecutor)
     case .failure(let failure):
       completing.fail(failure, from: originalExecutor)
     }

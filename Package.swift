@@ -1,4 +1,4 @@
-// swift-tools-version:3.0
+// swift-tools-version:4.0
 //
 //  Copyright (c) 2016-2017 Anton Mironov
 //
@@ -23,31 +23,16 @@
 
 import PackageDescription
 
-#if swift(>=4.0)
-  func makePackage() -> Package {
-    return Package(
+let package = Package(
       name: "AsyncNinja",
+      products: [
+      	.library(name: "AsyncNinja", targets: ["AsyncNinja"]),
+      	.library(name: "AsyncNinjaStatic", type: .static, targets: ["AsyncNinja"]),
+      	.library(name: "AsyncNinjaDynamic", type: .dynamic, targets: ["AsyncNinja"])
+      ],
       targets: [
-
-        .target(
-          name: "AsyncNinja",
-          path: "Sources"),
-
-        .testTarget(
-          name: "AsyncNinjaTests",
-          dependencies: ["AsyncNinja"],
-          path: "Tests/AsyncNinjaTests")
-      ]
+        .target(name: "AsyncNinja", path: "Sources"),
+        .testTarget(name: "AsyncNinjaTests", dependencies: [.target(name: "AsyncNinja")], path: "Tests/AsyncNinjaTests")
+      ],
+      swiftLanguageVersions: [4]
     )
-  }
-#elseif swift(>=3.0)
-  func makePackage() -> Package {
-    return Package(name: "AsyncNinja")
-  }
-#else
-  func makePackage() -> Package {
-  	fatalError("This Swift version is not supported")
-  }
-#endif
-
-let package = makePackage()
