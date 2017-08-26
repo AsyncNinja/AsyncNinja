@@ -21,6 +21,9 @@
 //
 
 import Dispatch
+#if os(Linux)
+  import Glibc
+#endif
 
 /// Context indepedent locking. Non-recursive.
 public protocol Locking {
