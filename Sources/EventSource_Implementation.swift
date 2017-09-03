@@ -73,8 +73,7 @@ extension EventSource {
     executor: Executor,
     pure: Bool,
     cancellationToken: CancellationToken?,
-    // swiftlint:disable:next line_length
-    _ onEvent: @escaping (_ event: Event, _ EventDestination: WeakBox<T>, _ originalExecutor: Executor) throws -> Void
+    _ onEvent: @escaping (_ event: Event, _ eventDestination: WeakBox<T>, _ originalExecutor: Executor) throws -> Void
     ) {
     let weakBoxOfEventDestination = WeakBox(EventDestination)
     let handler = self.makeHandler(executor: executor) { (event, originalExecutor) in

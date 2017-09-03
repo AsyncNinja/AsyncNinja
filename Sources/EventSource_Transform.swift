@@ -201,7 +201,7 @@ extension EventSource {
   ///     an extended buffering options of returned channel
   ///   - isEqual: closure that tells if specified values are equal
   /// - Returns: channel with distinct update values
-  func distinct(
+  public func distinct(
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     isEqual: @escaping (Update, Update) -> Bool

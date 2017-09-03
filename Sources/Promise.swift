@@ -138,7 +138,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
 }
 
 /// **internal use only**
-fileprivate class AbstractPromiseState<Success> {
+private class AbstractPromiseState<Success> {
   var completion: Fallible<Success>? { return nil }
 
   func subscribe(
@@ -163,7 +163,7 @@ fileprivate class AbstractPromiseState<Success> {
   }
 }
 
-fileprivate class InitialPromiseState<Success>: AbstractPromiseState<Success> {
+private class InitialPromiseState<Success>: AbstractPromiseState<Success> {
   let notifyBlock: (_ isCompleted: Bool) -> Void
   init(notifyBlock: @escaping (_ isCompleted: Bool) -> Void) {
     self.notifyBlock = notifyBlock
@@ -195,7 +195,7 @@ fileprivate class InitialPromiseState<Success>: AbstractPromiseState<Success> {
 }
 
 /// **internal use only**
-fileprivate  class SubscribedPromiseState<Success>: AbstractPromiseState<Success> {
+private class SubscribedPromiseState<Success>: AbstractPromiseState<Success> {
   var handlers: [WeakBox<PromiseHandler<Success>>]
 
   init(firstHandler: PromiseHandler<Success>) {
@@ -220,7 +220,7 @@ fileprivate  class SubscribedPromiseState<Success>: AbstractPromiseState<Success
 }
 
 /// **internal use only**
-fileprivate  class CompletedPromiseState<Success>: AbstractPromiseState<Success> {
+private class CompletedPromiseState<Success>: AbstractPromiseState<Success> {
   override var completion: Fallible<Success>? { return _completion }
   let _completion: Fallible<Success>
 
@@ -254,7 +254,7 @@ fileprivate  class CompletedPromiseState<Success>: AbstractPromiseState<Success>
 ///
 /// Each subscription to a future value will be expressed in such handler.
 /// Future will accumulate handlers until completion or deallocacion.
-final fileprivate class PromiseHandler<Success> {
+final private class PromiseHandler<Success> {
   typealias Block = (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
   let executor: Executor
   let block: Block

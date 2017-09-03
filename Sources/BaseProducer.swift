@@ -237,7 +237,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
 }
 
 // MARK: - Iterators
-fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Update, Success> {
+private class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Update, Success> {
   let _sema: DispatchSemaphore
   var _locking = makeLocking(isFair: true)
   let _bufferedUpdates: Queue<Update>
@@ -309,7 +309,7 @@ fileprivate class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Upd
 
 /// **internal use only** Wraps each block submitted to the channel
 /// to provide required memory management behavior
-final fileprivate class ProducerHandler<Update, Success> {
+final private class ProducerHandler<Update, Success> {
   public typealias Event = ChannelEvent<Update, Success>
   typealias Block = (_ event: Event, _ on: Executor) -> Void
 

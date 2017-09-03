@@ -86,14 +86,14 @@ class ReleasePoolTests: XCTestCase {
   }
 }
 
-fileprivate class Box<T> {
+private class Box<T> {
   let value: T
   init(_ value: T) {
     self.value = value
   }
 }
 
-fileprivate class WeakBox<T: AnyObject> {
+private class WeakBox<T: AnyObject> {
   weak var value: T?
   init(_ value: T) {
     self.value = value

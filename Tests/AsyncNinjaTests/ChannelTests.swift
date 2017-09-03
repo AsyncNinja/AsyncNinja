@@ -329,7 +329,7 @@ class ChannelTests: XCTestCase {
   }
 }
 
-fileprivate class DoubleBindTestActor<T>: TestActor {
+private class DoubleBindTestActor<T>: TestActor {
   var dynamicValue: DynamicProperty<T> { return _dynamicValue }
   var value: T {
     get { return _dynamicValue.value }

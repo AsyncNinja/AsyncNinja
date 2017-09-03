@@ -8,3 +8,5 @@ disabled_rules:
   - todo
   - type_body_length
   - nesting
+  - block_based_kvo
+  - xctfail_message

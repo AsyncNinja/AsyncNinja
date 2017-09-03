@@ -266,6 +266,6 @@ class FallibleTests: XCTestCase {
   }
 }
 
-fileprivate func procedureThatCanThrow() throws {
+private func procedureThatCanThrow() throws {
 
 }

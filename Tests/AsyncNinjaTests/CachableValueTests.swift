@@ -105,7 +105,7 @@ class CachableValueTests: XCTestCase {
   }
 }
 
-fileprivate class CachedValueHolder<T>: ExecutionContext, ReleasePoolOwner {
+private class CachedValueHolder<T>: ExecutionContext, ReleasePoolOwner {
   private(set) var cachableValue: SimpleCachableValue<T>!
   let executor = Executor.queue(DispatchQueue(label: "cached-value-holder-queue"))
   let releasePool = ReleasePool()

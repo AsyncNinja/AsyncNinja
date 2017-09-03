@@ -200,7 +200,7 @@ private class MainExecutorImpl: ExecutorImpl {
   }
 }
 
-fileprivate class ImmediateExecutorImpl: ExecutorImpl {
+private class ImmediateExecutorImpl: ExecutorImpl {
   var asyncNinja_representedDispatchQueue: DispatchQueue? { return nil }
   var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { return true }
 
@@ -220,7 +220,7 @@ fileprivate class ImmediateExecutorImpl: ExecutorImpl {
   }
 }
 
-fileprivate class HandlerBasedExecutorImpl: ExecutorImpl {
+private class HandlerBasedExecutorImpl: ExecutorImpl {
   public typealias Handler = (@escaping () -> Void) -> Void
   private let _handler: Handler
   private let _relaxAsyncWhenLaunchingFrom: ObjectIdentifier?

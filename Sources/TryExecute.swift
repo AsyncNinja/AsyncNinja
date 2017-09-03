@@ -86,19 +86,25 @@ public func tryExecute<T, C: ExecutionContext>(
   validate: @escaping (_ strongContext: C, _ completion: Fallible<T>) -> Bool,
   _ block: @escaping (_ strongContext: C) throws -> T) -> Future<T> {
   let promise = Promise<T>()
+  let weakContextBox = WeakBox(context)
+
+  func _validate(completion: Fallible<T>) -> Bool {
+    guard let context = weakContextBox.value else {
+      return false
+    }
+    return validate(context, completion)
+  }
+
+  func _block() throws -> T {
+    guard let context = weakContextBox.value else {
+      throw AsyncNinjaError.contextDeallocated
+    }
+    return try block(context)
+  }
   _tryExecute(promise: WeakBox(promise),
               lockingBox: MutableBox(makeLocking()),
               executor: executor ?? context.executor,
-              validate: { [weak context] (completion) in
-      if let strongContext = context {
-        return validate(strongContext, completion)
-      } else {
-        return false
-      }
-    }) { [weak context] in
-    guard let strongContext = context else { throw AsyncNinjaError.contextDeallocated }
-    return try block(strongContext)
-  }
+              validate: _validate, _block)
   return promise
 }
 
@@ -120,19 +126,27 @@ public func tryFlatExecute<T, C: ExecutionContext>(
   validate: @escaping (_ strongContext: C, _ completion: Fallible<T>) -> Bool,
   _ block: @escaping (_ strongContext: C) throws -> Future<T>) -> Future<T> {
   let promise = Promise<T>()
+  let weakContextBox = WeakBox(context)
+
+  func _validate(completion: Fallible<T>) -> Bool {
+    guard let context = weakContextBox.value else {
+      return false
+    }
+
+    return validate(context, completion)
+  }
+
+  func _block() throws -> Future<T> {
+    guard let context = weakContextBox.value else {
+      throw AsyncNinjaError.contextDeallocated
+    }
+
+    return try block(context)
+  }
   _tryFlatExecute(promise: WeakBox(promise),
                   lockingBox: MutableBox(makeLocking()),
                   executor: executor ?? context.executor,
-                  validate: { [weak context] (completion) in
-      if let strongContext = context {
-        return validate(strongContext, completion)
-      } else {
-        return false
-      }
-    }) { [weak context] in
-    guard let strongContext = context else { throw AsyncNinjaError.contextDeallocated }
-    return try block(strongContext)
-  }
+                  validate: _validate, _block)
   return promise
 }
 

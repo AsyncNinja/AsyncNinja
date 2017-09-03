@@ -81,7 +81,7 @@ extension XCTestCase {
   }
 }
 
-fileprivate struct Constants {
+private struct Constants {
   static let availableQosClassses: [DispatchQoS.QoSClass] = [
     .default,
     .userInitiated,
