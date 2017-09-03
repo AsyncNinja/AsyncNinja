@@ -1,6 +1,6 @@
 
 # ![AsyncNinja Title](title_image.png)
-## Swift library for concurrency and reactive programming
+## A complete set of primitives for concurrency and reactive programming on Swift
 
 ![License:MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
 [![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)](https://travis-ci.org/AsyncNinja)

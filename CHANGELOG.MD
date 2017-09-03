@@ -1,3 +1,7 @@
+# 1.2.1
+* [changed] `DispatchSemaphore`-based fair locking replaced with `pthread_mutex_t`-based locking
+* [improved] code style improved with [SwiftLint](https://github.com/realm/SwiftLint) (once again)
+
 # 1.2.0
 * [changed] lock-free implementation of `Future` and `CancellationToken` changed to regular locking-based
 * [fixed] multiple Xcode 9.0 beta 5 compile time issues
