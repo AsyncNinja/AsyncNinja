@@ -68,7 +68,7 @@
     }
   }
 
-  private class ActionReceiver: NSObject {
+  @objc(AsyncNinja_ActionReceiver) private class ActionReceiver: NSObject {
     weak var control: NSControl?
     let producer = Producer<NSControl.ActionChannelUpdate, Void>(bufferSize: 0)
 

@@ -96,7 +96,7 @@
     var state: Channel<UIControlState, Void> { return updating(forKeyPath: "state", onNone: .drop) }
   }
 
-  private class UIControlActionReceiver: NSObject {
+  @objc(AsyncNinja_UIControlActionReceiver) private class UIControlActionReceiver: NSObject {
     weak var control: UIControl?
     let producer = Producer<(sender: AnyObject?, event: UIEvent), Void>(bufferSize: 0)
 
@@ -394,17 +394,10 @@
     @available(iOS 8.0, *)
     var landscapeImagePhone: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "landscapeImagePhone") }
 
-    #if swift(>=4.0)
     /// `Sink` that refers to write-only `UIBarItem.setTitleTextAttributes(_:, for:)`
     func titleTextAttributes(for state: UIControlState) -> Sink<[NSAttributedStringKey: Any]?, Void> {
       return sink { $0.setTitleTextAttributes($1, for: state) }
     }
-    #else
-    /// `Sink` that refers to write-only `UIBarItem.setTitleTextAttributes(_:, for:)`
-    func titleTextAttributes(for state: UIControlState) -> Sink<[String: Any]?, Void> {
-      return sink { $0.setTitleTextAttributes($1, for: state) }
-    }
-    #endif
   }
 
   // MARK: - reactive properties for UIBarButtonItem
@@ -492,7 +485,7 @@
     #endif
   }
 
-  private class UIBarButtonItemActionReceiver: NSObject {
+  @objc(AsyncNinja_UIControlActionReceiver) private class UIBarButtonItemActionReceiver: NSObject {
     weak var object: UIBarButtonItem?
     let producer = Producer<AnyObject?, Void>(bufferSize: 0)
 
@@ -705,7 +698,7 @@
     }
   }
 
-  class UIGestureRecognizerActionReceiver: NSObject {
+  @objc(AsyncNinja_UIControlActionReceiver) class UIGestureRecognizerActionReceiver: NSObject {
     weak var object: UIGestureRecognizer?
     let producer = Producer<UIGestureRecognizer, Void>(bufferSize: 0)
 
