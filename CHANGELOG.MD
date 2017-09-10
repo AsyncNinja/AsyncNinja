@@ -1,3 +1,6 @@
+# 2.0.0-beta.1
+* [changed] project configuration changed to support Swift 4.0+
+
 # 1.2.1
 * [changed] `DispatchSemaphore`-based fair locking replaced with `pthread_mutex_t`-based locking
 * [improved] code style improved with [SwiftLint](https://github.com/realm/SwiftLint) (once again)
