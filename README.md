@@ -2,12 +2,12 @@
 # ![AsyncNinja Title](title_image.png)
 ## A complete set of primitives for concurrency and reactive programming on Swift
 
-![License:MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
-[![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)](https://travis-ci.org/AsyncNinja)
+[![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/AsyncNinja/Lobby)
 [![CocoaPods](https://img.shields.io/cocoapods/v/AsyncNinja.svg)](https://cocoapods.org/pods/AsyncNinja)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)](https://travis-ci.org/AsyncNinja)
 
-## **Supports latest Swift 4.0 toolchain**
+**for Swift 3.1-4.0**
 
 |   | Features   |
 |---|---|
@@ -23,6 +23,12 @@
 
 * Related Articles
 	* Moving to nice asynchronous Swift code: [GitHub](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md), [Medium](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
+
+## Communication
+
+* [GitHub issues](https://github.com/AsyncNinja/AsyncNinja/issues/new)
+* [Gitter.im](https://gitter.im/AsyncNinja/Lobby)
+* [Considering contribution?](CONTRIBUTING.md)
 
 ## Reactive Programming
 

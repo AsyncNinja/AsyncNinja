@@ -15,11 +15,13 @@
 ### Make a suggest a feature or share an idea
 
 * [write it in a GitHub issue](https://github.com/AsyncNinja/AsyncNinja/issues/new)
+* [contact via Gitter.im](https://gitter.im/AsyncNinja/Lobby)
 * [write an email to asyncninja@gmail.com](mailto:asyncninja@gmail.com?subject=[Suggestion])
 
 ### Ask question, clarification request, documentation request 
 
 * [ask it in a GitHub issue](https://github.com/AsyncNinja/AsyncNinja/issues/new)
+* [contact via Gitter.im](https://gitter.im/AsyncNinja/Lobby)
 * [ask via email to asyncninja@gmail.com](mailto:asyncninja@gmail.com?subject=[Clarification_Request])
 
 ### Anything else?
