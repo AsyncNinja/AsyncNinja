@@ -32,7 +32,7 @@ public extension EventSource {
                       `where` predicate: @escaping(Update) throws -> Bool
     ) -> Promise<Update?> {
     let promise = Promise<Update?>()
-    let queue = Queue<ChannelEvent<Update, Success>>()
+    var queue = Queue<ChannelEvent<Update, Success>>()
     var locking = makeLocking(isFair: true)
     var isComplete = false
 
@@ -163,7 +163,7 @@ public extension EventSource {
 
     var latestMatchingUpdate: Update?
     var locking = makeLocking(isFair: true)
-    let queue = Queue<ChannelEvent<Update, Success>>()
+    var queue = Queue<ChannelEvent<Update, Success>>()
     let promise = Promise<Update?>()
 
     let handler = self.makeHandler(

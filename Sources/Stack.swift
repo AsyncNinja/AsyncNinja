@@ -20,10 +20,10 @@
 //  IN THE SOFTWARE.
 //
 
-typealias Queue<Element> = Queue_<SinglyLinkedListStrongElementNode<Element>>
-typealias QueueOfWeakElements<T: AnyObject> = Queue_<SinglyLinkedListWeakElementNode<T>>
+typealias Stack<Element> = Stack_<SinglyLinkedListStrongElementNode<Element>>
+typealias StackOfWeakElements<T: AnyObject> = Stack_<SinglyLinkedListWeakElementNode<T>>
 
-struct Queue_<Node: SinglyLinkedListElementNode>: SinglyLinkedListBased, Sequence {
+struct Stack_<Node: SinglyLinkedListElementNode>: SinglyLinkedListBased, Sequence {
   typealias Iterator = SinglyLinkedListIterator<Node>
   var _impl: SinglyLinkedListImpl<Node>
 
@@ -40,15 +40,15 @@ struct Queue_<Node: SinglyLinkedListElementNode>: SinglyLinkedListBased, Sequenc
       _impl = SinglyLinkedListImpl(proto: _impl)
     }
 
-    _impl.pushBack(element)
+    _impl.pushFront(element)
   }
 
-  mutating func push<S: Sequence>(_ elements: S) where S.Iterator.Element == Iterator.Element {
+  mutating func push<S: Sequence>(_ elements: S) where S.Iterator.Element == Node.Element {
     if !isKnownUniquelyReferenced(&_impl) {
       _impl = SinglyLinkedListImpl(proto: _impl)
     }
 
-    _impl.pushBack(elements)
+    _impl.pushFront(elements)
   }
 
   func forEach(_ body: (Node.Element) throws -> Void) rethrows {

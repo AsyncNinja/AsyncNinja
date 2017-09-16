@@ -51,7 +51,7 @@ private class Zip2EventSourcesHelper<LeftSource: EventSource, RightSource: Event
         Destination.Success == (LeftSource.Success, RightSource.Success) {
 
   var locking = makeLocking()
-  let queueOfUpdates = Queue<Either<LeftSource.Update, RightSource.Update>>()
+  var queueOfUpdates = Queue<Either<LeftSource.Update, RightSource.Update>>()
   var leftSuccess: LeftSource.Success?
   var rightSuccess: RightSource.Success?
   weak var destination: Destination?

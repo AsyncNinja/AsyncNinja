@@ -27,7 +27,7 @@ import Dispatch
 /// **internal use only**
 public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDestination {
   private let _maxBufferSize: Int
-  let _bufferedUpdates = Queue<Update>()
+  var _bufferedUpdates = Queue<Update>()
   private let _releasePool = ReleasePool(locking: PlaceholderLocking())
   var _locking = makeLocking()
   private var _handlers = QueueOfWeakElements<ProducerHandler<Update, Success>>()
@@ -70,7 +70,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
     ) -> ProducerHandler<Update, Success>? {
     let handler = ProducerHandler(
       executor: executor,
-      bufferedUpdates: _bufferedUpdates.clone(),
+      bufferedUpdates: _bufferedUpdates,
       owner: self,
       block: block)
     if let completion = _completion {
@@ -116,9 +116,13 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
     }
 
     let event = Event.update(update)
-    let handlers = _handlers
+    var handlersIterator = _handlers.makeIterator()
     _locking.unlock()
-    handlers.forEach { $0.handle(event, from: originalExecutor) }
+
+    while let handler = handlersIterator.next() {
+      handler?.handle(event, from: originalExecutor)
+    }
+
     return true
   }
 
@@ -148,12 +152,13 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
       updates.suffix(self.maxBufferSize).forEach(_pushUpdateToBuffer)
     }
 
-    let handlers = _handlers
+    var handlersIterator = _handlers.makeIterator()
     _locking.unlock()
 
-    handlers.forEach {
+    while let handler = handlersIterator.next() {
+      guard let handler = handler else { continue }
       for update in updates {
-        $0.handle(.update(update), from: originalExecutor)
+        handler.handle(.update(update), from: originalExecutor)
       }
     }
   }
@@ -185,11 +190,13 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
 
     _completion = completion
     let handlers = _handlers
+    _handlers.removeAll()
     _locking.unlock()
 
-    handlers.forEach(andReset: true) { handler in
-      handler.handle(.completion(completion), from: originalExecutor)
-      handler.releaseOwner()
+    handlers.forEach { handler in
+      guard let handler_ = handler else { return }
+      handler_.handle(.completion(completion), from: originalExecutor)
+      handler_.releaseOwner()
     }
 
     return true
@@ -240,7 +247,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
 private class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Update, Success> {
   let _sema: DispatchSemaphore
   var _locking = makeLocking(isFair: true)
-  let _bufferedUpdates: Queue<Update>
+  var _bufferedUpdates: Queue<Update>
   let _producer: BaseProducer<Update, Success>
   var _handler: ProducerHandler<Update, Success>?
   override var completion: Fallible<Success>? {
@@ -281,7 +288,7 @@ private class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Update,
   }
 
   override func clone() -> ChannelIteratorImpl<Update, Success> {
-    return ProducerIteratorImpl(channel: _producer, bufferedUpdates: _bufferedUpdates.clone())
+    return ProducerIteratorImpl(channel: _producer, bufferedUpdates: _bufferedUpdates)
   }
 
   func handle(_ value: ChannelEvent<Update, Success>,
