@@ -657,7 +657,7 @@
     /// `ProducerProxy` that refers to read-write property `UISlider.valueWithAnimation`
     var valueWithAnimation: ProducerProxy<(value: Float, isAnimated: Bool), Void> {
       return updatable(forKeyPath: "value", onNone: .drop,
-                       customGetter: { (date: $0.value, isAnimated: false) },
+                       customGetter: { (value: $0.value, isAnimated: false) },
                        customSetter: { $0.setValue($1.value, animated: $1.isAnimated) })
     }
 
