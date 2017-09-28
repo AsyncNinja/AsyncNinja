@@ -35,7 +35,7 @@ public extension EventSource {
     ) -> BaseProducer<Result, (Result, Success)> {
     var locking = makeLocking(isFair: true)
     var partialResult = initialResult
-    let queue = Queue<Event>()
+    var queue = Queue<Event>()
 
     return self.makeProducer(
       executor: .immediate,
@@ -164,7 +164,7 @@ public extension EventSource {
     ) -> Promise<(Result, Success)> {
     var locking = makeLocking(isFair: true)
     var partialResult = initialResult
-    let queue = Queue<Event>()
+    var queue = Queue<Event>()
 
     let promise = Promise<(Result, Success)>()
     let weakPromise = WeakBox(promise)

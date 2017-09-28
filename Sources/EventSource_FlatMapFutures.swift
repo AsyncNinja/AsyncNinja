@@ -309,7 +309,7 @@ private class KeepLatestTransformFlatteningImpl<P, S, T>: BaseFlatteningImpl<P, 
 
 private class DropResultsOutOfOrderFlatteningImpl<P, S, T>: BaseFlatteningImpl<P, S, T> {
   var locking = makeLocking()
-  let futuresQueue = Queue<(future: Future<T?>, index: Int)>()
+  var futuresQueue = Queue<(future: Future<T?>, index: Int)>()
   var indexOfNextFuture = 1
 
   override func onEvent(
@@ -373,7 +373,7 @@ private class DropResultsOutOfOrderFlatteningImpl<P, S, T>: BaseFlatteningImpl<P
 
 private class OrderResultsFlatteningImpl<P, S, T>: BaseFlatteningImpl<P, S, T> {
   var locking = makeLocking(isFair: true)
-  let futuresQueue = Queue<Future<T?>>()
+  var futuresQueue = Queue<Future<T?>>()
   var isWaiting = false
 
   override func onEvent(
@@ -444,7 +444,7 @@ private class OrderResultsFlatteningImpl<P, S, T>: BaseFlatteningImpl<P, S, T> {
 
 private class TransformSeriallyFlatteningImpl<P, S, T>: BaseFlatteningImpl<P, S, T> {
   var locking = makeLocking(isFair: true)
-  let updatesQueue = Queue<P>()
+  var updatesQueue = Queue<P>()
   var isRunning = false
 
   override func onEvent(
@@ -456,7 +456,7 @@ private class TransformSeriallyFlatteningImpl<P, S, T>: BaseFlatteningImpl<P, S,
       locking.lock()
       defer { locking.unlock() }
       updatesQueue.push(update)
-      self.launchNextTransformIfNeeded(producer: producer, from: originalExecutor)
+      launchNextTransformIfNeeded(producer: producer, from: originalExecutor)
     case .completion(let completion):
       producer.value?.complete(completion, from: originalExecutor)
     }

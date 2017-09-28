@@ -96,7 +96,7 @@
       didSet {
         if isEnabled != oldValue {
           for item in items {
-            item.isEnabled = isEnabled
+            item?.isEnabled = isEnabled
           }
         }
       }

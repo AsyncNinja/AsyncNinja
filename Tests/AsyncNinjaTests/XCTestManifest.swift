@@ -49,6 +49,7 @@ import XCTest
       testCase(PerformanceTests.allTests),
       testCase(OptionalAdaptorTests.allTests),
       testCase(ReleasePoolTests.allTests),
+      testCase(SinglyLinkedListTests.allTests),
       testCase(TimerChannelTests.allTests),
       testCase(TryExecuteTests.allTests),
       testCase(ZipFuturesTest.allTests)

@@ -336,7 +336,7 @@ public extension EventSource {
     ) -> Channel<Update, Success> {
     // Test: EventSource_TransformTests.testSkip
     var locking = makeLocking(isFair: true)
-    let updatesQueue = Queue<Update>()
+    var updatesQueue = Queue<Update>()
     var numberOfFirstToSkip = first
     let numberOfLastToSkip = last
 
@@ -398,7 +398,7 @@ public extension EventSource {
     ) -> Channel<Update, Success> {
     // Test: EventSource_TransformTests.testTake
     var locking = makeLocking(isFair: true)
-    let updatesQueue = Queue<Update>()
+    var updatesQueue = Queue<Update>()
     var numberOfFirstToTake = first
     let numberOfLastToTake = last
 
@@ -428,10 +428,8 @@ public extension EventSource {
         }
       case let .completion(completion):
         if let producer = producerBox.value {
-          let queue = locking.locker { updatesQueue.clone() }
-          while let update = queue.pop() {
-            producer.update(update)
-          }
+          let queue = locking.locker { updatesQueue }
+          producer.update(queue)
           producer.complete(completion, from: originalExecutor)
         }
       }

@@ -53,7 +53,7 @@ public extension EventSource {
     // Test: EventSource_CombineTests.testSuspendable
     var locking = makeLocking(isFair: true)
     var isUnsuspended = !isSuspendedInitially
-    let queue = Queue<Update>()
+    var queue = Queue<Update>()
 
     func onEvent(
       event: ChannelEvent<Update, Success>,
@@ -92,7 +92,7 @@ public extension EventSource {
         let updates: Queue<Update>? = locking.locker {
           isUnsuspended = isUnsuspendedLocal
           guard isUnsuspendedLocal else { return nil }
-          let result = queue.clone()
+          let result = queue
           queue.removeAll()
           return result
         }

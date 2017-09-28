@@ -160,15 +160,19 @@ class Future_MakersTests: XCTestCase {
   func testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive() {
     let actor = TestActor()
     let value = pickInt()
-    let expectation = self.expectation(description: "block called")
+    let sema = DispatchSemaphore(value: 0)
 
     let futureValue = future(context: actor) { (actor) -> Int in
       assert(actor: actor)
-      expectation.fulfill()
       return try square_failure(value)
     }
 
-    self.waitForExpectations(timeout: 0.1)
+    futureValue.onFailure {
+      XCTAssertEqual($0 as? TestError, TestError.testCode)
+      sema.signal()
+    }
+
+    XCTAssertEqual(.success, sema.wait(timeout: .now() + 1.0))
     XCTAssertEqual(futureValue.failure as? TestError, TestError.testCode)
   }
 
@@ -276,8 +280,7 @@ class Future_MakersTests: XCTestCase {
     XCTAssertNil(futureValue.value)
     actor = nil
 
-    mysleep(0.25)
-    XCTAssertEqual(futureValue.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
+    XCTAssertEqual(futureValue.wait(seconds: 0.5)?.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
   func testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead() {

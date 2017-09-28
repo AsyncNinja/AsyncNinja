@@ -39,12 +39,12 @@ final public class Producer<Update, Success>: BaseProducer<Update, Success>, Cac
   /// designated initializer of Producer. Initializes Producer with specified buffer size and values
   public init<S: Sequence>(bufferSize: Int, bufferedUpdates: S) where S.Iterator.Element == Update {
     super.init(bufferSize: bufferSize)
-    bufferedUpdates.suffix(bufferSize).forEach(_bufferedUpdates.push)
+    _bufferedUpdates.push(bufferedUpdates.suffix(bufferSize))
   }
 
   /// designated initializer of Producer. Initializes Producer with specified buffer size and values
   public init<C: Collection>(bufferedUpdates: C) where C.Iterator.Element == Update {
     super.init(bufferSize: numericCast(bufferedUpdates.count))
-    bufferedUpdates.forEach(_bufferedUpdates.push)
+    _bufferedUpdates.push(bufferedUpdates)
   }
 }

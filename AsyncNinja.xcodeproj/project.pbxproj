@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B87378E01F67EA5900B6FF97 /* SinglyLinkedListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87378DF1F67EA5900B6FF97 /* SinglyLinkedListTests.swift */; };
+		B873DAB61F6D04BD00A04524 /* SinglyLinkedList.swift in Sources */ = {isa = PBXBuildFile; fileRef = B873DAB51F6D04BD00A04524 /* SinglyLinkedList.swift */; };
+		B87EC5CC1F6D565900ABBBE8 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87EC5CB1F6D565900ABBBE8 /* Queue.swift */; };
+		B87EC5CE1F6D687700ABBBE8 /* Stack.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87EC5CD1F6D687700ABBBE8 /* Stack.swift */; };
 		B8B5201E1EBF0D18006C27DA /* EventSource_Sample.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */; };
 		B8B520201EBF1604006C27DA /* EventSource_Merge2Unrelated.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B5201F1EBF1604006C27DA /* EventSource_Merge2Unrelated.swift */; };
 		B8B520221EBF2918006C27DA /* EventSource_Debounce.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */; };
@@ -62,7 +66,6 @@
 		OBJ_135 /* Producer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_48 /* Producer.swift */; };
 		OBJ_136 /* ProducerProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_49 /* ProducerProxy.swift */; };
 		OBJ_137 /* Promise.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_50 /* Promise.swift */; };
-		OBJ_138 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_51 /* Queue.swift */; };
 		OBJ_139 /* ReleasePool.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_52 /* ReleasePool.swift */; };
 		OBJ_140 /* Sequence_AsyncMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_53 /* Sequence_AsyncMap.swift */; };
 		OBJ_141 /* Sink.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_54 /* Sink.swift */; };
@@ -113,6 +116,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B87378DF1F67EA5900B6FF97 /* SinglyLinkedListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglyLinkedListTests.swift; sourceTree = "<group>"; };
+		B873DAB51F6D04BD00A04524 /* SinglyLinkedList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglyLinkedList.swift; sourceTree = "<group>"; };
+		B87EC5CB1F6D565900ABBBE8 /* Queue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
+		B87EC5CD1F6D687700ABBBE8 /* Stack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stack.swift; sourceTree = "<group>"; };
 		B8B5201D1EBF0D18006C27DA /* EventSource_Sample.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventSource_Sample.swift; sourceTree = "<group>"; };
 		B8B5201F1EBF1604006C27DA /* EventSource_Merge2Unrelated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventSource_Merge2Unrelated.swift; sourceTree = "<group>"; };
 		B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventSource_Debounce.swift; sourceTree = "<group>"; };
@@ -171,7 +178,6 @@
 		OBJ_48 /* Producer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Producer.swift; sourceTree = "<group>"; };
 		OBJ_49 /* ProducerProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProducerProxy.swift; sourceTree = "<group>"; };
 		OBJ_50 /* Promise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Promise.swift; sourceTree = "<group>"; };
-		OBJ_51 /* Queue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
 		OBJ_52 /* ReleasePool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleasePool.swift; sourceTree = "<group>"; };
 		OBJ_53 /* Sequence_AsyncMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sequence_AsyncMap.swift; sourceTree = "<group>"; };
 		OBJ_54 /* Sink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sink.swift; sourceTree = "<group>"; };
@@ -277,6 +283,7 @@
 				OBJ_80 /* ObserversTests.swift */,
 				F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */,
 				B8DC12831ED093C60099893A /* PerformanceTests.swift */,
+				B87378DF1F67EA5900B6FF97 /* SinglyLinkedListTests.swift */,
 				OBJ_81 /* ReleasePoolTests.swift */,
 				OBJ_82 /* TestUtilities.swift */,
 				F86BE0621E983DF5008B7BDC /* TryExecuteTests.swift */,
@@ -337,15 +344,17 @@
 				OBJ_46 /* MergeFutures.swift */,
 				F87E09211E9C337F006CD1C9 /* NetworkReachability.swift */,
 				OBJ_47 /* OptionalAdaptor.swift */,
+				B87EC5CB1F6D565900ABBBE8 /* Queue.swift */,
 				OBJ_48 /* Producer.swift */,
 				OBJ_49 /* ProducerProxy.swift */,
 				OBJ_50 /* Promise.swift */,
-				OBJ_51 /* Queue.swift */,
 				OBJ_52 /* ReleasePool.swift */,
 				B8B520231EBF2F54006C27DA /* Sequence_AsyncFlatMap.swift */,
 				OBJ_53 /* Sequence_AsyncMap.swift */,
 				B8B520251EBF3287006C27DA /* Sequence_AsyncReduce.swift */,
+				B873DAB51F6D04BD00A04524 /* SinglyLinkedList.swift */,
 				OBJ_54 /* Sink.swift */,
+				B87EC5CD1F6D687700ABBBE8 /* Stack.swift */,
 				OBJ_56 /* TimerChannel.swift */,
 				F85659561E97D7FE007EDC98 /* TryExecute.swift */,
 				OBJ_57 /* Util.swift */,
@@ -461,6 +470,7 @@
 				OBJ_154 /* BatchFutureTests.swift in Sources */,
 				F8419BD61E91080A0067701C /* EitherTests.swift in Sources */,
 				OBJ_155 /* CachableValueTests.swift in Sources */,
+				B87378E01F67EA5900B6FF97 /* SinglyLinkedListTests.swift in Sources */,
 				OBJ_156 /* ChannelTests.swift in Sources */,
 				OBJ_157 /* EventSource_CombineTests.swift in Sources */,
 				OBJ_158 /* EventSource_FlatMapFuturesTests.swift in Sources */,
@@ -533,6 +543,7 @@
 				OBJ_124 /* ExecutionContext.swift in Sources */,
 				OBJ_125 /* Executor.swift in Sources */,
 				OBJ_126 /* Fallible.swift in Sources */,
+				B87EC5CE1F6D687700ABBBE8 /* Stack.swift in Sources */,
 				OBJ_127 /* Future.swift in Sources */,
 				OBJ_128 /* Future_Makers.swift in Sources */,
 				OBJ_129 /* iOS.swift in Sources */,
@@ -546,8 +557,8 @@
 				OBJ_136 /* ProducerProxy.swift in Sources */,
 				B8B520201EBF1604006C27DA /* EventSource_Merge2Unrelated.swift in Sources */,
 				OBJ_137 /* Promise.swift in Sources */,
-				OBJ_138 /* Queue.swift in Sources */,
 				OBJ_139 /* ReleasePool.swift in Sources */,
+				B87EC5CC1F6D565900ABBBE8 /* Queue.swift in Sources */,
 				OBJ_140 /* Sequence_AsyncMap.swift in Sources */,
 				B8B520261EBF3287006C27DA /* Sequence_AsyncReduce.swift in Sources */,
 				OBJ_141 /* Sink.swift in Sources */,
@@ -555,6 +566,7 @@
 				OBJ_144 /* Util.swift in Sources */,
 				OBJ_145 /* watchOS.swift in Sources */,
 				B8C99AC31F5C742000E16257 /* Box.swift in Sources */,
+				B873DAB61F6D04BD00A04524 /* SinglyLinkedList.swift in Sources */,
 				OBJ_146 /* Zip2Futures.swift in Sources */,
 				OBJ_147 /* Zip3Futures.swift in Sources */,
 			);
@@ -642,7 +654,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_SWIFT_FLAGS = "-DXcode -Xfrontend -warn-long-function-bodies=200";
+				OTHER_SWIFT_FLAGS = "-DXcode -Xfrontend -warn-long-function-bodies=200 -Xfrontend -warn-long-expression-type-checking=200";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator watchos watchsimulator";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;
@@ -691,7 +703,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_SWIFT_FLAGS = "-DXcode -Xfrontend -warn-long-function-bodies=200";
+				OTHER_SWIFT_FLAGS = "-DXcode -Xfrontend -warn-long-function-bodies=200 -Xfrontend -warn-long-expression-type-checking=200";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator watchos watchsimulator";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;
