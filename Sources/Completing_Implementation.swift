@@ -46,7 +46,7 @@ public extension Completing {
   @discardableResult
   func onComplete(
     executor: Executor = .primary,
-    _ block: @escaping (Fallible<Success>) -> Void
+    _ block: @escaping (Completion) -> Void
     ) -> Self {
     return _onComplete(executor: executor) { (completion, _) in
       block(completion)
@@ -55,7 +55,7 @@ public extension Completing {
 
   internal func _onComplete(
     executor: Executor = .primary,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+    _ block: @escaping (_ completion: Completion, _ originalExecutor: Executor) -> Void
     ) -> Self {
     let handler = makeCompletionHandler(
       executor: executor
@@ -99,7 +99,7 @@ public extension Completing {
   func onComplete<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    _ block: @escaping (C, Fallible<Success>) -> Void
+    _ block: @escaping (C, Completion) -> Void
     ) -> Self {
     // Test: FutureTests.testOnCompleteContextual_ContextAlive
     // Test: FutureTests.testOnCompleteContextual_ContextDead
@@ -114,7 +114,7 @@ public extension Completing {
   internal func _onComplete<C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    _ block: @escaping (_ context: C, _ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+    _ block: @escaping (_ context: C, _ completion: Completion, _ originalExecutor: Executor) -> Void
     ) -> Self {
     // Test: FutureTests.testOnCompleteContextual_ContextAlive
     // Test: FutureTests.testOnCompleteContextual_ContextDead
@@ -169,12 +169,12 @@ public extension Completing {
 /// Using this method is **strongly** discouraged. Calling it on the same serial queue
 /// as any code performed on the same queue this future depends on will cause deadlock.
 public extension Completing {
-  private func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Fallible<Success>? {
+  private func wait(waitingBlock: (DispatchSemaphore) -> DispatchTimeoutResult) -> Completion? {
     if let completion = self.completion {
       return completion
     }
     let sema = DispatchSemaphore(value: 0)
-    var result: Fallible<Success>? = nil
+    var result: Completion? = nil
 
     var handler = makeCompletionHandler(executor: .immediate) { (completion, _) in
       result = completion
@@ -189,7 +189,7 @@ public extension Completing {
   }
 
   /// Waits for future to complete and returns completion value. Waits forever
-  func wait() -> Fallible<Success> {
+  func wait() -> Completion {
     return self.wait(waitingBlock: { $0.wait(); return .success })!
   }
 
@@ -197,7 +197,7 @@ public extension Completing {
   ///
   /// - Parameter timeout: `DispatchTime` to wait completion for
   /// - Returns: completion value or nil if `Future` did not complete in specified timeout
-  func wait(timeout: DispatchTime) -> Fallible<Success>? {
+  func wait(timeout: DispatchTime) -> Completion? {
     return self.wait(waitingBlock: { $0.wait(timeout: timeout) })
   }
 
@@ -205,7 +205,7 @@ public extension Completing {
   ///
   /// - Parameter wallTimeout: `DispatchWallTime` to wait completion for
   /// - Returns: completion value or nil if `Future` did not complete in specified timeout
-  func wait(wallTimeout: DispatchWallTime) -> Fallible<Success>? {
+  func wait(wallTimeout: DispatchWallTime) -> Completion? {
     return self.wait(waitingBlock: { $0.wait(wallTimeout: wallTimeout) })
   }
 
@@ -213,7 +213,7 @@ public extension Completing {
   ///
   /// - Parameter nanoseconds: to wait completion for
   /// - Returns: completion value or nil if `Future` did not complete in specified timeout
-  func wait(nanoseconds: Int) -> Fallible<Success>? {
+  func wait(nanoseconds: Int) -> Completion? {
     return self.wait(timeout: DispatchTime.now() + .nanoseconds(nanoseconds))
   }
 
@@ -221,7 +221,7 @@ public extension Completing {
   ///
   /// - Parameter milliseconds: to wait completion for
   /// - Returns: completion value or nil if `Future` did not complete in specified timeout
-  func wait(milliseconds: Int) -> Fallible<Success>? {
+  func wait(milliseconds: Int) -> Completion? {
     return self.wait(timeout: DispatchTime.now() + .milliseconds(milliseconds))
   }
 
@@ -229,7 +229,7 @@ public extension Completing {
   ///
   /// - Parameter microseconds: to wait completion for
   /// - Returns: completion value or nil if `Future` did not complete in specified timeout
-  func wait(microseconds: Int) -> Fallible<Success>? {
+  func wait(microseconds: Int) -> Completion? {
     return self.wait(timeout: DispatchTime.now() + .microseconds(microseconds))
   }
 
@@ -237,7 +237,7 @@ public extension Completing {
   ///
   /// - Parameter seconds: to wait completion for
   /// - Returns: completion value or nil if `Future` did not complete in specified timeout
-  func wait(seconds: Double) -> Fallible<Success>? {
+  func wait(seconds: Double) -> Completion? {
     return self.wait(wallTimeout: DispatchWallTime.now().adding(seconds: seconds))
   }
 }

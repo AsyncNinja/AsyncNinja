@@ -30,7 +30,7 @@ extension Completing {
   func _mapCompletion<T>(
     executor: Executor = .primary,
     pure: Bool,
-    _ transform: @escaping (_ completion: Fallible<Success>) throws -> T
+    _ transform: @escaping (_ completion: Completion) throws -> T
     ) -> Promise<T> {
     let promise = Promise<T>()
     let handler = makeCompletionHandler(executor: executor
@@ -80,7 +80,7 @@ extension Completing {
 
 public extension Completing {
 
-  /// Transforms the `Completing` to a `Future` with transformation `(Fallible<Success>) -> T`.
+  /// Transforms the `Completing` to a `Future` with transformation `(Completion) -> T`.
   ///
   /// - Parameters:
   ///   - executor: to perform transform on
@@ -97,12 +97,12 @@ public extension Completing {
   func mapCompletion<T>(
     executor: Executor = .primary,
     pure: Bool = true,
-    _ transform: @escaping (_ completion: Fallible<Success>) throws -> T
+    _ transform: @escaping (_ completion: Completion) throws -> T
     ) -> Future<T> {
     return _mapCompletion(executor: executor, pure: pure, transform)
   }
 
-  /// Transforms the `Completing` to a `Future` with transformation `(Fallible<Success>) -> Completing`.
+  /// Transforms the `Completing` to a `Future` with transformation `(Completion) -> Completing`.
   ///
   /// - Parameters:
   ///   - executor: to perform transform on
@@ -119,12 +119,12 @@ public extension Completing {
   func flatMapCompletion<T: Completing>(
     executor: Executor = .primary,
     pure: Bool = true,
-    _ transform: @escaping (_ completion: Fallible<Success>) throws -> T
+    _ transform: @escaping (_ completion: Completion) throws -> T
     ) -> Future<T.Success> {
     return mapCompletion(executor: executor, pure: pure, transform).flatten()
   }
 
-  /// Transforms the `Completing` to a `Channel` with transformation `(Fallible<Success>) -> Completing&Updating`.
+  /// Transforms the `Completing` to a `Channel` with transformation `(Completion) -> Completing&Updating`.
   ///
   /// - Parameters:
   ///   - executor: to perform transform on
@@ -141,7 +141,7 @@ public extension Completing {
   func flatMapCompletion<T: Completing&Updating>(
     executor: Executor = .primary,
     pure: Bool = true,
-    _ transform: @escaping (_ completion: Fallible<Success>) throws -> T
+    _ transform: @escaping (_ completion: Completion) throws -> T
     ) -> Channel<T.Update, T.Success> {
     return mapCompletion(executor: executor, pure: pure, transform).flatten()
   }
@@ -364,7 +364,7 @@ public extension Completing {
 
 public extension Completing {
 
-  /// Transforms the `Completing` to a `Future` with transformation `(Fallible<Success>) -> T`.
+  /// Transforms the `Completing` to a `Future` with transformation `(Completion) -> T`.
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
@@ -385,7 +385,7 @@ public extension Completing {
     context: C,
     executor: Executor? = nil,
     pure: Bool = true,
-    _ transform: @escaping (C, Fallible<Success>) throws -> Transformed
+    _ transform: @escaping (C, Completion) throws -> Transformed
     ) -> Future<Transformed> {
     let promise = _mapCompletion(
       executor: executor ?? context.executor,
@@ -398,7 +398,7 @@ public extension Completing {
     return promise
   }
 
-  /// Transforms the `Completing` to a `Future` with transformation `(Fallible<Success>) -> Completing`.
+  /// Transforms the `Completing` to a `Future` with transformation `(Completion) -> Completing`.
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
@@ -419,12 +419,12 @@ public extension Completing {
     context: C,
     executor: Executor? = nil,
     pure: Bool = true,
-    _ transform: @escaping (C, Fallible<Success>) throws -> T
+    _ transform: @escaping (C, Completion) throws -> T
     ) -> Future<T.Success> {
     return mapCompletion(context: context, executor: executor, pure: pure, transform).flatten()
   }
 
-  /// Transforms the `Completing` to a `Channel` with transformation `(Fallible<Success>) -> Completing&Updating`.
+  /// Transforms the `Completing` to a `Channel` with transformation `(Completion) -> Completing&Updating`.
   ///
   /// - Parameters:
   ///   - context: `ExectionContext` to apply transformation in
@@ -445,7 +445,7 @@ public extension Completing {
     context: C,
     executor: Executor? = nil,
     pure: Bool = true,
-    _ transform: @escaping (C, Fallible<Success>) throws -> T
+    _ transform: @escaping (C, Completion) throws -> T
     ) -> Channel<T.Update, T.Success> {
     return mapCompletion(context: context, executor: executor, pure: pure, transform).flatten()
   }

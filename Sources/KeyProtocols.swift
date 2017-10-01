@@ -29,15 +29,19 @@ public protocol CompletionController: LifetimeExtender {
   associatedtype Success
 }
 
+public extension CompletionController {
+  typealias Completion = Fallible<Success>
+}
+
 /// A protocol for objects that can eventually complete with value
 public protocol Completing: CompletionController {
   /// Returns either completion value for complete `Completing` or nil otherwise
-  var completion: Fallible<Success>? { get }
+  var completion: Completion? { get }
 
   /// **internal use only**
   func makeCompletionHandler(
     executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+    _ block: @escaping (_ completion: Completion, _ originalExecutor: Executor) -> Void
     ) -> AnyObject?
 }
 
@@ -55,7 +59,7 @@ public protocol Completable: CompletionController, Cancellable {
   ///   you calling this method on.
   /// - Returns: true if this call completed `Completable`
   @discardableResult
-  func tryComplete(_ completion: Fallible<Success>, from originalExecutor: Executor?) -> Bool
+  func tryComplete(_ completion: Completion, from originalExecutor: Executor?) -> Bool
 }
 
 // MARK: - Updates
@@ -205,7 +209,7 @@ public extension EventDestination {
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
   public func post(
-    _ event: ChannelEvent<Update, Success>,
+    _ event: Event,
     from originalExecutor: Executor? = nil) {
     switch event {
     case let .update(update):

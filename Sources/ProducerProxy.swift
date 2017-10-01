@@ -46,7 +46,7 @@ public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
   }
 
   func tryCompleteWithoutHandling(
-    with completion: Fallible<Success>,
+    with completion: Completion,
     from originalExecutor: Executor?) -> Bool {
     return super.tryComplete(completion, from: originalExecutor)
   }
@@ -64,7 +64,7 @@ public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
   }
 
   /// Calls update handler instead of sending specified Complete to the Producer
-  override public func tryComplete(_ completion: Fallible<Success>, from originalExecutor: Executor? = nil) -> Bool {
+  override public func tryComplete(_ completion: Completion, from originalExecutor: Executor? = nil) -> Bool {
     guard case .none = self.completion else { return false }
     _updateExecutor.execute(
       from: originalExecutor

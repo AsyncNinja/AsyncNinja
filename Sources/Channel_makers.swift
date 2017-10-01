@@ -111,7 +111,7 @@ public func channel<C: Collection, Success>(
 public extension Channel {
 
   /// Makes completed channel
-  static func completed(_ completion: Fallible<Success>) -> Channel<Update, Success> {
+  static func completed(_ completion: Completion) -> Channel<Update, Success> {
     // TEST: ChannelMakersTests.testCompletedWithStatic
 
     return channel(updates: [], completion: completion)

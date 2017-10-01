@@ -23,83 +23,83 @@
 /// Simple implementation of either monad
 public enum Either<Left, Right> {
 
-    /// left case
-    case left(Left)
+  /// left case
+  case left(Left)
 
-    /// right case
-    case right(Right)
+  /// right case
+  case right(Right)
 
-    /// returns left value if there is one
-    public var left: Left? {
-        if case let .left(value) = self { return value } else { return nil }
+  /// returns left value if there is one
+  public var left: Left? {
+    if case let .left(value) = self { return value } else { return nil }
+  }
+
+  /// returns right value if there is one
+  public var right: Right? {
+    if case let .right(value) = self { return value } else { return nil }
+  }
+
+  /// Transforms left value of `Either`. Does nothing if the value contains right
+  ///
+  /// - Parameter transform: closure that transforms Left to T
+  /// - Returns: transformed `Either`
+  /// - Throws: rethrows error thrown from transform
+  public func mapLeft<T>(_ transform: (Left) throws -> T) rethrows -> Either<T, Right> {
+    switch self {
+    case let .left(left):
+      return .left(try(transform(left)))
+    case let .right(right):
+      return .right(right)
     }
+  }
 
-    /// returns right value if there is one
-    public var right: Right? {
-        if case let .right(value) = self { return value } else { return nil }
+  /// Transforms right value of `Either`. Does nothing if the value contains left
+  ///
+  /// - Parameter transform: closure that transforms Right to T
+  /// - Returns: transformed `Either`
+  /// - Throws: rethrows error thrown from transform
+  public func mapRight<T>(_ transform: (Right) throws -> T) rethrows -> Either<Left, T> {
+    switch self {
+    case let .left(left):
+      return .left(left)
+    case let .right(right):
+      return .right(try(transform(right)))
     }
+  }
 
-    /// Transforms left value of `Either`. Does nothing if the value contains right
-    ///
-    /// - Parameter transform: closure that transforms Left to T
-    /// - Returns: transformed `Either`
-    /// - Throws: rethrows error thrown from transform
-    public func mapLeft<T>(_ transform: (Left) throws -> T) rethrows -> Either<T, Right> {
-        switch self {
-        case let .left(left):
-            return .left(try(transform(left)))
-        case let .right(right):
-            return .right(right)
-        }
+  /// Transforms the either to a either of unrelated type
+  /// Correctness of such transformation is left on our behalf
+  public func staticCast<L, R>() -> Either<L, R> {
+    switch self {
+    case let .left(left):
+      return .left(left as! L)
+    case let .right(right):
+      return .right(right as! R)
     }
-
-    /// Transforms right value of `Either`. Does nothing if the value contains left
-    ///
-    /// - Parameter transform: closure that transforms Right to T
-    /// - Returns: transformed `Either`
-    /// - Throws: rethrows error thrown from transform
-    public func mapRight<T>(_ transform: (Right) throws -> T) rethrows -> Either<Left, T> {
-        switch self {
-        case let .left(left):
-            return .left(left)
-        case let .right(right):
-            return .right(try(transform(right)))
-        }
-    }
-
-    /// Transforms the either to a either of unrelated type
-    /// Correctness of such transformation is left on our behalf
-    public func staticCast<L, R>() -> Either<L, R> {
-        switch self {
-        case let .left(left):
-            return .left(left as! L)
-        case let .right(right):
-            return .right(right as! R)
-        }
-    }
+  }
 }
 
 // MARK: - Description
 extension Either: CustomStringConvertible, CustomDebugStringConvertible {
-    /// A textual representation of this instance.
-    public var description: String {
-        return description(withBody: "")
-    }
+  /// A textual representation of this instance.
+  public var description: String {
+    return description(withBody: "")
+  }
 
-    /// A textual representation of this instance, suitable for debugging.
-    public var debugDescription: String {
-        return description(withBody: "<\(Left.self), \(Right.self)>")
-    }
+  /// A textual representation of this instance, suitable for debugging.
+  public var debugDescription: String {
+    return description(withBody: "<\(Left.self), \(Right.self)>")
+  }
 
-    /// **internal use only**
-    private func description(withBody body: String) -> String {
-        switch self {
-        case .left(let value):
-            return "left\(body)(\(value))"
-        case .right(let value):
-            return "right\(body)(\(value))"
-        }
+  /// **internal use only**
+  private func description(withBody body: String) -> String {
+    switch self {
+    case .left(let value):
+      return "left\(body)(\(value))"
+    case .right(let value):
+      return "right\(body)(\(value))"
     }
+  }
 }
 
 // MARK: - Equatable
@@ -127,39 +127,41 @@ extension Either where Left: Equatable, Right: Equatable {
 
 /// Value reveived by channel
 public enum ChannelEvent<Update, Success> {
-    /// A kind of value that can be received multiple times be for the completion one
-    case update(Update)
+  public typealias Completion = Fallible<Success>
 
-    /// A kind of value that can be received once and completes the channel
-    case completion(Fallible<Success>)
+  /// A kind of value that can be received multiple times be for the completion one
+  case update(Update)
+
+  /// A kind of value that can be received once and completes the channel
+  case completion(Completion)
 }
 
 public extension ChannelEvent {
 
-    /// Convenence initializer of ChannelEvent.completion
-    ///
-    /// - Parameter success: success value to complete with
-    /// - Returns: successful completion channel event
-    static func success(_ success: Success) -> ChannelEvent {
-        return .completion(.success(success))
-    }
+  /// Convenence initializer of ChannelEvent.completion
+  ///
+  /// - Parameter success: success value to complete with
+  /// - Returns: successful completion channel event
+  static func success(_ success: Success) -> ChannelEvent {
+    return .completion(.success(success))
+  }
 
-    /// Convenence initializer of ChannelEvent.completion
-    ///
-    /// - Parameter failure: error to complete with
-    /// - Returns: failure completion channel event
-    static func failure(_ error: Swift.Error) -> ChannelEvent {
-        return .completion(.failure(error))
-    }
+  /// Convenence initializer of ChannelEvent.completion
+  ///
+  /// - Parameter failure: error to complete with
+  /// - Returns: failure completion channel event
+  static func failure(_ error: Swift.Error) -> ChannelEvent {
+    return .completion(.failure(error))
+  }
 
-    /// Transforms the event to a event of unrelated type
-    /// Correctness of such transformation is left on our behalf
-    func staticCast<U, S>() -> ChannelEvent<U, S> {
-        switch self {
-        case let .update(update):
-            return .update(update as! U)
-        case let .completion(completion):
-            return .completion(completion.staticCast())
-        }
+  /// Transforms the event to a event of unrelated type
+  /// Correctness of such transformation is left on our behalf
+  func staticCast<U, S>() -> ChannelEvent<U, S> {
+    switch self {
+    case let .update(update):
+      return .update(update as! U)
+    case let .completion(completion):
+      return .completion(completion.staticCast())
     }
+  }
 }

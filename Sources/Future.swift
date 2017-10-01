@@ -27,10 +27,10 @@ public class Future<S>: Completing {
   public typealias Success = S
 
   /// Returns either completion for complete `Future` or nil otherwise
-  public var completion: Fallible<Success>? { assertAbstract() }
+  public var completion: Completion? { assertAbstract() }
 
   /// Returns either completion for complete `Future` or nil otherwise
-  public var value: Fallible<Success>? { return self.completion }
+  public var value: Completion? { return completion }
 
   /// Base future is **abstract**.
   ///
@@ -40,7 +40,7 @@ public class Future<S>: Completing {
   /// **Internal use only**.
   public func makeCompletionHandler(
     executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) -> AnyObject? {
+    _ block: @escaping (_ completion: Completion, _ originalExecutor: Executor) -> Void) -> AnyObject? {
     assertAbstract()
   }
 

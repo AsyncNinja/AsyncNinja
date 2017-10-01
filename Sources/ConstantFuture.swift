@@ -24,16 +24,16 @@ import Dispatch
 
 /// A future that has been initialized as completed
 final class ConstantFuture<Success>: Future<Success> {
-  private var _completion: Fallible<Success>
-  override public var completion: Fallible<Success>? { return _completion }
+  private var _completion: Completion
+  override public var completion: Completion? { return _completion }
 
-  init(completion: Fallible<Success>) {
+  init(completion: Completion) {
     _completion = completion
   }
 
   override public func makeCompletionHandler(
     executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+    _ block: @escaping (_ completion: Completion, _ originalExecutor: Executor) -> Void
     ) -> AnyObject? {
     let completion = _completion
     executor.execute(from: nil) { (originalExecutor) in
@@ -55,7 +55,7 @@ final class ConstantFuture<Success>: Future<Success> {
 public extension Future {
 
   /// Makes completed future
-  static func completed(_ completion: Fallible<Success>) -> Future<Success> {
+  static func completed(_ completion: Completion) -> Future<Success> {
     return ConstantFuture(completion: completion)
   }
 

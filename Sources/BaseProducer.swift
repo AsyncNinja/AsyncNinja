@@ -31,7 +31,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
   private let _releasePool = ReleasePool(locking: PlaceholderLocking())
   var _locking = makeLocking()
   private var _handlers = QueueOfWeakElements<ProducerHandler<Update, Success>>()
-  private var _completion: Fallible<Success>?
+  private var _completion: Completion?
 
   /// amount of currently stored updates
   override public var bufferSize: Int {
@@ -43,7 +43,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
   override public var maxBufferSize: Int { return _maxBufferSize }
 
   /// completion of `Producer`. Returns nil if channel is not complete yet
-  override public var completion: Fallible<Success>? {
+  override public var completion: Completion? {
     _locking.lock()
     defer { _locking.unlock() }
     return _completion
@@ -175,7 +175,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
   ///   false if it was completed before
   @discardableResult
   public func tryComplete(
-    _ completion: Fallible<Success>,
+    _ completion: Completion,
     from originalExecutor: Executor? = nil
     ) -> Bool {
     // TEST: ChannelTests.testOverComplete
@@ -250,12 +250,12 @@ private class ProducerIteratorImpl<Update, Success>: ChannelIteratorImpl<Update,
   var _bufferedUpdates: Queue<Update>
   let _producer: BaseProducer<Update, Success>
   var _handler: ProducerHandler<Update, Success>?
-  override var completion: Fallible<Success>? {
+  override var completion: Completion? {
     _locking.lock()
     defer { _locking.unlock() }
     return _completion
   }
-  var _completion: Fallible<Success>?
+  var _completion: Completion?
 
   init(channel: BaseProducer<Update, Success>, bufferedUpdates: Queue<Update>) {
     _producer = channel

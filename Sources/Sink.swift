@@ -66,7 +66,7 @@ public class Sink<U, S>: EventDestination {
 
   /// Calls completion handler
   public func tryComplete(
-    _ completion: Fallible<Success>,
+    _ completion: Completion,
     from originalExecutor: Executor? = nil) -> Bool {
 
     _locking.lock()

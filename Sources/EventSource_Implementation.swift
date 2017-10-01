@@ -26,7 +26,7 @@ extension EventSource {
   /// **internal use only**
   public func makeCompletionHandler(
     executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+    _ block: @escaping (_ completion: Completion, _ originalExecutor: Executor) -> Void
     ) -> AnyObject? {
     return self.makeHandler(
       executor: executor
@@ -208,10 +208,10 @@ public extension EventSource {
   }
 
   /// Makes a future of accumulated updates and completion
-  func extractAll() -> Future<(updates: [Update], completion: Fallible<Success>)> {
+  func extractAll() -> Future<(updates: [Update], completion: Completion)> {
     var updates = [Update]()
     var locking = makeLocking(isFair: true)
-    let promise = Promise<(updates: [Update], completion: Fallible<Success>)>()
+    let promise = Promise<(updates: [Update], completion: Completion)>()
     let handler = self.makeHandler(executor: .immediate) { [weak promise] (event, _) in
       switch event {
       case let .update(update):

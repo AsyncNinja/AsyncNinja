@@ -31,11 +31,11 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
   private let _releasePool: ReleasePool
 
   /// Returns either completion for complete `Promise` or nil otherwise
-  override public var completion: Fallible<Success>? {
+  override public var completion: Completion? {
     return _locking.locker(self) { $0._completion }
   }
 
-  private var _completion: Fallible<Success>? {
+  private var _completion: Completion? {
     return self._state.completion
   }
 
@@ -56,7 +56,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
   /// **internal use only**
   override public func makeCompletionHandler(
     executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+    _ block: @escaping (_ completion: Completion, _ originalExecutor: Executor) -> Void
     ) -> AnyObject? {
 
     let (oldState, handler) = _locking
@@ -83,7 +83,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
   ///   you calling this method on.
   /// - Returns: true if `Promise` was completed with specified value
   public func tryComplete(
-    _ completion: Fallible<Success>,
+    _ completion: Completion,
     from originalExecutor: Executor? = nil
     ) -> Bool {
 
@@ -139,27 +139,28 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
 
 /// **internal use only**
 private class AbstractPromiseState<Success> {
-  var completion: Fallible<Success>? { return nil }
+  typealias Completion = Fallible<Success>
+  var completion: Completion? { return nil }
 
   func subscribe(
     owner: Future<Success>,
     executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+    _ block: @escaping (_ completion: Completion, _ originalExecutor: Executor) -> Void
     ) -> (AbstractPromiseState<Success>, PromiseHandler<Success>?) {
     return (self, nil)
   }
 
   func didSubscribe(
     executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>,
+    _ block: @escaping (_ completion: Completion,
     _ originalExecutor: Executor) -> Void) {
   }
 
-  func complete(completion: Fallible<Success>) -> (AbstractPromiseState<Success>, [PromiseHandler<Success>]?) {
+  func complete(completion: Completion) -> (AbstractPromiseState<Success>, [PromiseHandler<Success>]?) {
     fatalError()
   }
 
-  func didComplete(_ value: Fallible<Success>, from originalExecutor: Executor?) {
+  func didComplete(_ value: Completion, from originalExecutor: Executor?) {
   }
 }
 
@@ -172,7 +173,7 @@ private class InitialPromiseState<Success>: AbstractPromiseState<Success> {
   override func subscribe(
     owner: Future<Success>,
     executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+    _ block: @escaping (_ completion: Completion, _ originalExecutor: Executor) -> Void
     ) -> (AbstractPromiseState<Success>, PromiseHandler<Success>?) {
     let handler = PromiseHandler(executor: executor, block: block, owner: owner)
     return (SubscribedPromiseState(firstHandler: handler), handler)
@@ -180,16 +181,16 @@ private class InitialPromiseState<Success>: AbstractPromiseState<Success> {
 
   override func didSubscribe(
     executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>,
+    _ block: @escaping (_ completion: Completion,
     _ originalExecutor: Executor) -> Void) {
     notifyBlock(false)
   }
 
-  override func complete(completion: Fallible<Success>) -> (AbstractPromiseState<Success>, [PromiseHandler<Success>]?) {
+  override func complete(completion: Completion) -> (AbstractPromiseState<Success>, [PromiseHandler<Success>]?) {
     return (CompletedPromiseState<Success>(completion: completion), [])
   }
 
-  override func didComplete(_ value: Fallible<Success>, from originalExecutor: Executor?) {
+  override func didComplete(_ value: Completion, from originalExecutor: Executor?) {
     notifyBlock(true)
   }
 }
@@ -205,14 +206,14 @@ private class SubscribedPromiseState<Success>: AbstractPromiseState<Success> {
   override func subscribe(
     owner: Future<Success>,
     executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+    _ block: @escaping (_ completion: Completion, _ originalExecutor: Executor) -> Void
     ) -> (AbstractPromiseState<Success>, PromiseHandler<Success>?) {
     let handler = PromiseHandler(executor: executor, block: block, owner: owner)
     handlers.append(WeakBox(handler))
     return (self, handler)
   }
 
-  override func complete(completion: Fallible<Success>) -> (AbstractPromiseState<Success>, [PromiseHandler<Success>]?) {
+  override func complete(completion: Completion) -> (AbstractPromiseState<Success>, [PromiseHandler<Success>]?) {
     let unwrappedHandlers = handlers.flatMap { $0.value }
     handlers = []
     return (CompletedPromiseState<Success>(completion: completion), unwrappedHandlers)
@@ -221,31 +222,31 @@ private class SubscribedPromiseState<Success>: AbstractPromiseState<Success> {
 
 /// **internal use only**
 private class CompletedPromiseState<Success>: AbstractPromiseState<Success> {
-  override var completion: Fallible<Success>? { return _completion }
-  let _completion: Fallible<Success>
+  override var completion: Completion? { return _completion }
+  let _completion: Completion
 
-  init(completion: Fallible<Success>) {
+  init(completion: Completion) {
     _completion = completion
   }
 
   override func subscribe(
     owner: Future<Success>,
     executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+    _ block: @escaping (_ completion: Completion, _ originalExecutor: Executor) -> Void
     ) -> (AbstractPromiseState<Success>, PromiseHandler<Success>?) {
     return (self, nil)
   }
 
   override func didSubscribe(
     executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) {
+    _ block: @escaping (_ completion: Completion, _ originalExecutor: Executor) -> Void) {
     let localCompletion = _completion
     executor.execute(from: nil) { (originalExecutor) in
       block(localCompletion, originalExecutor)
     }
   }
 
-  override func complete(completion: Fallible<Success>) -> (AbstractPromiseState<Success>, [PromiseHandler<Success>]?) {
+  override func complete(completion: Completion) -> (AbstractPromiseState<Success>, [PromiseHandler<Success>]?) {
     return (self, nil)
   }
 }
@@ -255,7 +256,8 @@ private class CompletedPromiseState<Success>: AbstractPromiseState<Success> {
 /// Each subscription to a future value will be expressed in such handler.
 /// Future will accumulate handlers until completion or deallocacion.
 final private class PromiseHandler<Success> {
-  typealias Block = (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
+  typealias Completion = Fallible<Success>
+  typealias Block = (_ completion: Completion, _ originalExecutor: Executor) -> Void
   let executor: Executor
   let block: Block
   var owner: Future<Success>?
@@ -268,7 +270,7 @@ final private class PromiseHandler<Success> {
     self.owner = owner
   }
 
-  func handle(_ value: Fallible<Success>, from originalExecutor: Executor?) {
+  func handle(_ value: Completion, from originalExecutor: Executor?) {
     let localBlock = block
     executor.execute(from: originalExecutor) { (originalExecutor) in
       localBlock(value, originalExecutor)

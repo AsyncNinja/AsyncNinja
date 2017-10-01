@@ -31,7 +31,7 @@ public class Channel<U, S>: EventSource {
   public typealias Iterator = ChannelIterator<Update, Success>
 
   /// completion of channel. Returns nil if channel is not complete yet
-  public var completion: Fallible<Success>? { assertAbstract() }
+  public var completion: Completion? { assertAbstract() }
 
   /// amount of currently stored updates
   public var bufferSize: Int { assertAbstract() }
@@ -142,7 +142,7 @@ extension Channel: CustomStringConvertible, CustomDebugStringConvertible {
 
 public extension Channel {
   /// Synchronously waits for channel to complete. Returns all updates and completion
-  func waitForAll() -> (updates: [Update], completion: Fallible<Success>) {
+  func waitForAll() -> (updates: [Update], completion: Completion) {
     return try! self.extractAll().wait().liftSuccess() // swiftlint:disable:this force_try
   }
 
@@ -150,7 +150,7 @@ public extension Channel {
   ///
   /// - Parameter seconds: to wait completion for
   /// - Returns: completion value or nil if `Future` did not complete in specified timeout
-  func waitForAll(seconds: Double) -> (updates: [Update], completion: Fallible<Success>)? {
+  func waitForAll(seconds: Double) -> (updates: [Update], completion: Completion)? {
     return try! self.extractAll().wait(seconds: seconds)?.liftSuccess() // swiftlint:disable:this force_try
   }
 }
@@ -160,12 +160,13 @@ public extension Channel {
 /// Synchronously iterates over each update value of channel
 public struct ChannelIterator<Update, Success>: IteratorProtocol {
   public typealias Element = Update
+  public typealias Completion = Fallible<Success>
 
   // want to have reference to reference, because impl may actually be retained by some handler
   private var _implBox: Box<ChannelIteratorImpl<Update, Success>>
 
   /// completion of the channel. Will be available as soon as the channel completes.
-  public var completion: Fallible<Success>? { return _implBox.value.completion }
+  public var completion: Completion? { return _implBox.value.completion }
 
   /// success of the channel. Will be available as soon as the channel completes with success.
   public var success: Success? { return _implBox.value.completion?.success }
@@ -191,8 +192,9 @@ public struct ChannelIterator<Update, Success>: IteratorProtocol {
 
 /// **Internal use only**
 class ChannelIteratorImpl<Update, Success> {
+  typealias Completion = Fallible<Success>
   public typealias Element = Update
-  var completion: Fallible<Success>? { assertAbstract() }
+  var completion: Completion? { assertAbstract() }
 
   init() { }
 

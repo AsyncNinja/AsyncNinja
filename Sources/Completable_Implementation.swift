@@ -43,14 +43,14 @@ public extension Completable {
   ///   on `strictAsync: false` `Executor`s.
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
-  func complete(_ completion: Fallible<Success>, from originalExecutor: Executor?) {
+  func complete(_ completion: Completion, from originalExecutor: Executor?) {
     tryComplete(completion, from: originalExecutor)
   }
 
   /// Shorthand to tryComplete(with:) that does not return value
   ///
   /// - Parameter completion: value to compete `Completing` with
-  func complete(_ completion: Fallible<Success>) {
+  func complete(_ completion: Completion) {
     tryComplete(completion, from: nil)
   }
 
