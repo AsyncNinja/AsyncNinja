@@ -32,7 +32,9 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
 
   /// Returns either completion for complete `Promise` or nil otherwise
   override public var completion: Fallible<Success>? {
-    return _locking.locker(self) { $0._completion }
+    _locking.lock()
+    defer { _locking.unlock() }
+    return _completion
   }
 
   private var _completion: Fallible<Success>? {
@@ -59,13 +61,11 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
     ) -> AnyObject? {
 
-    let (oldState, handler) = _locking
-      .locker(self, executor, block) { (self_, executor, block) -> (PromiseState<Success>, AnyObject?) in
-        let oldState = self_._state
-        let (newState, handler) = oldState.subscribe(owner: self_, executor: executor, block)
-        self_._state = newState
-        return (oldState, handler)
-    }
+    _locking.lock()
+    let oldState = _state
+    let (newState, handler) = oldState.subscribe(owner: self, executor: executor, block)
+    _state = newState
+    _locking.unlock()
 
     oldState.didSubscribe(executor: executor, block)
 
@@ -87,13 +87,11 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
     from originalExecutor: Executor? = nil
     ) -> Bool {
 
-    let (oldState, completionResult) = _locking
-      .locker(self, completion) { (self_, completion) -> (PromiseState<Success>, PromiseStateCompletionResult<Success>) in
-      let oldState = self_._state
-      let (newState, completionResult) = oldState.complete(completion: completion)
-      self_._state = newState
-      return (oldState, completionResult)
-    }
+    _locking.lock()
+    let oldState = _state
+    let (newState, completionResult) = oldState.complete(completion: completion)
+    _state = newState
+    _locking.unlock()
 
     oldState.didComplete(completion, from: originalExecutor)
 
@@ -118,23 +116,24 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
 
   /// **internal use only**
   override public func _asyncNinja_retainUntilFinalization(_ releasable: Releasable) {
-    _locking.locker(self, releasable) { (self_, releasable) -> Void in
-      if !self_._isComplete {
-        self_._releasePool.insert(releasable)
-      }
+    _locking.lock()
+    if !_isComplete {
+      _releasePool.insert(releasable)
     }
+    _locking.unlock()
   }
 
   /// **internal use only**
   override public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
-    let shouldCallBlockNow = _locking.locker(self, block) { (self_, block) -> Bool in
-      if self_._isComplete {
-        return true
-      } else {
-        self_._releasePool.notifyDrain(block)
-        return false
-      }
+    let shouldCallBlockNow: Bool
+    _locking.lock()
+    if _isComplete {
+      shouldCallBlockNow = true
+    } else {
+      _releasePool.notifyDrain(block)
+      shouldCallBlockNow = false
     }
+    _locking.unlock()
 
     if shouldCallBlockNow {
       block()
