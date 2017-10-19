@@ -87,28 +87,33 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
     from originalExecutor: Executor? = nil
     ) -> Bool {
 
-    let (oldState, handlers) = _locking
-      .locker(self, completion) { (self_, completion) -> (PromiseState<Success>, [PromiseHandler<Success>]?) in
+    let (oldState, completionResult) = _locking
+      .locker(self, completion) { (self_, completion) -> (PromiseState<Success>, PromiseStateCompletionResult<Success>) in
       let oldState = self_._state
-      let (newState, handlers) = oldState.complete(completion: completion)
+      let (newState, completionResult) = oldState.complete(completion: completion)
       self_._state = newState
-      return (oldState, handlers)
+      return (oldState, completionResult)
     }
 
     oldState.didComplete(completion, from: originalExecutor)
 
-    guard let handlers_ = handlers else {
+    switch completionResult {
+    case .completeEmpty:
+      // it is not safe to use release pool outside critical section.
+      // But at this point we have a guarantee that nobody else will use it
+      _releasePool.drain()
+      return true
+    case .complete(let handlers):
+      for handler in handlers {
+        handler.handle(completion, from: originalExecutor)
+      }
+      // it is not safe to use release pool outside critical section.
+      // But at this point we have a guarantee that nobody else will use it
+      _releasePool.drain()
+      return true
+    case .overcomplete:
       return false
     }
-
-    for handler in handlers_ {
-      handler.handle(completion, from: originalExecutor)
-    }
-
-    // it is not safe to use release pool outside critical section.
-    // But at this point we have a guarantee that nobody else will use it
-    _releasePool.drain()
-    return true
   }
 
   /// **internal use only**
@@ -138,9 +143,18 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
 }
 
 /// **internal use only**
+private enum PromiseStateCompletionResult<Success> {
+  case completeEmpty
+  case complete([PromiseHandler<Success>])
+  case overcomplete
+}
+
+/// **internal use only**
 private enum PromiseState<Success> {
   case initial(notifyBlock: (_ isCompleted: Bool) -> Void)
-  case subscribed(handlers: MutableBox<[WeakBox<PromiseHandler<Success>>]>) // mutable box to prevent unexpected copy on write
+
+  // mutable box to prevent unexpected copy on write
+  case subscribed(handlers: MutableBox<[WeakBox<PromiseHandler<Success>>]>)
   case completed(completion: Fallible<Success>)
 
   var completion: Fallible<Success>? {
@@ -189,15 +203,15 @@ private enum PromiseState<Success> {
     }
   }
 
-  func complete(completion: Fallible<Success>) -> (PromiseState<Success>, [PromiseHandler<Success>]?) {
+  func complete(completion: Fallible<Success>) -> (PromiseState<Success>, PromiseStateCompletionResult<Success>) {
     switch self {
     case .initial:
-      return (.completed(completion: completion), [])
+      return (.completed(completion: completion), .completeEmpty)
     case let .subscribed(handlers):
       let unwrappedHandlers = handlers.value.flatMap { $0.value }
-      return (.completed(completion: completion), unwrappedHandlers)
+      return (.completed(completion: completion), .complete(unwrappedHandlers))
     case .completed:
-      return (self, nil)
+      return (self, .overcomplete)
     }
   }
 
