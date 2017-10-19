@@ -27,7 +27,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
   public typealias CompletingType = Future<Success>
 
   private var _locking = makeLocking()
-  private var _state: AbstractPromiseState<Success>
+  private var _state: PromiseState<Success>
   private let _releasePool: ReleasePool
 
   /// Returns either completion for complete `Promise` or nil otherwise
@@ -43,13 +43,13 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
 
   /// Designated initializer of promise
   override public init() {
-    _state = InitialPromiseState(notifyBlock: { _ in })
+    _state = .initial(notifyBlock: { _ in })
     _releasePool = ReleasePool(locking: PlaceholderLocking())
     super.init()
   }
 
   init(notifyBlock: @escaping (_ isCompleted: Bool) -> Void) {
-    _state = InitialPromiseState(notifyBlock: notifyBlock)
+    _state = .initial(notifyBlock: notifyBlock)
     _releasePool = ReleasePool(locking: PlaceholderLocking())
   }
 
@@ -60,7 +60,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
     ) -> AnyObject? {
 
     let (oldState, handler) = _locking
-      .locker(self, executor, block) { (self_, executor, block) -> (AbstractPromiseState<Success>, AnyObject?) in
+      .locker(self, executor, block) { (self_, executor, block) -> (PromiseState<Success>, AnyObject?) in
         let oldState = self_._state
         let (newState, handler) = oldState.subscribe(owner: self_, executor: executor, block)
         self_._state = newState
@@ -88,7 +88,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
     ) -> Bool {
 
     let (oldState, handlers) = _locking
-      .locker(self, completion) { (self_, completion) -> (AbstractPromiseState<Success>, [PromiseHandler<Success>]?) in
+      .locker(self, completion) { (self_, completion) -> (PromiseState<Success>, [PromiseHandler<Success>]?) in
       let oldState = self_._state
       let (newState, handlers) = oldState.complete(completion: completion)
       self_._state = newState
@@ -138,115 +138,78 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
 }
 
 /// **internal use only**
-private class AbstractPromiseState<Success> {
-  var completion: Fallible<Success>? { return nil }
+private enum PromiseState<Success> {
+  case initial(notifyBlock: (_ isCompleted: Bool) -> Void)
+  case subscribed(handlers: MutableBox<[WeakBox<PromiseHandler<Success>>]>) // mutable box to prevent unexpected copy on write
+  case completed(completion: Fallible<Success>)
+
+  var completion: Fallible<Success>? {
+    switch self {
+    case .initial:
+      return nil
+    case .subscribed:
+      return nil
+    case let .completed(completion):
+      return completion
+    }
+  }
 
   func subscribe(
     owner: Future<Success>,
     executor: Executor,
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
-    ) -> (AbstractPromiseState<Success>, PromiseHandler<Success>?) {
-    return (self, nil)
+    ) -> (PromiseState<Success>, PromiseHandler<Success>?) {
+    switch self {
+    case .initial:
+      let handler = PromiseHandler(executor: executor, block: block, owner: owner)
+      let handlers = [WeakBox(handler)]
+      return (.subscribed(handlers: MutableBox(handlers)), handler)
+    case let .subscribed(handlers):
+      let handler = PromiseHandler(executor: executor, block: block, owner: owner)
+      handlers.value.append(WeakBox(handler))
+      return (self, handler)
+    case .completed:
+      return (self, nil)
+    }
   }
 
   func didSubscribe(
     executor: Executor,
     _ block: @escaping (_ completion: Fallible<Success>,
     _ originalExecutor: Executor) -> Void) {
-  }
-
-  func complete(completion: Fallible<Success>) -> (AbstractPromiseState<Success>, [PromiseHandler<Success>]?) {
-    fatalError()
-  }
-
-  func didComplete(_ value: Fallible<Success>, from originalExecutor: Executor?) {
-  }
-}
-
-private class InitialPromiseState<Success>: AbstractPromiseState<Success> {
-  let notifyBlock: (_ isCompleted: Bool) -> Void
-  init(notifyBlock: @escaping (_ isCompleted: Bool) -> Void) {
-    self.notifyBlock = notifyBlock
-  }
-
-  override func subscribe(
-    owner: Future<Success>,
-    executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
-    ) -> (AbstractPromiseState<Success>, PromiseHandler<Success>?) {
-    let handler = PromiseHandler(executor: executor, block: block, owner: owner)
-    return (SubscribedPromiseState(firstHandler: handler), handler)
-  }
-
-  override func didSubscribe(
-    executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>,
-    _ originalExecutor: Executor) -> Void) {
-    notifyBlock(false)
-  }
-
-  override func complete(completion: Fallible<Success>) -> (AbstractPromiseState<Success>, [PromiseHandler<Success>]?) {
-    return (CompletedPromiseState<Success>(completion: completion), [])
-  }
-
-  override func didComplete(_ value: Fallible<Success>, from originalExecutor: Executor?) {
-    notifyBlock(true)
-  }
-}
-
-/// **internal use only**
-private class SubscribedPromiseState<Success>: AbstractPromiseState<Success> {
-  var handlers: [WeakBox<PromiseHandler<Success>>]
-
-  init(firstHandler: PromiseHandler<Success>) {
-    self.handlers = [WeakBox(firstHandler)]
-  }
-
-  override func subscribe(
-    owner: Future<Success>,
-    executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
-    ) -> (AbstractPromiseState<Success>, PromiseHandler<Success>?) {
-    let handler = PromiseHandler(executor: executor, block: block, owner: owner)
-    handlers.append(WeakBox(handler))
-    return (self, handler)
-  }
-
-  override func complete(completion: Fallible<Success>) -> (AbstractPromiseState<Success>, [PromiseHandler<Success>]?) {
-    let unwrappedHandlers = handlers.flatMap { $0.value }
-    handlers = []
-    return (CompletedPromiseState<Success>(completion: completion), unwrappedHandlers)
-  }
-}
-
-/// **internal use only**
-private class CompletedPromiseState<Success>: AbstractPromiseState<Success> {
-  override var completion: Fallible<Success>? { return _completion }
-  let _completion: Fallible<Success>
-
-  init(completion: Fallible<Success>) {
-    _completion = completion
-  }
-
-  override func subscribe(
-    owner: Future<Success>,
-    executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
-    ) -> (AbstractPromiseState<Success>, PromiseHandler<Success>?) {
-    return (self, nil)
-  }
-
-  override func didSubscribe(
-    executor: Executor,
-    _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void) {
-    let localCompletion = _completion
-    executor.execute(from: nil) { (originalExecutor) in
-      block(localCompletion, originalExecutor)
+    switch self {
+    case let .initial(notifyBlock):
+      notifyBlock(false)
+    case .subscribed:
+      break
+    case let .completed(completion):
+      executor.execute(from: nil) { (originalExecutor) in
+        block(completion, originalExecutor)
+      }
     }
   }
 
-  override func complete(completion: Fallible<Success>) -> (AbstractPromiseState<Success>, [PromiseHandler<Success>]?) {
-    return (self, nil)
+  func complete(completion: Fallible<Success>) -> (PromiseState<Success>, [PromiseHandler<Success>]?) {
+    switch self {
+    case .initial:
+      return (.completed(completion: completion), [])
+    case let .subscribed(handlers):
+      let unwrappedHandlers = handlers.value.flatMap { $0.value }
+      return (.completed(completion: completion), unwrappedHandlers)
+    case .completed:
+      return (self, nil)
+    }
+  }
+
+  func didComplete(_ value: Fallible<Success>, from originalExecutor: Executor?) {
+    switch self {
+    case let .initial(notifyBlock):
+      notifyBlock(true)
+    case .subscribed:
+      break
+    case .completed:
+      break
+    }
   }
 }
 
