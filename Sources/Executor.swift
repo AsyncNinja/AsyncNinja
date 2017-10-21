@@ -70,6 +70,15 @@ public struct Executor {
     }
   }
 
+  func execute<T>(from original: Executor?, value: T, _ block: @escaping (_ value: T, _ original: Executor) -> Void) {
+    if let original = original,
+      _impl.asyncNinja_canImmediatelyExecute(from: original._impl) {
+      block(value, original)
+    } else {
+      _impl.asyncNinja_execute { () -> Void in block(value, self) }
+    }
+  }
+
   /// Schedules specified block for execution after timeout
   ///
   /// - Parameters:

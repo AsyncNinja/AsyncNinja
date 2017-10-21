@@ -35,14 +35,18 @@ extension Completing {
     let promise = Promise<T>()
     let handler = makeCompletionHandler(executor: executor
     ) { [weak promise] (completion, originalExecutor) -> Void in
-      if pure, promise.isNone { return }
-      let transformedValue = fallible { try transform(completion) }
-      promise?.complete(transformedValue, from: originalExecutor)
+      if pure, case .none = promise { return }
+      do {
+        let transformedValue = try transform(completion)
+        promise?.complete(.success(transformedValue), from: originalExecutor)
+      } catch {
+        promise?.complete(.failure(error), from: originalExecutor)
+      }
     }
     if pure {
       promise._asyncNinja_retainHandlerUntilFinalization(handler)
     } else {
-      self._asyncNinja_retainHandlerUntilFinalization(handler)
+      _asyncNinja_retainHandlerUntilFinalization(handler)
     }
     return promise
   }

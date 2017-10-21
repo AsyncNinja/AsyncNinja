@@ -65,7 +65,7 @@ public extension Completable {
   /// - Returns: true if this call completed `Completable`
   @discardableResult
   func trySucceed(_ success: Success, from originalExecutor: Executor? = nil) -> Bool {
-    return tryComplete(Fallible(success: success), from: originalExecutor)
+    return tryComplete(.success(success), from: originalExecutor)
   }
 
   /// Shorthand to trySucceed(with:) that does not return value
@@ -77,14 +77,14 @@ public extension Completable {
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
   func succeed(_ success: Success, from originalExecutor: Executor?) {
-    complete(Fallible(success: success), from: originalExecutor)
+    complete(.success(success), from: originalExecutor)
   }
 
   /// Shorthand to trySucceed(with:) that does not return value
   ///
   /// - Parameter success: value to succeed `Completing` with
   func succeed(_ success: Success) {
-    complete(Fallible(success: success))
+    complete(.success(success))
   }
 
   /// Tries to complete self with failure vlue
@@ -98,7 +98,7 @@ public extension Completable {
   /// - Returns: true if this call completed `Completable`
   @discardableResult
   public func tryFail(_ failure: Swift.Error, from originalExecutor: Executor? = nil) -> Bool {
-    return tryComplete(Fallible(failure: failure), from: originalExecutor)
+    return tryComplete(.failure(failure), from: originalExecutor)
   }
 
   /// Shorthand to tryFail(with:) that does not return value
@@ -110,14 +110,14 @@ public extension Completable {
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
   public func fail(_ failure: Swift.Error, from originalExecutor: Executor?) {
-    complete(Fallible(failure: failure), from: originalExecutor)
+    complete(.failure(failure), from: originalExecutor)
   }
 
   /// Shorthand to tryFail(with:) that does not return value
   ///
   /// - Parameter failure: error to fail `Completing` with
   public func fail(_ failure: Swift.Error) {
-    complete(Fallible(failure: failure))
+    complete(.failure(failure))
   }
 
   /// Completes with cancellation (AsyncNinjaError.cancelled)

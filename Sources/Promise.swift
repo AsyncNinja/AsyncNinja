@@ -196,9 +196,7 @@ private enum PromiseState<Success> {
     case .subscribed:
       break
     case let .completed(completion):
-      executor.execute(from: nil) { (originalExecutor) in
-        block(completion, originalExecutor)
-      }
+      executor.execute(from: nil, value: completion, block)
     }
   }
 
