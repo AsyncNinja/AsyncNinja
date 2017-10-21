@@ -32,7 +32,9 @@ public class CancellationToken: Cancellable {
 
   /// Returns state of the object
   public var isCancelled: Bool {
-    return _locking.locker(self) { $0._isCancelled }
+    _locking.lock()
+    defer { _locking.unlock() }
+    return _isCancelled
   }
 
   /// Designated initializer
@@ -44,14 +46,16 @@ public class CancellationToken: Cancellable {
   }
 
   private func add(item: CancellationTokenItem) {
-    let shouldCancel = _locking.locker(self, item) { (self_, item) -> Bool in
-      if self_._isCancelled {
-        return self_._isBackCancelAllowed
-      }
-
-      self_._items?.append(item)
-      return false
+    let shouldCancel: Bool
+    _locking.lock()
+    if _isCancelled {
+      shouldCancel = _isBackCancelAllowed
+    } else {
+      _items?.append(item)
+      shouldCancel = false
     }
+
+    _locking.unlock()
 
     if shouldCancel {
       item.cancel()
@@ -71,11 +75,11 @@ public class CancellationToken: Cancellable {
 
   /// Manually cancelles all attached items
   public func cancel() {
-    let items = _locking.locker(self) { (self_) -> [CancellationTokenItem]? in
-      let oldItems = self_._items
-      self_._items = nil
-      return oldItems
-    }
+    let items: [CancellationTokenItem]?
+    _locking.lock()
+    items = _items
+    _items = nil
+    _locking.unlock()
 
     if let items = items {
       for item in items {

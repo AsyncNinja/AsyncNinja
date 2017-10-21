@@ -85,6 +85,8 @@ public extension Sequence {
     var unknownSubvaluesCount = subvalues.count
 
     func updateAndTest(index: Int, value: T) -> [T]? {
+      locking.lock()
+      defer { locking.unlock() }
       subvalues[index] = value
       unknownSubvaluesCount -= 1
       guard 0 == unknownSubvaluesCount else { return nil }
@@ -99,7 +101,7 @@ public extension Sequence {
 
         do {
           let subvalue = try transform(value)
-          if canContinue, let success = locking.locker(index, subvalue, updateAndTest) {
+          if canContinue, let success = updateAndTest(index: index, value: subvalue) {
             promise?.succeed(success, from: originalExecutor)
           }
         } catch {
