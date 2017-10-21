@@ -29,12 +29,12 @@ extension DispatchQueue: ExecutorImpl {
   var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { return false }
 
   func asyncNinja_execute(_ block: @escaping () -> Void) {
-    self.async { block() }
+    async(execute: block)
   }
 
   func asyncNinja_execute(after timeout: Double, _ block: @escaping () -> Void) {
     let wallDeadline = DispatchWallTime.now().adding(seconds: timeout)
-    self.asyncAfter(wallDeadline: wallDeadline) { block() }
+    asyncAfter(wallDeadline: wallDeadline, execute: block)
   }
 
   func asyncNinja_canImmediatelyExecute(from impl: ExecutorImpl) -> Bool {
@@ -60,7 +60,7 @@ public extension DispatchGroup {
     func completionFuture(executor: Executor) -> Future<Void> {
         let promise = Promise<Void>()
         let executor_ = executor.dispatchQueueBasedExecutor
-        self.notify(queue: executor_.representedDispatchQueue!) { [weak promise] in
+        notify(queue: executor_.representedDispatchQueue!) { [weak promise] in
             promise?.succeed((), from: executor_)
         }
         return promise

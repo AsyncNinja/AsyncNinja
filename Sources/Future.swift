@@ -30,7 +30,7 @@ public class Future<S>: Completing {
   public var completion: Fallible<Success>? { assertAbstract() }
 
   /// Returns either completion for complete `Future` or nil otherwise
-  public var value: Fallible<Success>? { return self.completion }
+  public var value: Fallible<Success>? { return completion }
 
   /// Base future is **abstract**.
   ///

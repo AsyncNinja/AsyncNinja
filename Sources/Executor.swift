@@ -176,12 +176,12 @@ private class PrimaryExecutorImpl: ExecutorImpl {
   var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { return true }
 
   func asyncNinja_execute(_ block: @escaping () -> Void) {
-    queue.async { block() }
+    queue.async(execute: block)
   }
 
   func asyncNinja_execute(after timeout: Double, _ block: @escaping () -> Void) {
     let wallDeadline = DispatchWallTime.now().adding(seconds: timeout)
-    queue.asyncAfter(wallDeadline: wallDeadline) { block() }
+    queue.asyncAfter(wallDeadline: wallDeadline, execute: block)
   }
 
   func asyncNinja_canImmediatelyExecute(from impl: ExecutorImpl) -> Bool {
@@ -219,9 +219,8 @@ private class ImmediateExecutorImpl: ExecutorImpl {
 
   func asyncNinja_execute(after timeout: Double, _ block: @escaping () -> Void) {
     let deadline = DispatchWallTime.now().adding(seconds: timeout)
-    DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
-      block()
-    }
+    DispatchQueue.global(qos: .default)
+      .asyncAfter(wallDeadline: deadline, execute: block)
   }
 
   func asyncNinja_canImmediatelyExecute(from impl: ExecutorImpl) -> Bool {
@@ -248,8 +247,10 @@ private class HandlerBasedExecutorImpl: ExecutorImpl {
 
   func asyncNinja_execute(after timeout: Double, _ block: @escaping () -> Void) {
     let deadline = DispatchWallTime.now().adding(seconds: timeout)
-    DispatchQueue.global(qos: .default).asyncAfter(wallDeadline: deadline) {
-      self.asyncNinja_execute(block)
+    let handler = _handler
+    DispatchQueue.global(qos: .default)
+      .asyncAfter(wallDeadline: deadline) {
+        handler(block)
     }
   }
 
