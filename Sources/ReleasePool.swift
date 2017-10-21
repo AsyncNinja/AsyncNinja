@@ -40,14 +40,19 @@ public class ReleasePool {
   }
 
   deinit {
-    drain()
+    _locking.lock()
+    let blocksContainer = _blocksContainer
+    _locking.unlock()
+    for block in blocksContainer {
+      block()
+    }
   }
 
   /// Inserts object to retain
   public func insert(_ releasable: Releasable) {
     _locking.lock()
-    defer { _locking.unlock() }
     _objectsContainer.append(releasable)
+    _locking.unlock()
   }
 
   /// Adds block to call on draining ReleasePool
@@ -55,16 +60,16 @@ public class ReleasePool {
   /// - Parameter block: to call
   public func notifyDrain(_ block: @escaping () -> Void) {
     _locking.lock()
-    defer { _locking.unlock() }
     _blocksContainer.append(block)
+    _locking.unlock()
   }
 
   /// Causes release of all retained objects
   public func drain() {
     _locking.lock()
-    _objectsContainer.removeAll()
+    _objectsContainer = []
     let blocksContainer = _blocksContainer
-    _blocksContainer.removeAll()
+    _blocksContainer = []
     _locking.unlock()
     for block in blocksContainer {
       block()

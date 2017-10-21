@@ -35,10 +35,7 @@ final class ConstantFuture<Success>: Future<Success> {
     executor: Executor,
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
     ) -> AnyObject? {
-    let completion = _completion
-    executor.execute(from: nil) { (originalExecutor) in
-      block(completion, originalExecutor)
-    }
+    executor.execute(from: nil, value: _completion, block)
     return nil
   }
 
@@ -101,7 +98,7 @@ public func future<Success>(completion: Fallible<Success>) -> Future<Success> {
 /// - Parameter success: success value to complete future with
 /// - Returns: succeeded future
 public func future<Success>(success: Success) -> Future<Success> {
-  return ConstantFuture(completion: Fallible(success: success))
+  return ConstantFuture(completion: .success(success))
 }
 
 /// Makes failed future
@@ -109,7 +106,7 @@ public func future<Success>(success: Success) -> Future<Success> {
 /// - Parameter failure: failure value (Error) to complete future with
 /// - Returns: failed future
 public func future<Success>(failure: Swift.Error) -> Future<Success> {
-  return ConstantFuture(completion: Fallible(failure: failure))
+  return ConstantFuture(completion: .failure(failure))
 }
 
 /// Makes cancelled future (shorthand to `future(failure: AsyncNinjaError.cancelled)`)

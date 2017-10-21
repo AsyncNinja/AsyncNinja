@@ -242,11 +242,8 @@ final private class PromiseHandler<Success> {
     self.owner = owner
   }
 
-  func handle(_ value: Fallible<Success>, from originalExecutor: Executor?) {
-    let localBlock = block
-    executor.execute(from: originalExecutor) { (originalExecutor) in
-      localBlock(value, originalExecutor)
-    }
+  func handle(_ completion: Fallible<Success>, from originalExecutor: Executor?) {
+    executor.execute(from: originalExecutor, value: completion, block)
     owner = nil
   }
 }
