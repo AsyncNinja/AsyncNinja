@@ -1,3 +1,6 @@
+# 1.2.3
+* [performance] `Future` and `Promise` performance degradation detected. Performance fixed and improved
+
 # 1.2.2
 * [improved] internal implementation of linked list
 * [fixed] compatibility [issue SR-5998](https://bugs.swift.org/browse/SR-5998) revealed by [improvement of type checker](https://github.com/apple/swift/pull/12072)
