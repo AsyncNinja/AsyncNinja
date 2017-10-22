@@ -165,6 +165,11 @@ public extension Completing {
   }
 }
 
+private func eternalWaiter(semaphore: DispatchSemaphore) -> DispatchTimeoutResult {
+  semaphore.wait()
+  return .success
+}
+
 /// Each of these methods synchronously awaits for future to complete.
 /// Using this method is **strongly** discouraged. Calling it on the same serial queue
 /// as any code performed on the same queue this future depends on will cause deadlock.
@@ -190,7 +195,7 @@ public extension Completing {
 
   /// Waits for future to complete and returns completion value. Waits forever
   func wait() -> Fallible<Success> {
-    return self.wait(waitingBlock: { $0.wait(); return .success })!
+    return wait(waitingBlock: eternalWaiter)!
   }
 
   /// Waits for future to complete and returns completion value
@@ -198,7 +203,7 @@ public extension Completing {
   /// - Parameter timeout: `DispatchTime` to wait completion for
   /// - Returns: completion value or nil if `Future` did not complete in specified timeout
   func wait(timeout: DispatchTime) -> Fallible<Success>? {
-    return self.wait(waitingBlock: { $0.wait(timeout: timeout) })
+    return wait(waitingBlock: { $0.wait(timeout: timeout) })
   }
 
   /// Waits for future to complete and returns completion value
@@ -206,7 +211,7 @@ public extension Completing {
   /// - Parameter wallTimeout: `DispatchWallTime` to wait completion for
   /// - Returns: completion value or nil if `Future` did not complete in specified timeout
   func wait(wallTimeout: DispatchWallTime) -> Fallible<Success>? {
-    return self.wait(waitingBlock: { $0.wait(wallTimeout: wallTimeout) })
+    return wait(waitingBlock: { $0.wait(wallTimeout: wallTimeout) })
   }
 
   /// Waits for future to complete and returns completion value

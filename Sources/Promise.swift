@@ -44,7 +44,7 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
 
   /// Designated initializer of promise
   override public init() {
-    _state = .initial(notifyBlock: { _ in })
+    _state = .initialNoBlock
     super.init()
   }
 
@@ -179,6 +179,7 @@ private enum PromiseStateCompletionResult<Success> {
 
 /// **internal use only**
 private enum PromiseState<Success> {
+  case initialNoBlock
   case initial(notifyBlock: (_ isCompleted: Bool) -> Void)
 
   // mutable box to prevent unexpected copy on write
@@ -191,7 +192,7 @@ private enum PromiseState<Success> {
     _ block: @escaping (_ completion: Fallible<Success>, _ originalExecutor: Executor) -> Void
     ) -> (PromiseState<Success>, PromiseHandler<Success>?) {
     switch self {
-    case .initial:
+    case .initialNoBlock, .initial:
       let handler = PromiseHandler(executor: executor, block: block, owner: owner)
       let handlers = [WeakBox(handler)]
       return (.subscribed(handlers: MutableBox(handlers)), handler)
@@ -209,6 +210,8 @@ private enum PromiseState<Success> {
     _ block: @escaping (_ completion: Fallible<Success>,
     _ originalExecutor: Executor) -> Void) {
     switch self {
+    case .initialNoBlock:
+      break
     case let .initial(notifyBlock):
       notifyBlock(false)
     case .subscribed:
@@ -220,6 +223,8 @@ private enum PromiseState<Success> {
 
   func complete(completion: Fallible<Success>) -> (PromiseState<Success>, PromiseStateCompletionResult<Success>) {
     switch self {
+    case .initialNoBlock:
+      return (.completed(completion: completion), .completeEmpty)
     case .initial:
       return (.completed(completion: completion), .completeEmpty)
     case let .subscribed(handlers):
@@ -232,6 +237,8 @@ private enum PromiseState<Success> {
 
   func didComplete(_ value: Fallible<Success>, from originalExecutor: Executor?) {
     switch self {
+    case .initialNoBlock:
+      break
     case let .initial(notifyBlock):
       notifyBlock(true)
     case .subscribed:
