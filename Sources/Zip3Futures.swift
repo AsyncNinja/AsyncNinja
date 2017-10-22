@@ -49,14 +49,15 @@ public func zip<A, B, C>(
       executor: .immediate
     ) { [weak promise] (localSubvalue, originalExecutor) in
 
-      let completion: Fallible<(A, B, C)>? = locking.locker {
-        switch localSubvalue {
-        case let .success(success):
-          return accumulator(success).flatMap(Fallible.success)
-        case let .failure(fail):
-          return .failure(fail)
-        }
+      let completion: Fallible<(A, B, C)>?
+      locking.lock()
+      switch localSubvalue {
+      case let .success(success):
+        completion = accumulator(success).flatMap(Fallible.success)
+      case let .failure(fail):
+        completion = .failure(fail)
       }
+      locking.unlock()
 
       if let completion = completion {
         promise?.complete(completion, from: originalExecutor)

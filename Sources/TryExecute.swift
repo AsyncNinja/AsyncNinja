@@ -279,7 +279,12 @@ private func _tryExecute<T>(
   ) { (originalExecutor) in
     guard case .some = promise.value else { return }
     let completion = fallible(block: block)
-    if lockingBox.value.locker({ validate(completion) }) {
+    let isValid: Bool
+    lockingBox.value.lock()
+    isValid = validate(completion)
+    lockingBox.value.unlock()
+
+    if isValid {
       promise.value?.complete(completion, from: originalExecutor)
     } else {
       _tryExecute(promise: promise, lockingBox: lockingBox, executor: executor, validate: validate, block)
@@ -302,7 +307,12 @@ private func _tryFlatExecute<T>(
     do {
       let future = try block()
       let handler = future.makeCompletionHandler(executor: .primary) { (completion, originalExecutor) in
-        if lockingBox.value.locker({ validate(completion) }) {
+        let isValid: Bool
+        lockingBox.value.lock()
+        isValid = validate(completion)
+        lockingBox.value.unlock()
+
+        if isValid {
           promise.value?.complete(completion, from: originalExecutor)
         } else {
           _tryFlatExecute(promise: promise, lockingBox: lockingBox, executor: executor, validate: validate, block)
@@ -312,7 +322,12 @@ private func _tryFlatExecute<T>(
 
     } catch {
       let completion = Fallible<T>(failure: error)
-      if lockingBox.value.locker({ validate(completion) }) {
+      let isValid: Bool
+      lockingBox.value.lock()
+      isValid = validate(completion)
+      lockingBox.value.unlock()
+
+      if isValid {
         promise.value?.complete(completion, from: originalExecutor)
       } else {
         _tryFlatExecute(promise: promise, lockingBox: lockingBox, executor: executor, validate: validate, block)

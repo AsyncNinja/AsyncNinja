@@ -165,6 +165,11 @@ public extension Completing {
   }
 }
 
+private func eternalWaiter(semaphore: DispatchSemaphore) -> DispatchTimeoutResult {
+  semaphore.wait()
+  return .success
+}
+
 /// Each of these methods synchronously awaits for future to complete.
 /// Using this method is **strongly** discouraged. Calling it on the same serial queue
 /// as any code performed on the same queue this future depends on will cause deadlock.
@@ -190,7 +195,7 @@ public extension Completing {
 
   /// Waits for future to complete and returns completion value. Waits forever
   func wait() -> Completion {
-    return self.wait(waitingBlock: { $0.wait(); return .success })!
+    return wait(waitingBlock: eternalWaiter)!
   }
 
   /// Waits for future to complete and returns completion value

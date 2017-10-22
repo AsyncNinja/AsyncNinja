@@ -96,6 +96,8 @@ public extension Sequence {
         guard case .some = promise, canContinue else { return }
 
         func updateAndTest(index: Int, subvalue: Fallible<T.Success>) -> Fallible<[T.Success]>? {
+          locking.lock()
+          defer { locking.unlock() }
           switch subvalue {
           case let .success(success):
             subvalues[index] = success
@@ -114,7 +116,7 @@ public extension Sequence {
             executor: .immediate
           ) { [weak promise] (subvalue, originalExecutor) in
             if let promise = promise, canContinue,
-              let completion = locking.locker(index, subvalue, updateAndTest) {
+              let completion = updateAndTest(index: index, subvalue: subvalue) {
               promise.complete(completion, from: originalExecutor)
             }
           }

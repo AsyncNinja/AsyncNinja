@@ -59,9 +59,9 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
     executor: Executor,
     _ block: @escaping (_ event: ChannelEvent<Update, Success>, _ originalExecutor: Executor) -> Void
     ) -> AnyObject? {
-    return _locking.locker {
-      return _makeHandler(executor: executor, block)
-    }
+    _locking.lock()
+    defer { _locking.unlock() }
+    return _makeHandler(executor: executor, block)
   }
 
   fileprivate func _makeHandler(

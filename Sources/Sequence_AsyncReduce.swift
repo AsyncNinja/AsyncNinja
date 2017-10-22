@@ -128,6 +128,8 @@ where Destination.Success == OutputElement {
   }
 
   func updateAndTest(index: Int, subcompletion: Fallible<InputElement>) -> Fallible<[InputElement?]>? {
+    locking.lock()
+    defer { locking.unlock() }
     switch subcompletion {
     case let .success(success):
       values[index] = success
@@ -148,7 +150,7 @@ where Destination.Success == OutputElement {
       guard
         self.canContinue,
         case .some = self.destination,
-        let valuesToReduce = self.locking.locker(index, completion, self.updateAndTest)
+        let valuesToReduce = self.updateAndTest(index: index, subcompletion: completion)
         else { return }
 
       switch valuesToReduce {
