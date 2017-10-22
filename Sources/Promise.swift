@@ -28,31 +28,34 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
 
   private var _locking = makeLocking()
   private var _state: PromiseState<Success>
-  private let _releasePool: ReleasePool
+  private var _objectsContainer = [Releasable]()
+  private var _blocksContainer = [() -> Void]()
 
   /// Returns either completion for complete `Promise` or nil otherwise
   override public var completion: Fallible<Success>? {
     _locking.lock()
     defer { _locking.unlock() }
-    return _completion
+    if case .completed(let completion) = _state {
+      return completion
+    } else {
+      return nil
+    }
   }
-
-  private var _completion: Fallible<Success>? {
-    return self._state.completion
-  }
-
-  private var _isComplete: Bool { return _completion.isSome }
 
   /// Designated initializer of promise
   override public init() {
     _state = .initial(notifyBlock: { _ in })
-    _releasePool = ReleasePool(locking: PlaceholderLocking())
     super.init()
   }
 
   init(notifyBlock: @escaping (_ isCompleted: Bool) -> Void) {
     _state = .initial(notifyBlock: notifyBlock)
-    _releasePool = ReleasePool(locking: PlaceholderLocking())
+  }
+
+  deinit {
+    for block in _blocksContainer {
+      block()
+    }
   }
 
   /// **internal use only**
@@ -87,38 +90,64 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
     from originalExecutor: Executor? = nil
     ) -> Bool {
 
+    var blocksContainer: [() -> Void]?
+    var objectContainer: [Releasable]?
+    let handlers: [PromiseHandler<Success>]
+
     _locking.lock()
+
     let oldState = _state
     let (newState, completionResult) = oldState.complete(completion: completion)
+    let didComplete: Bool
     _state = newState
+    switch completionResult {
+    case .completeEmpty:
+      objectContainer = _objectsContainer
+      _objectsContainer = []
+      blocksContainer = _blocksContainer
+      _blocksContainer = []
+      handlers = []
+      didComplete = true
+    case .complete(let handlers_):
+      objectContainer = _objectsContainer
+      _objectsContainer = []
+      blocksContainer = _blocksContainer
+      _blocksContainer = []
+      handlers = handlers_
+      didComplete = true
+    case .overcomplete:
+      objectContainer = []
+      blocksContainer = []
+      handlers = []
+      didComplete = false
+    }
+
     _locking.unlock()
 
     oldState.didComplete(completion, from: originalExecutor)
 
-    switch completionResult {
-    case .completeEmpty:
-      // it is not safe to use release pool outside critical section.
-      // But at this point we have a guarantee that nobody else will use it
-      _releasePool.drain()
-      return true
-    case .complete(let handlers):
-      for handler in handlers {
-        handler.handle(completion, from: originalExecutor)
-      }
-      // it is not safe to use release pool outside critical section.
-      // But at this point we have a guarantee that nobody else will use it
-      _releasePool.drain()
-      return true
-    case .overcomplete:
-      return false
+    for handler in handlers {
+      handler.handle(completion, from: originalExecutor)
     }
+
+    objectContainer = nil
+
+    if let blocksContainer = blocksContainer {
+      for block in blocksContainer {
+        block()
+      }
+    }
+
+    return didComplete
   }
 
   /// **internal use only**
   override public func _asyncNinja_retainUntilFinalization(_ releasable: Releasable) {
     _locking.lock()
-    if !_isComplete {
-      _releasePool.insert(releasable)
+    if case .completed = _state {
+      // do nothing
+    } else {
+      _objectsContainer.append(releasable)
     }
     _locking.unlock()
   }
@@ -127,10 +156,10 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
   override public func _asyncNinja_notifyFinalization(_ block: @escaping () -> Void) {
     let shouldCallBlockNow: Bool
     _locking.lock()
-    if _isComplete {
+    if case .completed = _state {
       shouldCallBlockNow = true
     } else {
-      _releasePool.notifyDrain(block)
+      _blocksContainer.append(block)
       shouldCallBlockNow = false
     }
     _locking.unlock()
@@ -155,17 +184,6 @@ private enum PromiseState<Success> {
   // mutable box to prevent unexpected copy on write
   case subscribed(handlers: MutableBox<[WeakBox<PromiseHandler<Success>>]>)
   case completed(completion: Fallible<Success>)
-
-  var completion: Fallible<Success>? {
-    switch self {
-    case .initial:
-      return nil
-    case .subscribed:
-      return nil
-    case let .completed(completion):
-      return completion
-    }
-  }
 
   func subscribe(
     owner: Future<Success>,
