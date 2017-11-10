@@ -90,9 +90,9 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
     from originalExecutor: Executor? = nil
     ) -> Bool {
 
-    var blocksContainer: [() -> Void]?
-    var objectContainer: [Releasable]?
-    let handlers: [PromiseHandler<Success>]
+    var blocksContainer: [() -> Void] = []
+    var objectContainer: [Releasable] = []
+    var handlers: [PromiseHandler<Success>] = []
 
     _locking.lock()
 
@@ -102,23 +102,15 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
     _state = newState
     switch completionResult {
     case .completeEmpty:
-      objectContainer = _objectsContainer
-      _objectsContainer = []
-      blocksContainer = _blocksContainer
-      _blocksContainer = []
-      handlers = []
+      swap(&objectContainer, &_objectsContainer)
+      swap(&blocksContainer, &_blocksContainer)
       didComplete = true
     case .complete(let handlers_):
-      objectContainer = _objectsContainer
-      _objectsContainer = []
-      blocksContainer = _blocksContainer
-      _blocksContainer = []
+      swap(&objectContainer, &_objectsContainer)
+      swap(&blocksContainer, &_blocksContainer)
       handlers = handlers_
       didComplete = true
     case .overcomplete:
-      objectContainer = []
-      blocksContainer = []
-      handlers = []
       didComplete = false
     }
 
@@ -130,12 +122,10 @@ final public class Promise<Success>: Future<Success>, Completable, CachableCompl
       handler.handle(completion, from: originalExecutor)
     }
 
-    objectContainer = nil
+    objectContainer = []
 
-    if let blocksContainer = blocksContainer {
-      for block in blocksContainer {
-        block()
-      }
+    for block in blocksContainer {
+      block()
     }
 
     return didComplete
