@@ -44,56 +44,55 @@ public func zip<A, B, C>(
   var subvalueB: B? = nil
   var subvalueC: C? = nil
 
-  func makeHandler<Z>(future: Future<Z>, _ accumulator: @escaping (Z) -> (A, B, C)?) -> AnyObject? {
-    return future.makeCompletionHandler(
+  func setupHandler<Z>(future: Future<Z>, _ accumulator: @escaping (Z) -> Fallible<(A, B, C)>?) {
+    let handler = future.makeCompletionHandler(
       executor: .immediate
     ) { [weak promise] (localSubvalue, originalExecutor) in
 
       let completion: Fallible<(A, B, C)>?
-      locking.lock()
       switch localSubvalue {
-      case let .success(success):
-        completion = accumulator(success).flatMap(Fallible.success)
+      case let .success(localSuccess):
+        locking.lock()
+        completion = accumulator(localSuccess)
+        locking.unlock()
       case let .failure(fail):
         completion = .failure(fail)
       }
-      locking.unlock()
 
       if let completion = completion {
         promise?.complete(completion, from: originalExecutor)
       }
     }
+
+    promise._asyncNinja_retainHandlerUntilFinalization(handler)
   }
 
-  let handlerA = makeHandler(future: futureA) {
+  setupHandler(future: futureA) {
     subvalueA = $0
     if let b = subvalueB, let c = subvalueC {
-      return ($0, b, c)
+      return .success(($0, b, c))
     } else {
       return nil
     }
   }
-  promise._asyncNinja_retainHandlerUntilFinalization(handlerA)
 
-  let handlerB = makeHandler(future: futureB) {
+  setupHandler(future: futureB) {
     subvalueB = $0
     if let a = subvalueA, let c = subvalueC {
-      return (a, $0, c)
+      return .success((a, $0, c))
     } else {
       return nil
     }
   }
-  promise._asyncNinja_retainHandlerUntilFinalization(handlerB)
 
-  let handlerC = makeHandler(future: futureC) {
+  setupHandler(future: futureC) {
     subvalueC = $0
     if let a = subvalueA, let b = subvalueB {
-      return (a, b, $0)
+      return .success((a, b, $0))
     } else {
       return nil
     }
   }
-  promise._asyncNinja_retainHandlerUntilFinalization(handlerC)
 
   return promise
 }
