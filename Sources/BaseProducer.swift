@@ -138,7 +138,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
   public func update<S: Sequence>(
     _ updates: S,
     from originalExecutor: Executor? = nil
-    ) where S.Iterator.Element == Update {
+    ) where S.Element == Update {
     // TEST: ChannelTests.testOverUpdateWithSeqence
 
     _locking.lock()

@@ -129,7 +129,7 @@
     }
   }
 
-  extension EventSource where Update: Collection, Update.Iterator.Element: NSObject {
+  extension EventSource where Update: Collection, Update.Element: NSObject {
 
     /// Returns channel of distinct update values of original channel.
     /// Works only for collections of NSObjects values

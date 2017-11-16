@@ -43,7 +43,7 @@ struct Stack_<Node: SinglyLinkedListElementNode>: SinglyLinkedListBased, Sequenc
     _impl.pushFront(element)
   }
 
-  mutating func push<S: Sequence>(_ elements: S) where S.Iterator.Element == Node.Element {
+  mutating func push<S: Sequence>(_ elements: S) where S.Element == Node.Element {
     if !isKnownUniquelyReferenced(&_impl) {
       _impl = SinglyLinkedListImpl(proto: _impl)
     }

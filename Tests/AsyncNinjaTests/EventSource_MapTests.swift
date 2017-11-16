@@ -42,8 +42,8 @@ class EventSource_MapTests: XCTestCase {
     ("testFlatMapOptionalContextual", testFlatMapOptionalContextual)
   ]
 
-  func makeChannel<S: Sequence, T>(updates: S, success: T) -> Channel<S.Iterator.Element, T> {
-    let producer = Producer<S.Iterator.Element, T>()
+  func makeChannel<S: Sequence, T>(updates: S, success: T) -> Channel<S.Element, T> {
+    let producer = Producer<S.Element, T>()
 
     DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
       producer.update(updates)

@@ -35,7 +35,7 @@ public extension Sequence {
   /// - Returns: a Future of Array of results
   func asyncMap<T>(
     executor: Executor = .primary,
-    _ transform: @escaping (_ element: Self.Iterator.Element) throws -> T
+    _ transform: @escaping (_ element: Element) throws -> T
     ) -> Future<[T]> {
     return _asyncMap(executor: executor, transform)
   }
@@ -53,7 +53,7 @@ public extension Sequence {
   func asyncMap<T, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    _ transform: @escaping (_ strongContext: C, _ element: Self.Iterator.Element) throws -> T
+    _ transform: @escaping (_ strongContext: C, _ element: Element) throws -> T
     ) -> Future<[T]> {
     let promise = _asyncMap(
       executor: executor ?? context.executor
@@ -69,9 +69,9 @@ public extension Sequence {
   /// **internal use only**
   func _asyncMap<T>(
     executor: Executor = .primary,
-    _ transform: @escaping (_ element: Self.Iterator.Element) throws -> T
+    _ transform: @escaping (_ element: Element) throws -> T
     ) -> Promise<[T]> {
-    func makeDummy(value: Self.Iterator.Element) -> T? {
+    func makeDummy(value: Element) -> T? {
       return nil
     }
     var subvalues: [T?] = self.map(makeDummy)

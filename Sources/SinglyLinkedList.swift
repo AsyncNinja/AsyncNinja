@@ -58,7 +58,7 @@ class SinglyLinkedListImpl<Node: SinglyLinkedListElementNode>: Sequence {
     count += 1
   }
 
-  func pushFront<S: Sequence>(_ elements: S) where S.Iterator.Element == Element {
+  func pushFront<S: Sequence>(_ elements: S) where S.Element == Element {
     elements.forEach(pushFront)
   }
 
@@ -73,7 +73,7 @@ class SinglyLinkedListImpl<Node: SinglyLinkedListElementNode>: Sequence {
     count += 1
   }
 
-  func pushBack<S: Sequence>(_ elements: S) where S.Iterator.Element == Element {
+  func pushBack<S: Sequence>(_ elements: S) where S.Element == Element {
     elements.forEach(pushBack)
   }
 

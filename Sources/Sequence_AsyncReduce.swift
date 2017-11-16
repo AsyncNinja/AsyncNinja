@@ -24,7 +24,7 @@ import Dispatch
 
 // MARK: - asyncReduce
 
-public extension Sequence where Self.Iterator.Element: Completing {
+public extension Sequence where Element: Completing {
 
   /// Asyncronously reduces over each element of the Sequence of Completing
   ///
@@ -36,7 +36,7 @@ public extension Sequence where Self.Iterator.Element: Completing {
   func asyncReduce<T>(
     _ initialResult: T,
     executor: Executor = .primary,
-    _ nextPartialResult: @escaping (_ accumulator: T, _ element: Self.Iterator.Element.Success) throws -> T
+    _ nextPartialResult: @escaping (_ accumulator: T, _ element: Element.Success) throws -> T
     ) -> Future<T> {
     // Test: BatchFutureTests.testReduce
     // Test: BatchFutureTests.testReduceThrows
@@ -57,8 +57,7 @@ public extension Sequence where Self.Iterator.Element: Completing {
     _ initialResult: T,
     context: C,
     executor: Executor? = nil,
-    // swiftlint:disable:next line_length
-    _ nextPartialResult: @escaping (_ strongContext: C, _ accumulator: T, _ element: Self.Iterator.Element.Success) throws -> T
+    _ nextPartialResult: @escaping (_ strongContext: C, _ accumulator: T, _ element: Element.Success) throws -> T
     ) -> Future<T> {
     let future = asyncReduce(initialResult,
                               executor: executor ?? context.executor
@@ -78,12 +77,12 @@ public extension Sequence where Self.Iterator.Element: Completing {
   internal func _asyncReduce<T>(
     _ initialResult: T,
     executor: Executor = .primary,
-    _ nextPartialResult: @escaping (_ accumulator: T, _ element: Self.Iterator.Element.Success) throws -> T
+    _ nextPartialResult: @escaping (_ accumulator: T, _ element: Element.Success) throws -> T
     ) -> Future<T> {
     // Test: BatchFutureTests.testReduce
     // Test: BatchFutureTests.testReduceThrows
 
-    let values: [Self.Iterator.Element.Success?] = self.map { _ in nil }
+    let values: [Element.Success?] = self.map { _ in nil }
     guard !values.isEmpty else { return .just(initialResult) }
     let promise = Promise<T>()
     let helper = SequenceAsyncReduceHelper(

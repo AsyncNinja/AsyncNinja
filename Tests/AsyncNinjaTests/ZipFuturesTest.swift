@@ -251,12 +251,12 @@ class ZipFuturesTest: XCTestCase {
   func testMerge2OfDifferentTypeFirst() {
     let futureA: Future<String> = future(after: 0.1) { return "Right" }
     let futureB: Future<Int> = future(after: 0.3) { return 0xbad }
-    XCTAssert(merge(futureA, futureB).wait().success! == .left("Right"))
+    XCTAssertEqual(merge(futureA, futureB).wait().success, .left("Right"))
   }
 
   func testMerge2OfDifferentTypeSecond() {
     let futureA: Future<Int> = future(after: 0.3) { return 0xbad }
     let futureB: Future<String> = future(after: 0.1) { return "Right" }
-    XCTAssert(merge(futureA, futureB).wait().success! == .right("Right"))
+    XCTAssertEqual(merge(futureA, futureB).wait().success, .right("Right"))
   }
 }

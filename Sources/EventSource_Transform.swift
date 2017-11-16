@@ -285,7 +285,7 @@ extension EventSource where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinja
   }
 }
 
-extension EventSource where Update: Collection, Update.Iterator.Element: Equatable {
+extension EventSource where Update: Collection, Update.Element: Equatable {
 
   /// Returns channel of distinct update values of original channel.
   /// Works only for collections of equatable values

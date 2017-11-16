@@ -68,15 +68,15 @@ class EitherTests: XCTestCase {
     let c = Either<Int, String>.right("hello")
     let d = Either<Int, String>.right("bye")
 
-    XCTAssert(a == a)
-    XCTAssert(a != b)
-    XCTAssert(a != c)
-    XCTAssert(a != d)
+    XCTAssertEqual(a, a)
+    XCTAssertNotEqual(a, b)
+    XCTAssertNotEqual(a, c)
+    XCTAssertNotEqual(a, d)
 
-    XCTAssert(c != a)
-    XCTAssert(c != b)
-    XCTAssert(c == c)
-    XCTAssert(c != d)
+    XCTAssertNotEqual(c, a)
+    XCTAssertNotEqual(c, b)
+    XCTAssertEqual(c, c)
+    XCTAssertNotEqual(c, d)
   }
 
   func testChannelEvent() {

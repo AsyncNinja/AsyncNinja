@@ -31,12 +31,20 @@ public enum Either<Left, Right> {
 
   /// returns left value if there is one
   public var left: Left? {
-    if case let .left(value) = self { return value } else { return nil }
+    if case let .left(value) = self {
+      return value
+    } else {
+      return nil
+    }
   }
 
   /// returns right value if there is one
   public var right: Right? {
-    if case let .right(value) = self { return value } else { return nil }
+    if case let .right(value) = self {
+      return value
+    } else {
+      return nil
+    }
   }
 
   /// Transforms left value of `Either`. Does nothing if the value contains right
@@ -103,9 +111,9 @@ extension Either: CustomStringConvertible, CustomDebugStringConvertible {
 }
 
 // MARK: - Equatable
-extension Either where Left: Equatable, Right: Equatable {
+extension Either: Equatable where Left: Equatable, Right: Equatable {
 
-  /// implementation of an "equals" operatior
+  // Two eithers are equal if they are both left or both right and their corresponding values are equal
   public static func == (lhs: Either, rhs: Either) -> Bool {
     switch (lhs, rhs) {
     case let (.left(valueA), .left(valueB)):
@@ -116,10 +124,19 @@ extension Either where Left: Equatable, Right: Equatable {
       return false
     }
   }
+}
 
-  /// implementation of an "not equals" operatior
-  public static func != (lhs: Either, rhs: Either) -> Bool {
-    return !(lhs == rhs)
+// MARK: - Hashable
+extension Either: Hashable where Left: Hashable, Right: Hashable {
+
+  // Simplistic implementation of hash value
+  public var hashValue: Int {
+    switch self {
+    case let .left(left):
+      return left.hashValue
+    case let .right(right):
+      return right.hashValue
+    }
   }
 }
 

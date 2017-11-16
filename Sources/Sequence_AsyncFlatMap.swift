@@ -36,7 +36,7 @@ public extension Sequence {
   /// - Returns: a Future of Array of results
   func asyncFlatMap<T: Completing>(
     executor: Executor = .primary,
-    _ transform: @escaping (_ element: Self.Iterator.Element) throws -> T
+    _ transform: @escaping (_ element: Self.Element) throws -> T
     ) -> Future<[T.Success]> {
     return _asyncFlatMap(executor: executor, transform)
   }
@@ -55,7 +55,7 @@ public extension Sequence {
   func asyncFlatMap<T: Completing, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
-    _ transform: @escaping (_ strongContext: C, _ element: Self.Iterator.Element) throws -> T
+    _ transform: @escaping (_ strongContext: C, _ element: Self.Element) throws -> T
     ) -> Future<[T.Success]> {
     let executor_ = executor ?? context.executor
     let future = _asyncFlatMap(
@@ -75,7 +75,7 @@ public extension Sequence {
   /// **internal use only**
   internal func _asyncFlatMap<T: Completing>(
     executor: Executor,
-    _ transform: @escaping (_ element: Self.Iterator.Element) throws -> T
+    _ transform: @escaping (_ element: Self.Element) throws -> T
     ) -> Future<[T.Success]> {
 
     var subvalues: [T.Success?] = self.map { _ in nil }
@@ -134,10 +134,10 @@ public extension Sequence {
 
 // MARK: - joined
 
-public extension Sequence where Self.Iterator.Element: Completing {
+public extension Sequence where Element: Completing {
 
   /// joins a Sequence of Completing to a Future of Array
-  func joined() -> Future<[Self.Iterator.Element.Success]> {
-    return _asyncFlatMap(executor: .immediate) { $0 as! Future<Self.Iterator.Element.Success> }
+  func joined() -> Future<[Element.Success]> {
+    return _asyncFlatMap(executor: .immediate) { $0 as! Future<Element.Success> }
   }
 }

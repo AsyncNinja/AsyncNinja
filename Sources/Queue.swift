@@ -43,7 +43,7 @@ struct Queue_<Node: SinglyLinkedListElementNode>: SinglyLinkedListBased, Sequenc
     _impl.pushBack(element)
   }
 
-  mutating func push<S: Sequence>(_ elements: S) where S.Iterator.Element == Iterator.Element {
+  mutating func push<S: Sequence>(_ elements: S) where S.Element == Element {
     if !isKnownUniquelyReferenced(&_impl) {
       _impl = SinglyLinkedListImpl(proto: _impl)
     }

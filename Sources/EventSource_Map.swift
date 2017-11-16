@@ -300,7 +300,7 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> PS
-    ) -> Channel<PS.Iterator.Element, Success> {
+    ) -> Channel<PS.Element, Success> {
     // Test: EventSource_MapTests.testFlatMapArrayContextual
 
     return makeProducer(
@@ -339,7 +339,7 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
     _ transform: @escaping (_ update: Update) throws -> PS
-    ) -> Channel<PS.Iterator.Element, Success> {
+    ) -> Channel<PS.Element, Success> {
     // Test: EventSource_MapTests.testFlatMapArray
 
     return makeProducer(

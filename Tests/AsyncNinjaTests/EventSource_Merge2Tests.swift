@@ -82,10 +82,7 @@ class EventSource_Merge2Tests: XCTestCase {
 
       channelOfNumbers.extractAll().onSuccess {
         let (numbers, stringsOfError) = $0
-        XCTAssertEqual(numbers.count, fixtureNumbers.count)
-        for (number, fixture) in zip(numbers, fixtureNumbers) {
-          XCTAssert(number == fixture)
-        }
+        XCTAssertEqual(numbers, fixtureNumbers)
         XCTAssertEqual(stringsOfError.success!.0, "Hello")
         XCTAssertEqual(stringsOfError.success!.1, "World")
 

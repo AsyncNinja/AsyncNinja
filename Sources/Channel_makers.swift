@@ -79,10 +79,10 @@ public func channel<U: ExecutionContext, Update, Success>(
 public func channel<C: Collection, Success>(
   updates: C,
   completion: Fallible<Success>
-  ) -> Channel<C.Iterator.Element, Success> {
+  ) -> Channel<C.Element, Success> {
   // TEST: ChannelMakersTests.testCompletedWithFunc
 
-  let producer = Producer<C.Iterator.Element, Success>(bufferedUpdates: updates)
+  let producer = Producer<C.Element, Success>(bufferedUpdates: updates)
   producer.complete(completion, from: nil)
   return producer
 }
@@ -91,7 +91,7 @@ public func channel<C: Collection, Success>(
 public func channel<C: Collection, Success>(
   updates: C,
   success: Success
-  ) -> Channel<C.Iterator.Element, Success> {
+  ) -> Channel<C.Element, Success> {
   // TEST: ChannelMakersTests.testSucceededWithFunc
 
   return channel(updates: updates, completion: .success(success))
@@ -101,7 +101,7 @@ public func channel<C: Collection, Success>(
 public func channel<C: Collection, Success>(
   updates: C,
   failure: Swift.Error
-  ) -> Channel<C.Iterator.Element, Success> {
+  ) -> Channel<C.Element, Success> {
   // TEST: ChannelMakersTests.testFailedWithFunc
 
   return channel(updates: updates, completion: .failure(failure))

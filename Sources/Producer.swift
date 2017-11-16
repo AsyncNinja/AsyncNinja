@@ -37,13 +37,13 @@ final public class Producer<Update, Success>: BaseProducer<Update, Success>, Cac
   }
 
   /// designated initializer of Producer. Initializes Producer with specified buffer size and values
-  public init<S: Sequence>(bufferSize: Int, bufferedUpdates: S) where S.Iterator.Element == Update {
+  public init<S: Sequence>(bufferSize: Int, bufferedUpdates: S) where S.Element == Update {
     super.init(bufferSize: bufferSize)
     _bufferedUpdates.push(bufferedUpdates.suffix(bufferSize))
   }
 
   /// designated initializer of Producer. Initializes Producer with specified buffer size and values
-  public init<C: Collection>(bufferedUpdates: C) where C.Iterator.Element == Update {
+  public init<C: Collection>(bufferedUpdates: C) where C.Element == Update {
     super.init(bufferSize: numericCast(bufferedUpdates.count))
     _bufferedUpdates.push(bufferedUpdates)
   }

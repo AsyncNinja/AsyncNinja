@@ -113,7 +113,11 @@ public extension Fallible {
   /// Returns success if Fallible has a success value inside.
   /// Returns nil otherwise
   var success: Success? {
-    if case let .success(success) = self { return success } else { return nil }
+    if case let .success(success) = self {
+      return success
+    } else {
+      return nil
+    }
   }
 
   /// Returns success if Fallible has a success value inside.
@@ -125,7 +129,11 @@ public extension Fallible {
   /// Returns failure if Fallible has a failure value inside.
   /// Returns nil otherwise
   var failure: Swift.Error? {
-    if case let .failure(failure) = self { return failure } else { return nil }
+    if case let .failure(failure) = self {
+      return failure
+    } else {
+      return nil
+    }
   }
 
   /// This method is convenient when you want to transfer back
@@ -179,7 +187,16 @@ public extension Fallible {
   ///   - success: success value of original Fallible
   /// - Returns: transformed Fallible
   func map<T>(_ transform: (_ success: Success) throws -> T) -> Fallible<T> {
-    return self.flatMap { .success(try transform($0)) }
+    switch self {
+    case let .success(success):
+      do {
+        return .success(try transform(success))
+      } catch {
+        return .failure(error)
+      }
+    case let .failure(failure):
+      return .failure(failure)
+    }
   }
 
   /// Applies transformation to Fallible and flattens nested Fallibles.
@@ -195,7 +212,11 @@ public extension Fallible {
   func flatMap<T>(_ transform: (_ success: Success) throws -> Fallible<T>) -> Fallible<T> {
     switch self {
     case let .success(success):
-      return flatFallible { try transform(success) }
+    do {
+      return try transform(success)
+    } catch {
+      return .failure(error)
+    }
     case let .failure(failure):
       return .failure(failure)
     }
@@ -216,7 +237,11 @@ public extension Fallible {
     case let .success(success):
       return .success(success)
     case let .failure(error):
-      do { return .success(try transform(error)) } catch { return .failure(error) }
+      do {
+        return .success(try transform(error))
+      } catch {
+        return .failure(error)
+      }
     }
   }
 
@@ -262,7 +287,11 @@ public extension Fallible {
 ///   A thrown error will become failure value of returned Fallible.
 /// - Returns: fallible constructed of a returned value or a thrown error with Fallible
 public func fallible<T>(block: () throws -> T) -> Fallible<T> {
-  do { return Fallible(success: try block()) } catch { return Fallible(failure: error) }
+  do {
+    return .success(try block())
+  } catch {
+    return .failure(error)
+  }
 }
 
 /// Executes specified block and returns returned Fallible or wraps a thrown error with Fallible
@@ -272,7 +301,11 @@ public func fallible<T>(block: () throws -> T) -> Fallible<T> {
 ///   A thrown error will become failure value of returned Fallible.
 /// - Returns: returned Fallible or a thrown error wrapped with Fallible
 public func flatFallible<T>(block: () throws -> Fallible<T>) -> Fallible<T> {
-  do { return try block() } catch { return Fallible(failure: error) }
+  do {
+    return try block()
+  } catch {
+    return .failure(error)
+  }
 }
 
 // MARK: - flattening
@@ -340,9 +373,7 @@ public protocol _Fallible: CustomStringConvertible {
 }
 
 // MARK: - equality
-extension Fallible where Success: Equatable {
-  /* TODO: update when conditional conformation becomes availble */
-
+extension Fallible: Equatable where Success: Equatable {
   /// Partial implementation of equality opeator for Fallibles
   /// You should check equalitu of unwrapped values rather then use this function
   public static func == (lhs: Fallible, rhs: Fallible) -> Bool {
@@ -361,9 +392,7 @@ extension Fallible where Success: Equatable {
 }
 
 // MARK: - hashing
-extension Fallible where Success: Hashable {
-  /* TODO: update when conditional conformation becomes availble */
-
+extension Fallible: Hashable where Success: Hashable {
   /// Partial implementation of hashValue for Fallibles
   /// You should get hashValue ofunwrapped values rather then use this method
   public var hashValue: Int {
