@@ -7,7 +7,7 @@
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)](https://travis-ci.org/AsyncNinja)
 
-**for Swift 3.1-4.0**
+**for Swift 3.1-4.1**
 
 |   | Features   |
 |---|---|
@@ -17,12 +17,13 @@
 | 🙌 <br/> improves existing things  | Key-Value Observing,  target-action, notifications, bindings            |
 | 🍳 <br/> less boilerplate code     | neat cancellation, threading, memory manament                  |
 | 🕶 <br/> extendable                | powerful extensions for `URLSession`, UI controls, `CoreData`, ... |
-| 🍱 <br/> all platforms <br/> (Swift 3.0-4.0)  |  🖥 macOS 10.10+  📱 iOS 8.0+ 📺 tvOS 9.0+ ⌚️ watchOS 2.0+ 🐧 Linux       |
+| 🍱 <br/> all platforms <br/> (Swift 3.1-4.1)  |  🖥 macOS 10.10+  📱 iOS 8.0+ 📺 tvOS 9.0+ ⌚️ watchOS 2.0+ 🐧 Linux       |
 | 🤓 <br/> documentation             | 100% + sample code, **[see full documentation](http://docs.async.ninja/)** |
 | 🔩 <br/> simple integration        | [SPM](Documentation/Integration.md#using-swift-package-manager), [CocoaPods](Documentation/Integration.md#cocoapods), [Carthage](Documentation/Integration.md#сarthage) |
 
-* Related Articles
+* Related articles
 	* Moving to nice asynchronous Swift code: [GitHub](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md), [Medium](https://medium.com/@AntonMironov/moving-to-nice-asynchronous-swift-code-7b0cb2eadde1)
+* [Known users](known_users.md)
 
 ## Communication
 

@@ -1,3 +1,6 @@
+# 1.2.4
+* [gardening] fixed multiple warnings
+
 # 1.2.3
 * [performance] `Future` and `Promise` performance degradation detected. Performance fixed and improved
 
