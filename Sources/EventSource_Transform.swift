@@ -259,62 +259,6 @@ extension EventSource where Update: Equatable {
   }
 }
 
-extension EventSource where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrapped: Equatable {
-
-  /// Returns channel of distinct update values of original channel.
-  /// Works only for equatable wrapped in optionals
-  /// [nil, 1, nil, nil, 2, 2, 3, nil, 3, 3, 4, 5, 6, 6, 7] => [nil, 1, nil, 2, 3, nil, 3, 4, 5, 6, 7]
-  ///
-  /// - Parameters:
-  ///   - cancellationToken: `CancellationToken` to use.
-  ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned primitive
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
-  ///     Keep default value of the argument unless you need
-  ///     an extended buffering options of returned channel
-  /// - Returns: channel with distinct update values
-  public func distinct(
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Update, Success> {
-
-    // Test: EventSource_TransformTests.testDistinctInts
-    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
-      $0.asyncNinjaOptionalValue == $1.asyncNinjaOptionalValue
-    }
-  }
-}
-
-extension EventSource where Update: Collection, Update.Element: Equatable {
-
-  /// Returns channel of distinct update values of original channel.
-  /// Works only for collections of equatable values
-  /// [[1], [1], [1, 2], [1, 2, 3], [1, 2, 3], [1]] => [[1], [1, 2], [1, 2, 3], [1]]
-  ///
-  /// - Parameters:
-  ///   - cancellationToken: `CancellationToken` to use.
-  ///     Keep default value of the argument unless you need
-  ///     an extended cancellation options of returned primitive
-  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
-  ///     Keep default value of the argument unless you need
-  ///     an extended buffering options of returned channel
-  /// - Returns: channel with distinct update values
-  public func distinct(
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default
-    ) -> Channel<Update, Success> {
-    // Test: EventSource_TransformTests.testDistinctArray
-
-    func isEqual(lhs: Update, rhs: Update) -> Bool {
-      return lhs.count == rhs.count
-        && !zip(lhs, rhs).contains { $0.0 != $0.1 }
-    }
-    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: isEqual)
-  }
-}
-
-// MARK: - skip
-
 public extension EventSource {
   /// Makes a channel that skips updates
   ///
