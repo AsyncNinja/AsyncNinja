@@ -218,7 +218,11 @@ private enum PromiseState<Success> {
     case .initial:
       return (.completed(completion: completion), .completeEmpty)
     case let .subscribed(handlers):
+      #if swift(>=4.1)
+      let unwrappedHandlers = handlers.value.compactMap { $0.value }
+      #else
       let unwrappedHandlers = handlers.value.flatMap { $0.value }
+      #endif
       return (.completed(completion: completion), .complete(unwrappedHandlers))
     case .completed:
       return (self, .overcomplete)

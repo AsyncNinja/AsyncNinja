@@ -259,6 +259,8 @@ extension EventSource where Update: Equatable {
   }
 }
 
+#if swift(>=4.1)
+#else
 extension EventSource where Update: AsyncNinjaOptionalAdaptor, Update.AsyncNinjaWrapped: Equatable {
 
   /// Returns channel of distinct update values of original channel.
@@ -312,6 +314,7 @@ extension EventSource where Update: Collection, Update.Iterator.Element: Equatab
     return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: isEqual)
   }
 }
+#endif
 
 // MARK: - skip
 
