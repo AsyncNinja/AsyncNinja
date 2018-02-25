@@ -1,3 +1,6 @@
+# 1.3.0
+* [changes] Swift 3.0 dropped
+
 # 1.2.4
 * [gardening] fixed multiple warnings
 

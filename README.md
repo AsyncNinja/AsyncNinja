@@ -7,7 +7,8 @@
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)](https://travis-ci.org/AsyncNinja)
 
-**for Swift 3.1-4.1**
+* **1.3.0 is for Swift 4.0+**
+* **use 1.2.4 for latest release for Swift 3**
 
 |   | Features   |
 |---|---|
@@ -17,7 +18,7 @@
 | 🙌 <br/> improves existing things  | Key-Value Observing,  target-action, notifications, bindings            |
 | 🍳 <br/> less boilerplate code     | neat cancellation, threading, memory manament                  |
 | 🕶 <br/> extendable                | powerful extensions for `URLSession`, UI controls, `CoreData`, ... |
-| 🍱 <br/> all platforms <br/> (Swift 3.1-4.1)  |  🖥 macOS 10.10+  📱 iOS 8.0+ 📺 tvOS 9.0+ ⌚️ watchOS 2.0+ 🐧 Linux       |
+| 🍱 <br/> all platforms <br/>       |  🖥 macOS 10.10+  📱 iOS 8.0+ 📺 tvOS 9.0+ ⌚️ watchOS 2.0+ 🐧 Linux       |
 | 🤓 <br/> documentation             | 100% + sample code, **[see full documentation](http://docs.async.ninja/)** |
 | 🔩 <br/> simple integration        | [SPM](Documentation/Integration.md#using-swift-package-manager), [CocoaPods](Documentation/Integration.md#cocoapods), [Carthage](Documentation/Integration.md#сarthage) |
 
