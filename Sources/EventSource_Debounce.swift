@@ -82,19 +82,11 @@ where Source.Update == Destination.Update, Source.Success == Destination.Success
     let queue = DispatchQueue.global(qos: qos)
     let executor = Executor.queue(queue)
     let timer = DispatchSource.makeTimerSource(queue: queue)
-    #if swift(>=4.0)
-      if let leeway = leeway {
+    if let leeway = leeway {
       timer.schedule(deadline: deadline, repeating: interval, leeway: leeway)
-      } else {
+    } else {
       timer.schedule(deadline: deadline, repeating: interval)
-      }
-    #else
-      if let leeway = leeway {
-        timer.scheduleRepeating(deadline: deadline, interval: interval, leeway: leeway)
-      } else {
-        timer.scheduleRepeating(deadline: deadline, interval: interval)
-      }
-    #endif
+    }
 
     timer.setEventHandler {
       self.locking.lock()

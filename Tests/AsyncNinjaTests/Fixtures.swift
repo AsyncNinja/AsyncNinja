@@ -34,7 +34,6 @@
     static let bools: [Bool] = [true, true, false, false, true]
     static let stringsAndNils: [String?] = ["1", nil, "1", "1", "2", "2", nil, nil, "3", "1", "4"]
     static let strings: [String] = Fixtures.stringsAndNils.flatMap { $0 }
-    #if swift(>=4.0)
     static let attributedStrings = Fixtures.strings
       .map {
         NSAttributedString(string: $0,
@@ -42,15 +41,6 @@
                             NSAttributedStringKey.font: UIFont.systemFont(ofSize: 14.0)
           ])
     }
-    #else
-    static let attributedStrings = Fixtures.strings
-      .map {
-        NSAttributedString(string: $0,
-                           attributes: [
-                            NSFontAttributeName: UIFont.systemFont(ofSize: 14.0)
-          ])
-    }
-    #endif
     static let colorsAndNils: [UIColor?]
       = [.white, .white, nil, .red, nil, nil, .green, nil, .green, .blue, .blue]
     static let colors: [UIColor] = Fixtures.colorsAndNils.flatMap { $0 }

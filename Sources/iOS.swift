@@ -394,17 +394,10 @@
     @available(iOS 8.0, *)
     var landscapeImagePhone: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "landscapeImagePhone") }
 
-    #if swift(>=4.0)
     /// `Sink` that refers to write-only `UIBarItem.setTitleTextAttributes(_:, for:)`
     func titleTextAttributes(for state: UIControlState) -> Sink<[NSAttributedStringKey: Any]?, Void> {
       return sink { $0.setTitleTextAttributes($1, for: state) }
     }
-    #else
-    /// `Sink` that refers to write-only `UIBarItem.setTitleTextAttributes(_:, for:)`
-    func titleTextAttributes(for state: UIControlState) -> Sink<[String: Any]?, Void> {
-      return sink { $0.setTitleTextAttributes($1, for: state) }
-    }
-    #endif
   }
 
   // MARK: - reactive properties for UIBarButtonItem

@@ -82,15 +82,10 @@
 
     func testUITextField() {
       let object = UITextField()
-      #if swift(>=4.0)
-        let defaultTextAttributes: [NSAttributedStringKey:Any] = Dictionary(uniqueKeysWithValues:
-          object.defaultTextAttributes.map { (NSAttributedStringKey($0.key), $0.value) })
-        let attributedStringsFixtures = Fixtures.strings
-          .map { NSAttributedString(string: $0, attributes: defaultTextAttributes) }
-      #else
-        let attributedStringsFixtures = Fixtures.strings
-          .map { NSAttributedString(string: $0, attributes: object.defaultTextAttributes) }
-      #endif
+      let defaultTextAttributes: [NSAttributedStringKey: Any] = Dictionary(uniqueKeysWithValues:
+        object.defaultTextAttributes.map { (NSAttributedStringKey($0.key), $0.value) })
+      let attributedStringsFixtures = Fixtures.strings
+        .map { NSAttributedString(string: $0, attributes: defaultTextAttributes) }
       testEventStream(object.rp.text,
                       object: object,
                       keyPathOrGetSet: .left("text"),
