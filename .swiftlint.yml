@@ -6,7 +6,5 @@ disabled_rules:
   - file_length
   - function_parameter_count
   - todo
-  - type_body_length
   - nesting
   - block_based_kvo
-  - xctfail_message
