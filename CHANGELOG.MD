@@ -1,5 +1,14 @@
 # 2.0.0-beta.1
-* [changed] project configuration changed to support Swift 4.0+
+* [changed] KVO engine
+
+# 1.3.0
+* [changes] Swift 3.0 dropped
+
+# 1.2.4
+* [gardening] fixed multiple warnings
+
+# 1.2.3
+* [performance] `Future` and `Promise` performance degradation detected. Performance fixed and improved
 
 # 1.2.2
 * [improved] internal implementation of linked list

@@ -1,6 +1,6 @@
 // swift-tools-version:4.0
 //
-//  Copyright (c) 2016-2017 Anton Mironov
+//  Copyright (c) 2016-2018 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -31,8 +31,14 @@ let package = Package(
       	.library(name: "AsyncNinjaDynamic", type: .dynamic, targets: ["AsyncNinja"])
       ],
       targets: [
-        .target(name: "AsyncNinja", path: "Sources"),
-        .testTarget(name: "AsyncNinjaTests", dependencies: [.target(name: "AsyncNinja")], path: "Tests/AsyncNinjaTests")
+        .target(
+          name: "AsyncNinja",
+          path: "Sources"),
+
+        .testTarget(
+          name: "AsyncNinjaTests",
+          dependencies: ["AsyncNinja"],
+          path: "Tests/AsyncNinjaTests")
       ],
-      swiftLanguageVersions: [4]
+      swiftLanguageVersions: [.v4_2]
     )

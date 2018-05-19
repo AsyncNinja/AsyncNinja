@@ -82,7 +82,7 @@
 
     func testUITextField() {
       let object = UITextField()
-      let defaultTextAttributes: [NSAttributedStringKey:Any] = Dictionary(uniqueKeysWithValues:
+      let defaultTextAttributes: [NSAttributedStringKey: Any] = Dictionary(uniqueKeysWithValues:
         object.defaultTextAttributes.map { (NSAttributedStringKey($0.key), $0.value) })
       let attributedStringsFixtures = Fixtures.strings
         .map { NSAttributedString(string: $0, attributes: defaultTextAttributes) }

@@ -245,7 +245,7 @@ public extension Fallible {
     }
   }
 
-  /// Applies non-trowable transformation to Fallible
+  /// Applies non-throwable transformation to Fallible
   ///
   /// - Parameters:
   ///   - transform: block to apply.
@@ -263,7 +263,7 @@ public extension Fallible {
     }
   }
 
-  /// Applies non-trowable transformation to Fallible
+  /// Applies non-throwable transformation to Fallible
   ///
   /// - Parameters:
   ///   - success: recover failure with

@@ -122,9 +122,12 @@ func mysleep(_ duration: Double) {
   #endif
 }
 
-enum TestError: Error {
+enum TestError: String, Error, CustomStringConvertible, CustomDebugStringConvertible {
   case testCode
   case otherCode
+
+  var description: String { return rawValue }
+  var debugDescription: String { return rawValue }
 }
 
 func square(_ value: Int) -> Int {

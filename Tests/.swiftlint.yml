@@ -1,0 +1,4 @@
+disabled_rules:
+  - function_body_length
+  - type_body_length
+  - xctfail_message

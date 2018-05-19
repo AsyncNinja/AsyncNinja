@@ -218,7 +218,7 @@ private enum PromiseState<Success> {
     case .initial:
       return (.completed(completion: completion), .completeEmpty)
     case let .subscribed(handlers):
-      let unwrappedHandlers = handlers.value.flatMap { $0.value }
+      let unwrappedHandlers = handlers.value.compactMap { $0.value }
       return (.completed(completion: completion), .complete(unwrappedHandlers))
     case .completed:
       return (self, .overcomplete)
