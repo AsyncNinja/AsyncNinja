@@ -33,56 +33,39 @@
     case replace(T)
   }
 
-  /// **Internal use only** `KeyPathObserver` is an object for managing KVO.
-  @objc(AsyncNinja_KeyPathObserver) final class KeyPathObserver: NSObject, ObservationSessionItem {
-    typealias ObservationBlock = (_ object: Any?, _ changes: [NSKeyValueChangeKey: Any]) -> Void
+/// **Internal use only** `KeyPathObserver` is an object for managing KVO.
+final class KeyPathObserver<Root: NSObject, Value>: ObservationSessionItem {
+  typealias _KeyPath = KeyPath<Root, Value>
+  typealias _ChangeHandler = (Root, NSKeyValueObservedChange<Value>) -> Void
 
-    let object: Unmanaged<NSObject>
-    let keyPath: String
-    let options: NSKeyValueObservingOptions
-    let observationBlock: ObservationBlock
-    var isEnabled: Bool {
-      didSet {
-        if isEnabled == oldValue {
-          return
-        } else if isEnabled {
-          object.takeUnretainedValue().addObserver(self, forKeyPath: keyPath, options: options, context: nil)
-        } else {
-          object.takeUnretainedValue().removeObserver(self, forKeyPath: keyPath)
-        }
-      }
-    }
+  let _keyPath: _KeyPath
+  private weak var _object: Root?
+  private let _changeHandler: _ChangeHandler
+  private var _observation: NSKeyValueObservation?
+  private let _options: NSKeyValueObservingOptions
 
-    init(object: NSObject,
-         keyPath: String,
-         options: NSKeyValueObservingOptions,
-         isEnabled: Bool,
-         observationBlock: @escaping ObservationBlock) {
-      self.object = Unmanaged.passUnretained(object)
-      self.keyPath = keyPath
-      self.options = options
-      self.observationBlock = observationBlock
-      self.isEnabled = isEnabled
-      super.init()
-      if isEnabled {
-        object.addObserver(self, forKeyPath: keyPath, options: options, context: nil)
-      }
-    }
-
-    deinit {
-      self.isEnabled = false
-    }
-
-    override func observeValue(forKeyPath keyPath: String?,
-                               of object: Any?,
-                               change: [NSKeyValueChangeKey: Any]?,
-                               context: UnsafeMutableRawPointer?) {
-      assert(keyPath == self.keyPath)
-      if let change = change {
-        observationBlock(object, change)
+  var isEnabled: Bool {
+    get { return _observation.isSome }
+    set {
+      if newValue == _observation.isSome {
+        // do nothing
+      } else if !newValue {
+        _observation = .none
+      } else if _observation.isNone {
+        _observation = _object?.observe(_keyPath, options: _options, changeHandler: _changeHandler)
       }
     }
   }
+
+  init(keyPath: _KeyPath, object: Root, options: NSKeyValueObservingOptions, changeHandler: @escaping _ChangeHandler) {
+    _keyPath = keyPath
+    _object = object
+    _options = options
+    _changeHandler = changeHandler
+    _observation = .none
+    isEnabled = true
+  }
+}
 
   @objc protocol ObservationSessionItem: AnyObject {
     var isEnabled: Bool { get set }

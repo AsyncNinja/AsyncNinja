@@ -20,6 +20,8 @@
 //  IN THE SOFTWARE.
 //
 
+/*
+
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
   import Foundation
 
@@ -165,3 +167,5 @@
     }
   }
 #endif
+
+ */

@@ -20,6 +20,8 @@
 //  IN THE SOFTWARE.
 //
 
+/*
+
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
   import Foundation
 
@@ -240,3 +242,5 @@
     var rx: ReactiveProperties<Self> { return reactiveProperties(from: executor) }
   }
 #endif
+
+ */

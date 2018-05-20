@@ -159,4 +159,160 @@ class TestObjCActor: NSObject, Actor, ObjCInjectedRetainer {
     var executor: Executor { return .queue(self.internalQueue) }
 }
 
+class UITestCase: XCTestCase {
+}
+
+// MARK: - regular testing functions
+extension UITestCase {
+  func testEventStream<Root: NSObject&ExecutionContext, Value: Equatable>(
+    _ object: Root,
+    keyPath: ReferenceWritableKeyPath<Root, Value>,
+    getter: ((Root) -> Value)? = nil,
+    setter: ((Root, Value) -> Void)? = nil,
+    values: [Value],
+    file: StaticString = #file,
+    line: UInt = #line
+    ) {
+    testEventDestination(object, keyPath: keyPath, getter: getter, values: values, file: file, line: line)
+    if let setter = setter {
+      testEventSource(object, keyPath: keyPath, setter: setter, values: values, file: file, line: line)
+    } else {
+      testEventSource(object, keyPath: keyPath, values: values, file: file, line: line)
+    }
+  }
+
+  func testEventDestination<Root: NSObject&ExecutionContext, Value: Equatable>(
+    _ object: Root,
+    keyPath: ReferenceWritableKeyPath<Root, Value>,
+    getter: ((Root) -> Value)?,
+    values: [Value],
+    file: StaticString = #file,
+    line: UInt = #line
+    ) {
+    let eventDestination = object[updatableKeyPath: keyPath]
+    for expectedValue in values {
+      eventDestination.update(expectedValue, from: .main)
+      let actualValue: Value? = eval {
+        if let getter = getter {
+          return getter(object)
+        } else {
+          return object[keyPath: keyPath]
+        }
+      }
+      XCTAssertEqual(actualValue, expectedValue, file: file, line: line)
+    }
+  }
+
+  func testEventSource<Root: NSObject&ExecutionContext, Value: Equatable>(
+    _ object: Root,
+    keyPath: KeyPath<Root, Value>,
+    setter: (Root, Value) -> Void,
+    values: [Value],
+    file: StaticString = #file,
+    line: UInt = #line
+    ) {
+    var updatingIterator: ChannelIterator<Value, Void> = object[updatingKeyPath: keyPath].makeIterator()
+    _ = updatingIterator.next() // skip an initial value
+    for expectedValue in values {
+      setter(object, expectedValue)
+      let actualValue: Value? = updatingIterator.next()
+      XCTAssertEqual(actualValue, expectedValue, file: file, line: line)
+    }
+  }
+
+  func testEventSource<Root: NSObject&ExecutionContext, Value: Equatable>(
+    _ object: Root,
+    keyPath: ReferenceWritableKeyPath<Root, Value>,
+    values: [Value],
+    file: StaticString = #file,
+    line: UInt = #line
+    ) {
+    var updatingIterator: ChannelIterator<Value, Void> = object[updatingKeyPath: keyPath].makeIterator()
+    _ = updatingIterator.next() // skip an initial value
+    for value in values {
+      object[keyPath: keyPath] = value
+      XCTAssertEqual(updatingIterator.next(), value, file: file, line: line)
+    }
+  }
+}
+
+// MARK: - IUO testing functions
+extension UITestCase {
+  func testEventStreamForIUO<Root: NSObject&ExecutionContext, Value: Equatable>(
+    _ object: Root,
+    keyPath: ReferenceWritableKeyPath<Root, Value!>,
+    getter: ((Root) -> Value!)? = nil,
+    setter: ((Root, Value!) -> Void)? = nil,
+    values: [Value!],
+    file: StaticString = #file,
+    line: UInt = #line
+    ) {
+    testEventDestinationForIUO(object, keyPath: keyPath, getter: getter, values: values, file: file, line: line)
+    if let setter = setter {
+      testEventSourceForIUO(object, keyPath: keyPath, setter: setter, values: values, file: file, line: line)
+    } else {
+      testEventSourceForIUO(object, keyPath: keyPath, values: values, file: file, line: line)
+    }
+  }
+
+  func testEventDestinationForIUO<Root: NSObject&ExecutionContext, Value: Equatable>(
+    _ object: Root,
+    keyPath: ReferenceWritableKeyPath<Root, Value!>,
+    getter: ((Root) -> Value!)?,
+    values: [Value!],
+    file: StaticString = #file,
+    line: UInt = #line
+    ) {
+    let eventDestination = object[updatableKeyPath: keyPath]
+    for expectedValue in values {
+      eventDestination.update(expectedValue, from: .main)
+      let actualValue: Value? = eval {
+        if let getter = getter {
+          return getter(object)
+        } else {
+          return object[keyPath: keyPath]
+        }
+      }
+      XCTAssertEqual(actualValue, expectedValue, file: file, line: line)
+    }
+  }
+
+  func testEventSourceForIUO<Root: NSObject&ExecutionContext, Value: Equatable>(
+    _ object: Root,
+    keyPath: KeyPath<Root, Value!>,
+    setter: (Root, Value!) -> Void,
+    values: [Value!],
+    file: StaticString = #file,
+    line: UInt = #line
+    ) {
+    var updatingIterator: ChannelIterator<Value!, Void> = object[updatingKeyPath: keyPath].makeIterator()
+    _ = updatingIterator.next() // skip an initial value
+    for expectedValue in values {
+      setter(object, expectedValue)
+      let actualValue: Value? = updatingIterator.next()
+      XCTAssertEqual(actualValue, expectedValue, file: file, line: line)
+    }
+  }
+
+  func testEventSourceForIUO<Root: NSObject&ExecutionContext, Value: Equatable>(
+    _ object: Root,
+    keyPath: ReferenceWritableKeyPath<Root, Value!>,
+    values: [Value!],
+    file: StaticString = #file,
+    line: UInt = #line
+    ) {
+    var updatingIterator: ChannelIterator<Value!, Void> = object[updatingKeyPath: keyPath].makeIterator()
+    _ = updatingIterator.next() // skip an initial value
+    for value in values {
+      switch value {
+      case let .some(someValue):
+        object[keyPath: keyPath] = ImplicitlyUnwrappedOptional(someValue)
+      case .none:
+        object[keyPath: keyPath] = nil
+      }
+      XCTAssertEqual(updatingIterator.next(), value, file: file, line: line)
+    }
+  }
+}
+
 #endif

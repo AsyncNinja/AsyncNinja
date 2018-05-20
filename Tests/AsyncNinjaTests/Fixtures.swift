@@ -33,7 +33,7 @@
     static let doubles: [Double] = [0.0, 0.0, 0.25, 0.5, 0.5, 1.0, 1.0]
     static let bools: [Bool] = [true, true, false, false, true]
     static let stringsAndNils: [String?] = ["1", nil, "1", "1", "2", "2", nil, nil, "3", "1", "4"]
-    static let strings: [String] = Fixtures.stringsAndNils.flatMap { $0 }
+    static let strings: [String] = Fixtures.stringsAndNils.compactMap { $0 }
     static let attributedStrings = Fixtures.strings
       .map {
         NSAttributedString(string: $0,
@@ -43,7 +43,8 @@
     }
     static let colorsAndNils: [UIColor?]
       = [.white, .white, nil, .red, nil, nil, .green, nil, .green, .blue, .blue]
-    static let colors: [UIColor] = Fixtures.colorsAndNils.flatMap { $0 }
+    static let colors: [UIColor] = Fixtures.colorsAndNils.compactMap { $0 }
+    static let colorsIUO: [UIColor!] = Fixtures.colors
     static let fontTextStyles: [UIFontTextStyle]
       = [.headline, .subheadline, .body, .footnote, .caption1, .caption2]
     static let fonts: [UIFont] = Fixtures.fontTextStyles
@@ -101,7 +102,7 @@
       nil,
       Date(timeInterval: 30.0, since: Date())
     ]
-    static let dates: [Date] = Fixtures.datesAndNils.flatMap { $0 }
+    static let dates: [Date] = Fixtures.datesAndNils.compactMap { $0 }
     static let shadowOffsets: [CGSize] = [
       CGSize(width: 0, height: 0),
       CGSize(width: 0, height: 0),
@@ -120,7 +121,7 @@
                                             imageOne, imageTwo, imageTwo,
                                             nil, nil, imageThree,
                                             imageOne, imageFour]
-    static let images: [UIImage] = Fixtures.imagesAndNils.flatMap { $0 }
+    static let images: [UIImage] = Fixtures.imagesAndNils.compactMap { $0 }
     static let arraysOfImagesAndNils: [[UIImage]?] = Fixtures.imagesAndNils
       .map { $0.map { [$0] } }
     static let uiControlStates: [UIControlState] = eval {

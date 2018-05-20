@@ -22,67 +22,66 @@
 
 #if os(macOS)
 
-  import AppKit
+import AppKit
 
-  /// Conforms NSResponer to ObjCUIInjectedExecutionContext that allows
-  /// using each NSResponder as ExecutionContext
-  extension NSResponder: ObjCUIInjectedExecutionContext {
-  }
+/// Conforms NSResponer to ObjCUIInjectedExecutionContext that allows
+/// using each NSResponder as ExecutionContext
+extension NSResponder: ObjCUIInjectedExecutionContext {
+}
 
-  /// NSControl improved with AsyncNinja
-  public extension NSControl {
-    /// Update of ActionChannel
-    typealias ActionChannelUpdate = (sender: AnyObject?, objectValue: Any?)
+/// NSControl improved with AsyncNinja
+public extension NSControl {
+  /// Update of ActionChannel
+  typealias ActionChannelUpdate = (sender: AnyObject?, objectValue: Any?)
 
-    /// Channel that contains actions sent by the control
-    typealias ActionChannel = Channel<ActionChannelUpdate, Void>
+  /// Channel that contains actions sent by the control
+  typealias ActionChannel = Channel<ActionChannelUpdate, Void>
 
-    /// Makes or returns cached channel. The channel that will have update on each triggering of action
-    func actionChannel() -> ActionChannel {
-      let actionReceiver = (self.target as? ActionReceiver) ?? {
-        let actionReceiver = ActionReceiver(control: self)
-        self.target = actionReceiver
-        self.notifyDeinit {
-          actionReceiver.producer.cancelBecauseOfDeallocatedContext()
-        }
-        return actionReceiver
-        }()
-
-      self.action = #selector(ActionReceiver.asyncNinjaAction(sender:))
-      return actionReceiver.producer
-    }
-
-    /// Shortcut that binds block to NSControl event
-    ///
-    /// - Parameters:
-    ///   - context: context to bind block to
-    ///   - block: block to execute on action on context
-    func onAction<C: ExecutionContext>(
-      context: C,
-      _ block: @escaping (C, AnyObject?, Any?) -> Void) {
-
-      self.actionChannel()
-        .onUpdate(context: context) { (context, update) in
-          block(context, update.sender, update.objectValue)
+  /// Makes or returns cached channel. The channel that will have update on each triggering of action
+  func actionChannel() -> ActionChannel {
+    let actionReceiver = (self.target as? ActionReceiver) ?? {
+      let actionReceiver = ActionReceiver(control: self)
+      self.target = actionReceiver
+      self.notifyDeinit {
+        actionReceiver.producer.cancelBecauseOfDeallocatedContext()
       }
-    }
+      return actionReceiver
+      }()
+
+    self.action = #selector(ActionReceiver.asyncNinjaAction(sender:))
+    return actionReceiver.producer
   }
 
-  @objc(AsyncNinja_ActionReceiver) private class ActionReceiver: NSObject {
-    weak var control: NSControl?
-    let producer = Producer<NSControl.ActionChannelUpdate, Void>(bufferSize: 0)
+  /// Shortcut that binds block to NSControl event
+  ///
+  /// - Parameters:
+  ///   - context: context to bind block to
+  ///   - block: block to execute on action on context
+  func onAction<C: ExecutionContext>(
+    context: C,
+    _ block: @escaping (C, AnyObject?, Any?) -> Void) {
 
-    init(control: NSControl) {
-      self.control = control
-    }
-
-    @objc dynamic func asyncNinjaAction(sender: AnyObject?) {
-      let update: NSControl.ActionChannelUpdate = (
-        sender: sender,
-        objectValue: self.control?.objectValue
-      )
-      self.producer.update(update, from: .main)
+    self.actionChannel()
+      .onUpdate(context: context) { (context, update) in
+        block(context, update.sender, update.objectValue)
     }
   }
+}
 
+@objc(AsyncNinja_ActionReceiver) private class ActionReceiver: NSObject {
+  weak var control: NSControl?
+  let producer = Producer<NSControl.ActionChannelUpdate, Void>(bufferSize: 0)
+
+  init(control: NSControl) {
+    self.control = control
+  }
+
+  @objc dynamic func asyncNinjaAction(sender: AnyObject?) {
+    let update: NSControl.ActionChannelUpdate = (
+      sender: sender,
+      objectValue: self.control?.objectValue
+    )
+    self.producer.update(update, from: .main)
+  }
+}
 #endif

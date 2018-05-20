@@ -21,212 +21,217 @@
 //
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-  import Foundation
 
-  public extension Executor {
+import Foundation
 
-    /// makes an `Executor` from `OperationQueue`
-    ///
-    /// - Parameters:
-    ///   - operationQueue: an `OperationQueue` to make executor from
-    ///   - isStrictAsync: `true` if the `Executor` must execute blocks strictly asynchronously.
-    ///     `false` will relax requirements to increase performance
-    /// - Returns: constructed `Executor`
-    static func operationQueue(
-      _ operationQueue: OperationQueue,
-      isStrictAsync: Bool = false
-      ) -> Executor {
-      return Executor(operationQueue: operationQueue, isStrictAsync: isStrictAsync)
-    }
+public extension Executor {
 
-    /// initializes an `Executor` with `OperationQueue`
-    ///
-    /// - Parameters:
-    ///   - operationQueue: an `OperationQueue` to make executor from
-    ///   - isStrictAsync: `true` if the `Executor` must execute blocks strictly asynchronously.
-    ///     `false` will relax requirements to increase performance
-    /// - Returns: constructed `Executor`
-    init(
-      operationQueue: OperationQueue,
-      isStrictAsync: Bool = false) {
-      self.init(relaxAsyncWhenLaunchingFrom: isStrictAsync ? nil : ObjectIdentifier(operationQueue),
-                handler: operationQueue.addOperation)
-    }
-  }
-
-  /// A protocol that automatically adds implementation of methods
-  /// of `Retainer` for Objective-C runtime compatible objects
-  public protocol ObjCInjectedRetainer: Retainer, NSObjectProtocol { }
-
-  /// **Internal use only** An object that calls specified block on deinit
-  private class DeinitNotifier {
-    let _block: () -> Void
-
-    init(block: @escaping () -> Void) {
-      _block = block
-    }
-
-    deinit { _block() }
-  }
-
-  public extension ObjCInjectedRetainer {
-    func releaseOnDeinit(_ object: AnyObject) {
-      Statics.withUniqueKey {
-        "asyncNinjaKey_\($0)".withCString {
-          objc_setAssociatedObject(self, $0, object,
-                                   .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-        }
-      }
-    }
-
-    func notifyDeinit(_ block: @escaping () -> Void) {
-      releaseOnDeinit(DeinitNotifier(block: block))
-    }
-  }
-
-  /// Is a protocol that automatically adds implementation of methods
-  /// of `ExecutionContext` for Objective-C runtime compatible objects
-  /// involved in UI manipulations
-  public protocol ObjCUIInjectedExecutionContext: ExecutionContext, ObjCInjectedRetainer {
-  }
-
-  public extension ObjCUIInjectedExecutionContext {
-    /// executor for ui objects. The main queue
-    var executor: Executor { return .main }
-  }
-
-  // **internal use only**
-  private struct Statics {
-    static var increment: OSAtomic_int64_aligned64_t = 0
-    static func withUniqueKey(_ block: (Int64) -> Void) {
-      let unique = OSAtomicIncrement64Barrier(&increment)
-      block(unique)
-    }
-  }
-
-  extension EventSource where Update: NSObject {
-
-    /// Returns channel of distinct update values of original channel.
-    /// Works only for collections of equatable values
-    /// [objectA, objectA, objectB, objectC, objectC, objectA] => [objectA, objectB, objectC, objectA]
-    ///
-    /// - Parameters:
-    ///   - cancellationToken: `CancellationToken` to use.
-    ///     Keep default value of the argument unless you need
-    ///     an extended cancellation options of returned primitive
-    ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
-    ///     Keep default value of the argument unless you need
-    ///     an extended buffering options of returned channel
-    /// - Returns: channel with distinct update values
-    public func distinctNSObjects(cancellationToken: CancellationToken? = nil,
-                                  bufferSize: DerivedChannelBufferSize = .default
-      ) -> Channel<Update, Success> {
-
-      // Test: EventSource_TransformTests.testDistinctNSObjects
-      return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
-        return $0.isEqual($1)
-      }
-    }
-  }
-
-  extension EventSource where Update: Collection, Update.Element: NSObject {
-
-    /// Returns channel of distinct update values of original channel.
-    /// Works only for collections of NSObjects values
-    /// ```swift
-    /// [
-    ///   [objectA],
-    ///   [objectA],
-    ///   [objectA, objectB],
-    ///   [objectA, objectB, objectC],
-    ///   [objectA, objectB, objectC], [objectA]
-    /// ] => [
-    ///   [objectA],
-    ///   [objectA, objectB],
-    ///   [objectA, objectB, objectC], [objectA]
-    /// ]
-    /// ```
-    ///
-    /// - Parameters:
-    ///   - cancellationToken: `CancellationToken` to use.
-    ///     Keep default value of the argument unless you need
-    ///     an extended cancellation options of returned primitive
-    ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
-    ///     Keep default value of the argument unless you need
-    ///     an extended buffering options of returned channel
-    /// - Returns: channel with distinct update values
-    public func distinctCollectionOfNSObjects(
-      cancellationToken: CancellationToken? = nil,
-      bufferSize: DerivedChannelBufferSize = .default
-      ) -> Channel<Update, Success> {
-      // Test: EventSource_TransformTests.testDistinctArrayOfNSObjects
-
-      func isEqual(lhs: Update, rhs: Update) -> Bool {
-        return lhs.count == rhs.count
-          && !zip(lhs, rhs).contains { !$0.0.isEqual($0.1) }
-      }
-
-      return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: isEqual)
-    }
-  }
-
-  /// Binds two event streams bidirectionally.
+  /// makes an `Executor` from `OperationQueue`
   ///
   /// - Parameters:
-  ///   - majorStream: a stream to bind to. This stream has a priority during initial synchronization
-  ///   - minorStream: a stream to bind to.
-  ///   - valueTransformer: `ValueTransformer` to use to transform from T.Update to U.Update and reverse
-  public func doubleBind<T: EventSource&EventDestination, U: EventSource&EventDestination>(
-    _ majorStream: T,
-    _ minorStream: U,
-    valueTransformer: ValueTransformer) {
-    doubleBind(majorStream,
-               transform: { valueTransformer.transformedValue($0) as! U.Update },
-               minorStream,
-               reverseTransform: { valueTransformer.reverseTransformedValue($0) as! T.Update })
+  ///   - operationQueue: an `OperationQueue` to make executor from
+  ///   - isStrictAsync: `true` if the `Executor` must execute blocks strictly asynchronously.
+  ///     `false` will relax requirements to increase performance
+  /// - Returns: constructed `Executor`
+  static func operationQueue(
+    _ operationQueue: OperationQueue,
+    isStrictAsync: Bool = false
+    ) -> Executor {
+    return Executor(operationQueue: operationQueue, isStrictAsync: isStrictAsync)
   }
 
-#endif
+  /// initializes an `Executor` with `OperationQueue`
+  ///
+  /// - Parameters:
+  ///   - operationQueue: an `OperationQueue` to make executor from
+  ///   - isStrictAsync: `true` if the `Executor` must execute blocks strictly asynchronously.
+  ///     `false` will relax requirements to increase performance
+  /// - Returns: constructed `Executor`
+  init(
+    operationQueue: OperationQueue,
+    isStrictAsync: Bool = false) {
+    self.init(relaxAsyncWhenLaunchingFrom: isStrictAsync ? nil : ObjectIdentifier(operationQueue),
+              handler: operationQueue.addOperation)
+  }
+}
 
-#if os(macOS) || os(iOS)
+/// A protocol that automatically adds implementation of methods
+/// of `Retainer` for Objective-C runtime compatible objects
+public protocol ObjCInjectedRetainer: Retainer, NSObjectProtocol { }
 
-  import WebKit
+/// **Internal use only** An object that calls specified block on deinit
+private class DeinitNotifier {
+  let _block: () -> Void
 
-  // MARK: - reactive properties for WKWebView
-  public extension ReactiveProperties where Object: WKWebView {
+  init(block: @escaping () -> Void) {
+    _block = block
+  }
 
-    /// `Sink` that refers to write-only `WKWebView.load(_:)`
-    var loadRequest: Sink<URLRequest, Void> {
-      func setter(webView: WKWebView, request: URLRequest) {
-        webView.load(request)
-      }
-      return sink(setter: setter)
-    }
+  deinit { _block() }
+}
 
-    /// `Sink` that refers to write-only `WKWebView.loadFileURL(_:, allowingReadAccessTo:)`
-    @available(OSX 10.11, iOS 9, *)
-    var loadFileURL: Sink<(url: URL, readAccessURL: URL), Void> {
-      func setter(webView: WKWebView, values: (url: URL, readAccessURL: URL)) {
-        webView.loadFileURL(values.url, allowingReadAccessTo: values.readAccessURL)
-      }
-      return sink(setter: setter)
-    }
-
-    /// `Sink` that refers to write-only `WKWebView.loadHTMLString(_:, baseURL:)`
-    var loadHTMLString: Sink<(string: String, baseURL: URL?), Void> {
-      func setter(webView: WKWebView, values: (string: String, baseURL: URL?)) {
-        webView.loadHTMLString(values.string, baseURL: values.baseURL)
-      }
-      return sink(setter: setter)
-    }
-
-    /// `Sink` that refers to write-only `load(_:, mimeType:, characterEncodingName:, baseURL:)`
-    @available(OSX 10.11, iOS 9, *)
-    var loadData: Sink<(data: Data, mimeType: String, characterEncodingName: String, baseURL: URL), Void> {
-      return sink {
-        $0.load($1.data, mimeType: $1.mimeType, characterEncodingName: $1.characterEncodingName, baseURL: $1.baseURL)
+public extension ObjCInjectedRetainer {
+  func releaseOnDeinit(_ object: AnyObject) {
+    Statics.withUniqueKey {
+      "asyncNinjaKey_\($0)".withCString {
+        objc_setAssociatedObject(self, $0, object,
+                                 .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
       }
     }
   }
 
+  func notifyDeinit(_ block: @escaping () -> Void) {
+    releaseOnDeinit(DeinitNotifier(block: block))
+  }
+}
+
+/// Is a protocol that automatically adds implementation of methods
+/// of `ExecutionContext` for Objective-C runtime compatible objects
+/// involved in UI manipulations
+public protocol ObjCUIInjectedExecutionContext: ExecutionContext, ObjCInjectedRetainer {
+}
+
+public extension ObjCUIInjectedExecutionContext {
+  /// executor for ui objects. The main queue
+  var executor: Executor { return .main }
+}
+
+// **internal use only**
+private struct Statics {
+  static var increment: OSAtomic_int64_aligned64_t = 0
+  static func withUniqueKey(_ block: (Int64) -> Void) {
+    let unique = OSAtomicIncrement64Barrier(&increment)
+    block(unique)
+  }
+}
+
+extension EventSource where Update: NSObject {
+
+  /// Returns channel of distinct update values of original channel.
+  /// Works only for collections of equatable values
+  /// [objectA, objectA, objectB, objectC, objectC, objectA] => [objectA, objectB, objectC, objectA]
+  ///
+  /// - Parameters:
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned primitive
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  /// - Returns: channel with distinct update values
+  public func distinctNSObjects(cancellationToken: CancellationToken? = nil,
+                                bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success> {
+
+    // Test: EventSource_TransformTests.testDistinctNSObjects
+    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize) {
+      return $0.isEqual($1)
+    }
+  }
+}
+
+extension EventSource where Update: Collection, Update.Element: NSObject {
+
+  /// Returns channel of distinct update values of original channel.
+  /// Works only for collections of NSObjects values
+  /// ```swift
+  /// [
+  ///   [objectA],
+  ///   [objectA],
+  ///   [objectA, objectB],
+  ///   [objectA, objectB, objectC],
+  ///   [objectA, objectB, objectC], [objectA]
+  /// ] => [
+  ///   [objectA],
+  ///   [objectA, objectB],
+  ///   [objectA, objectB, objectC], [objectA]
+  /// ]
+  /// ```
+  ///
+  /// - Parameters:
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned primitive
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  /// - Returns: channel with distinct update values
+  public func distinctCollectionOfNSObjects(
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success> {
+    // Test: EventSource_TransformTests.testDistinctArrayOfNSObjects
+
+    func isEqual(lhs: Update, rhs: Update) -> Bool {
+      return lhs.count == rhs.count
+        && !zip(lhs, rhs).contains { !$0.0.isEqual($0.1) }
+    }
+
+    return distinct(cancellationToken: cancellationToken, bufferSize: bufferSize, isEqual: isEqual)
+  }
+}
+
+/// Binds two event streams bidirectionally.
+///
+/// - Parameters:
+///   - majorStream: a stream to bind to. This stream has a priority during initial synchronization
+///   - minorStream: a stream to bind to.
+///   - valueTransformer: `ValueTransformer` to use to transform from T.Update to U.Update and reverse
+public func doubleBind<T: EventSource&EventDestination, U: EventSource&EventDestination>(
+  _ majorStream: T,
+  _ minorStream: U,
+  valueTransformer: ValueTransformer) {
+  doubleBind(majorStream,
+             transform: { valueTransformer.transformedValue($0) as! U.Update },
+             minorStream,
+             reverseTransform: { valueTransformer.reverseTransformedValue($0) as! T.Update })
+}
+
 #endif
+
+/*
+
+ #if os(macOS) || os(iOS)
+
+ import WebKit
+
+ // MARK: - reactive properties for WKWebView
+ public extension ReactiveProperties where Object: WKWebView {
+
+ /// `Sink` that refers to write-only `WKWebView.load(_:)`
+ var loadRequest: Sink<URLRequest, Void> {
+ func setter(webView: WKWebView, request: URLRequest) {
+ webView.load(request)
+ }
+ return sink(setter: setter)
+ }
+
+ /// `Sink` that refers to write-only `WKWebView.loadFileURL(_:, allowingReadAccessTo:)`
+ @available(OSX 10.11, iOS 9, *)
+ var loadFileURL: Sink<(url: URL, readAccessURL: URL), Void> {
+ func setter(webView: WKWebView, values: (url: URL, readAccessURL: URL)) {
+ webView.loadFileURL(values.url, allowingReadAccessTo: values.readAccessURL)
+ }
+ return sink(setter: setter)
+ }
+
+ /// `Sink` that refers to write-only `WKWebView.loadHTMLString(_:, baseURL:)`
+ var loadHTMLString: Sink<(string: String, baseURL: URL?), Void> {
+ func setter(webView: WKWebView, values: (string: String, baseURL: URL?)) {
+ webView.loadHTMLString(values.string, baseURL: values.baseURL)
+ }
+ return sink(setter: setter)
+ }
+
+ /// `Sink` that refers to write-only `load(_:, mimeType:, characterEncodingName:, baseURL:)`
+ @available(OSX 10.11, iOS 9, *)
+ var loadData: Sink<(data: Data, mimeType: String, characterEncodingName: String, baseURL: URL), Void> {
+ return sink {
+ $0.load($1.data, mimeType: $1.mimeType, characterEncodingName: $1.characterEncodingName, baseURL: $1.baseURL)
+ }
+ }
+ }
+
+ #endif
+
+ */

@@ -21,25 +21,26 @@
 //
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-  import Foundation
-  import CoreData
 
-  /// NSManagedObjectContext improved with AsyncNinja
-  extension NSManagedObjectContext: ExecutionContext, ObjCInjectedRetainer {
+import Foundation
+import CoreData
 
-    /// returns an executor that executes block on private queue of NSManagedObjectContext
-    public var executor: Executor {
-      return Executor(handler: self.perform)
-    }
+/// NSManagedObjectContext improved with AsyncNinja
+extension NSManagedObjectContext: ExecutionContext, ObjCInjectedRetainer {
+
+  /// returns an executor that executes block on private queue of NSManagedObjectContext
+  public var executor: Executor {
+    return Executor(handler: self.perform)
   }
+}
 
-  /// NSPersistentStoreCoordinator improved with AsyncNinja
-  extension NSPersistentStoreCoordinator: ExecutionContext, ObjCInjectedRetainer {
+/// NSPersistentStoreCoordinator improved with AsyncNinja
+extension NSPersistentStoreCoordinator: ExecutionContext, ObjCInjectedRetainer {
 
-    /// returns an executor that executes block on private queue of NSPersistentStoreCoordinator
-    public var executor: Executor {
-      return Executor(handler: self.perform)
-    }
+  /// returns an executor that executes block on private queue of NSPersistentStoreCoordinator
+  public var executor: Executor {
+    return Executor(handler: self.perform)
   }
+}
 
 #endif

@@ -21,447 +21,145 @@
 //
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-  import Foundation
+import Foundation
 
-  public extension Retainer where Self: NSObject {
-    public typealias CustomGetter<T> = (Self) -> T?
-    public typealias CustomSetter<T> = (Self, T) -> Void
+public extension Retainer where Self: NSObject {
+  public typealias CustomGetter<Value> = (Self) -> Value
+  public typealias CustomSetter<Value> = (Self, Value) -> Void
 
-    /// makes an `UpdatableProperty<T?>` for specified key path.
-    ///
-    /// `UpdatableProperty` is a kind of `Producer` so you can:
-    /// * subscribe for updates
-    /// * transform using `map`, `flatMap`, `filter`, `debounce`, `distinct`, ...
-    /// * update manually with `update()` method
-    /// * bind `Channel` to an `UpdatableProperty` using `Channel.bind`
-    ///
-    /// - Parameter keyPath: to observe.
-    ///
-    ///   **Make sure that keyPath refers to KVO-compliant property**.
-    ///   * Make sure that properties defined in swift have dynamic attribute.
-    ///   * Make sure that methods `class func keyPathsForValuesAffectingValue(forKey key: String) -> Set<String>`
-    ///   return correct values for read-only properties
-    /// - Parameter executor: to subscribe and update value on
-    /// - Parameter originalExecutor: `Executor` you calling this method on.
-    ///   Specifying this argument will allow to perform syncronous executions
-    ///   on `strictAsync: false` `Executor`s.
-    ///   Use default value or nil if you are not sure about an `Executor`
-    ///   you calling this method on.
-    /// - Parameter observationSession: is an object that helps to control observation
-    /// - Parameter allowSettingSameValue: set to true if you want
-    ///   to set a new value event if it is equal to an old one
-    /// - Parameter channelBufferSize: size of the buffer within returned channel
-    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
-    /// - Parameter customSetter: provides a custom getter to use instead of setValue(_: forKeyPath:) call
-    /// - Returns: an `UpdatableProperty<T?>` bound to observe and update specified keyPath
-    func updatable<T>(
-      forKeyPath keyPath: String,
-      executor: Executor,
-      from originalExecutor: Executor? = nil,
-      observationSession: ObservationSession? = nil,
-      allowSettingSameValue: Bool = false,
-      channelBufferSize: Int = 1,
-      customGetter: CustomGetter<T?>? = nil,
-      customSetter: CustomSetter<T?>? = nil
-      ) -> ProducerProxy<T?, Void> {
-      let producer = ProducerProxy<T?, Void>(
-        updateExecutor: executor,
-        bufferSize: channelBufferSize
-      ) { [weak self] (_, event, _) in
-        switch event {
-        case let .update(update):
-          self?.setValue(update,
-                         forKeyPath: keyPath,
-                         allowSettingSameValue: allowSettingSameValue,
-                         customSetter: customSetter)
-        case .completion:
-          nop()
-        }
-      }
-
-      executor.execute(from: originalExecutor) { (_) in
-        let observer = KeyPathObserver(
-          object: self,
-          keyPath: keyPath,
-          options: [.initial, .new],
-          isEnabled: observationSession?.isEnabled ?? true
-        ) { [weak producer] (maybeSelf, changes) in
-          guard let strongSelf = maybeSelf as? Self,
-            let producer = producer
-            else { return }
-
-          let newValue = strongSelf.getValue(forKeyPath: keyPath, changes: changes, customGetter: customGetter)
-          _ = producer.tryUpdateWithoutHandling(newValue, from: executor)
-        }
-
-        observationSession?.insert(item: observer)
-        self.notifyDeinit {
-          producer.cancelBecauseOfDeallocatedContext(from: nil)
-          observer.isEnabled = false
-        }
-      }
-
-      return producer
-    }
-
-    /// makes an `UpdatableProperty<T>` for specified key path.
-    ///
-    /// `UpdatableProperty` is a kind of `Producer` so you can:
-    /// * subscribe for updates
-    /// * transform using `map`, `flatMap`, `filter`, `debounce`, `distinct`, ...
-    /// * update manually with `update()` method
-    /// * bind `Channel` to an `UpdatableProperty` using `Channel.bind`
-    ///
-    /// - Parameter keyPath: to observe.
-    ///
-    ///   **Make sure that keyPath refers to KVO-compliant property**.
-    ///   * Make sure that properties defined in swift have dynamic attribute.
-    ///   * Make sure that methods `class func keyPathsForValuesAffectingValue(forKey key: String) -> Set<String>`
-    ///   return correct values for read-only properties
-    /// - Parameter onNone: is a policy of handling `None` (or `nil`) value
-    ///   that can arrive from Key-Value observation.
-    /// - Parameter executor: to subscribe and update value on
-    /// - Parameter originalExecutor: `Executor` you calling this method on.
-    ///   Specifying this argument will allow to perform syncronous executions
-    ///   on `strictAsync: false` `Executor`s.
-    ///   Use default value or nil if you are not sure about an `Executor`
-    ///   you calling this method on.
-    /// - Parameter observationSession: is an object that helps to control observation
-    /// - Parameter allowSettingSameValue: set to true if you want
-    ///   to set a new value event if it is equal to an old one
-    /// - Parameter channelBufferSize: size of the buffer within returned channel
-    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
-    /// - Parameter customSetter: provides a custom getter to use instead of setValue(_: forKeyPath:) call
-    /// - Returns: an `UpdatableProperty<T>` bound to observe and update specified keyPath
-    func updatable<T>(
-      forKeyPath keyPath: String,
-      onNone: UpdateWithNoneHandlingPolicy<T>,
-      executor: Executor,
-      from originalExecutor: Executor? = nil,
-      observationSession: ObservationSession? = nil,
-      allowSettingSameValue: Bool = false,
-      channelBufferSize: Int = 1,
-      customGetter: CustomGetter<T>? = nil,
-      customSetter: CustomSetter<T>? = nil
-      ) -> ProducerProxy<T, Void> {
-      let producer = ProducerProxy<T, Void>(
-        updateExecutor: executor,
-        bufferSize: channelBufferSize
-      ) { [weak self] (_, event, _) in
-        switch event {
-        case let .update(update):
-          self?.setValue(update,
-                         forKeyPath: keyPath,
-                         allowSettingSameValue: allowSettingSameValue,
-                         customSetter: customSetter)
-        case .completion:
-          nop()
-        }
-      }
-
-      executor.execute(from: originalExecutor) { _ in
-        let observer = KeyPathObserver(
-          object: self,
-          keyPath: keyPath,
-          options: [.initial, .new],
-          isEnabled: observationSession?.isEnabled ?? true
-        ) { [weak producer] (maybeSelf, changes) in
-          guard
-            let strongSelf = maybeSelf as? Self,
-            let producer = producer
-            else { return }
-          if let update = strongSelf.getValue(forKeyPath: keyPath, changes: changes, customGetter: customGetter) {
-            _ = producer.tryUpdateWithoutHandling(update, from: executor)
-          } else if case let .replace(update) = onNone {
-            _ = producer.tryUpdateWithoutHandling(update, from: executor)
-          }
-        }
-
-        observationSession?.insert(item: observer)
-        self.notifyDeinit {
-          producer.cancelBecauseOfDeallocatedContext(from: nil)
-          observer.isEnabled = false
-        }
-      }
-
-      return producer
-    }
-
-    /// makes an `Updating<T?>` for specified key path.
-    ///
-    /// `Updating` is a kind of `Channel` so you can:
-    /// * subscribe for updates
-    /// * transform using `map`, `flatMap`, `filter`, `debounce`, `distinct`, ...
-    ///
-    /// - Parameter keyPath: to observe.
-    ///
-    ///   **Make sure that keyPath refers to KVO-compliant property**.
-    ///   * Make sure that properties defined in swift have dynamic attribute.
-    ///   * Make sure that methods `class func keyPathsForValuesAffectingValue(forKey key: String) -> Set<String>`
-    ///   return correct values for read-only properties
-    /// - Parameter executor: to subscribe and update value on
-    /// - Parameter originalExecutor: `Executor` you calling this method on.
-    ///   Specifying this argument will allow to perform syncronous executions
-    ///   on `strictAsync: false` `Executor`s.
-    ///   Use default value or nil if you are not sure about an `Executor`
-    ///   you calling this method on.
-    /// - Parameter observationSession: is an object that helps to control observation
-    /// - Parameter channelBufferSize: size of the buffer within returned channel
-    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
-    /// - Returns: an `Updating<T?>` bound to observe and update specified keyPath
-    func updating<T>(
-      forKeyPath keyPath: String,
-      executor: Executor,
-      from originalExecutor: Executor? = nil,
-      observationSession: ObservationSession? = nil,
-      channelBufferSize: Int = 1,
-      customGetter: CustomGetter<T?>? = nil
-      ) -> Channel<T?, Void> {
-
-      let producer = Producer<T?, Void>(bufferSize: channelBufferSize)
-
-      executor.execute(from: originalExecutor) { (_) in
-        let observer = KeyPathObserver(
-          object: self,
-          keyPath: keyPath,
-          options: [.initial, .new],
-          isEnabled: observationSession?.isEnabled ?? true
-        ) { [weak producer] (maybeSelf, changes) in
-          guard
-            let strongSelf = maybeSelf as? Self,
-            let producer = producer
-            else { return }
-          let update = strongSelf.getValue(forKeyPath: keyPath, changes: changes, customGetter: customGetter)
-          producer.update(update, from: executor)
-        }
-
-        observationSession?.insert(item: observer)
-        self.notifyDeinit {
-          producer.cancelBecauseOfDeallocatedContext(from: nil)
-          observer.isEnabled = false
-        }
-      }
-
-      return producer
-    }
-
-    /// makes an `Updating<T>` for specified key path.
-    ///
-    /// `Updating` is a kind of `Channel` so you can:
-    /// * subscribe for updates
-    /// * transform using `map`, `flatMap`, `filter`, `debounce`, `distinct`, ...
-    ///
-    /// - Parameter keyPath: to observe.
-    ///
-    ///   **Make sure that keyPath refers to KVO-compliant property**.
-    ///   * Make sure that properties defined in swift have dynamic attribute.
-    ///   * Make sure that methods `class func keyPathsForValuesAffectingValue(forKey key: String) -> Set<String>`
-    ///   return correct values for read-only properties
-    /// - Parameter onNone: is a policy of handling `None` (or `nil`) value
-    ///   that can arrive from Key-Value observation.
-    /// - Parameter executor: to subscribe and update value on
-    /// - Parameter originalExecutor: `Executor` you calling this method on.
-    ///   Specifying this argument will allow to perform syncronous executions
-    ///   on `strictAsync: false` `Executor`s.
-    ///   Use default value or nil if you are not sure about an `Executor`
-    ///   you calling this method on.
-    /// - Parameter observationSession: is an object that helps to control observation
-    /// - Parameter channelBufferSize: size of the buffer within returned channel
-    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
-    /// - Returns: an `Updating<T>` bound to observe and update specified keyPath
-    func updating<T>(
-      forKeyPath keyPath: String,
-      onNone: UpdateWithNoneHandlingPolicy<T>,
-      executor: Executor,
-      from originalExecutor: Executor? = nil,
-      observationSession: ObservationSession? = nil,
-      channelBufferSize: Int = 1,
-      customGetter: CustomGetter<T>? = nil
-      ) -> Channel<T, Void> {
-      let producer = Producer<T, Void>(bufferSize: channelBufferSize)
-
-      executor.execute(from: originalExecutor) { (_) in
-        let observer = KeyPathObserver(
-          object: self,
-          keyPath: keyPath,
-          options: [.initial, .new],
-          isEnabled: observationSession?.isEnabled ?? true
-        ) { [weak producer] (maybeSelf, changes) in
-          guard
-            let strongSelf = maybeSelf as? Self,
-            let producer = producer
-            else { return }
-          if let update = strongSelf.getValue(forKeyPath: keyPath, changes: changes, customGetter: customGetter) {
-            producer.update(update, from: executor)
-          } else if case let .replace(update) = onNone {
-            producer.update(update, from: executor)
-          }
-        }
-
-        observationSession?.insert(item: observer)
-        self.notifyDeinit {
-          producer.cancelBecauseOfDeallocatedContext(from: nil)
-          observer.isEnabled = false
-        }
-      }
-
-      return producer
-    }
-
-    /// Makes a sink that wraps specified setter
-    ///
-    /// - Parameter setter: to use with sink
-    /// - Returns: constructed sink
-    func sink<T>(executor: Executor, setter: @escaping CustomSetter<T>) -> Sink<T, Void> {
-      let sink = Sink<T, Void>(
-        updateExecutor: executor
-      ) { [weak self] (_, event, _) in
-        if let strongSelf = self, case let .update(update) = event {
-          setter(strongSelf, update)
-        }
-      }
-      self.notifyDeinit {
-        sink.cancelBecauseOfDeallocatedContext(from: nil)
-      }
-      return sink
-    }
-
-    /// makes an `Updating<(old: T?, new: T?)>` for specified key path.
-    /// With an `Updating` you can
-    /// * subscribe for updates
-    /// * transform `Updating` as any `Channel` (`map`, `flatMap`, `filter`, `debounce`, `distinct`, ...)
-    ///
-    /// - Parameter keyPath: to observe.
-    ///
-    ///   **Make sure that keyPath refers to KVO-compliant property**.
-    ///   * Make sure that properties defined in swift have dynamic attribute.
-    ///   * Make sure that methods `class func keyPathsForValuesAffectingValue(forKey key: String) -> Set<String>`
-    ///   return correct values for read-only properties
-    /// - Parameter executor: to subscribe and update value on
-    /// - Parameter originalExecutor: `Executor` you calling this method on.
-    ///   Specifying this argument will allow to perform syncronous executions
-    ///   on `strictAsync: false` `Executor`s.
-    ///   Use default value or nil if you are not sure about an `Executor`
-    ///   you calling this method on.
-    /// - Parameter observationSession: is an object that helps to control observation
-    /// - Parameter channelBufferSize: size of the buffer within returned channel
-    /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
-    /// - Returns: an `Updating<(old: T?, new: T?)>` bound to observe and update specified keyPath
-    func updatingOldAndNew<T>(
-      forKeyPath keyPath: String,
-      executor: Executor,
-      from originalExecutor: Executor? = nil,
-      observationSession: ObservationSession? = nil,
-      channelBufferSize: Int = 1
-      ) -> Channel<(old: T?, new: T?), Void> {
-      return updatingChanges(forKeyPath: keyPath,
-                             executor: executor,
-                             from: originalExecutor,
-                             options: [.initial, .old, .new],
-                             observationSession: observationSession,
-                             channelBufferSize: channelBufferSize)
-        .map(executor: .immediate) { (old: $0[.oldKey] as? T, new: $0[.newKey] as? T) }
-    }
-
-    /// makes an `Updating<[NSKeyValueChangeKey: Any]>` for specified key path.
-    /// With an `Updating` you can
-    /// * subscribe for updates
-    /// * transform `Updating` as any `Channel` (`map`, `flatMap`, `filter`, `debounce`, `distinct`, ...)
-    ///
-    /// - Parameter keyPath: to observe.
-    ///
-    ///   **Make sure that keyPath refers to KVO-compliant property**.
-    ///   * Make sure that properties defined in swift have dynamic attribute.
-    ///   * Make sure that methods `class func keyPathsForValuesAffectingValue(forKey key: String) -> Set<String>`
-    ///   return correct values for read-only properties
-    /// - Parameter executor: to subscribe and update value on
-    /// - Parameter originalExecutor: `Executor` you calling this method on.
-    ///   Specifying this argument will allow to perform syncronous executions
-    ///   on `strictAsync: false` `Executor`s.
-    ///   Use default value or nil if you are not sure about an `Executor`
-    ///   you calling this method on.
-    /// - Parameter observationSession: is an object that helps to control observation
-    /// - Parameter channelBufferSize: size of the buffer within returned channel
-    /// - Returns: an `Updating<[NSKeyValueChangeKey: Any]>` bound to observe and update specified keyPath
-    func updatingChanges(
-      forKeyPath keyPath: String,
-      executor: Executor,
-      from originalExecutor: Executor? = nil,
-      options: NSKeyValueObservingOptions,
-      observationSession: ObservationSession? = nil,
-      channelBufferSize: Int = 1
-      ) -> Channel<[NSKeyValueChangeKey: Any], Void> {
-      let producer = Producer<[NSKeyValueChangeKey: Any], Void>(bufferSize: channelBufferSize)
-
-      executor.execute(from: originalExecutor) { (_) in
-        let observer = KeyPathObserver(
-          object: self,
-          keyPath: keyPath,
-          options: options,
-          isEnabled: observationSession?.isEnabled ?? true
-        ) { [weak producer] (_, changes) in
-          producer?.update(changes, from: executor)
-        }
-
-        observationSession?.insert(item: observer)
-        self.notifyDeinit {
-          producer.cancelBecauseOfDeallocatedContext(from: nil)
-          observer.isEnabled = false
-        }
-      }
-
-      return producer
-    }
-
-    fileprivate func setValue<T>(
-      _ newValue: T,
-      forKeyPath keyPath: String,
-      allowSettingSameValue: Bool,
-      customSetter: CustomSetter<T>?) {
-      let nsNewObjectValue: NSObject?
+  /// makes an `UpdatableProperty<T>` for specified key path.
+  ///
+  /// `UpdatableProperty` is a kind of `Producer` so you can:
+  /// * subscribe for updates
+  /// * transform using `map`, `flatMap`, `filter`, `debounce`, `distinct`, ...
+  /// * update manually with `update()` method
+  /// * bind `Channel` to an `UpdatableProperty` using `Channel.bind`
+  ///
+  /// - Parameter keyPath: to observe.
+  ///
+  ///   **Make sure that keyPath refers to KVO-compliant property**.
+  ///   * Make sure that properties defined in swift have dynamic attribute.
+  ///   * Make sure that methods `class func keyPathsForValuesAffectingValue(forKey key: String) -> Set<String>`
+  ///   return correct values for read-only properties
+  /// - Parameter executor: to subscribe and update value on
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
+  /// - Parameter observationSession: is an object that helps to control observation
+  /// - Parameter channelBufferSize: size of the buffer within returned channel
+  /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
+  /// - Parameter customSetter: provides a custom getter to use instead of setValue(_: forKeyPath:) call
+  /// - Returns: an `UpdatableProperty<T>` bound to observe and update specified keyPath
+  func updatable<Value>(
+    forKeyPath keyPath: ReferenceWritableKeyPath<Self, Value>,
+    executor: Executor,
+    from originalExecutor: Executor? = nil,
+    observationSession: ObservationSession? = nil,
+    channelBufferSize: Int = 1,
+    customGetter: CustomGetter<Value>? = nil,
+    customSetter: CustomSetter<Value>? = nil
+    ) -> ProducerProxy<Value, Void> {
+    let producer = ProducerProxy<Value, Void>(
+      updateExecutor: executor,
+      bufferSize: channelBufferSize
+    ) { [weak maybeSelf = self] (_, event, _) in
+      guard
+        let strongSelf = maybeSelf,
+        case let .update(value) = event
+        else { return }
       if let customSetter = customSetter {
-        customSetter(self, newValue)
+        customSetter(self, value)
       } else {
-        let mustSet: Bool
-        nsNewObjectValue = newValue as? NSObject
-
-        if allowSettingSameValue {
-          mustSet = true
-        } else {
-          let nsOldObjectValue = self
-            .value(forKeyPath: keyPath)
-            .map { $0 as! NSObject }
-          mustSet = (nsNewObjectValue != nsOldObjectValue)
-        }
-
-        if mustSet {
-          self.setValue(nsNewObjectValue, forKeyPath: keyPath)
-        }
+        strongSelf[keyPath: keyPath] = value
       }
     }
 
-    fileprivate func getValue<T>(
-      forKeyPath keyPath: String,
-      changes: [NSKeyValueChangeKey: Any],
-      customGetter: CustomGetter<T>?
-      ) -> T? {
-        if let customGetter = customGetter {
-            return customGetter(self)
-        } else {
-            return changes[.newKey] as? T
-        }
-    }
-
-    fileprivate func getValue<T>(
-      forKeyPath keyPath: String,
-      changes: [NSKeyValueChangeKey: Any],
-      customGetter: CustomGetter<T?>?
-      ) -> T? {
+    executor.execute(from: originalExecutor) { _ in
+      let observer: KeyPathObserver<Self, Value>
       if let customGetter = customGetter {
-        return customGetter(self).flatMap { $0 }
+        _ = producer.tryUpdateWithoutHandling(customGetter(self), from: executor)
+        observer = KeyPathObserver(keyPath: keyPath, object: self, options: []
+        ) { [weak producer] (self_, _) in
+          _ = producer?.tryUpdateWithoutHandling(customGetter(self_), from: executor)
+        }
       } else {
-        return changes[.newKey] as? T
+        _ = producer.tryUpdateWithoutHandling(self[keyPath: keyPath], from: executor)
+        observer = KeyPathObserver(keyPath: keyPath, object: self, options: []
+        ) { [weak producer] (self_, _) in
+          _ = producer?.tryUpdateWithoutHandling(self_[keyPath: keyPath], from: executor)
+        }
+      }
+
+      observationSession?.insert(item: observer)
+      self.notifyDeinit {
+        producer.cancelBecauseOfDeallocatedContext(from: nil)
+        observer.isEnabled = false
       }
     }
+
+    return producer
   }
+
+  /// makes an `Updating<T>` for specified key path.
+  ///
+  /// `Updating` is a kind of `Channel` so you can:
+  /// * subscribe for updates
+  /// * transform using `map`, `flatMap`, `filter`, `debounce`, `distinct`, ...
+  ///
+  /// - Parameter keyPath: to observe.
+  ///
+  ///   **Make sure that keyPath refers to KVO-compliant property**.
+  ///   * Make sure that properties defined in swift have dynamic attribute.
+  ///   * Make sure that methods `class func keyPathsForValuesAffectingValue(forKey key: String) -> Set<String>`
+  ///   return correct values for read-only properties
+  /// - Parameter executor: to subscribe and update value on
+  /// - Parameter originalExecutor: `Executor` you calling this method on.
+  ///   Specifying this argument will allow to perform syncronous executions
+  ///   on `strictAsync: false` `Executor`s.
+  ///   Use default value or nil if you are not sure about an `Executor`
+  ///   you calling this method on.
+  /// - Parameter observationSession: is an object that helps to control observation
+  /// - Parameter channelBufferSize: size of the buffer within returned channel
+  /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
+  /// - Returns: an `Updating<T>` bound to observe and update specified keyPath
+  func updating<Value>(
+    forKeyPath keyPath: KeyPath<Self, Value>,
+    executor: Executor,
+    from originalExecutor: Executor? = nil,
+    observationSession: ObservationSession? = nil,
+    channelBufferSize: Int = 1,
+    customGetter: CustomGetter<Value>? = nil
+    ) -> Channel<Value, Void> {
+
+    let producer = Producer<Value, Void>(bufferSize: channelBufferSize)
+
+    executor.execute(from: originalExecutor) { _ in
+      let observer: KeyPathObserver<Self, Value>
+      if let customGetter = customGetter {
+        _ = producer.update(customGetter(self), from: executor)
+        observer = KeyPathObserver(keyPath: keyPath, object: self, options: []
+        ) { [weak producer] (self_, _) in
+          _ = producer?.update(customGetter(self_), from: executor)
+        }
+      } else {
+        _ = producer.update(self[keyPath: keyPath], from: executor)
+        observer = KeyPathObserver(keyPath: keyPath, object: self, options: []
+        ) { [weak producer] (self_, _) in
+          _ = producer?.update(self_[keyPath: keyPath], from: executor)
+        }
+      }
+
+      observationSession?.insert(item: observer)
+      self.notifyDeinit {
+        producer.cancelBecauseOfDeallocatedContext(from: nil)
+        observer.isEnabled = false
+      }
+    }
+
+    return producer
+  }
+}
+
 #endif
