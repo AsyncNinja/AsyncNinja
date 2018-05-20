@@ -39,6 +39,5 @@ let package = Package(
           name: "AsyncNinjaTests",
           dependencies: ["AsyncNinja"],
           path: "Tests/AsyncNinjaTests")
-      ],
-      swiftLanguageVersions: [.v4_2]
+      ]
     )
