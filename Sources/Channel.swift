@@ -33,6 +33,10 @@ public class Channel<U, S>: EventSource {
   /// completion of channel. Returns nil if channel is not complete yet
   public var completion: Completion? { assertAbstract() }
 
+  public var latestUpdate: Update? {
+    assertAbstract()
+  }
+
   /// amount of currently stored updates
   public var bufferSize: Int { assertAbstract() }
 

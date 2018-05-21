@@ -136,35 +136,43 @@ public extension ExecutionContext {
 
 // MARK: - updating
 public extension ExecutionContext {
-  func updating<Value>(
-    forKeyPath keyPath: KeyPath<Self, Value>,
+  internal func _updating<T>(
+    forKeyPath keyPath: AnyKeyPath,
     from originalExecutor: Executor? = nil,
     observationSession: ObservationSession? = nil
-    ) -> Channel<Value, Void> {
-
+    ) -> Channel<T, Void> {
     if let customSupport = self as? CustomKVOUpdatingSupport,
-      let anyObject = customSupport.customUpdating(forKeyPath: keyPath) {
-      return anyObject as! Channel<Value, Void>
+      let channel = customSupport.customUpdating(forKeyPath: keyPath) {
+      return channel.staticCast()
     }
 
     if let customSupport = self as? CustomKVOUpdatableSupport,
-      let specialKeyPath = keyPath as? ReferenceWritableKeyPath<Self, Value>,
-      let anyObject = customSupport.customUpdatable(forKeyPath: specialKeyPath) {
-      return anyObject as! BaseProducer<Value, Void>
+      let channel = customSupport.customUpdatable(forKeyPath: keyPath) {
+      return channel.staticCast()
     }
 
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 
-    if let objcSupport = self as? NSObject&ObjCExecutionContext {
-      return objcSupport.objcKVOUpdating(forKeyPath: keyPath,
-                                         executor: executor,
-                                         from: originalExecutor,
-                                         observationSession: observationSession)
+    if let objcSupport = self as? NSObject&ObjCExecutionContext,
+      let producer = objcSupport.objcKVOUpdating(forKeyPath: keyPath,
+                                                 valueType: T.self,
+                                                 executor: executor,
+                                                 from: originalExecutor,
+                                                 observationSession: observationSession) {
+      return producer.staticCast()
     }
 
     #endif
 
     fatalError("\(keyPath) is not reactive")
+  }
+
+  func updating<Value>(
+    forKeyPath keyPath: KeyPath<Self, Value>,
+    from originalExecutor: Executor? = nil,
+    observationSession: ObservationSession? = nil
+    ) -> Channel<Value, Void> {
+    return _updating(forKeyPath: keyPath, from: originalExecutor, observationSession: observationSession)
   }
 
   subscript<Value>(updatingKeyPath keyPath: KeyPath<Self, Value>) -> Channel<Value, Void> {
@@ -173,7 +181,7 @@ public extension ExecutionContext {
 }
 
 public protocol CustomKVOUpdatingSupport: ExecutionContext {
-  func customUpdating(forKeyPath keyPath: AnyKeyPath) -> AnyObject?
+  func customUpdating(forKeyPath keyPath: AnyKeyPath) -> Channel<Any, Void>?
 }
 
 // MARK: - updatable
@@ -185,16 +193,15 @@ public extension ExecutionContext {
     ) -> BaseProducer<Value, Void> {
     if let customSupport = self as? CustomKVOUpdatableSupport,
       let anyObject = customSupport.customUpdatable(forKeyPath: keyPath) {
-      return anyObject as! BaseProducer<Value, Void>
+      return anyObject.staticCastProducer()
 
     }
 
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 
-    if let objcSupport = self as? NSObject&ObjCExecutionContext {
-      return objcSupport.objcKVOUpdatable(forKeyPath: keyPath,
-                                          executor: executor,
-                                          from: executor)
+    if let objcSupport = self as? NSObject&ObjCExecutionContext,
+      let producer: ProducerProxy<Value, Void> = objcSupport.objcKVOUpdatable(forKeyPath: keyPath, executor: executor, from: executor) {
+      return producer
     }
 
     #endif
@@ -210,7 +217,7 @@ public extension ExecutionContext {
 }
 
 public protocol CustomKVOUpdatableSupport: ExecutionContext {
-  func customUpdatable(forKeyPath keyPath: AnyKeyPath) -> AnyObject?
+  func customUpdatable(forKeyPath keyPath: AnyKeyPath) -> BaseProducer<Any, Void>?
 }
 
 /// Protocol for any instance that has `ReleasePool`.

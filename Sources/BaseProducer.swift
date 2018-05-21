@@ -49,6 +49,12 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
     return _completion
   }
 
+  override public var latestUpdate: Update? {
+    _locking.lock()
+    defer { _locking.unlock() }
+    return _bufferedUpdates.last
+  }
+
   /// designated initializer of Producer. Initializes Producer with specified buffer size
   init(bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize) {
     _maxBufferSize = bufferSize
@@ -240,6 +246,17 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
     let channelIteratorImpl = ProducerIteratorImpl<Update, Success>(channel: self, bufferedUpdates: Queue())
     _locking.unlock()
     return ChannelIterator(impl: channelIteratorImpl)
+  }
+
+  func staticCastProducer<A, B>() -> BaseProducer<A, B> {
+    func originToAdaptor(event: Event) -> BaseProducer<A, B>.Event {
+      return event.staticCast()
+    }
+
+    func adaptorToOrigin(event: BaseProducer<A, B>.Event) -> Event {
+      return event.staticCast()
+    }
+    return ProducerProxy(origin: self, originToAdaptor: originToAdaptor, adaptorToOrigin: adaptorToOrigin)
   }
 }
 

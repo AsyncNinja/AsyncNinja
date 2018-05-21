@@ -25,6 +25,8 @@
 		F8419BD81E911CF00067701C /* ChannelMakersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD71E911CF00067701C /* ChannelMakersTests.swift */; };
 		F8419BDA1E913B580067701C /* CacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD91E913B580067701C /* CacheTests.swift */; };
 		F85659571E97D7FE007EDC98 /* TryExecute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85659561E97D7FE007EDC98 /* TryExecute.swift */; };
+		F85F421C20B31E0E00358A9E /* DerivedProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85F421B20B31E0E00358A9E /* DerivedProperty.swift */; };
+		F85F421F20B32C8100358A9E /* DerivedPropertyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85F421D20B32C3500358A9E /* DerivedPropertyTests.swift */; };
 		F86BE0641E983E20008B7BDC /* TryExecuteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86BE0621E983DF5008B7BDC /* TryExecuteTests.swift */; };
 		F87E09221E9C337F006CD1C9 /* NetworkReachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87E09211E9C337F006CD1C9 /* NetworkReachability.swift */; };
 		F88DBFF81EC3A3B700FC589E /* Fixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88DBFF61EC3A29000FC589E /* Fixtures.swift */; };
@@ -134,6 +136,8 @@
 		F8419BD71E911CF00067701C /* ChannelMakersTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelMakersTests.swift; sourceTree = "<group>"; };
 		F8419BD91E913B580067701C /* CacheTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CacheTests.swift; sourceTree = "<group>"; };
 		F85659561E97D7FE007EDC98 /* TryExecute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TryExecute.swift; sourceTree = "<group>"; };
+		F85F421B20B31E0E00358A9E /* DerivedProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DerivedProperty.swift; sourceTree = "<group>"; };
+		F85F421D20B32C3500358A9E /* DerivedPropertyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DerivedPropertyTests.swift; sourceTree = "<group>"; };
 		F86BE0621E983DF5008B7BDC /* TryExecuteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TryExecuteTests.swift; sourceTree = "<group>"; };
 		F87E09211E9C337F006CD1C9 /* NetworkReachability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkReachability.swift; sourceTree = "<group>"; };
 		F88DBFF61EC3A29000FC589E /* Fixtures.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Fixtures.swift; sourceTree = "<group>"; };
@@ -264,6 +268,7 @@
 				F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */,
 				OBJ_65 /* ChannelTests.swift */,
 				F8419BD71E911CF00067701C /* ChannelMakersTests.swift */,
+				F85F421D20B32C3500358A9E /* DerivedPropertyTests.swift */,
 				F8419BD51E9108090067701C /* EitherTests.swift */,
 				OBJ_66 /* EventSource_CombineTests.swift */,
 				OBJ_67 /* EventSource_FlatMapFuturesTests.swift */,
@@ -318,6 +323,7 @@
 				OBJ_24 /* Completing_Transform.swift */,
 				OBJ_25 /* ConstantFuture.swift */,
 				OBJ_26 /* Dispatch_Extensions.swift */,
+				F85F421B20B31E0E00358A9E /* DerivedProperty.swift */,
 				OBJ_27 /* DynamicProperty.swift */,
 				F819DC171E8A9F2A0072E0B1 /* Either.swift */,
 				OBJ_28 /* EventSource_Combine.swift */,
@@ -490,6 +496,7 @@
 				OBJ_168 /* Future_MakersTests.swift in Sources */,
 				OBJ_169 /* FutureTests.swift in Sources */,
 				F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */,
+				F85F421F20B32C8100358A9E /* DerivedPropertyTests.swift in Sources */,
 				OBJ_170 /* iOSTests.swift in Sources */,
 				OBJ_171 /* ObserversTests.swift in Sources */,
 				F88DBFF81EC3A3B700FC589E /* Fixtures.swift in Sources */,
@@ -530,6 +537,7 @@
 				OBJ_112 /* ConstantFuture.swift in Sources */,
 				OBJ_113 /* Dispatch_Extensions.swift in Sources */,
 				OBJ_114 /* DynamicProperty.swift in Sources */,
+				F85F421C20B31E0E00358A9E /* DerivedProperty.swift in Sources */,
 				OBJ_115 /* EventSource_Combine.swift in Sources */,
 				OBJ_116 /* EventSource_FlatMapFutures.swift in Sources */,
 				OBJ_117 /* EventSource_Implementation.swift in Sources */,

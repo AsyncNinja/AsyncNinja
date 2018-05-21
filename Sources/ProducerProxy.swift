@@ -41,12 +41,37 @@ public class ProducerProxy<Update, Success>: BaseProducer<Update, Success> {
     super.init(bufferSize: bufferSize)
   }
 
+  convenience init<OriginUpdate, OriginSuccess>(origin: BaseProducer<OriginUpdate, OriginSuccess>,
+                                                originToAdaptor: @escaping (BaseProducer<OriginUpdate, OriginSuccess>.Event) -> Event,
+                                                adaptorToOrigin: @escaping (Event) -> BaseProducer<OriginUpdate, OriginSuccess>.Event) {
+    self.init(updateExecutor: .immediate, bufferSize: origin.bufferSize) { [weak origin] (_, event, originalExecutor) in
+      let originEvent = adaptorToOrigin(event)
+      switch originEvent {
+      case let .update(update):
+        let _ = origin?.tryUpdate(update, from: originalExecutor)
+      case let .completion(completion):
+        let _ = origin?.tryComplete(completion, from: originalExecutor)
+      }
+    }
+
+    let originHandler = origin.makeHandler(executor: .immediate) { [weak self] (event, originalExecutor) in
+      let adapedEvent = originToAdaptor(event)
+      switch adapedEvent {
+      case let .update(update):
+        let _ = self?.tryUpdateWithoutHandling(update, from: originalExecutor)
+      case let .completion(completion):
+        let _ = self?.tryCompleteWithoutHandling(completion, from: originalExecutor)
+      }
+    }
+    _asyncNinja_retainHandlerUntilFinalization(originHandler)
+  }
+
   func tryUpdateWithoutHandling(_ update: Update, from originalExecutor: Executor?) -> Bool {
     return super.tryUpdate(update, from: originalExecutor)
   }
 
   func tryCompleteWithoutHandling(
-    with completion: Completion,
+    _ completion: Completion,
     from originalExecutor: Executor?) -> Bool {
     return super.tryComplete(completion, from: originalExecutor)
   }

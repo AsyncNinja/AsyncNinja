@@ -24,8 +24,6 @@
 import Foundation
 
 public extension Retainer where Self: NSObject {
-  public typealias CustomGetter<Value> = (Self) -> Value
-  public typealias CustomSetter<Value> = (Self, Value) -> Void
 
   /// makes an `UpdatableProperty<T>` for specified key path.
   ///
@@ -57,12 +55,14 @@ public extension Retainer where Self: NSObject {
     executor: Executor,
     from originalExecutor: Executor? = nil,
     observationSession: ObservationSession? = nil,
-    channelBufferSize: Int = 1,
-    customGetter: CustomGetter<Value>? = nil,
-    customSetter: CustomSetter<Value>? = nil
-    ) -> ProducerProxy<Value, Void> {
-    guard let keyPath_ = keyPath as? ReferenceWritableKeyPath<Self, Value> else {
-      fatalError("Unsupported key path provided")
+    channelBufferSize: Int = 1
+    ) -> ProducerProxy<Value, Void>? {
+
+    guard
+      let keyPath_ = keyPath as? ReferenceWritableKeyPath<Self, Value>,
+      let kvcKeyPath = keyPath_._kvcKeyPathString
+      else {
+      return nil
     }
 
     let producer = ProducerProxy<Value, Void>(
@@ -73,27 +73,18 @@ public extension Retainer where Self: NSObject {
         let strongSelf = maybeSelf,
         case let .update(value) = event
         else { return }
-      if let customSetter = customSetter {
-        customSetter(self, value)
-      } else {
-        strongSelf[keyPath: keyPath_] = value
-      }
+      strongSelf[keyPath: keyPath_] = value
     }
 
     executor.execute(from: originalExecutor) { _ in
-      let observer: KeyPathObserver<Self, Value>
-      if let customGetter = customGetter {
-        _ = producer.tryUpdateWithoutHandling(customGetter(self), from: executor)
-        observer = KeyPathObserver(keyPath: keyPath_, object: self, options: []
-        ) { [weak producer] (self_, _) in
-          _ = producer?.tryUpdateWithoutHandling(customGetter(self_), from: executor)
+      let observer = KeyPathObserver(kvcKeyPath: kvcKeyPath, object: self) { [weak weakProducer = producer, weak weakSelf = self] () in
+        guard
+          let strongProducer = weakProducer,
+          let strongSelf = weakSelf else {
+            return
         }
-      } else {
-        _ = producer.tryUpdateWithoutHandling(self[keyPath: keyPath_], from: executor)
-        observer = KeyPathObserver(keyPath: keyPath_, object: self, options: []
-        ) { [weak producer] (self_, _) in
-          _ = producer?.tryUpdateWithoutHandling(self_[keyPath: keyPath_], from: executor)
-        }
+        let value = strongSelf[keyPath: keyPath_]
+        _ = strongProducer.tryUpdateWithoutHandling(value, from: executor)
       }
 
       observationSession?.insert(item: observer)
@@ -128,34 +119,32 @@ public extension Retainer where Self: NSObject {
   /// - Parameter channelBufferSize: size of the buffer within returned channel
   /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
   /// - Returns: an `Updating<T>` bound to observe and update specified keyPath
-  func objcKVOUpdating<Value>(
+  func objcKVOUpdating<ValueType>(
     forKeyPath keyPath: AnyKeyPath,
+    valueType: ValueType.Type,
     executor: Executor,
     from originalExecutor: Executor? = nil,
     observationSession: ObservationSession? = nil,
-    channelBufferSize: Int = 1,
-    customGetter: CustomGetter<Value>? = nil
-    ) -> Channel<Value, Void> {
+    channelBufferSize: Int = 1
+    ) -> Channel<Any, Void>? {
 
-    guard let keyPath_ = keyPath as? KeyPath<Self, Value> else {
-      fatalError("Unsupported key path provided")
+    guard
+      let keyPath_ = keyPath as? KeyPath<Self, ValueType>,
+      let kvcKeyPath = keyPath_._kvcKeyPathString else {
+      return nil
     }
 
-    let producer = Producer<Value, Void>(bufferSize: channelBufferSize)
+    let producer = Producer<Any, Void>(bufferSize: channelBufferSize)
     executor.execute(from: originalExecutor) { _ in
-      let observer: KeyPathObserver<Self, Value>
-      if let customGetter = customGetter {
-        _ = producer.update(customGetter(self), from: executor)
-        observer = KeyPathObserver(keyPath: keyPath_, object: self, options: []
-        ) { [weak producer] (self_, _) in
-          _ = producer?.update(customGetter(self_), from: executor)
+      let observer = KeyPathObserver(kvcKeyPath: kvcKeyPath, object: self) { [weak weakProducer = producer, weak weakSelf = self] () in
+        guard
+          let strongProducer = weakProducer,
+          let strongSelf = weakSelf else {
+            return
         }
-      } else {
-        _ = producer.update(self[keyPath: keyPath_], from: executor)
-        observer = KeyPathObserver(keyPath: keyPath_, object: self, options: []
-        ) { [weak producer] (self_, _) in
-          _ = producer?.update(self_[keyPath: keyPath_], from: executor)
-        }
+
+        let value = strongSelf[keyPath: keyPath_]
+        strongProducer.update(value, from: executor)
       }
 
       observationSession?.insert(item: observer)

@@ -75,9 +75,9 @@ class ExecutionContextTests: XCTestCase {
         _intValue = makeDynamicProperty(intValue)
       }
 
-      func customUpdatable(forKeyPath keyPath: AnyKeyPath) -> AnyObject? {
+      func customUpdatable(forKeyPath keyPath: AnyKeyPath) -> BaseProducer<Any, Void>? {
         switch keyPath {
-        case \MyActor.intValue: return _intValue
+        case \MyActor.intValue: return _intValue.staticCastProducer()
         default: return nil
         }
       }

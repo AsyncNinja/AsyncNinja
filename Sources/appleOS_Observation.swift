@@ -34,36 +34,47 @@
   }
 
 /// **Internal use only** `KeyPathObserver` is an object for managing KVO.
-final class KeyPathObserver<Root: NSObject, Value>: ObservationSessionItem {
-  typealias _KeyPath = KeyPath<Root, Value>
-  typealias _ChangeHandler = (Root, NSKeyValueObservedChange<Value>) -> Void
+final class KeyPathObserver: NSObject, ObservationSessionItem {
+  typealias _ChangeHandler = () -> Void
 
-  let _keyPath: _KeyPath
-  private weak var _object: Root?
+  let _keyPath: String
+  private weak var _object: NSObject?
   private let _changeHandler: _ChangeHandler
-  private var _observation: NSKeyValueObservation?
-  private let _options: NSKeyValueObservingOptions
+  private var _isEnabled: Bool = false
 
   var isEnabled: Bool {
-    get { return _observation.isSome }
+    get { return _isEnabled }
     set {
-      if newValue == _observation.isSome {
+      if newValue == _isEnabled {
         // do nothing
-      } else if !newValue {
-        _observation = .none
-      } else if _observation.isNone {
-        _observation = _object?.observe(_keyPath, options: _options, changeHandler: _changeHandler)
+      } else if newValue {
+        _object?.addObserver(self, forKeyPath: _keyPath, options: [.initial], context: nil)
+        _isEnabled = true
+      } else {
+        _object?.removeObserver(self, forKeyPath: _keyPath)
+        _isEnabled = false
       }
     }
   }
 
-  init(keyPath: _KeyPath, object: Root, options: NSKeyValueObservingOptions, changeHandler: @escaping _ChangeHandler) {
-    _keyPath = keyPath
+  init(kvcKeyPath: String, object: NSObject, changeHandler: @escaping _ChangeHandler) {
+    _keyPath = kvcKeyPath
     _object = object
-    _options = options
     _changeHandler = changeHandler
-    _observation = .none
+    super.init()
     isEnabled = true
+  }
+
+  convenience init?(keyPath: AnyKeyPath, object: NSObject, changeHandler: @escaping _ChangeHandler) {
+    guard let kvcKeyPath = keyPath._kvcKeyPathString else { return nil }
+    self.init(kvcKeyPath: kvcKeyPath, object: object, changeHandler: changeHandler)
+  }
+
+  override func observeValue(forKeyPath keyPath: String?,
+                             of object: Any?,
+                             change: [NSKeyValueChangeKey : Any]?,
+                             context: UnsafeMutableRawPointer?) {
+    _changeHandler()
   }
 }
 
