@@ -55,54 +55,15 @@ public extension Executor {
   }
 }
 
-/// A protocol that automatically adds implementation of methods
-/// of `Retainer` for Objective-C runtime compatible objects
-public protocol ObjCInjectedRetainer: Retainer, NSObjectProtocol { }
-
-/// **Internal use only** An object that calls specified block on deinit
-private class DeinitNotifier {
-  let _block: () -> Void
-
-  init(block: @escaping () -> Void) {
-    _block = block
-  }
-
-  deinit { _block() }
-}
-
-public extension ObjCInjectedRetainer {
-  func releaseOnDeinit(_ object: AnyObject) {
-    Statics.withUniqueKey {
-      "asyncNinjaKey_\($0)".withCString {
-        objc_setAssociatedObject(self, $0, object,
-                                 .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-      }
-    }
-  }
-
-  func notifyDeinit(_ block: @escaping () -> Void) {
-    releaseOnDeinit(DeinitNotifier(block: block))
-  }
-}
-
 /// Is a protocol that automatically adds implementation of methods
 /// of `ExecutionContext` for Objective-C runtime compatible objects
 /// involved in UI manipulations
-public protocol ObjCUIInjectedExecutionContext: ExecutionContext, ObjCInjectedRetainer {
+public protocol ObjCUIInjectedExecutionContext: ObjCExecutionContext {
 }
 
 public extension ObjCUIInjectedExecutionContext {
   /// executor for ui objects. The main queue
   var executor: Executor { return .main }
-}
-
-// **internal use only**
-private struct Statics {
-  static var increment: OSAtomic_int64_aligned64_t = 0
-  static func withUniqueKey(_ block: (Int64) -> Void) {
-    let unique = OSAtomicIncrement64Barrier(&increment)
-    block(unique)
-  }
 }
 
 extension EventSource where Update: NSObject {

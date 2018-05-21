@@ -52,7 +52,7 @@ public extension Retainer where Self: NSObject {
   /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
   /// - Parameter customSetter: provides a custom getter to use instead of setValue(_: forKeyPath:) call
   /// - Returns: an `UpdatableProperty<T>` bound to observe and update specified keyPath
-  func updatable<Value>(
+  func objcKVOUpdatable<Value>(
     forKeyPath keyPath: ReferenceWritableKeyPath<Self, Value>,
     executor: Executor,
     from originalExecutor: Executor? = nil,
@@ -124,7 +124,7 @@ public extension Retainer where Self: NSObject {
   /// - Parameter channelBufferSize: size of the buffer within returned channel
   /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
   /// - Returns: an `Updating<T>` bound to observe and update specified keyPath
-  func updating<Value>(
+  func objcKVOUpdating<Value>(
     forKeyPath keyPath: KeyPath<Self, Value>,
     executor: Executor,
     from originalExecutor: Executor? = nil,

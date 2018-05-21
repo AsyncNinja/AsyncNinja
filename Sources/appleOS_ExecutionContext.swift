@@ -24,38 +24,62 @@
 
 import Foundation
 
-public extension ExecutionContext where Self: NSObject {
+public protocol ObjCExecutionContext: ExecutionContext where Self: NSObject {
 }
 
-extension ExecutionContext where Self: NSObject {
+// MARK: - retainer
+/// **Internal use only** An object that calls specified block on deinit
+private class DeinitNotifier {
+  let _block: () -> Void
+
+  init(block: @escaping () -> Void) {
+    _block = block
+  }
+
+  deinit { _block() }
+}
+
+// **internal use only**
+private struct Statics {
+  static var increment: OSAtomic_int64_aligned64_t = 0
+  static func withUniqueKey(_ block: (Int64) -> Void) {
+    let unique = OSAtomicIncrement64Barrier(&increment)
+    block(unique)
+  }
+}
+
+public extension ObjCExecutionContext {
+  func releaseOnDeinit(_ object: AnyObject) {
+    Statics.withUniqueKey {
+      "asyncNinjaKey_\($0)".withCString {
+        objc_setAssociatedObject(self, $0, object,
+                                 .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+      }
+    }
+  }
+
+  func notifyDeinit(_ block: @escaping () -> Void) {
+    releaseOnDeinit(DeinitNotifier(block: block))
+  }
+}
+
+// MARK: - subscripts
+extension ObjCExecutionContext {
   public subscript<Value>(updatingKeyPath keyPath: KeyPath<Self, Value>) -> Channel<Value, Void> {
-    return updating(forKeyPath: keyPath,
-                    executor: executor,
-                    from: executor,
-                    customGetter: type(of: self).asyncNinjaCustomGetter(keyPath: keyPath))
+    return objcKVOUpdating(forKeyPath: keyPath,
+                           executor: executor,
+                           from: executor,
+                           customGetter: type(of: self).asyncNinjaCustomGetter(keyPath: keyPath))
   }
 
   public subscript<Value>(
     updatableKeyPath keyPath: ReferenceWritableKeyPath<Self, Value>
     ) -> BaseProducer<Value, Void> {
-      return updatable(forKeyPath: keyPath,
+      return objcKVOUpdatable(forKeyPath: keyPath,
                        executor: executor,
                        from: executor,
                        customGetter: type(of: self).asyncNinjaCustomGetter(keyPath: keyPath),
                        customSetter: type(of: self).asyncNinjaCustomSetter(keyPath: keyPath))
-  }
-
-  public static func asyncNinjaRegister<Value>(
-    keyPath: KeyPath<Self, Value>,
-    getter: @escaping (Self) -> Value) {
-
-  }
-
-  public static func asyncNinjaRegister<Value>(
-    keyPath: ReferenceWritableKeyPath<Self, Value>,
-    getter: @escaping (Self) -> Value,
-    setter: @escaping (Self, Value) -> Void) {
-
   }
 
   static func asyncNinjaCustomGetter<Self, Value>(
@@ -68,11 +92,6 @@ extension ExecutionContext where Self: NSObject {
     keyPath: ReferenceWritableKeyPath<Self, Value>
     ) -> ((Self, Value) -> Void)? {
     return nil
-  }
-}
-
-public extension NSObject {
-  @objc public class func asyncNinjaRegister() {
   }
 }
 

@@ -31,10 +31,6 @@ extension UIResponder: ObjCUIInjectedExecutionContext {
 
 // MARK: - reactive properties for UIView
 public extension UITextField {
-  @objc override public class func asyncNinjaRegister() {
-    super.asyncNinjaRegister()
-    self.asyncNinjaRegister(keyPath: \.textAlignment, getter: { $0.textAlignment })
-  }
 //
 //  /// `ProducerProxy` that refers to read-write property `UIView.alpha`
 //  var alpha: ProducerProxy<CGFloat, Void> { return updatable(forKeyPath: "alpha", onNone: .drop) }

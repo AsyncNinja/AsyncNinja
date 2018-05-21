@@ -154,7 +154,7 @@ class TestActor: Actor, ReleasePoolOwner {
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 
-class TestObjCActor: NSObject, Actor, ObjCInjectedRetainer {
+class TestObjCActor: NSObject, Actor, ObjCExecutionContext {
     let internalQueue = DispatchQueue(label: "internal queue", attributes: [])
     var executor: Executor { return .queue(self.internalQueue) }
 }
@@ -164,7 +164,7 @@ class UITestCase: XCTestCase {
 
 // MARK: - regular testing functions
 extension UITestCase {
-  func testEventStream<Root: NSObject&ExecutionContext, Value: Equatable>(
+  func testEventStream<Root: ObjCExecutionContext, Value: Equatable>(
     _ object: Root,
     keyPath: ReferenceWritableKeyPath<Root, Value>,
     getter: ((Root) -> Value)? = nil,
@@ -181,7 +181,7 @@ extension UITestCase {
     }
   }
 
-  func testEventDestination<Root: NSObject&ExecutionContext, Value: Equatable>(
+  func testEventDestination<Root: ObjCExecutionContext, Value: Equatable>(
     _ object: Root,
     keyPath: ReferenceWritableKeyPath<Root, Value>,
     getter: ((Root) -> Value)?,
@@ -203,7 +203,7 @@ extension UITestCase {
     }
   }
 
-  func testEventSource<Root: NSObject&ExecutionContext, Value: Equatable>(
+  func testEventSource<Root: ObjCExecutionContext, Value: Equatable>(
     _ object: Root,
     keyPath: KeyPath<Root, Value>,
     setter: (Root, Value) -> Void,
@@ -220,7 +220,7 @@ extension UITestCase {
     }
   }
 
-  func testEventSource<Root: NSObject&ExecutionContext, Value: Equatable>(
+  func testEventSource<Root: ObjCExecutionContext, Value: Equatable>(
     _ object: Root,
     keyPath: ReferenceWritableKeyPath<Root, Value>,
     values: [Value],
@@ -238,7 +238,7 @@ extension UITestCase {
 
 // MARK: - IUO testing functions
 extension UITestCase {
-  func testEventStreamForIUO<Root: NSObject&ExecutionContext, Value: Equatable>(
+  func testEventStreamForIUO<Root: ObjCExecutionContext, Value: Equatable>(
     _ object: Root,
     keyPath: ReferenceWritableKeyPath<Root, Value!>,
     getter: ((Root) -> Value!)? = nil,
@@ -255,7 +255,7 @@ extension UITestCase {
     }
   }
 
-  func testEventDestinationForIUO<Root: NSObject&ExecutionContext, Value: Equatable>(
+  func testEventDestinationForIUO<Root: ObjCExecutionContext, Value: Equatable>(
     _ object: Root,
     keyPath: ReferenceWritableKeyPath<Root, Value!>,
     getter: ((Root) -> Value!)?,
@@ -277,7 +277,7 @@ extension UITestCase {
     }
   }
 
-  func testEventSourceForIUO<Root: NSObject&ExecutionContext, Value: Equatable>(
+  func testEventSourceForIUO<Root: ObjCExecutionContext, Value: Equatable>(
     _ object: Root,
     keyPath: KeyPath<Root, Value!>,
     setter: (Root, Value!) -> Void,
@@ -289,12 +289,12 @@ extension UITestCase {
     _ = updatingIterator.next() // skip an initial value
     for expectedValue in values {
       setter(object, expectedValue)
-      let actualValue: Value? = updatingIterator.next()
+      let actualValue: Value!? = updatingIterator.next()
       XCTAssertEqual(actualValue, expectedValue, file: file, line: line)
     }
   }
 
-  func testEventSourceForIUO<Root: NSObject&ExecutionContext, Value: Equatable>(
+  func testEventSourceForIUO<Root: ObjCExecutionContext, Value: Equatable>(
     _ object: Root,
     keyPath: ReferenceWritableKeyPath<Root, Value!>,
     values: [Value!],
@@ -306,7 +306,7 @@ extension UITestCase {
     for value in values {
       switch value {
       case let .some(someValue):
-        object[keyPath: keyPath] = ImplicitlyUnwrappedOptional(someValue)
+        object[keyPath: keyPath] = Optional(someValue)
       case .none:
         object[keyPath: keyPath] = nil
       }
