@@ -70,6 +70,10 @@ final class KeyPathObserver: NSObject, ObservationSessionItem {
     self.init(kvcKeyPath: kvcKeyPath, object: object, changeHandler: changeHandler)
   }
 
+  deinit {
+    isEnabled = false
+  }
+
   override func observeValue(forKeyPath keyPath: String?,
                              of object: Any?,
                              change: [NSKeyValueChangeKey: Any]?,
