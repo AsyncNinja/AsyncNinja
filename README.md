@@ -7,7 +7,7 @@
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![Build Status](https://travis-ci.org/AsyncNinja/AsyncNinja.svg?branch=master)](https://travis-ci.org/AsyncNinja)
 
-* **2.0 for Swift 4.2+**
+* **2.0 for Swift 4.1+**
 * **1.3.0 is for Swift 4.0+**
 * **use 1.2.4 for latest release for Swift 3**
 
