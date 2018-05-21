@@ -159,12 +159,9 @@ class TestObjCActor: NSObject, Actor, ObjCExecutionContext {
     var executor: Executor { return .queue(self.internalQueue) }
 }
 
-class UITestCase: XCTestCase {
-}
-
 // MARK: - regular testing functions
-extension UITestCase {
-  func testEventStream<Root: ObjCExecutionContext, Value: Equatable>(
+extension XCTestCase {
+  func testEventStream<Root: ExecutionContext, Value: Equatable>(
     _ object: Root,
     keyPath: ReferenceWritableKeyPath<Root, Value>,
     getter: ((Root) -> Value)? = nil,
@@ -181,7 +178,7 @@ extension UITestCase {
     }
   }
 
-  func testEventDestination<Root: ObjCExecutionContext, Value: Equatable>(
+  func testEventDestination<Root: ExecutionContext, Value: Equatable>(
     _ object: Root,
     keyPath: ReferenceWritableKeyPath<Root, Value>,
     getter: ((Root) -> Value)?,
@@ -203,7 +200,7 @@ extension UITestCase {
     }
   }
 
-  func testEventSource<Root: ObjCExecutionContext, Value: Equatable>(
+  func testEventSource<Root: ExecutionContext, Value: Equatable>(
     _ object: Root,
     keyPath: KeyPath<Root, Value>,
     setter: (Root, Value) -> Void,
@@ -220,7 +217,7 @@ extension UITestCase {
     }
   }
 
-  func testEventSource<Root: ObjCExecutionContext, Value: Equatable>(
+  func testEventSource<Root: ExecutionContext, Value: Equatable>(
     _ object: Root,
     keyPath: ReferenceWritableKeyPath<Root, Value>,
     values: [Value],
@@ -237,7 +234,7 @@ extension UITestCase {
 }
 
 // MARK: - IUO testing functions
-extension UITestCase {
+extension XCTestCase {
   func testEventStreamForIUO<Root: ObjCExecutionContext, Value: Equatable>(
     _ object: Root,
     keyPath: ReferenceWritableKeyPath<Root, Value!>,

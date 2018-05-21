@@ -63,36 +63,4 @@ public extension ObjCExecutionContext {
   }
 }
 
-// MARK: - subscripts
-extension ObjCExecutionContext {
-  public subscript<Value>(updatingKeyPath keyPath: KeyPath<Self, Value>) -> Channel<Value, Void> {
-    return objcKVOUpdating(forKeyPath: keyPath,
-                           executor: executor,
-                           from: executor,
-                           customGetter: type(of: self).asyncNinjaCustomGetter(keyPath: keyPath))
-  }
-
-  public subscript<Value>(
-    updatableKeyPath keyPath: ReferenceWritableKeyPath<Self, Value>
-    ) -> BaseProducer<Value, Void> {
-      return objcKVOUpdatable(forKeyPath: keyPath,
-                       executor: executor,
-                       from: executor,
-                       customGetter: type(of: self).asyncNinjaCustomGetter(keyPath: keyPath),
-                       customSetter: type(of: self).asyncNinjaCustomSetter(keyPath: keyPath))
-  }
-
-  static func asyncNinjaCustomGetter<Self, Value>(
-    keyPath: KeyPath<Self, Value>
-    ) -> ((Self) -> Value)? {
-    return nil
-  }
-
-  static func asyncNinjaCustomSetter<Self, Value>(
-    keyPath: ReferenceWritableKeyPath<Self, Value>
-    ) -> ((Self, Value) -> Void)? {
-    return nil
-  }
-}
-
 #endif

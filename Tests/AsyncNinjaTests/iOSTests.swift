@@ -26,7 +26,7 @@ import Dispatch
 import UIKit
 @testable import AsyncNinja
 
-class iOSTests: UITestCase {
+class iOSTests: XCTestCase {
 
   // MARK: - 
   static let allTests = [

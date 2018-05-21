@@ -134,6 +134,85 @@ public extension ExecutionContext {
   }
 }
 
+// MARK: - updating
+public extension ExecutionContext {
+  func updating<Value>(
+    forKeyPath keyPath: KeyPath<Self, Value>,
+    from originalExecutor: Executor? = nil,
+    observationSession: ObservationSession? = nil
+    ) -> Channel<Value, Void> {
+
+    if let customSupport = self as? CustomKVOUpdatingSupport,
+      let anyObject = customSupport.customUpdating(forKeyPath: keyPath) {
+      return anyObject as! Channel<Value, Void>
+    }
+
+    if let customSupport = self as? CustomKVOUpdatableSupport,
+      let specialKeyPath = keyPath as? ReferenceWritableKeyPath<Self, Value>,
+      let anyObject = customSupport.customUpdatable(forKeyPath: specialKeyPath) {
+      return anyObject as! BaseProducer<Value, Void>
+    }
+
+    #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+
+    if let objcSupport = self as? NSObject&ObjCExecutionContext {
+      return objcSupport.objcKVOUpdating(forKeyPath: keyPath,
+                                         executor: executor,
+                                         from: originalExecutor,
+                                         observationSession: observationSession)
+    }
+
+    #endif
+
+    fatalError("\(keyPath) is not reactive")
+  }
+
+  subscript<Value>(updatingKeyPath keyPath: KeyPath<Self, Value>) -> Channel<Value, Void> {
+    return updating(forKeyPath: keyPath, from: executor)
+  }
+}
+
+public protocol CustomKVOUpdatingSupport: ExecutionContext {
+  func customUpdating(forKeyPath keyPath: AnyKeyPath) -> AnyObject?
+}
+
+// MARK: - updatable
+public extension ExecutionContext {
+  func updatable<Value>(
+    forKeyPath keyPath: ReferenceWritableKeyPath<Self, Value>,
+    from originalExecutor: Executor? = nil,
+    observationSession: ObservationSession? = nil
+    ) -> BaseProducer<Value, Void> {
+    if let customSupport = self as? CustomKVOUpdatableSupport,
+      let anyObject = customSupport.customUpdatable(forKeyPath: keyPath) {
+      return anyObject as! BaseProducer<Value, Void>
+
+    }
+
+    #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+
+    if let objcSupport = self as? NSObject&ObjCExecutionContext {
+      return objcSupport.objcKVOUpdatable(forKeyPath: keyPath,
+                                          executor: executor,
+                                          from: executor)
+    }
+
+    #endif
+
+    fatalError("\(keyPath) is not reactive")
+  }
+
+  subscript<Value>(
+    updatableKeyPath keyPath: ReferenceWritableKeyPath<Self, Value>
+    ) -> BaseProducer<Value, Void> {
+    return updatable(forKeyPath: keyPath, from: executor)
+  }
+}
+
+public protocol CustomKVOUpdatableSupport: ExecutionContext {
+  func customUpdatable(forKeyPath keyPath: AnyKeyPath) -> AnyObject?
+}
+
 /// Protocol for any instance that has `ReleasePool`.
 /// Made to proxy calls of `func releaseOnDeinit(_ object: AnyObject)`
 /// and `func notifyDeinit(_ block: @escaping () -> Void)` to `ReleasePool`

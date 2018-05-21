@@ -33,7 +33,8 @@ struct SimpleResponse {}
 class ExecutionContextTests: XCTestCase {
 
   static let allTests = [
-    ("testFailure", testFailure)
+    ("testFailure", testFailure),
+    ("testNonObjCKVO", testNonObjCKVO)
     ]
 
   func testFailure() {
@@ -57,5 +58,32 @@ class ExecutionContextTests: XCTestCase {
     let failure = fullFutureValue.wait().failure
     XCTAssertNotNil(failure)
     XCTAssertEqual(failure as! AsyncNinjaError, AsyncNinjaError.contextDeallocated)
+  }
+
+  func testNonObjCKVO() {
+    class MyActor: ExecutionContext, ReleasePoolOwner, CustomKVOUpdatableSupport {
+      var executor: Executor { return .main }
+      let releasePool = ReleasePool()
+
+      private var _intValue: DynamicProperty<Int>!
+      var intValue: Int {
+        get { return _intValue.value }
+        set { _intValue.value = newValue }
+      }
+
+      init(intValue: Int) {
+        _intValue = makeDynamicProperty(intValue)
+      }
+
+      func customUpdatable(forKeyPath keyPath: AnyKeyPath) -> AnyObject? {
+        switch keyPath {
+        case \MyActor.intValue: return _intValue
+        default: return nil
+        }
+      }
+    }
+
+    let myActor = MyActor(intValue: 3)
+    testEventStream(myActor, keyPath: \.intValue, getter: nil, values: [1, 2, 3, 4, 5])
   }
 }

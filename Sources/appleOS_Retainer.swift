@@ -53,7 +53,7 @@ public extension Retainer where Self: NSObject {
   /// - Parameter customSetter: provides a custom getter to use instead of setValue(_: forKeyPath:) call
   /// - Returns: an `UpdatableProperty<T>` bound to observe and update specified keyPath
   func objcKVOUpdatable<Value>(
-    forKeyPath keyPath: ReferenceWritableKeyPath<Self, Value>,
+    forKeyPath keyPath: AnyKeyPath,
     executor: Executor,
     from originalExecutor: Executor? = nil,
     observationSession: ObservationSession? = nil,
@@ -61,6 +61,10 @@ public extension Retainer where Self: NSObject {
     customGetter: CustomGetter<Value>? = nil,
     customSetter: CustomSetter<Value>? = nil
     ) -> ProducerProxy<Value, Void> {
+    guard let keyPath_ = keyPath as? ReferenceWritableKeyPath<Self, Value> else {
+      fatalError("Unsupported key path provided")
+    }
+
     let producer = ProducerProxy<Value, Void>(
       updateExecutor: executor,
       bufferSize: channelBufferSize
@@ -72,7 +76,7 @@ public extension Retainer where Self: NSObject {
       if let customSetter = customSetter {
         customSetter(self, value)
       } else {
-        strongSelf[keyPath: keyPath] = value
+        strongSelf[keyPath: keyPath_] = value
       }
     }
 
@@ -80,15 +84,15 @@ public extension Retainer where Self: NSObject {
       let observer: KeyPathObserver<Self, Value>
       if let customGetter = customGetter {
         _ = producer.tryUpdateWithoutHandling(customGetter(self), from: executor)
-        observer = KeyPathObserver(keyPath: keyPath, object: self, options: []
+        observer = KeyPathObserver(keyPath: keyPath_, object: self, options: []
         ) { [weak producer] (self_, _) in
           _ = producer?.tryUpdateWithoutHandling(customGetter(self_), from: executor)
         }
       } else {
-        _ = producer.tryUpdateWithoutHandling(self[keyPath: keyPath], from: executor)
-        observer = KeyPathObserver(keyPath: keyPath, object: self, options: []
+        _ = producer.tryUpdateWithoutHandling(self[keyPath: keyPath_], from: executor)
+        observer = KeyPathObserver(keyPath: keyPath_, object: self, options: []
         ) { [weak producer] (self_, _) in
-          _ = producer?.tryUpdateWithoutHandling(self_[keyPath: keyPath], from: executor)
+          _ = producer?.tryUpdateWithoutHandling(self_[keyPath: keyPath_], from: executor)
         }
       }
 
@@ -125,7 +129,7 @@ public extension Retainer where Self: NSObject {
   /// - Parameter customGetter: provides a custom getter to use instead of value(forKeyPath:) call
   /// - Returns: an `Updating<T>` bound to observe and update specified keyPath
   func objcKVOUpdating<Value>(
-    forKeyPath keyPath: KeyPath<Self, Value>,
+    forKeyPath keyPath: AnyKeyPath,
     executor: Executor,
     from originalExecutor: Executor? = nil,
     observationSession: ObservationSession? = nil,
@@ -133,21 +137,24 @@ public extension Retainer where Self: NSObject {
     customGetter: CustomGetter<Value>? = nil
     ) -> Channel<Value, Void> {
 
-    let producer = Producer<Value, Void>(bufferSize: channelBufferSize)
+    guard let keyPath_ = keyPath as? KeyPath<Self, Value> else {
+      fatalError("Unsupported key path provided")
+    }
 
+    let producer = Producer<Value, Void>(bufferSize: channelBufferSize)
     executor.execute(from: originalExecutor) { _ in
       let observer: KeyPathObserver<Self, Value>
       if let customGetter = customGetter {
         _ = producer.update(customGetter(self), from: executor)
-        observer = KeyPathObserver(keyPath: keyPath, object: self, options: []
+        observer = KeyPathObserver(keyPath: keyPath_, object: self, options: []
         ) { [weak producer] (self_, _) in
           _ = producer?.update(customGetter(self_), from: executor)
         }
       } else {
-        _ = producer.update(self[keyPath: keyPath], from: executor)
-        observer = KeyPathObserver(keyPath: keyPath, object: self, options: []
+        _ = producer.update(self[keyPath: keyPath_], from: executor)
+        observer = KeyPathObserver(keyPath: keyPath_, object: self, options: []
         ) { [weak producer] (self_, _) in
-          _ = producer?.update(self_[keyPath: keyPath], from: executor)
+          _ = producer?.update(self_[keyPath: keyPath_], from: executor)
         }
       }
 
