@@ -25,7 +25,7 @@ import Dispatch
 public extension EventSource {
   private static func _prepareReduceUpdates<Key: Hashable>(
     channelsByKey: [Key: Channel<Any, Void>]
-    ) -> Channel<[Key:Any], Void> {
+    ) -> Channel<[Key: Any], Void> {
     let producer = Producer<[Key: Any], Void>(bufferSize: 1)
 
     var isComplete = false
@@ -117,7 +117,10 @@ public extension ExecutionContext {
       channelsByKey[keyPath] = channel
     }
 
-    return Channel<T, Void>.reduceUpdates(channelsByKey: channelsByKey, context: self, executor: .immediate) { (_, valuesByKeyPath) -> T in
+    return Channel<T, Void>.reduceUpdates(channelsByKey: channelsByKey,
+                                          context: self,
+                                          executor: .immediate
+    ) { (_, valuesByKeyPath) -> T in
       return try combiner(DerivedPropertyValuesProvider<Self>(valuesByKey: valuesByKeyPath))
     }
   }

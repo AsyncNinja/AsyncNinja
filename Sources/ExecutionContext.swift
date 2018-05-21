@@ -200,7 +200,10 @@ public extension ExecutionContext {
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 
     if let objcSupport = self as? NSObject&ObjCExecutionContext,
-      let producer: ProducerProxy<Value, Void> = objcSupport.objcKVOUpdatable(forKeyPath: keyPath, executor: executor, from: executor) {
+      let producer: ProducerProxy<Value, Void> = objcSupport.objcKVOUpdatable(
+        forKeyPath: keyPath,
+        executor: executor,
+        from: executor) {
       return producer
     }
 

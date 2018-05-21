@@ -77,7 +77,8 @@ public extension Retainer where Self: NSObject {
     }
 
     executor.execute(from: originalExecutor) { _ in
-      let observer = KeyPathObserver(kvcKeyPath: kvcKeyPath, object: self) { [weak weakProducer = producer, weak weakSelf = self] () in
+      let observer = KeyPathObserver(kvcKeyPath: kvcKeyPath, object: self) {
+        [weak weakProducer = producer, weak weakSelf = self] () in
         guard
           let strongProducer = weakProducer,
           let strongSelf = weakSelf else {
@@ -136,7 +137,8 @@ public extension Retainer where Self: NSObject {
 
     let producer = Producer<Any, Void>(bufferSize: channelBufferSize)
     executor.execute(from: originalExecutor) { _ in
-      let observer = KeyPathObserver(kvcKeyPath: kvcKeyPath, object: self) { [weak weakProducer = producer, weak weakSelf = self] () in
+      let observer = KeyPathObserver(kvcKeyPath: kvcKeyPath, object: self) {
+        [weak weakProducer = producer, weak weakSelf = self] () in
         guard
           let strongProducer = weakProducer,
           let strongSelf = weakSelf else {

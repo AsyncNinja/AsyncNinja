@@ -44,7 +44,6 @@
     static let colorsAndNils: [UIColor?]
       = [.white, .white, nil, .red, nil, nil, .green, nil, .green, .blue, .blue]
     static let colors: [UIColor] = Fixtures.colorsAndNils.compactMap { $0 }
-    static let colorsIUO: [UIColor!] = Fixtures.colors
     static let fontTextStyles: [UIFontTextStyle]
       = [.headline, .subheadline, .body, .footnote, .caption1, .caption2]
     static let fonts: [UIFont] = Fixtures.fontTextStyles

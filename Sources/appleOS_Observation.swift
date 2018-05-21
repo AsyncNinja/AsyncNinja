@@ -72,7 +72,7 @@ final class KeyPathObserver: NSObject, ObservationSessionItem {
 
   override func observeValue(forKeyPath keyPath: String?,
                              of object: Any?,
-                             change: [NSKeyValueChangeKey : Any]?,
+                             change: [NSKeyValueChangeKey: Any]?,
                              context: UnsafeMutableRawPointer?) {
     _changeHandler()
   }
