@@ -38,7 +38,7 @@ final class KeyPathObserver: NSObject, ObservationSessionItem {
   typealias _ChangeHandler = () -> Void
 
   let _keyPath: String
-  private weak var _object: NSObject?
+  private let _object: Unmanaged<NSObject>
   private let _changeHandler: _ChangeHandler
   private var _isEnabled: Bool = false
 
@@ -48,10 +48,10 @@ final class KeyPathObserver: NSObject, ObservationSessionItem {
       if newValue == _isEnabled {
         // do nothing
       } else if newValue {
-        _object?.addObserver(self, forKeyPath: _keyPath, options: [.initial], context: nil)
+        _object.takeUnretainedValue().addObserver(self, forKeyPath: _keyPath, options: [.initial], context: nil)
         _isEnabled = true
       } else {
-        _object?.removeObserver(self, forKeyPath: _keyPath)
+        _object.takeUnretainedValue().removeObserver(self, forKeyPath: _keyPath)
         _isEnabled = false
       }
     }
@@ -59,7 +59,7 @@ final class KeyPathObserver: NSObject, ObservationSessionItem {
 
   init(kvcKeyPath: String, object: NSObject, changeHandler: @escaping _ChangeHandler) {
     _keyPath = kvcKeyPath
-    _object = object
+    _object = Unmanaged.passUnretained(object)
     _changeHandler = changeHandler
     super.init()
     isEnabled = true
