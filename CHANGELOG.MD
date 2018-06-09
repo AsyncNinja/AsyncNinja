@@ -1,3 +1,6 @@
+# 1.3.1
+* [fixes] nested executes using the same executor `Executor` could be optimized into on-stack execution instead of dispatch_async call. That is a direct cause of stack overflow. Avoiding that by limiting amount of nested on-stack executions.
+
 # 1.3.0
 * [changes] Swift 3.0 dropped
 
