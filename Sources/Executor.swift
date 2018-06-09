@@ -27,6 +27,7 @@ public struct Executor {
   /// Handler that encapsulates asynchrounous way of execution escaped block
   public typealias Handler = (@escaping () -> Void) -> Void
   private let _impl: ExecutorImpl
+  private let _nesting: Int
   var dispatchQueueBasedExecutor: Executor {
     switch _impl.asyncNinja_representedDispatchQueue {
     case .none: return .primary
@@ -36,12 +37,19 @@ public struct Executor {
   var representedDispatchQueue: DispatchQueue? {
     return _impl.asyncNinja_representedDispatchQueue
   }
+  var unnested: Executor {
+    return Executor(impl: _impl, nesting: 0)
+  }
+  var nested: Executor? {
+    return _nesting < 64 ? Executor(impl: _impl, nesting: _nesting + 1) : nil
+  }
 
   /// Initializes executor with specified implementation
   ///
   /// - Parameter impl: implementation of executor
-  fileprivate init(impl: ExecutorImpl) {
+  fileprivate init(impl: ExecutorImpl, nesting: Int) {
     _impl = impl
+    _nesting = nesting
   }
 
   /// Initialiaes executor with custom handler
@@ -51,6 +59,7 @@ public struct Executor {
   public init(relaxAsyncWhenLaunchingFrom: ObjectIdentifier? = nil, handler: @escaping Handler) {
     // Test: ExecutorTests.testCustomHandler
     _impl = HandlerBasedExecutorImpl(relaxAsyncWhenLaunchingFrom: relaxAsyncWhenLaunchingFrom, handler: handler)
+    _nesting = 0
   }
 
   /// Schedules specified block for execution
@@ -62,20 +71,20 @@ public struct Executor {
   ///   you calling this method on.
   /// - Parameter block: to execute
   func execute(from original: Executor?, _ block: @escaping (_ original: Executor) -> Void) {
-    if let original = original,
-      _impl.asyncNinja_canImmediatelyExecute(from: original._impl) {
-      block(original)
+    if case let .some(newOrigin) = original?.nested,
+      _impl.asyncNinja_canImmediatelyExecute(from: newOrigin._impl) {
+      block(newOrigin)
     } else {
-      _impl.asyncNinja_execute { () -> Void in block(self) }
+      _impl.asyncNinja_execute { () -> Void in block(self.unnested) }
     }
   }
 
   func execute<T>(from original: Executor?, value: T, _ block: @escaping (_ value: T, _ original: Executor) -> Void) {
-    if let original = original,
-      _impl.asyncNinja_canImmediatelyExecute(from: original._impl) {
-      block(value, original)
+    if case let .some(newOrigin) = original?.nested,
+      _impl.asyncNinja_canImmediatelyExecute(from: newOrigin._impl) {
+      block(value, newOrigin)
     } else {
-      _impl.asyncNinja_execute { () -> Void in block(value, self) }
+      _impl.asyncNinja_execute { () -> Void in block(value, self.unnested) }
     }
   }
 
@@ -85,7 +94,7 @@ public struct Executor {
   ///   - timeout: to schedule execution of the block after
   ///   - block: to execute
   func execute(after timeout: Double, _ block: @escaping (_ original: Executor) -> Void) {
-    _impl.asyncNinja_execute(after: timeout) { () -> Void in block(self) }
+    _impl.asyncNinja_execute(after: timeout) { () -> Void in block(self.unnested) }
   }
 }
 
@@ -95,10 +104,10 @@ public extension Executor {
   // Test: ExecutorTests.testPrimary
   /// primary executor is primary because it will be used
   /// as default value when executor argument is ommited
-  static let primary = Executor(impl: PrimaryExecutorImpl())
+  static let primary = Executor(impl: PrimaryExecutorImpl(), nesting: 0)
 
   /// shortcut to the main queue executor
-  static let main = Executor(impl: MainExecutorImpl())
+  static let main = Executor(impl: MainExecutorImpl(), nesting: 0)
 
   // Test: ExecutorTests.testUserInteractive
   /// shortcut to the global concurrent user interactive queue executor
@@ -122,7 +131,7 @@ public extension Executor {
 
   // Test: ExecutorTests.testImmediate
   /// executes block immediately. Not suitable for long running calculations
-  static let immediate = Executor(impl: ImmediateExecutorImpl())
+  static let immediate = Executor(impl: ImmediateExecutorImpl(), nesting: 0)
 
   /// initializes executor based on specified queue
   ///
@@ -137,7 +146,7 @@ public extension Executor {
   ///
   /// - Parameter queue: to execute submitted blocks on
   init(queue: DispatchQueue) {
-    self.init(impl: queue)
+    self.init(impl: queue, nesting: 0)
   }
 
   // Test: ExecutorTests.testCustomQoS

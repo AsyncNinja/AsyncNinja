@@ -67,15 +67,23 @@ class PerformanceTests: XCTestCase {
     }
   }
 
-  func testHugeMapping_Success() {
+  func _testHugeMapping_Success(executor: Executor) {
     self.measure {
       var futureValue: Future<Int64> = future(success: 0)
       for _ in PerformanceTests.runsRange {
-        futureValue = futureValue.map(executor: .immediate) { $0 + 1 }
+        futureValue = futureValue.map(executor: executor) { $0 + 1 }
       }
 
       XCTAssertEqual(futureValue.wait().success, PerformanceTests.runsRange.upperBound)
     }
+  }
+
+  func testHugeMapping_Success() {
+    _testHugeMapping_Success(executor: .immediate)
+  }
+
+  func testHugeAsyncMapping_Success() {
+    _testHugeMapping_Success(executor: .userInitiated)
   }
 
   func testHugeMapping_Failure() {
