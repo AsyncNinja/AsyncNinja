@@ -33,7 +33,7 @@ public extension EventSource {
     bufferSize: DerivedChannelBufferSize = .default,
     _ nextPartialResult: @escaping (Result, Update) throws -> Result
     ) -> BaseProducer<Result, (Result, Success)> {
-    var locking = makeLocking(isFair: true)
+    let locking = makeLocking(isFair: true)
     var partialResult = initialResult
     var queue = Queue<Event>()
 
@@ -162,7 +162,7 @@ public extension EventSource {
     cancellationToken: CancellationToken?,
     _ nextPartialResult: @escaping (Result, Update) throws -> Result
     ) -> Promise<(Result, Success)> {
-    var locking = makeLocking(isFair: true)
+    let locking = makeLocking(isFair: true)
     var partialResult = initialResult
     var queue = Queue<Event>()
 

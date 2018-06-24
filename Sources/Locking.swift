@@ -26,13 +26,13 @@ import Dispatch
 #endif
 
 /// Context indepedent locking. Non-recursive.
-public protocol Locking {
+public protocol Locking: class {
 
   /// Locks. Be sure to balance with unlock
-  mutating func lock()
+  func lock()
 
   /// Unlocks. Be sure to balance with lock
-  mutating func unlock()
+  func unlock()
 }
 
 public extension Locking {
@@ -41,7 +41,7 @@ public extension Locking {
   ///
   /// - Parameter locked: locked function to perform
   /// - Returns: value returned by the locker
-  mutating func locker<Result>(_ locked: () throws -> Result) rethrows -> Result {
+  func locker<Result>(_ locked: () throws -> Result) rethrows -> Result {
     lock()
     defer { unlock() }
     return try locked()
@@ -51,7 +51,7 @@ public extension Locking {
   ///
   /// - Parameter locked: locked function to perform
   /// - Returns: value returned by the locker
-  mutating func locker<A, Result>(_ a: A, _ locked: (A) throws -> Result) rethrows -> Result {
+  func locker<A, Result>(_ a: A, _ locked: (A) throws -> Result) rethrows -> Result {
     lock()
     defer { unlock() }
     return try locked(a)
@@ -61,7 +61,7 @@ public extension Locking {
   ///
   /// - Parameter locked: locked function to perform
   /// - Returns: value returned by the locker
-  mutating func locker<A, B, Result>(_ a: A, _ b: B, _ locked: (A, B) throws -> Result) rethrows -> Result {
+  func locker<A, B, Result>(_ a: A, _ b: B, _ locked: (A, B) throws -> Result) rethrows -> Result {
     lock()
     defer { unlock() }
     return try locked(a, b)
@@ -71,8 +71,8 @@ public extension Locking {
   ///
   /// - Parameter locked: locked function to perform
   /// - Returns: value returned by the locker
-  mutating func locker<A, B, C, Result>(_ a: A, _ b: B, _ c: C,
-                                        _ locked: (A, B, C) throws -> Result) rethrows -> Result {
+  func locker<A, B, C, Result>(_ a: A, _ b: B, _ c: C,
+                               _ locked: (A, B, C) throws -> Result) rethrows -> Result {
     lock()
     defer { unlock() }
     return try locked(a, b, c)
@@ -81,7 +81,7 @@ public extension Locking {
   /// Locks and performs block
   ///
   /// - Parameter locked: locked function to perform
-  mutating func locker(_ locked: () -> Void) {
+  func locker(_ locked: () -> Void) {
     lock()
     locked()
     unlock()
@@ -133,9 +133,9 @@ class PThreadLocking: Locking {
 }
 
 /// **internal use only** Behaves like a locking but actually does nothing.
-struct PlaceholderLocking: Locking {
-  mutating func lock() { }
-  mutating func unlock() { }
+class PlaceholderLocking: Locking {
+  func lock() { }
+  func unlock() { }
 }
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
@@ -144,28 +144,28 @@ struct PlaceholderLocking: Locking {
 @available(iOS, deprecated: 10.0, message: "Use UnfairLockLocking instead")
 @available(tvOS, deprecated: 10.0, message: "Use UnfairLockLocking instead")
 @available(watchOS, deprecated: 3.0, message: "Use UnfairLockLocking instead")
-struct SpinLockLocking: Locking {
+class SpinLockLocking: Locking {
   private var _lock: OSSpinLock = OS_SPINLOCK_INIT
 
-  mutating func lock() {
+  func lock() {
     OSSpinLockLock(&_lock)
   }
 
-  mutating func unlock() {
+  func unlock() {
     OSSpinLockUnlock(&_lock)
   }
 }
 
 /// **internal use only**
 @available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *)
-struct  UnfairLockLocking: Locking {
+class UnfairLockLocking: Locking {
   private var _lock = os_unfair_lock_s()
 
-  mutating func lock() {
+  func lock() {
     os_unfair_lock_lock(&_lock)
   }
 
-  mutating func unlock() {
+  func unlock() {
     os_unfair_lock_unlock(&_lock)
   }
 }

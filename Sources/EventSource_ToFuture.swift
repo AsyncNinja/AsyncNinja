@@ -33,7 +33,7 @@ public extension EventSource {
     ) -> Promise<Update?> {
     let promise = Promise<Update?>()
     var queue = Queue<ChannelEvent<Update, Success>>()
-    var locking = makeLocking(isFair: true)
+    let locking = makeLocking(isFair: true)
     var isComplete = false
 
     let handler = self.makeHandler(
@@ -162,7 +162,7 @@ public extension EventSource {
     ) -> Promise<Update?> {
 
     var latestMatchingUpdate: Update?
-    var locking = makeLocking(isFair: true)
+    let locking = makeLocking(isFair: true)
     var queue = Queue<ChannelEvent<Update, Success>>()
     let promise = Promise<Update?>()
 
@@ -296,7 +296,7 @@ public extension EventSource {
     // Test: EventSource_ToFutureTests.testContainsTrue
     // Test: EventSource_ToFutureTests.testContainsFalse
 
-    var locking = makeLocking(isFair: true)
+    let locking = makeLocking(isFair: true)
     let promise = Promise<Bool>()
     let handler = makeHandler(
       executor: executor

@@ -210,7 +210,7 @@ public extension EventSource {
   /// Makes a future of accumulated updates and completion
   func extractAll() -> Future<(updates: [Update], completion: Fallible<Success>)> {
     var updates = [Update]()
-    var locking = makeLocking(isFair: true)
+    let locking = makeLocking(isFair: true)
     let promise = Promise<(updates: [Update], completion: Fallible<Success>)>()
     let handler = self.makeHandler(executor: .immediate) { [weak promise] (event, _) in
       switch event {
@@ -298,7 +298,7 @@ public func doubleBind<T: EventSource&EventDestination, U: EventSource&EventDest
   transform: @escaping (T.Update) -> U.Update,
   _ minorStream: U,
   reverseTransform: @escaping (U.Update) -> T.Update) {
-  var locking = makeLocking(isFair: true)
+  let locking = makeLocking(isFair: true)
   var majorRevision = 1
   var minorRevision = 0
 

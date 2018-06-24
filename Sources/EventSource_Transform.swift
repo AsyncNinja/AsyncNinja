@@ -79,7 +79,7 @@ public extension EventSource {
                      bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<(Update, Update), Success>
   {
-    var locking = makeLocking()
+    let locking = makeLocking()
     var previousUpdate: Update? = nil
 
     return makeProducer(
@@ -123,7 +123,7 @@ public extension EventSource {
     ) -> Channel<[Update], Success> {
     var buffer = [Update]()
     buffer.reserveCapacity(capacity)
-    var locking = makeLocking()
+    let locking = makeLocking()
 
     return makeProducer(
       executor: .immediate,
@@ -206,7 +206,7 @@ extension EventSource {
     bufferSize: DerivedChannelBufferSize = .default,
     isEqual: @escaping (Update, Update) -> Bool
     ) -> Channel<Update, Success> {
-    var locking = makeLocking()
+    let locking = makeLocking()
     var previousUpdate: Update? = nil
 
     return makeProducer(
