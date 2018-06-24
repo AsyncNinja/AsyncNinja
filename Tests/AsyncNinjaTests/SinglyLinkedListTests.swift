@@ -45,12 +45,14 @@ class SinglyLinkedListTests: XCTestCase {
     XCTAssertEqual(valueA, queue.first)
     XCTAssertEqual(valueA, queue.last)
     XCTAssertEqual(1, queue.count)
+    let queueA = queue
     XCTAssertEqual(valueA, queue.pop())
 
     XCTAssertNil(queue.first)
     XCTAssertNil(queue.last)
     XCTAssertEqual(0, queue.count)
     XCTAssertNil(queue.pop())
+    XCTAssertEqual(1, queueA.count)
 
     let valueB = 2
     queue.push(valueB)

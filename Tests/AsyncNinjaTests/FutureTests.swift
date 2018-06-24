@@ -48,6 +48,7 @@ class FutureTests: XCTestCase {
     ("testFlatten_InnerFailure", testFlatten_InnerFailure),
     ("testChannelFlatten", testChannelFlatten),
     ("testGroupCompletionFuture", testGroupCompletionFuture),
+    ("testOnCompleteOnMultipleExecutors", testOnCompleteOnMultipleExecutors),
     ("testDescription", testDescription)
     ]
 
@@ -470,6 +471,32 @@ class FutureTests: XCTestCase {
       .onFailure { _ in XCTFail() }
 
     self.waitForExpectations(timeout: 0.2)
+  }
+
+  func testOnCompleteOnMultipleExecutors() {
+    let executors: [Executor] = [
+      .primary,
+      .immediate,
+      .userInteractive,
+      .userInitiated,
+      .default,
+      .utility,
+      .background
+    ]
+    multiTest {
+      let expectedValue = pickInt()
+      let futureValue = future(after: 0.1) { return expectedValue }
+      let group = DispatchGroup()
+      for executor in executors {
+        group.enter()
+        futureValue.onSuccess(executor: executor) { (actualValue) in
+          XCTAssertEqual(expectedValue, actualValue)
+          group.leave()
+        }
+      }
+
+      group.wait()
+    }
   }
 
   func testDescription() {

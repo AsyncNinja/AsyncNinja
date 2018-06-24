@@ -141,6 +141,7 @@ class Future_MakersTests: XCTestCase {
     let value = pickInt()
 
     var futureValue: Future<Int>? = nil
+    let sema = DispatchSemaphore(value: 0)
     DispatchQueue.global().async {
       let actor = TestActor()
       actor.internalQueue.async {
@@ -151,10 +152,12 @@ class Future_MakersTests: XCTestCase {
         assert(actor: actor)
         return try square_success(value)
       }
+      sema.signal()
     }
 
+    sema.wait()
     mysleep(0.1)
-    XCTAssertEqual(futureValue?.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
+    XCTAssertEqual(futureValue?.wait().failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
   func testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive() {
@@ -181,6 +184,7 @@ class Future_MakersTests: XCTestCase {
 
     var futureValue: Future<Int>? = nil
 
+    let sema = DispatchSemaphore(value: 0)
     DispatchQueue.global().async {
       let actor = TestActor()
       actor.internalQueue.async {
@@ -191,8 +195,10 @@ class Future_MakersTests: XCTestCase {
         assert(actor: actor)
         return try square_failure(value)
       }
+      sema.signal()
     }
 
+    sema.wait()
     mysleep(0.1)
     XCTAssertEqual(futureValue?.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }

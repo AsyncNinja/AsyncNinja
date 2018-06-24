@@ -343,12 +343,12 @@ final private class ProducerHandler<Update, Success> {
 
   func handleBufferedUpdatesIfNeeded(from originalExecutor: Executor) {
     locking.lock()
-    let bufferedUpdates = self.bufferedUpdates
+    let bufferedUpdatesIterator = self.bufferedUpdates?.makeIterator()
     self.bufferedUpdates = nil
     locking.unlock()
 
-    if let bufferedUpdates = bufferedUpdates {
-      for update in bufferedUpdates {
+    if var bufferedUpdatesIterator = bufferedUpdatesIterator {
+      while let update = bufferedUpdatesIterator.next() {
         handle(.update(update), from: originalExecutor)
       }
     }
