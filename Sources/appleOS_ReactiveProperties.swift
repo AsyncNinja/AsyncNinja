@@ -235,8 +235,5 @@
 
     /// Short and useful property that returns `ReactiveProperties` and covers `99%` of use cases
     var rp: ReactiveProperties<Self> { return reactiveProperties(from: executor) }
-
-    /// The same as `rp` but for those who came from `Rx` world
-    var rx: ReactiveProperties<Self> { return reactiveProperties(from: executor) }
   }
 #endif
