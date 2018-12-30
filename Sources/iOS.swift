@@ -56,7 +56,7 @@
     /// - Parameter events: events that to listen for
     /// - Returns: unbuffered channel
     func actions(
-      forEvents events: UIControlEvents = UIControlEvents.allEvents
+      forEvents events: UIControl.Event = .allEvents
       ) -> Channel<(sender: AnyObject?, event: UIEvent), Void> {
       let actionReceiver = UIControlActionReceiver(control: object)
       object.addTarget(actionReceiver,
@@ -76,7 +76,7 @@
     ///   - context: context to bind block to
     ///   - block: block to execute on action on context
     func onAction<C: ExecutionContext>(
-      forEvents events: UIControlEvents = UIControlEvents.allEvents,
+      forEvents events: UIControl.Event = .allEvents,
       context: C,
       _ block: @escaping (C, AnyObject?, UIEvent) -> Void) {
 
@@ -93,7 +93,7 @@
     var isSelected: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "selected", onNone: .drop) }
 
     /// `Channel` that refers to read-only property `UIControl.state`
-    var state: Channel<UIControlState, Void> { return updating(forKeyPath: "state", onNone: .drop) }
+    var state: Channel<UIControl.State, Void> { return updating(forKeyPath: "state", onNone: .drop) }
   }
 
   private class UIControlActionReceiver: NSObject {
@@ -296,7 +296,7 @@
     var barTintColor: ProducerProxy<UIColor, Void> { return updatable(forKeyPath: "barTintColor", onNone: .drop) }
 
     /// `ProducerProxy` that refers to read-write property `UISearchBar.searchBarStyle`
-    var searchBarStyle: ProducerProxy<UISearchBarStyle, Void> {
+    var searchBarStyle: ProducerProxy<UISearchBar.Style, Void> {
       return updatable(forKeyPath: "searchBarStyle",
                        onNone: .drop,
                        customGetter: { $0.searchBarStyle },
@@ -352,27 +352,27 @@
   public extension ReactiveProperties where Object: UIButton {
 
     /// `Sink` that refers to write-only `UIImageView.setTitle(_:, for:)`
-    func title(for state: UIControlState) -> Sink<String?, Void> {
+    func title(for state: UIControl.State) -> Sink<String?, Void> {
       return sink { $0.setTitle($1, for: state) }
     }
 
     /// `Sink` that refers to write-only `UIImageView.setTitleShadowColor(_:, for:)`
-    func titleShadowColor(for state: UIControlState) -> Sink<UIColor?, Void> {
+    func titleShadowColor(for state: UIControl.State) -> Sink<UIColor?, Void> {
       return sink { $0.setTitleShadowColor($1, for: state) }
     }
 
     /// `Sink` that refers to write-only `UIImageView.setImage(_:, for:)`
-    func image(for state: UIControlState) -> Sink<UIImage?, Void> {
+    func image(for state: UIControl.State) -> Sink<UIImage?, Void> {
       return sink { $0.setImage($1, for: state) }
     }
 
     /// `Sink` that refers to write-only `UIImageView.setBackgroundImage(_:, for:)`
-    func backgroundImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+    func backgroundImage(for state: UIControl.State) -> Sink<UIImage?, Void> {
       return sink { $0.setBackgroundImage($1, for: state) }
     }
 
     /// `Sink` that refers to write-only `UIImageView.setAttributedTitle(_:, for:)`
-    func attributedTitle(for state: UIControlState) -> Sink<NSAttributedString?, Void> {
+    func attributedTitle(for state: UIControl.State) -> Sink<NSAttributedString?, Void> {
       return sink { $0.setAttributedTitle($1, for: state) }
     }
   }
@@ -395,7 +395,7 @@
     var landscapeImagePhone: ProducerProxy<UIImage?, Void> { return updatable(forKeyPath: "landscapeImagePhone") }
 
     /// `Sink` that refers to write-only `UIBarItem.setTitleTextAttributes(_:, for:)`
-    func titleTextAttributes(for state: UIControlState) -> Sink<[NSAttributedStringKey: Any]?, Void> {
+    func titleTextAttributes(for state: UIControl.State) -> Sink<[NSAttributedString.Key: Any]?, Void> {
       return sink { $0.setTitleTextAttributes($1, for: state) }
     }
   }
@@ -419,7 +419,7 @@
     }
 
     /// `ProducerProxy` that refers to read-write property `UIBarButtonItem.style`
-    var style: ProducerProxy<UIBarButtonItemStyle, Void> {
+    var style: ProducerProxy<UIBarButtonItem.Style, Void> {
       return updatable(forKeyPath: "style", onNone: .drop, customGetter: { $0.style }, customSetter: { $0.style = $1 })
     }
 
@@ -436,14 +436,14 @@
     }
 
     /// `Sink` that refers to write-only `UIBarButtonItem.setBackgroundImage(_:, for:, barMetrics:)`
-    func backgroundImage(for state: UIControlState, barMetrics: UIBarMetrics) -> Sink<UIImage?, Void> {
+    func backgroundImage(for state: UIControl.State, barMetrics: UIBarMetrics) -> Sink<UIImage?, Void> {
       return sink { $0.setBackgroundImage($1, for: state, barMetrics: barMetrics) }
     }
 
     /// `Sink` that refers to write-only `UIBarButtonItem.setBackgroundImage(_:, for:, style:, barMetrics:)`
     func backgroundImage(
-      for state: UIControlState,
-      style: UIBarButtonItemStyle,
+      for state: UIControl.State,
+      style: UIBarButtonItem.Style,
       barMetrics: UIBarMetrics
       ) -> Sink<UIImage?, Void> {
       return sink { $0.setBackgroundImage($1, for: state, style: style, barMetrics: barMetrics) }
@@ -468,7 +468,7 @@
 
     #if os(iOS)
     /// `Sink` that refers to write-only `UIBarButtonItem.setBackButtonBackgroundImage(_:, for:, barMetrics:)`
-    func backButtonBackgroundImage(for state: UIControlState, barMetrics: UIBarMetrics) -> Sink<UIImage?, Void> {
+    func backButtonBackgroundImage(for state: UIControl.State, barMetrics: UIBarMetrics) -> Sink<UIImage?, Void> {
       return sink { $0.setBackButtonBackgroundImage($1, for: state, barMetrics: barMetrics) }
     }
 
@@ -502,7 +502,7 @@
   // MARK: - reactive properties for UIDatePicker
   public extension ReactiveProperties where Object: UIDatePicker {
     /// `ProducerProxy` that refers to read-write property `UIDatePicker.datePickerMode`
-    var datePickerMode: ProducerProxy<UIDatePickerMode, Void> {
+    var datePickerMode: ProducerProxy<UIDatePicker.Mode, Void> {
       return updatable(forKeyPath: "datePickerMode",
                        onNone: .drop,
                        customGetter: { $0.datePickerMode },
@@ -595,25 +595,25 @@
     var stepValue: ProducerProxy<Double, Void> { return updatable(forKeyPath: "stepValue", onNone: .drop) }
 
     /// `Sink` that refers to write-only `UIStepper.setBackButtonBackgroundImage(_:, for:)`
-    func backgroundImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+    func backgroundImage(for state: UIControl.State) -> Sink<UIImage?, Void> {
       return sink { $0.setBackgroundImage($1, for: state) }
     }
 
     /// `Sink` that refers to write-only `UIStepper.setDividerImage(_:, forLeftSegmentState:, rightSegmentState:)`
     func dividerImage(
-      forLeftSegmentState leftState: UIControlState,
-      rightSegmentState rightState: UIControlState
+      forLeftSegmentState leftState: UIControl.State,
+      rightSegmentState rightState: UIControl.State
       ) -> Sink<UIImage?, Void> {
       return sink { $0.setDividerImage($1, forLeftSegmentState: leftState, rightSegmentState: rightState) }
     }
 
     /// `Sink` that refers to write-only `setIncrementImage(_:, for:)`
-    func incrementImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+    func incrementImage(for state: UIControl.State) -> Sink<UIImage?, Void> {
       return sink { $0.setIncrementImage($1, for: state) }
     }
 
     /// `Sink` that refers to write-only `setDecrementImage(_:, for:)`
-    func decrementImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+    func decrementImage(for state: UIControl.State) -> Sink<UIImage?, Void> {
       return sink { $0.setDecrementImage($1, for: state) }
     }
   }
@@ -655,17 +655,17 @@
     }
 
     /// `Sink` that refers to write-only `UISlider.setThumbImage(_:, for:)`
-    func thumbImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+    func thumbImage(for state: UIControl.State) -> Sink<UIImage?, Void> {
       return sink { $0.setThumbImage($1, for: state) }
     }
 
     /// `Sink` that refers to write-only `UISlider.setMinimumTrackImage(_:, for:)`
-    func minimumTrackImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+    func minimumTrackImage(for state: UIControl.State) -> Sink<UIImage?, Void> {
       return sink { $0.setMinimumTrackImage($1, for: state) }
     }
 
     /// `Sink` that refers to write-only `UISlider.setMaximumTrackImage(_:, for:)`
-    func maximumTrackImage(for state: UIControlState) -> Sink<UIImage?, Void> {
+    func maximumTrackImage(for state: UIControl.State) -> Sink<UIImage?, Void> {
       return sink { $0.setMaximumTrackImage($1, for: state) }
     }
   }
@@ -725,7 +725,7 @@
       let notificationsChannel: Channel<Notification, Void> = NotificationCenter.default
         .updatable(
           object: UIDevice.current,
-          name: .UIDeviceOrientationDidChange,
+          name: UIDevice.orientationDidChangeNotification,
           observationSession: observationSession
         ) { [weak simulatedEventsProducer] (_, object, isEnabled) in
           if isEnabled {

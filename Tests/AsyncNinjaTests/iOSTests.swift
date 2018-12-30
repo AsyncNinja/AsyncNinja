@@ -82,8 +82,7 @@
 
     func testUITextField() {
       let object = UITextField()
-      let defaultTextAttributes: [NSAttributedStringKey: Any] = Dictionary(uniqueKeysWithValues:
-        object.defaultTextAttributes.map { (NSAttributedStringKey($0.key), $0.value) })
+      let defaultTextAttributes = object.defaultTextAttributes
       let attributedStringsFixtures = Fixtures.strings
         .map { NSAttributedString(string: $0, attributes: defaultTextAttributes) }
       testEventStream(object.rp.text,
@@ -346,7 +345,7 @@
       #if os(iOS)
         let object = UIDatePicker()
 
-        let datePickerModeFixtures: [UIDatePickerMode] = [
+        let datePickerModeFixtures: [UIDatePicker.Mode] = [
           .time, .time, .date, .date, .dateAndTime, .countDownTimer, .countDownTimer, .dateAndTime
         ]
         testEventStream(object.rp.datePickerMode,
@@ -465,7 +464,7 @@
     }
 
     #if os(iOS)
-    func _testUISlider(_ object: UISlider, state: UIControlState) {
+    func _testUISlider(_ object: UISlider, state: UIControl.State) {
       testOptionalEventDestination(object.rp.thumbImage(for: state), object: object,
                                    keyPathOrGet: .right({ $0.thumbImage(for: state) }),
                                    values: Fixtures.imagesAndNils)
