@@ -42,12 +42,11 @@ class BatchFutureTests: XCTestCase {
     ]
 
   func testJoined() {
-    let value: [Int] = (1...5)
+    let futures: [Future<Int>] = (1...5)
       .map { (value) -> Future<Int> in
         return future(after: 1.0 - Double(value) / 5.0, { () -> Int in value })
-      }
-      .joined()
-      .wait().success!
+    }
+    let value: [Int] = futures.joined().wait().success!
     XCTAssertEqual([1, 2, 3, 4, 5], Set(value))
   }
 
