@@ -171,8 +171,12 @@
       }
     }
 
+    #if swift(>=4.1)
+    // hashable conformance is synthesized automatically
+    #else
     /// The hash value
     public var hashValue: Int { return data.hashValue }
+    #endif
 
     /// Initializes NetworkAddress with any sockaddr
     ///
@@ -202,7 +206,11 @@
   struct NetworkAddressPair: Hashable {
     var localAddress: NetworkAddress?
     var remoteAddress: NetworkAddress?
+    #if swift(>=4.1)
+    // hashable conformance is synthesized automatically
+    #else
     var hashValue: Int { return (localAddress?.hashValue ?? 0) ^ (remoteAddress?.hashValue ?? 0) }
+    #endif
 
     static func == (lhs: NetworkAddressPair, rhs: NetworkAddressPair) -> Bool {
       return lhs.localAddress == rhs.localAddress && lhs.remoteAddress == rhs.remoteAddress
