@@ -171,7 +171,7 @@
       }
     }
 
-    #if swift(>=4.1)
+    #if swift(>=4.2)
     // hashable conformance is synthesized automatically
     #else
     /// The hash value
@@ -206,7 +206,7 @@
   struct NetworkAddressPair: Hashable {
     var localAddress: NetworkAddress?
     var remoteAddress: NetworkAddress?
-    #if swift(>=4.1)
+    #if swift(>=4.2)
     // hashable conformance is synthesized automatically
     #else
     var hashValue: Int { return (localAddress?.hashValue ?? 0) ^ (remoteAddress?.hashValue ?? 0) }
