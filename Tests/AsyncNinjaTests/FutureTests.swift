@@ -59,7 +59,7 @@ class FutureTests: XCTestCase {
       weak var weakMappedFuture: Future<Int>?
 
       let fixtureResult = pickInt()
-      var result: Int? = nil
+      var result: Int?
 
       queue.sync {
         var futureValue: Future<Int>? = .succeeded(fixtureResult)

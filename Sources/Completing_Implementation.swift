@@ -179,7 +179,7 @@ public extension Completing {
       return completion
     }
     let sema = DispatchSemaphore(value: 0)
-    var result: Fallible<Success>? = nil
+    var result: Fallible<Success>?
 
     var handler = makeCompletionHandler(executor: .immediate) { (completion, _) in
       result = completion

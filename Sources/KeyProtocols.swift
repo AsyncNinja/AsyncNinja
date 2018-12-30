@@ -204,7 +204,7 @@ public extension EventDestination {
   ///   on `strictAsync: false` `Executor`s.
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
-  public func post(
+  func post(
     _ event: ChannelEvent<Update, Success>,
     from originalExecutor: Executor? = nil) {
     switch event {

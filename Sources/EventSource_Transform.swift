@@ -80,7 +80,7 @@ public extension EventSource {
     ) -> Channel<(Update, Update), Success>
   {
     let locking = makeLocking()
-    var previousUpdate: Update? = nil
+    var previousUpdate: Update?
 
     return makeProducer(
       executor: .immediate,
@@ -207,7 +207,7 @@ extension EventSource {
     isEqual: @escaping (Update, Update) -> Bool
     ) -> Channel<Update, Success> {
     let locking = makeLocking()
-    var previousUpdate: Update? = nil
+    var previousUpdate: Update?
 
     return makeProducer(
       executor: .immediate,

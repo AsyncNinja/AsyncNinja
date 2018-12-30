@@ -68,8 +68,8 @@ class ChannelTests: XCTestCase {
     let actor = TestActor()
 
     var updates = [Int]()
-    var successValue: String? = nil
-    weak var weakProducer: Producer<Int, String>? = nil
+    var successValue: String?
+    weak var weakProducer: Producer<Int, String>?
 
     let updatesFixture = pickInts()
     let successValueFixture = "I am working correctly!"
@@ -102,8 +102,8 @@ class ChannelTests: XCTestCase {
   func testOnValue() {
     multiTest(repeating: 100) {
       var updates = [Int]()
-      var successValue: String? = nil
-      weak var weakProducer: Producer<Int, String>? = nil
+      var successValue: String?
+      weak var weakProducer: Producer<Int, String>?
 
       let updatesFixture = pickInts()
       let successValueFixture = "I am working correctly!"

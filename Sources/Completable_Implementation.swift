@@ -97,7 +97,7 @@ public extension Completable {
   ///   you calling this method on.
   /// - Returns: true if this call completed `Completable`
   @discardableResult
-  public func tryFail(_ failure: Swift.Error, from originalExecutor: Executor? = nil) -> Bool {
+  func tryFail(_ failure: Swift.Error, from originalExecutor: Executor? = nil) -> Bool {
     return tryComplete(.failure(failure), from: originalExecutor)
   }
 
@@ -109,19 +109,19 @@ public extension Completable {
   ///   on `strictAsync: false` `Executor`s.
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
-  public func fail(_ failure: Swift.Error, from originalExecutor: Executor?) {
+  func fail(_ failure: Swift.Error, from originalExecutor: Executor?) {
     complete(.failure(failure), from: originalExecutor)
   }
 
   /// Shorthand to tryFail(with:) that does not return value
   ///
   /// - Parameter failure: error to fail `Completing` with
-  public func fail(_ failure: Swift.Error) {
+  func fail(_ failure: Swift.Error) {
     complete(.failure(failure))
   }
 
   /// Completes with cancellation (AsyncNinjaError.cancelled)
-  public func cancel() {
+  func cancel() {
     fail(AsyncNinjaError.cancelled)
   }
 
@@ -132,7 +132,7 @@ public extension Completable {
   ///   on `strictAsync: false` `Executor`s.
   ///   Use default value or nil if you are not sure about an `Executor`
   ///   you calling this method on.
-  public func cancel(from originalExecutor: Executor?) {
+  func cancel(from originalExecutor: Executor?) {
     fail(AsyncNinjaError.cancelled, from: originalExecutor)
   }
 

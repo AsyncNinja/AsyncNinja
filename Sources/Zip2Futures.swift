@@ -39,8 +39,8 @@ public func zip<A, B>(
   // Test: ZipFuturesTest.test2Lifetime
   let promise = Promise<(A, B)>()
   var locking = makeLocking()
-  var subvalueA: A? = nil
-  var subvalueB: B? = nil
+  var subvalueA: A?
+  var subvalueB: B?
 
   let handlerA = futureA.makeCompletionHandler(
     executor: .immediate

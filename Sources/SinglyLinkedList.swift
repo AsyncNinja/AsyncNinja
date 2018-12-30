@@ -43,7 +43,7 @@ class SinglyLinkedListImpl<Node: SinglyLinkedListElementNode>: Sequence {
 
   required init<N>(proto: SinglyLinkedListImpl<N>) where N.Element == Element {
     self.count = proto.count
-    var prevNode: Node? = nil
+    var prevNode: Node?
     var nextNode = proto._frontNode
     while let node = nextNode {
       let newNode = Node(element: node.element, next: nil)

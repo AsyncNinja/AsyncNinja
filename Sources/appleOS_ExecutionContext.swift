@@ -24,8 +24,8 @@
   import Foundation
 
   public extension ExecutionContext where Self: NSObject {
-    public typealias CustomGetter<T> = (Self) -> T?
-    public typealias CustomSetter<T> = (Self, T) -> Void
+    typealias CustomGetter<T> = (Self) -> T?
+    typealias CustomSetter<T> = (Self, T) -> Void
 
     /// makes an `UpdatableProperty<T?>` for specified key path.
     ///

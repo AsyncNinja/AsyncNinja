@@ -40,9 +40,9 @@ public func zip<A, B, C>(
   // Test: ZipFuturesTest.test3Lifetime
   let promise = Promise<(A, B, C)>()
   var locking = makeLocking()
-  var subvalueA: A? = nil
-  var subvalueB: B? = nil
-  var subvalueC: C? = nil
+  var subvalueA: A?
+  var subvalueB: B?
+  var subvalueC: C?
 
   func setupHandler<Z>(future: Future<Z>, _ accumulator: @escaping (Z) -> Fallible<(A, B, C)>?) {
     let handler = future.makeCompletionHandler(

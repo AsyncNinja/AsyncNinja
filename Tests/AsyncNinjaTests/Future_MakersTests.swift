@@ -140,7 +140,7 @@ class Future_MakersTests: XCTestCase {
   func testMakeFutureOfContextualFallibleBlock_Success_ContextDead() {
     let value = pickInt()
 
-    var futureValue: Future<Int>? = nil
+    var futureValue: Future<Int>?
     let sema = DispatchSemaphore(value: 0)
     DispatchQueue.global().async {
       let actor = TestActor()
@@ -182,7 +182,7 @@ class Future_MakersTests: XCTestCase {
   func testMakeFutureOfContextualFallibleBlock_Failure_ContextDead() {
     let value = pickInt()
 
-    var futureValue: Future<Int>? = nil
+    var futureValue: Future<Int>?
 
     let sema = DispatchSemaphore(value: 0)
     DispatchQueue.global().async {
