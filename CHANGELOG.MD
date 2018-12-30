@@ -1,5 +1,5 @@
 # 1.3.2
-* [changed] default Swift version has been changed to 4.2. However 4.0 is still supported
+* [changed] default Swift version has been updated to 4.2. 4.0-4.1 is dropped due to changes in UIKit enums naming
 * [improvement] tested against latest Swift 5.0 build. No errors, no warnings, tests are passing
 * [improvement] annoying warnings fixed
 * [improvement] minor improvements of documentation

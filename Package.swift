@@ -1,4 +1,4 @@
-// swift-tools-version:4.0
+// swift-tools-version:4.2
 //
 //  Copyright (c) 2016-2018 Anton Mironov
 //
