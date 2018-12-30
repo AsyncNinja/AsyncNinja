@@ -1,3 +1,9 @@
+# 1.3.2
+* [changed] default Swift version has been changed to 4.2. However 4.0 is still supported
+* [improvement] tested against latest Swift 5.0 build. No errors, no warnings, tests are passing
+* [improvement] annoying warnings fixed
+* [improvement] minor improvements of documentation
+
 # 1.3.1
 * [fixes] nested executes using the same executor `Executor` could be optimized into on-stack execution instead of dispatch_async call. That is a direct cause of stack overflow. Avoiding that by limiting amount of nested on-stack executions.
 
