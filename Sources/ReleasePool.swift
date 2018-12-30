@@ -22,6 +22,7 @@
 
 import Dispatch
 
+/// An alias to a type that support releasing. Anything fits for now
 public typealias Releasable = Any
 
 /// ReleasePool is an object that retains another objects

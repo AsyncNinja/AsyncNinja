@@ -25,7 +25,9 @@
 
   /// **Internal use only** `NotificationsObserver` is an object for managing KVO.
   final class NotificationsObserver<T: NSObject>: ObservationSessionItem {
+    /// block that is called as new events being observed
     typealias ObservationBlock = (Notification) -> Void
+    /// block that is called as observation is enababled or disabled
     typealias EnablingCallback = (_ notificationCenter: NotificationCenter, _ object: T?, _ isEnabled: Bool) -> Void
 
     let notificationCenter: NotificationCenter

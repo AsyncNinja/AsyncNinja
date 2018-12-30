@@ -26,6 +26,7 @@ import Dispatch
 
 /// A base protocol for objects that are aware of Success, Error and Completion
 public protocol CompletionController: LifetimeExtender {
+  /// a type of a successful completion value
   associatedtype Success
 }
 
@@ -62,6 +63,7 @@ public protocol Completable: CompletionController, Cancellable {
 
 /// A base protocol for objects that are aware of Update
 public protocol UpdatesController: LifetimeExtender {
+  /// a type of an update event value
   associatedtype Update
 }
 
@@ -166,12 +168,14 @@ public protocol EventController: UpdatesController, CompletionController {
 }
 
 public extension EventController {
+  /// a type that wraps all possible event cases
   typealias Event = ChannelEvent<Update, Success>
 }
 
 /// A base protocol of object that update and complete
 public protocol EventSource: EventController, Completing, Updating, Sequence {
 
+  /// a sequence iterator type. Enables conformance to Sequence behaviors
   associatedtype Iterator = ChannelIterator<Update, Success>
 
   /// amount of currently stored updates

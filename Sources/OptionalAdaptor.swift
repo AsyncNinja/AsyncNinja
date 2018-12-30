@@ -47,6 +47,7 @@ extension Optional: AsyncNinjaOptionalAdaptor {
 
 /// Adds convenience members to the channel that who's Update is optional
 public extension Channel where U: AsyncNinjaOptionalAdaptor {
+  /// a shortcut to unwrapped update type
   typealias UnwrappedUpdate = Update.AsyncNinjaWrapped
 
   /// makes channel of unsafely unwrapped optional Updates
@@ -64,6 +65,7 @@ public extension Channel where U: AsyncNinjaOptionalAdaptor {
 
 /// Adds convenience members to the future that who's Success is optional
 public extension Future where S: AsyncNinjaOptionalAdaptor {
+  /// a shortcut to unwrapped success type
   typealias UnwrappedSuccess = Success.AsyncNinjaWrapped
 
   /// makes channel of unsafely unwrapped optional Updates

@@ -24,7 +24,9 @@ import Dispatch
 
 /// An object that allows to implement and control cancellation
 public class CancellationToken: Cancellable {
+  /// block to call on cancellation
   public typealias NotifyBlock = () -> Void
+
   private let _isBackCancelAllowed: Bool
   private var _locking = makeLocking()
   private var _items: [CancellationTokenItem]? = []

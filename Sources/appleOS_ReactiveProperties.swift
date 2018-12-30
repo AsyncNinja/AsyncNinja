@@ -25,7 +25,9 @@
 
   /// `ReactiveProperties` is an adaptor for reactive properties.
   public struct ReactiveProperties<Object: NSObject> where Object: Retainer {
+    /// a getter that could be provided as customization point
     public typealias CustomGetter<T> = (Object) -> T?
+    /// a setter that could be provided as customization point
     public typealias CustomSetter<T> = (Object, T) -> Void
 
     var object: Object

@@ -35,6 +35,7 @@
 
   /// **Internal use only** `KeyPathObserver` is an object for managing KVO.
   final class KeyPathObserver: NSObject, ObservationSessionItem {
+    /// block that is called as new events being observed
     typealias ObservationBlock = (_ object: Any?, _ changes: [NSKeyValueChangeKey: Any]) -> Void
 
     let object: Unmanaged<NSObject>

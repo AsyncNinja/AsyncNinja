@@ -95,7 +95,9 @@
   }
 
   fileprivate extension URLSession {
+    /// a shortcut to url session callback
     typealias URLSessionCallback = (Data?, URLResponse?, Swift.Error?) -> Void
+    /// a shortcut to url session task construction
     typealias MakeURLTask = (@escaping URLSessionCallback) -> URLSessionDataTask
     func dataFuture(
       cancellationToken: CancellationToken?,
@@ -124,7 +126,9 @@
       return promise
     }
 
+    /// a shortcut to url session callback
     typealias DownloadTaskCallback = (URL?, URLResponse?, Swift.Error?) -> Void
+    /// a shortcut to url session task construction
     typealias MakeDownloadTask = (@escaping DownloadTaskCallback) -> URLSessionDownloadTask
     func downloadFuture(
       to destinationURL: URL,

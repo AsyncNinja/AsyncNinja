@@ -139,6 +139,7 @@ class SinglyLinkedListImpl<Node: SinglyLinkedListElementNode>: Sequence {
 // MARK: Nodes
 
 protocol SinglyLinkedListElementNode: class {
+  /// a type of an element
   associatedtype Element
 
   var element: Element { get }
@@ -206,6 +207,7 @@ struct SinglyLinkedListIterator<Node: SinglyLinkedListElementNode>: IteratorProt
 // MARK: -
 
 protocol SinglyLinkedListBased {
+  /// a type of node
   associatedtype Node: SinglyLinkedListElementNode
   var _impl: SinglyLinkedListImpl<Node> { get set }
 

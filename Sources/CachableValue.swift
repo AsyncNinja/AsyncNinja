@@ -24,6 +24,7 @@ import Dispatch
 
 /// Protocol for a Completable that can be used for cachable
 public protocol CachableCompletable: Completable {
+  /// a type of Completing (Future, Channel, etc) that is managed this Cacheable
   associatedtype CompletingType: Completing
 
   /// Required initializer
@@ -36,6 +37,7 @@ public protocol CachableCompletable: Completable {
 /// an opportunity to make cache that can report of status of completion
 /// updateally (e.g. download persentage).
 public class CachableValue<T: CachableCompletable> {
+  /// a block to call when cache miss happened and resolution is needed
   public typealias MissHandler = () throws -> T.CompletingType
   private let _executor: Executor
   private var _locking = makeLocking()

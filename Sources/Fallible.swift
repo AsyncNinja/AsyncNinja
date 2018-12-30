@@ -300,6 +300,7 @@ extension Fallible where Success: _Fallible {
 /// But there are no higher kinded types or generic protocols to implement it properly.
 /// Major propose is an ability to implement flatten() method.
 public protocol _Fallible: CustomStringConvertible {
+  /// a type of a successful case value
   associatedtype Success
 
   /// returns success value if _Fallible contains one

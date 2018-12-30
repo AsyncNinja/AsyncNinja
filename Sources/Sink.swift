@@ -26,8 +26,13 @@ import Dispatch
 /// Very useful for write-only reactive properties (you can write to, but they are not observable) 
 public class Sink<U, S>: EventDestination {
 
+  /// a type of update value
   public typealias Update = U
+
+  /// a type of successful completion value
   public typealias Success = S
+
+  /// a shortcut to an update handler block
   public typealias UpdateHandler = (
     _ sink: Sink<U, S>,
     _ event: ChannelEvent<Update, Success>,
