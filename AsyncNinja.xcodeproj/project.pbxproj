@@ -19,6 +19,7 @@
 		B8C99AC31F5C742000E16257 /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C99AC21F5C742000E16257 /* Box.swift */; };
 		B8DC12851ED093CF0099893A /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DC12831ED093C60099893A /* PerformanceTests.swift */; };
 		F812B7A421DEDC4E00571A07 /* Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A321DEDC4E00571A07 /* Debug.swift */; };
+		F812B7A621DEE6DC00571A07 /* appleOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A521DEE6DC00571A07 /* appleOSTests.swift */; };
 		F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = F819DC171E8A9F2A0072E0B1 /* Either.swift */; };
 		F81A3EB51EA232DE009B0144 /* OptionalAdaptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */; };
 		F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */; };
@@ -129,6 +130,7 @@
 		B8C99AC21F5C742000E16257 /* Box.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
 		B8DC12831ED093C60099893A /* PerformanceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
 		F812B7A321DEDC4E00571A07 /* Debug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debug.swift; sourceTree = "<group>"; };
+		F812B7A521DEE6DC00571A07 /* appleOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOSTests.swift; sourceTree = "<group>"; };
 		F819DC171E8A9F2A0072E0B1 /* Either.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
 		F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionalAdaptorTests.swift; sourceTree = "<group>"; };
 		F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancellationTokenTests.swift; sourceTree = "<group>"; };
@@ -260,6 +262,7 @@
 		OBJ_62 /* AsyncNinjaTests */ = {
 			isa = PBXGroup;
 			children = (
+				F812B7A521DEE6DC00571A07 /* appleOSTests.swift */,
 				OBJ_63 /* BatchFutureTests.swift */,
 				OBJ_64 /* CachableValueTests.swift */,
 				F8419BD91E913B580067701C /* CacheTests.swift */,
@@ -484,6 +487,7 @@
 				OBJ_162 /* EventSource_ToFutureTests.swift in Sources */,
 				OBJ_163 /* EventSource_TransformTests.swift in Sources */,
 				OBJ_164 /* EventSource_Zip2Tests.swift in Sources */,
+				F812B7A621DEE6DC00571A07 /* appleOSTests.swift in Sources */,
 				OBJ_165 /* ExecutionContextTests.swift in Sources */,
 				F86BE0641E983E20008B7BDC /* TryExecuteTests.swift in Sources */,
 				OBJ_166 /* ExecutorTests.swift in Sources */,
