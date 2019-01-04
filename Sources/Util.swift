@@ -48,6 +48,13 @@ public struct AsyncNinjaConstants {
   /// This kind of behavior is present in each way of interaction
   /// with `Channel`: transformation, sync enumeration and etc.
   public static let defaultChannelBufferSize = 1
+
+  /// formats date for debug methods
+  static let debugDateFormatter: DateFormatter = { () -> DateFormatter in
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "HH:mm:ss.SSSS"
+    return dateFormatter
+  }()
 }
 
 /// Errors produced by AsyncNinja

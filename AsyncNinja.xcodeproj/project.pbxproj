@@ -18,6 +18,7 @@
 		B8B520261EBF3287006C27DA /* Sequence_AsyncReduce.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B520251EBF3287006C27DA /* Sequence_AsyncReduce.swift */; };
 		B8C99AC31F5C742000E16257 /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C99AC21F5C742000E16257 /* Box.swift */; };
 		B8DC12851ED093CF0099893A /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DC12831ED093C60099893A /* PerformanceTests.swift */; };
+		F812B7A421DEDC4E00571A07 /* Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A321DEDC4E00571A07 /* Debug.swift */; };
 		F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = F819DC171E8A9F2A0072E0B1 /* Either.swift */; };
 		F81A3EB51EA232DE009B0144 /* OptionalAdaptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */; };
 		F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */; };
@@ -127,6 +128,7 @@
 		B8B520251EBF3287006C27DA /* Sequence_AsyncReduce.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sequence_AsyncReduce.swift; sourceTree = "<group>"; };
 		B8C99AC21F5C742000E16257 /* Box.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
 		B8DC12831ED093C60099893A /* PerformanceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
+		F812B7A321DEDC4E00571A07 /* Debug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debug.swift; sourceTree = "<group>"; };
 		F819DC171E8A9F2A0072E0B1 /* Either.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
 		F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionalAdaptorTests.swift; sourceTree = "<group>"; };
 		F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancellationTokenTests.swift; sourceTree = "<group>"; };
@@ -318,6 +320,7 @@
 				OBJ_24 /* Completing_Transform.swift */,
 				OBJ_25 /* ConstantFuture.swift */,
 				OBJ_26 /* Dispatch_Extensions.swift */,
+				F812B7A321DEDC4E00571A07 /* Debug.swift */,
 				OBJ_27 /* DynamicProperty.swift */,
 				F819DC171E8A9F2A0072E0B1 /* Either.swift */,
 				OBJ_28 /* EventSource_Combine.swift */,
@@ -519,6 +522,7 @@
 				OBJ_105 /* Cache.swift in Sources */,
 				OBJ_106 /* CancellationToken.swift in Sources */,
 				OBJ_107 /* Channel.swift in Sources */,
+				F812B7A421DEDC4E00571A07 /* Debug.swift in Sources */,
 				OBJ_108 /* Channel_makers.swift in Sources */,
 				F87E09221E9C337F006CD1C9 /* NetworkReachability.swift in Sources */,
 				B8B520221EBF2918006C27DA /* EventSource_Debounce.swift in Sources */,
