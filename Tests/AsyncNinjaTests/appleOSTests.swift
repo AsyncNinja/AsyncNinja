@@ -46,7 +46,7 @@ extension appleOSTests {
   }
 
   func testEventDestination<T: EventDestination, Object: NSObject>(
-    _ EventDestination: T,
+    _ eventDestination: T,
     object: Object,
     keyPathOrGet: Either<String, (Object) -> T.Update?>,
     values: [T.Update],
@@ -54,7 +54,7 @@ extension appleOSTests {
     line: UInt = #line
     ) where T.Update: Equatable {
     for value in values {
-      EventDestination.update(value, from: .main)
+      eventDestination.update(value, from: .main)
       let objectValue: T.Update? = eval {
         switch keyPathOrGet {
         case let .left(keyPath):
@@ -68,14 +68,14 @@ extension appleOSTests {
   }
 
   func testEventSource<T: EventSource, Object: NSObject>(
-    _ EventSource: T,
+    _ eventSource: T,
     object: Object,
     keyPathOrSet: Either<String, (Object, T.Update?) -> Void>,
     values: [T.Update],
     file: StaticString = #file,
     line: UInt = #line
     ) where T.Update: Equatable {
-    var updatingIterator = EventSource.makeIterator()
+    var updatingIterator = eventSource.makeIterator()
     _ = updatingIterator.next() // skip an initial value
     for value in values {
       switch keyPathOrSet {
@@ -117,7 +117,7 @@ extension appleOSTests {
   }
 
   func testOptionalEventDestination<T: EventDestination, Object: NSObject>(
-    _ EventDestination: T,
+    _ eventDestination: T,
     object: Object,
     keyPathOrGet: Either<String, (Object) -> T.Update?>,
     values: [T.Update],
@@ -127,7 +127,7 @@ extension appleOSTests {
     ) where T.Update: AsyncNinjaOptionalAdaptor,
     T.Update.AsyncNinjaWrapped: Equatable {
       for value in values {
-        EventDestination.update(value, from: .main)
+        eventDestination.update(value, from: .main)
         let objectValue: T.Update? = eval {
           switch keyPathOrGet {
           case let .left(keyPath):
@@ -141,7 +141,7 @@ extension appleOSTests {
   }
 
   func testOptionalEventSource<T: EventSource, Object: NSObject>(
-    _ EventSource: T,
+    _ eventSource: T,
     object: Object,
     keyPathOrSet: Either<String, (Object, T.Update?) -> Void>,
     values: [T.Update],
@@ -149,7 +149,7 @@ extension appleOSTests {
     line: UInt = #line
     ) where T.Update: AsyncNinjaOptionalAdaptor,
     T.Update.AsyncNinjaWrapped: Equatable {
-      var updatingIterator = EventSource.makeIterator()
+      var updatingIterator = eventSource.makeIterator()
       _ = updatingIterator.next() // skip an initial value
       for value in values {
         switch keyPathOrSet {

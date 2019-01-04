@@ -85,4 +85,44 @@
     }
   }
 
+// MARK: - reactive properties for NSView
+public extension ReactiveProperties where Object: NSView {
+  /// `ProducerProxy` that refers to read-write property `NSView.alphaValue`
+  var alphaValue: ProducerProxy<CGFloat, Void> { return updatable(forKeyPath: "alphaValue", onNone: .drop) }
+
+  /// `ProducerProxy` that refers to read-write property `NSView.isHidden`
+  var isHidden: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "hidden", onNone: .drop) }
+
+  /// `ProducerProxy` that refers to read-write property `NSView.isOpaque`
+  var isOpaque: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "opaque", onNone: .drop) }
+}
+
+// MARK: - reactive properties for NSControl
+public extension ReactiveProperties where Object: NSControl {
+  var isEnabled: ProducerProxy<Bool, Void> { return updatable(forKeyPath: "enabled", onNone: .drop) }
+
+  /// `ProducerProxy` that refers to read-write property `NSControl.stringValue`
+  var stringValue: ProducerProxy<String, Void> {
+    return updatable(forKeyPath: "stringValue", onNone: .replace(""))
+  }
+
+  /// `Channel` that refers to read-write property `NSControl.doubleValue`
+  var integerValue: ProducerProxy<Int, Void> {
+    return updatable(forKeyPath: "integerValue", onNone: .replace(0))
+  }
+
+  /// `Channel` that refers to read-write property `NSControl.doubleValue`
+  var floatValue: ProducerProxy<Float, Void> {
+    return updatable(forKeyPath: "floatValue", onNone: .replace(0))
+  }
+
+  /// `Channel` that refers to read-write property `NSControl.doubleValue`
+  var doubleValue: ProducerProxy<Double, Void> {
+    return updatable(forKeyPath: "doubleValue", onNone: .replace(0))
+  }
+
+  /// `Channel` that refers to read-write property `NSControl.objectValue`
+  var objectValue: ProducerProxy<Any?, Void> { return updatable(forKeyPath: "objectValue") }
+}
+
 #endif
