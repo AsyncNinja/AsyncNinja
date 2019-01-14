@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016-2017 Anton Mironov
+//  Copyright (c) 2016-2019 Anton Mironov
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -466,4 +466,22 @@
       }
     }
   }
+#endif
+
+#if os(macOS)
+
+import AppKit
+public extension Retainer where Self: NSObject {
+  func updatable(
+    forBindingName bindingName: NSBindingName,
+    executor: Executor,
+    from originalExecutor: Executor? = nil,
+    observationSession: ObservationSession? = nil,
+    initialValue: Any?) -> ProducerProxy<Any?, Void> {
+    return BindingProxy.makeProducerProxy(object: self,
+                                          bindingName: bindingName,
+                                          initialValue: initialValue)
+  }
+}
+
 #endif

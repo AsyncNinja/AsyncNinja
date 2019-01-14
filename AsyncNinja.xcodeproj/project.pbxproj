@@ -21,6 +21,7 @@
 		F812B7A421DEDC4E00571A07 /* Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A321DEDC4E00571A07 /* Debug.swift */; };
 		F812B7A621DEE6DC00571A07 /* appleOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A521DEE6DC00571A07 /* appleOSTests.swift */; };
 		F812B7A821DEE91200571A07 /* macOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A721DEE91200571A07 /* macOSTests.swift */; };
+		F812B7AC21E0E78C00571A07 /* macOS_BindingsProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7AA21E0E5CE00571A07 /* macOS_BindingsProxy.swift */; };
 		F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */ = {isa = PBXBuildFile; fileRef = F819DC171E8A9F2A0072E0B1 /* Either.swift */; };
 		F81A3EB51EA232DE009B0144 /* OptionalAdaptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */; };
 		F8419BD41E90FCB60067701C /* CancellationTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */; };
@@ -133,6 +134,7 @@
 		F812B7A321DEDC4E00571A07 /* Debug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debug.swift; sourceTree = "<group>"; };
 		F812B7A521DEE6DC00571A07 /* appleOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOSTests.swift; sourceTree = "<group>"; };
 		F812B7A721DEE91200571A07 /* macOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macOSTests.swift; sourceTree = "<group>"; };
+		F812B7AA21E0E5CE00571A07 /* macOS_BindingsProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macOS_BindingsProxy.swift; sourceTree = "<group>"; };
 		F819DC171E8A9F2A0072E0B1 /* Either.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Either.swift; sourceTree = "<group>"; };
 		F81A3EB41EA232DE009B0144 /* OptionalAdaptorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionalAdaptorTests.swift; sourceTree = "<group>"; };
 		F8419BD31E90FCB60067701C /* CancellationTokenTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancellationTokenTests.swift; sourceTree = "<group>"; };
@@ -350,6 +352,7 @@
 				OBJ_43 /* KeyProtocols.swift */,
 				OBJ_44 /* Locking.swift */,
 				OBJ_45 /* macOS.swift */,
+				F812B7AA21E0E5CE00571A07 /* macOS_BindingsProxy.swift */,
 				OBJ_46 /* MergeFutures.swift */,
 				F87E09211E9C337F006CD1C9 /* NetworkReachability.swift */,
 				OBJ_47 /* OptionalAdaptor.swift */,
@@ -541,6 +544,7 @@
 				OBJ_111 /* Completing_Transform.swift in Sources */,
 				OBJ_112 /* ConstantFuture.swift in Sources */,
 				OBJ_113 /* Dispatch_Extensions.swift in Sources */,
+				F812B7AC21E0E78C00571A07 /* macOS_BindingsProxy.swift in Sources */,
 				OBJ_114 /* DynamicProperty.swift in Sources */,
 				OBJ_115 /* EventSource_Combine.swift in Sources */,
 				OBJ_116 /* EventSource_FlatMapFutures.swift in Sources */,
