@@ -31,6 +31,7 @@ class ChannelMakersTests: XCTestCase {
 
   static let allTests = [
     ("testMakeChannel", testMakeChannel),
+    ("testMakeChannel2", testMakeChannel2),
     ("testMakeChannelContextual", testMakeChannelContextual),
     ("testCompletedWithFunc", testCompletedWithFunc),
     ("testCompletedWithStatic", testCompletedWithStatic),
@@ -68,6 +69,39 @@ class ChannelMakersTests: XCTestCase {
     self.waitForExpectations(timeout: 1.0, handler: nil)
 
     XCTAssertEqual(resultNumbers, Array(numbers.suffix(resultNumbers.count)))
+  }
+
+  func testMakeChannel2() {
+    let numbers = Array(0..<100)
+
+    let channelA: Channel<Int, String> = channel { (update, complete) in
+      DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) {
+        for i in numbers {
+          update(i)
+        }
+        complete(.just("done"))
+      }
+    }
+
+    var resultNumbers = [Int]()
+    let serialQueue = DispatchQueue(label: "test-queue")
+    let expectation = self.expectation(description: "channel to complete")
+
+    channelA.onUpdate(executor: .queue(serialQueue)) {
+      assert(on: serialQueue)
+      resultNumbers.append($0)
+    }
+
+    channelA.onSuccess(executor: .queue(serialQueue)) {
+      assert(on: serialQueue)
+      XCTAssertEqual("done", $0)
+      expectation.fulfill()
+    }
+
+    self.waitForExpectations(timeout: 2.0, handler: nil)
+
+    XCTAssertEqual(resultNumbers, numbers)
+    XCTAssertEqual(channelA.completion?.success, "done")
   }
 
   func testMakeChannelContextual() {
