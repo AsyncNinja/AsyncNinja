@@ -69,13 +69,13 @@ extension EventSource {
 
   /// **internal use only**
   func attach<T: EventDestination>(
-    _ EventDestination: T,
+    _ eventDestination: T,
     executor: Executor,
     pure: Bool,
     cancellationToken: CancellationToken?,
     _ onEvent: @escaping (_ event: Event, _ eventDestination: WeakBox<T>, _ originalExecutor: Executor) throws -> Void
     ) {
-    let weakBoxOfEventDestination = WeakBox(EventDestination)
+    let weakBoxOfEventDestination = WeakBox(eventDestination)
     let handler = self.makeHandler(executor: executor) { (event, originalExecutor) in
       if pure, case .none = weakBoxOfEventDestination.value { return }
       do {
@@ -89,13 +89,13 @@ extension EventSource {
       if pure {
         let box = AtomicMutableBox<AnyObject?>(handler)
         self._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
-        EventDestination._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
+        eventDestination._asyncNinja_retainUntilFinalization(HalfRetainer(box: box))
       } else {
         self._asyncNinja_retainUntilFinalization(handler)
       }
     }
 
-    cancellationToken?.add(cancellable: EventDestination)
+    cancellationToken?.add(cancellable: eventDestination)
   }
 
   /// **internal use only**
@@ -117,7 +117,7 @@ extension EventSource {
 
   /// **internal use only**
   func attach<T: EventDestination, C: ExecutionContext>(
-    _ EventDestination: T,
+    _ eventDestination: T,
     context: C,
     executor: Executor?,
     pure: Bool,
@@ -125,7 +125,7 @@ extension EventSource {
     // swiftlint:disable:next line_length
     _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: WeakBox<T>, _ originalExecutor: Executor) throws -> Void) {
     let executor_ = executor ?? context.executor
-    self.attach(EventDestination,
+    self.attach(eventDestination,
                 executor: executor_,
                 pure: pure,
                 cancellationToken: cancellationToken
@@ -135,7 +135,7 @@ extension EventSource {
       }
     }
 
-    context.addDependent(completable: EventDestination)
+    context.addDependent(completable: eventDestination)
   }
 }
 
@@ -237,10 +237,10 @@ public extension EventSource {
   ///     Keep default value of the argument unless you need
   ///     an extended cancellation options of returned primitive
   func bindEvents<T: EventDestination>(
-    _ EventDestination: T,
+    _ eventDestination: T,
     cancellationToken: CancellationToken? = nil
     ) where T.Update == Update, T.Success == Success {
-    self.attach(EventDestination,
+    self.attach(eventDestination,
                 executor: .immediate,
                 pure: true,
                 cancellationToken: cancellationToken
@@ -254,6 +254,7 @@ public extension EventSource {
         producer.value?.succeed(success, from: originalExecutor)
       }
     }
+    _asyncNinja_retainUntilFinalization(eventDestination)
   }
 
   /// Binds updates to a specified UpdatableProperty
@@ -264,10 +265,10 @@ public extension EventSource {
   ///     Keep default value of the argument unless you need
   ///     an extended cancellation options of returned primitive
   func bind<T: EventDestination>(
-    _ EventDestination: T,
+    _ eventDestination: T,
     cancellationToken: CancellationToken? = nil
     ) where T.Update == Update, T.Success == Void {
-    self.attach(EventDestination,
+    self.attach(eventDestination,
                 executor: .immediate,
                 pure: true,
                 cancellationToken: cancellationToken
@@ -281,6 +282,7 @@ public extension EventSource {
         producer.value?.succeed(from: originalExecutor)
       }
     }
+    _asyncNinja_retainUntilFinalization(eventDestination)
   }
 }
 
