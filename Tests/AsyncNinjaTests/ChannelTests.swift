@@ -360,7 +360,7 @@ class ChannelTests: XCTestCase {
     let extRetainInCompletion = expectation(description: "RetainInCompletion")
     let retainInCompletion = CallOnDeinit(id: extRetainInCompletion.description) {  extRetainInCompletion.fulfill() }
     
-    let ch = channelFactory() { producer in
+    let ch = channel() { producer in
       producer.update("Update")
       producer._asyncNinja_notifyFinalization {
         expNotifyFinalization.fulfill()
