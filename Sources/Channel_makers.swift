@@ -22,6 +22,42 @@
 
 import Dispatch
 
+public func channelFactory<Update, Success>(executor: Executor = .primary, block: @escaping (_ strongProducer: Producer<Update, Success>) throws -> Void) -> Channel<Update, Success> {
+  let producer = Producer<Update, Success>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
+  executor.execute(from: nil) { [weak producer] _ in
+    guard let producer = producer else { return }
+    
+    do {
+      try block(producer)
+    } catch {
+      producer.fail(error)
+    }
+  }
+  return producer
+}
+
+public func channelFactory<C: ExecutionContext, Update, Success>(context: C, executor: Executor? = nil,
+                                                                 block: @escaping (_ strongProducer: Producer<Update, Success>) throws -> Void) -> Channel<Update, Success> {
+  let producer = Producer<Update, Success>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
+  context.addDependent(completable: producer)
+
+  (executor ?? context.executor).execute(from: nil) { [weak context, weak producer] (originalExecutor) in
+    guard let producer = producer else { return }
+    guard let _ = context else {
+      producer.cancelBecauseOfDeallocatedContext(from: originalExecutor)
+      return
+    }
+    
+    do {
+      try block(producer)
+    } catch {
+      producer.fail(error)
+    }
+  }
+
+  return producer
+}
+
 /// Convenience constructor of Channel. Encapsulates cancellation and producer creation.
 public func channel<Update, Success>(
   executor: Executor = .primary,
