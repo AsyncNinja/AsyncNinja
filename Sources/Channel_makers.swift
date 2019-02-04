@@ -22,7 +22,7 @@
 
 import Dispatch
 
-public func channelFactory<Update, Success>(executor: Executor = .primary, block: @escaping (_ strongProducer: Producer<Update, Success>) throws -> Void) -> Channel<Update, Success> {
+public func channel<Update, Success>(executor: Executor = .primary, block: @escaping (_ strongProducer: Producer<Update, Success>) throws -> Void) -> Channel<Update, Success> {
   let producer = Producer<Update, Success>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
   executor.execute(from: nil) { [weak producer] _ in
     guard let producer = producer else { return }
@@ -36,7 +36,7 @@ public func channelFactory<Update, Success>(executor: Executor = .primary, block
   return producer
 }
 
-public func channelFactory<C: ExecutionContext, Update, Success>(context: C, executor: Executor? = nil,
+public func channel<C: ExecutionContext, Update, Success>(context: C, executor: Executor? = nil,
                                                                  block: @escaping (_ strongProducer: Producer<Update, Success>) throws -> Void) -> Channel<Update, Success> {
   let producer = Producer<Update, Success>(bufferSize: AsyncNinjaConstants.defaultChannelBufferSize)
   context.addDependent(completable: producer)
