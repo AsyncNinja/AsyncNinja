@@ -327,6 +327,63 @@ class ChannelTests: XCTestCase {
     majorActor.value = 7
     test(value: 7)
   }
+    
+  class CallOnDeinit {
+    let block : ()->Void
+    let id : String
+
+    init(id: String, block: @escaping ()->Void) {
+      self.id = id
+      self.block = block
+    }
+    deinit {
+      print("\(id) deinit")
+      block()
+    }
+  }
+  
+  class TestContext : ExecutionContext, ReleasePoolOwner {
+    var executor: Executor { return Executor.immediate }
+    let releasePool = ReleasePool()
+
+    deinit {
+      print("TestContext deinit")
+    }
+  }
+  
+  func testChannelFinalization() {
+    let expNotifyFinalization = expectation(description: "NotifyFinalization")
+    
+    let expRetainUntilFinalization = expectation(description: "RetainUntilFinalization")
+    let retainUntilFinalization = CallOnDeinit(id: expRetainUntilFinalization.description) {  expRetainUntilFinalization.fulfill() }
+    
+    let extRetainInCompletion = expectation(description: "RetainInCompletion")
+    let retainInCompletion = CallOnDeinit(id: extRetainInCompletion.description) {  extRetainInCompletion.fulfill() }
+    
+    let ch = channelFactory() { producer in
+      producer.update("Update")
+      producer._asyncNinja_notifyFinalization {
+        expNotifyFinalization.fulfill()
+        print("FINALIZATION")
+      }
+      producer._asyncNinja_retainUntilFinalization(retainUntilFinalization)
+      } as Channel<String,Void>
+    
+    var testContext : TestContext? = TestContext()
+    let _ = ch
+      .onUpdate(context: testContext!) { ctx, upd in print(upd) }
+                .onComplete(context: testContext!) { ctx, upd in
+                    print("onComplete \(upd)")
+                    assert(false, "onComplete should never be executed")
+                    _ = retainInCompletion
+                }
+    
+    // destory context
+    testContext = nil
+    sleep(1)
+    
+    waitForExpectations(timeout: 2, handler: nil)
+  }
 }
 
 private class DoubleBindTestActor<T>: TestActor {
