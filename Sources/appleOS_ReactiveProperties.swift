@@ -30,12 +30,24 @@
     /// a setter that could be provided as customization point
     public typealias CustomSetter<T> = (Object, T) -> Void
 
-    var object: Object
-    var executor: Executor
-    var originalExecutor: Executor?
-    var observationSession: ObservationSession?
+    /// object that hosts reactive properties
+    public var object: Object
 
-    init(object: Object, executor: Executor, originalExecutor: Executor?, observationSession: ObservationSession?) {
+    /// executor to update object on
+    public var executor: Executor
+
+    /// original exectutor this instance was created on
+    public var originalExecutor: Executor?
+
+    /// observation session used by this instance
+    public var observationSession: ObservationSession?
+
+    /// designated initalizer
+    public init(
+      object: Object,
+      executor: Executor,
+      originalExecutor: Executor?,
+      observationSession: ObservationSession?) {
       self.object = object
       self.executor = executor
       self.originalExecutor = originalExecutor
