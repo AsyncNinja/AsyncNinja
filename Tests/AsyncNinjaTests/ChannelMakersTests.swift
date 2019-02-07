@@ -33,6 +33,8 @@ class ChannelMakersTests: XCTestCase {
     ("testMakeChannel", testMakeChannel),
     ("testMakeChannel2", testMakeChannel2),
     ("testMakeChannelContextual", testMakeChannelContextual),
+    ("testMakeChannelWithProducerProvidingBlock", testMakeChannelWithProducerProvidingBlock),
+    ("testMakeChannelWithProducerProvidingBlockWithDeadContext", testMakeChannelWithProducerProvidingBlockWithDeadContext),
     ("testCompletedWithFunc", testCompletedWithFunc),
     ("testCompletedWithStatic", testCompletedWithStatic),
     ("testSucceededWithFunc", testSucceededWithFunc),
@@ -137,6 +139,67 @@ class ChannelMakersTests: XCTestCase {
       sema.wait()
       XCTAssertEqual(resultNumbers, Array(numbers.suffix(resultNumbers.count)))
     }
+  }
+
+  func testMakeChannelWithProducerProvidingBlock() {
+    let producerFinalizedExpectation = expectation(description: "producer finalized")
+    let updateDeliveredExpectation = expectation(description: "update delivered")
+    let completionDeliveredExpectation = expectation(description: "completion delivered")
+
+    var testedChannel: Channel<String, Int>? = channel(executor: .default) { (producer: Producer<String, Int>)  in
+      assert(qos: .default)
+      producer.update("update")
+      producer._asyncNinja_notifyFinalization {
+        producerFinalizedExpectation.fulfill()
+      }
+      producer.succeed(42)
+    }
+
+    testedChannel!
+      .onUpdate(executor: .userInitiated) {
+        XCTAssertEqual($0, "update")
+        updateDeliveredExpectation.fulfill()
+      }
+      .onComplete(executor: .userInitiated) {
+        XCTAssertEqual($0.success, 42)
+        completionDeliveredExpectation.fulfill()
+    }
+
+    weak var weakTestedChannel = testedChannel
+    testedChannel = nil
+    waitForExpectations(timeout: 1, handler: nil)
+    XCTAssertNil(weakTestedChannel)
+  }
+
+  func testMakeChannelWithProducerProvidingBlockWithDeadContext() {
+    let producerFinalizedExpectation = expectation(description: "producer finalized")
+    let updateDeliveredExpectation = expectation(description: "update delivered")
+    let completionDeliveredExpectation = expectation(description: "completion delivered")
+
+    var context: TestActor? = TestActor()
+    var testedChannel: Channel<String, Int>? = channel(context: context!
+    ) { (_, producer: Producer<String, Int>)  in
+      producer.update("update")
+      producer._asyncNinja_notifyFinalization {
+        producerFinalizedExpectation.fulfill()
+      }
+    }
+
+    testedChannel!
+      .onUpdate(executor: .userInitiated) {
+        XCTAssertEqual($0, "update")
+        updateDeliveredExpectation.fulfill()
+      }
+      .onComplete {
+        XCTAssertEqual($0.failure as! AsyncNinjaError, .contextDeallocated)
+        completionDeliveredExpectation.fulfill()
+    }
+
+    context = nil
+    weak var weakTestedChannel = testedChannel
+    testedChannel = nil
+    waitForExpectations(timeout: 1, handler: nil)
+    XCTAssertNil(weakTestedChannel)
   }
 
   func testCompletedWithFunc() {
