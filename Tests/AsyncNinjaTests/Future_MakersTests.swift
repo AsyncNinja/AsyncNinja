@@ -207,16 +207,15 @@ class Future_MakersTests: XCTestCase {
     let value = pickInt()
     let expectation = self.expectation(description: "block called")
 
-    let futureValue = future(context: actor, after: 1.0) { (actor) -> Int in
+    let start = Date()
+    let futureValue = future(context: actor, after: 0.2) { (actor) -> Int in
+      XCTAssert((0.15...0.4).contains(-start.timeIntervalSinceNow))
       assert(actor: actor)
       expectation.fulfill()
       return try square_success(value)
     }
 
-    mysleep(0.5)
-    XCTAssertNil(futureValue.value)
-
-    self.waitForExpectations(timeout: 2.0)
+    waitForExpectations(timeout: 1.0)
     XCTAssertEqual(futureValue.success, square(value))
   }
 
@@ -258,16 +257,15 @@ class Future_MakersTests: XCTestCase {
     let value = pickInt()
     let expectation = self.expectation(description: "block called")
 
+    let start = Date()
     let futureValue = future(context: actor, after: 0.2) { (actor) -> Int in
+      XCTAssert((0.15...0.4).contains(-start.timeIntervalSinceNow))
       assert(actor: actor)
       expectation.fulfill()
       return try square_failure(value)
     }
 
-    mysleep(0.15)
-    XCTAssertNil(futureValue.value)
-
-    self.waitForExpectations(timeout: 0.3)
+    self.waitForExpectations(timeout: 1.0)
     XCTAssertEqual(futureValue.failure as? TestError, TestError.testCode)
   }
 
