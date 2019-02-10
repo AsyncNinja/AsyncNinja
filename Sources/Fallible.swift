@@ -50,6 +50,17 @@ public enum Fallible<Success>: _Fallible {
   public static func just(_ success: Success) -> Fallible<Success> {
     return .success(success)
   }
+
+  #if swift(>=5.0)
+  var result: Result<Success, Swift.Error> {
+    switch self {
+    case let .success(success):
+      return .success(success)
+    case let .failure(failure):
+      return .failure(failure)
+    }
+  }
+  #endif
 }
 
 // MARK: - Casting
