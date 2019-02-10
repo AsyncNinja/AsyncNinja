@@ -101,13 +101,12 @@ class Future_MakersTests: XCTestCase {
   }
 
   func testMakeFutureOfDelayedFallibleBlock_Failure() {
-    let qos = pickQoS()
     let value = pickInt()
     let expectation = self.expectation(description: "block called")
     let startTime = DispatchTime.now()
 
-    let futureValue = future(executor: .queue(qos), after: 0.2) { () -> Int in
-      assert(qos: qos)
+    let futureValue = future(executor: .default, after: 0.2) { () -> Int in
+      assert(qos: .default)
       let finishTime = DispatchTime.now()
       XCTAssert(startTime + 0.2 < finishTime)
       XCTAssert(startTime + 0.4 > finishTime)
@@ -115,7 +114,7 @@ class Future_MakersTests: XCTestCase {
       return try square_failure(value)
     }
 
-    mysleep(0.15)
+    mysleep(0.1)
     XCTAssertNil(futureValue.value)
 
     self.waitForExpectations(timeout: 0.5)
