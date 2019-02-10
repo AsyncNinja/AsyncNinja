@@ -382,19 +382,13 @@ class FutureTests: XCTestCase {
   }
 
   func testFlatten() {
-    let startTime = DispatchTime.now()
-    let timeout = startTime + 0.7
     let value = pickInt()
-    let future3D = future(after: 0.2) { return future(after: 0.3) { value } }
-    let future2D = future3D.flatten()
-    if let failable = future2D.wait(timeout: timeout) {
-      XCTAssertEqual(failable.maybeSuccess, value)
-      let finishTime = DispatchTime.now()
-      XCTAssert(startTime + 0.3 < finishTime)
-      XCTAssert(startTime + 0.7 > finishTime)
-    } else {
-      XCTFail("timeout")
+    let future3D = future(executor: .queue(pickQoS())) {
+      return future(executor: .queue(pickQoS())) { value }
     }
+    let future2D = future3D.flatten()
+    let failable = future2D.wait()
+    XCTAssertEqual(failable.maybeSuccess, value)
   }
 
   func testFlatten_OuterFailure() {
