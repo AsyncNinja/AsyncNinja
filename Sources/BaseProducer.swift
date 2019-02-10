@@ -107,6 +107,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
     _locking.lock()
     guard case .none = _completion
       else {
+        _didUpdate(update, from: originalExecutor)
         _locking.unlock()
         return false
     }
@@ -117,6 +118,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
 
     let event = Event.update(update)
     var handlersIterator = _handlers.makeIterator()
+    _didUpdate(update, from: originalExecutor)
     _locking.unlock()
 
     while let handler = handlersIterator.next() {
@@ -124,6 +126,10 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
     }
 
     return true
+  }
+
+  func _didUpdate(_ update: Update,
+                  from originalExecutor: Executor?) {
   }
 
   /// Sends specified sequence of Update to the Producer

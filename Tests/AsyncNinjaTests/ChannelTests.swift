@@ -43,6 +43,7 @@ class ChannelTests: XCTestCase {
     ("testOverUpdateWithSeqence", testOverUpdateWithSeqence),
     ("testOverComplete", testOverComplete),
     ("testStaticCast", testStaticCast),
+    ("testDynamicProperty", testDynamicProperty),
     ("testDoubleBind", testDoubleBind)
   ]
 

@@ -28,8 +28,14 @@ public class DynamicProperty<T>: BaseProducer<T, Void> {
   /// Value that property contains
   /// It is safe to use this property for any `Executor` but do not expect it to be updated immediatly.
   public var value: T {
-    get { return _value }
-    set { self.update(newValue) }
+    get {
+      _locking.lock()
+      defer { _locking.unlock() }
+      return _value
+    }
+    set {
+      self.update(newValue)
+    }
   }
 
   private let _updateExecutor: Executor
@@ -45,17 +51,7 @@ public class DynamicProperty<T>: BaseProducer<T, Void> {
     _pushUpdateToBuffer(initialValue)
   }
 
-  /// Calls update handler instead of sending specified Update to the Producer
-  override public func tryUpdate(_ update: Update, from originalExecutor: Executor?) -> Bool {
-    if super.tryUpdate(update, from: originalExecutor) {
-      _updateExecutor.execute(
-        from: originalExecutor
-      ) { [weak self] _ in
-        self?._value = update
-      }
-      return true
-    } else {
-      return false
-    }
+  override func _didUpdate(_ update: Update, from originalExecutor: Executor?) {
+    _value = update
   }
 }
