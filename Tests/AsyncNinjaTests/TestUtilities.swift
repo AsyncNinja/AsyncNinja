@@ -61,21 +61,32 @@ func assert(actor: Actor, file: StaticString = #file, line: UInt = #line) {
 
 extension XCTestCase {
   func multiTest(repeating: Int = 1, _ test: @escaping () -> Void) {
+    let globalQueue = DispatchQueue.global()
     let configs: [(threads: Int, tests: Int)] = [ (1, 8), (2, 4), (4, 2), (8, 1) ]
 
     for _ in 0..<repeating {
       for config in configs {
-        let group = DispatchGroup()
+        let autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency
+        if #available(OSX 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
+          autoreleaseFrequency = .workItem
+        } else {
+          autoreleaseFrequency = .inherit
+        }
+        let localQueue = DispatchQueue(label: "local queue",
+                                       qos: .default,
+                                       attributes: [.concurrent],
+                                       autoreleaseFrequency: autoreleaseFrequency,
+                                       target: globalQueue)
 
         for _ in 0..<config.threads {
-          DispatchQueue.global().async(group: group) {
+          localQueue.async {
             for _ in 0..<config.tests {
               test()
             }
           }
         }
 
-        _ = group.wait(timeout: DispatchTime.now() + .seconds(10))
+        localQueue.sync(flags: [.barrier]) {}
       }
     }
   }
