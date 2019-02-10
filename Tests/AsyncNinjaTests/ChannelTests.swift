@@ -301,6 +301,21 @@ class ChannelTests: XCTestCase {
     sema.wait()
     sema.wait()
   }
+    
+  func testDynamicProperty() {
+    let initialValue = "initial value"
+    let newValue = "newValue"
+    let nextValue = "nextValue"
+    
+    let actor = TestActor()
+    let dynamicProperty = actor.makeDynamicProperty(initialValue)
+    
+    dynamicProperty.value = newValue
+    XCTAssert(dynamicProperty.value == newValue)
+    
+    dynamicProperty.value = nextValue
+    XCTAssert(dynamicProperty.value == nextValue)
+  }
 
   func testDoubleBind() {
     let majorActor = DoubleBindTestActor<Int>(initialValue: 3)
