@@ -22,15 +22,22 @@
 
 import Dispatch
 
+#if swift(>=5.0)
+
+public typealias Fallible<S> = Result<S, Swift.Error>
+
+#else
+
 /// Fallible is an implementation of validation monad.
 /// May contain either success value or failure in form of `Error`.
 public enum Fallible<Success>: _Fallible {
+  public typealias Failure = Swift.Error
 
   /// success case of Fallible. Contains success value
   case success(Success)
 
   /// failure case of Fallible. Contains failure value (Error)
-  case failure(Swift.Error)
+  case failure(Failure)
 
   /// Initializes Fallible with success value
   ///
@@ -42,7 +49,7 @@ public enum Fallible<Success>: _Fallible {
   /// Initializes Fallible with failure valie
   ///
   /// - Parameter failure: error to initalize Fallible with
-  public init(failure: Swift.Error) {
+  public init(failure: Failure) {
     self = .failure(failure)
   }
 
@@ -50,18 +57,8 @@ public enum Fallible<Success>: _Fallible {
   public static func just(_ success: Success) -> Fallible<Success> {
     return .success(success)
   }
-
-  #if swift(>=5.0)
-  var result: Result<Success, Swift.Error> {
-    switch self {
-    case let .success(success):
-      return .success(success)
-    case let .failure(failure):
-      return .failure(failure)
-    }
-  }
-  #endif
 }
+#endif
 
 // MARK: - Casting
 
@@ -95,7 +92,6 @@ public extension Fallible {
 }
 
 // MARK: - Description
-
 extension Fallible: CustomStringConvertible, CustomDebugStringConvertible {
   /// A textual representation of this instance.
   public var description: String {
@@ -121,35 +117,59 @@ extension Fallible: CustomStringConvertible, CustomDebugStringConvertible {
 // MARK: - state managers
 public extension Fallible {
 
-  /// Returns success if Fallible has a success value inside.
-  /// Returns nil otherwise
+  #if swift(>=5.0)
+  #else
+  /// A legacy shortcut to maybeSuccess
   var success: Success? {
-    if case let .success(success) = self { return success } else { return nil }
+    return maybeSuccess
   }
 
+  /// A legacy shortcut to maybeFailure
+  var failure: Failure? {
+    return maybeFailure
+  }
+  #endif
+
   /// Returns success if Fallible has a success value inside.
-  /// Crashes otherwise
-  var unsafeSuccess: Success! {
-    return success!
+  /// Returns nil otherwise
+  var maybeSuccess: Success? {
+    switch self {
+    case let .success(succes):
+      return succes
+    case .failure:
+      return nil
+    }
   }
 
   /// Returns failure if Fallible has a failure value inside.
   /// Returns nil otherwise
-  var failure: Swift.Error? {
-    if case let .failure(failure) = self { return failure } else { return nil }
+  var maybeFailure: Failure? {
+    switch self {
+    case .success:
+      return nil
+    case let .failure(failure):
+      return failure
+    }
   }
 
+  #if swift(>=5.0)
+  /// A legacy shortcut to get()
+  func liftSuccess() throws -> Success {
+    return try get()
+  }
+  #else
   /// This method is convenient when you want to transfer back
   /// to a regular Swift error handling
   ///
   /// - Returns: success value if Fallible has a success value inside
   /// - Throws: failure value if Fallible has a failure value inside
-  func liftSuccess() throws -> Success {
+  func get() throws -> Success {
     switch self {
     case let .success(success): return success
-    case let .failure(error): throw error
+    case let .failure(failure): throw failure
     }
   }
+  #endif
 
   /// Executes block if Fallible has success value inside
   ///
@@ -169,7 +189,7 @@ public extension Fallible {
   ///     - handler: handler to execute
   ///     - failure: failure value of Fallible
   /// - Throws: rethrows an error thrown by the block
-  func onFailure(_ block: (_ failure: Swift.Error) throws -> Void) rethrows {
+  func onFailure(_ block: (_ failure: Failure) throws -> Void) rethrows {
     if case let .failure(failure) = self {
       try block(failure)
     }
@@ -177,7 +197,6 @@ public extension Fallible {
 }
 
 // MARK: - transformers
-
 public extension Fallible {
   /// Applies transformation to Fallible
   ///
@@ -222,12 +241,16 @@ public extension Fallible {
   ///    **That success value will become a success value of a transfomed Fallible**
   ///   - failure: failure value of original Fallible
   /// - Returns: transformed Fallible
-  func tryRecover(_ transform: (_ failure: Swift.Error) throws -> Success) -> Fallible<Success> {
+  func tryRecover(_ transform: (_ failure: Failure) throws -> Success) -> Fallible<Success> {
     switch self {
     case let .success(success):
       return .success(success)
-    case let .failure(error):
-      do { return .success(try transform(error)) } catch { return .failure(error) }
+    case let .failure(failure):
+      do {
+        return .success(try transform(failure))
+      } catch {
+        return .failure(error)
+      }
     }
   }
 
@@ -240,12 +263,12 @@ public extension Fallible {
   ///     **That success value will become a success value of a transfomed Fallible**
   ///   - failure: failure value of original Fallible
   /// - Returns: success value
-  func recover(_ transform: (_ failure: Swift.Error) -> Success) -> Success {
+  func recover(_ transform: (_ failure: Failure) -> Success) -> Success {
     switch self {
     case let .success(success):
       return success
-    case let .failure(error):
-      return transform(error)
+    case let .failure(failure):
+      return transform(failure)
     }
   }
 
@@ -273,7 +296,11 @@ public extension Fallible {
 ///   A thrown error will become failure value of returned Fallible.
 /// - Returns: fallible constructed of a returned value or a thrown error with Fallible
 public func fallible<T>(block: () throws -> T) -> Fallible<T> {
-  do { return Fallible(success: try block()) } catch { return Fallible(failure: error) }
+  do {
+    return .success(try block())
+  } catch {
+    return .failure(error)
+  }
 }
 
 /// Executes specified block and returns returned Fallible or wraps a thrown error with Fallible
@@ -283,7 +310,11 @@ public func fallible<T>(block: () throws -> T) -> Fallible<T> {
 ///   A thrown error will become failure value of returned Fallible.
 /// - Returns: returned Fallible or a thrown error wrapped with Fallible
 public func flatFallible<T>(block: () throws -> Fallible<T>) -> Fallible<T> {
-  do { return try block() } catch { return Fallible(failure: error) }
+  do {
+    return try block()
+  } catch {
+    return .failure(error)
+  }
 }
 
 // MARK: - flattening
@@ -300,8 +331,8 @@ extension Fallible where Success: _Fallible {
     switch self {
     case let .success(success):
       return success as! Fallible<Success.Success>
-    case let .failure(error):
-      return .failure(error)
+    case let .failure(failure):
+      return .failure(failure)
     }
   }
 }
@@ -313,27 +344,19 @@ extension Fallible where Success: _Fallible {
 public protocol _Fallible: CustomStringConvertible {
   /// a type of a successful case value
   associatedtype Success
+  associatedtype Failure
 
   /// returns success value if _Fallible contains one
-  var success: Success? { get }
-
-  /// returns success if Fallible has a success value inside. Crashes otherwise
-  var unsafeSuccess: Success! { get }
+  var maybeSuccess: Success? { get }
 
   /// returns failure value if _Fallible contains one
-  var failure: Swift.Error? { get }
-
-  /// initializes fallible with success value
-  init(success: Success)
-
-  /// initializes fallible with failure value
-  init(failure: Swift.Error)
+  var maybeFailure: Failure? { get }
 
   /// executes handler if the fallible containse success value
   func onSuccess(_ handler: (Success) throws -> Void) rethrows
 
   /// executes handler if the fallible containse failure value
-  func onFailure(_ handler: (Swift.Error) throws -> Void) rethrows
+  func onFailure(_ handler: (Failure) throws -> Void) rethrows
 
   /// (success or failure) * (try transform success to success) -> (success or failure)
   func map<T>(_ transform: (Success) throws -> T) -> Fallible<T>
@@ -342,15 +365,17 @@ public protocol _Fallible: CustomStringConvertible {
   func flatMap<T>(_ transform: (Success) throws -> Fallible<T>) -> Fallible<T>
 
   /// (success or failure) * (try transform failure to success) -> (success or failure)
-  func tryRecover(_ transform: (Swift.Error) throws -> Success) -> Fallible<Success>
+  func tryRecover(_ transform: (Failure) throws -> Success) -> Fallible<Success>
 
   /// (success or failure) * (transform failure to success) -> success
-  func recover(_ transform: (Swift.Error) -> Success) -> Success
+  func recover(_ transform: (Failure) -> Success) -> Success
 
   /// returns success or throws failure
-  func liftSuccess() throws -> Success
+  func get() throws -> Success
 }
 
+#if swift(>=5.0)
+#else
 // MARK: - equality
 extension Fallible where Success: Equatable {
   /* TODO: update when conditional conformation becomes availble */
@@ -389,6 +414,7 @@ extension Fallible where Success: Hashable {
     }
   }
 }
+#endif
 
 /// Combines successes of two failables or returns fallible with first error
 public func zip<A, B>(
@@ -398,9 +424,9 @@ public func zip<A, B>(
   switch (a, b) {
   case let (.success(successA), .success(successB)):
     return .success((successA, successB))
-  case let (.failure(error), _),
-       let (_, .failure(error)):
-    return .failure(error)
+  case let (.failure(failure), _),
+       let (_, .failure(failure)):
+    return .failure(failure)
   default:
     fatalError()
   }
@@ -415,11 +441,17 @@ public func zip<A, B, C>(
   switch (a, b, c) {
   case let (.success(successA), .success(successB), .success(successC)):
     return .success((successA, successB, successC))
-  case let (.failure(error), _, _),
-       let (_, .failure(error), _),
-       let (_, _, .failure(error)):
-    return .failure(error)
+  case let (.failure(failure), _, _),
+       let (_, .failure(failure), _),
+       let (_, _, .failure(failure)):
+    return .failure(failure)
   default:
     fatalError()
   }
 }
+
+#if swift(>=5.0)
+
+extension Fallible: _Fallible { }
+
+#endif

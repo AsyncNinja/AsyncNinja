@@ -48,8 +48,8 @@ class EventSource_Zip2Tests: XCTestCase {
           XCTAssertEqual(pair.1, fixturePair.1)
         }
 
-        XCTAssertEqual(stringsOfError.success!.0, "Hello")
-        XCTAssertEqual(stringsOfError.success!.1, "World")
+        XCTAssertEqual(stringsOfError.maybeSuccess!.0, "Hello")
+        XCTAssertEqual(stringsOfError.maybeSuccess!.1, "World")
         expectation.fulfill()
     }
 

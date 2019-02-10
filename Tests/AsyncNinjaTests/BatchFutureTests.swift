@@ -46,7 +46,7 @@ class BatchFutureTests: XCTestCase {
       .map { (value) -> Future<Int> in
         return future(after: 1.0 - Double(value) / 5.0, { () -> Int in value })
     }
-    let value: [Int] = futures.joined().wait().success!
+    let value: [Int] = futures.joined().wait().maybeSuccess!
     XCTAssertEqual([1, 2, 3, 4, 5], Set(value))
   }
 
@@ -54,7 +54,7 @@ class BatchFutureTests: XCTestCase {
     let value: [Int] = [Int]()
       .map { value in future(after: 1.0 - Double(value) / 5.0, { value }) }
       .joined()
-      .wait().success!
+      .wait().maybeSuccess!
     XCTAssertEqual([], Set(value))
   }
 
@@ -66,7 +66,7 @@ class BatchFutureTests: XCTestCase {
     let value: Int = (1...5)
       .map(asyncTransform)
       .asyncReduce(5, +)
-      .wait().success!
+      .wait().maybeSuccess!
     XCTAssertEqual(20, value)
   }
 
@@ -78,7 +78,7 @@ class BatchFutureTests: XCTestCase {
     let value: Int = [Int]()
       .map(asyncTransform)
       .asyncReduce(5) { $0 + $1 }
-      .wait().success!
+      .wait().maybeSuccess!
     XCTAssertEqual(5, value)
   }
 
@@ -97,7 +97,7 @@ class BatchFutureTests: XCTestCase {
         }
       }
       .wait()
-    XCTAssertEqual(TestError.testCode, value.failure as! TestError)
+    XCTAssertEqual(TestError.testCode, value.maybeFailure as! TestError)
   }
 
   func testFlatMap() {
@@ -138,7 +138,7 @@ class BatchFutureTests: XCTestCase {
     let value = (1...5)
       .asyncMap(executor: .utility) { $0 }
       .map { $0.reduce(5) { $0 + $1 } }
-      .wait().success!
+      .wait().maybeSuccess
     XCTAssertEqual(20, value)
   }
 
@@ -146,7 +146,7 @@ class BatchFutureTests: XCTestCase {
     let value = [Int]()
       .asyncMap(executor: .utility) { $0 }
       .map { $0.reduce(5) { $0 + $1 } }
-      .wait().success!
+      .wait().maybeSuccess
     XCTAssertEqual(5, value)
   }
 

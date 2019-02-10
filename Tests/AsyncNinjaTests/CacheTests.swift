@@ -56,10 +56,10 @@ class CacheTests: XCTestCase {
       let futureC = cache.value(forKey: "C")
       let futureD = cache.value(forKey: "fail")
       XCTAssert(futureA1 === futureA2)
-      XCTAssertEqual(futureA1.wait().success!, 1)
-      XCTAssertEqual(futureB.wait().success!, 2)
-      XCTAssertNil(futureC.wait().success!)
-      XCTAssertEqual(futureD.wait().failure as! TestError, TestError.testCode)
+      XCTAssertEqual(futureA1.wait().maybeSuccess, 1)
+      XCTAssertEqual(futureB.wait().maybeSuccess, 2)
+      XCTAssertNil(futureC.wait().maybeSuccess!)
+      XCTAssertEqual(futureD.wait().maybeFailure as! TestError, TestError.testCode)
     }
   }
 
@@ -82,11 +82,11 @@ class CacheTests: XCTestCase {
       }
 
       let futureA1 = cache.value(forKey: "1")
-      XCTAssertEqual(futureA1.wait().success!, 1)
+      XCTAssertEqual(futureA1.wait().maybeSuccess, 1)
       cache.invalidate(valueForKey: "1")
       let futureA2 = cache.value(forKey: "1")
       XCTAssertFalse(futureA1 === futureA2)
-      XCTAssertEqual(futureA2.wait().success!, 1)
+      XCTAssertEqual(futureA2.wait().maybeSuccess, 1)
     }
   }
 
@@ -120,10 +120,10 @@ class CacheTests: XCTestCase {
       let futureC = cache.value(forKey: "C")
       let futureD = cache.value(forKey: "fail")
       XCTAssert(futureA1 === futureA2)
-      XCTAssertEqual(futureA1.wait().success!, 1)
-      XCTAssertEqual(futureB.wait().success!, 2)
-      XCTAssertNil(futureC.wait().success!)
-      XCTAssertEqual(futureD.wait().failure as! TestError, TestError.testCode)
+      XCTAssertEqual(futureA1.wait().maybeSuccess, 1)
+      XCTAssertEqual(futureB.wait().maybeSuccess, 2)
+      XCTAssertNil(futureC.wait().maybeSuccess!)
+      XCTAssertEqual(futureD.wait().maybeFailure as! TestError, TestError.testCode)
     }
   }
 
@@ -137,11 +137,11 @@ class CacheTests: XCTestCase {
       }
 
       let futureA1 = cache.value(forKey: "1")
-      XCTAssertEqual(futureA1.wait().success!, 1)
+      XCTAssertEqual(futureA1.wait().maybeSuccess, 1)
       cache.invalidate(valueForKey: "1")
       let futureA2 = cache.value(forKey: "1")
       XCTAssertFalse(futureA1 === futureA2)
-      XCTAssertEqual(futureA2.wait().success!, 1)
+      XCTAssertEqual(futureA2.wait().maybeSuccess, 1)
     }
   }
 }

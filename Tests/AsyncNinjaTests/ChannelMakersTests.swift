@@ -82,7 +82,7 @@ class ChannelMakersTests: XCTestCase {
         for i in numbers {
           update(i)
         }
-        complete(.just("done"))
+        complete(.success("done"))
       }
     }
 
@@ -104,7 +104,7 @@ class ChannelMakersTests: XCTestCase {
     self.waitForExpectations(timeout: 2.0, handler: nil)
 
     XCTAssertEqual(resultNumbers, numbers)
-    XCTAssertEqual(channelA.completion?.success, "done")
+    XCTAssertEqual(channelA.completion?.maybeSuccess, "done")
   }
 
   func testMakeChannelContextual() {
@@ -162,7 +162,7 @@ class ChannelMakersTests: XCTestCase {
         updateDeliveredExpectation.fulfill()
       }
       .onComplete(executor: .userInitiated) {
-        XCTAssertEqual($0.success, 42)
+        XCTAssertEqual($0.maybeSuccess!, 42)
         completionDeliveredExpectation.fulfill()
     }
 
@@ -192,7 +192,7 @@ class ChannelMakersTests: XCTestCase {
         updateDeliveredExpectation.fulfill()
       }
       .onComplete {
-        XCTAssertEqual($0.failure as! AsyncNinjaError, .contextDeallocated)
+        XCTAssertEqual($0.maybeFailure as! AsyncNinjaError, .contextDeallocated)
         completionDeliveredExpectation.fulfill()
     }
 

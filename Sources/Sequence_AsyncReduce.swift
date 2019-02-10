@@ -135,7 +135,7 @@ where Destination.Success == OutputElement {
       values[index] = success
       unknownSubvaluesCount -= 1
       if 0 == unknownSubvaluesCount {
-        return .just(values)
+        return .success(values)
       } else {
         return nil
       }

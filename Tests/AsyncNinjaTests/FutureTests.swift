@@ -71,7 +71,7 @@ class FutureTests: XCTestCase {
         }
         weakFuture = futureValue
         weakMappedFuture = mappedFutureValue
-        result = mappedFutureValue!.wait().success!
+        result = mappedFutureValue!.wait().maybeSuccess
         futureValue = nil
         mappedFutureValue = nil
       }
@@ -173,7 +173,7 @@ class FutureTests: XCTestCase {
     let result = mappedFuture.wait()
     queue.sync { nop() }
     XCTAssertNil(weakInitialFuture)
-    XCTAssertEqual(result.success, valueSquared)
+    XCTAssertEqual(result.maybeSuccess!, valueSquared)
   }
 
   func testMap_Failure() {
@@ -193,7 +193,7 @@ class FutureTests: XCTestCase {
 
     queue.sync { nop() }
     XCTAssertNil(weakInitialFuture)
-    XCTAssertEqual(result.failure as? TestError, .testCode)
+    XCTAssertEqual(result.maybeFailure as? TestError, .testCode)
   }
 
   func testMapContextual_Success_ContextAlive() {
@@ -223,7 +223,7 @@ class FutureTests: XCTestCase {
     actor.internalQueue.sync { nop() }
     XCTAssertNil(weakInitialFuture)
     XCTAssertNil(weakMappedFuture)
-    XCTAssertEqual(result.success, valueSquared)
+    XCTAssertEqual(result.maybeSuccess!, valueSquared)
   }
 
   func testMapContextual_Success_ContextDead() {
@@ -251,7 +251,7 @@ class FutureTests: XCTestCase {
     // self.waitForExpectations(timeout: 1.0)
     let result = mappedFuture.wait()
     XCTAssertNil(weakInitialFuture)
-    XCTAssertEqual(result.failure as? AsyncNinjaError, .contextDeallocated)
+    XCTAssertEqual(result.maybeFailure as? AsyncNinjaError, .contextDeallocated)
   }
 
   func testMapContextual_Failure_ContextAlive() {
@@ -279,7 +279,7 @@ class FutureTests: XCTestCase {
 
       actor.internalQueue.sync { nop() }
       XCTAssertNil(weakInitialFuture)
-      XCTAssertEqual(result.failure as? TestError, .testCode)
+      XCTAssertEqual(result.maybeFailure as? TestError, .testCode)
     }
   }
 
@@ -309,7 +309,7 @@ class FutureTests: XCTestCase {
     //self.waitForExpectations(timeout: 0.1)
     let result = mappedFuture.wait()
     XCTAssertNil(weakInitialFuture)
-    XCTAssertEqual(result.failure as? AsyncNinjaError, .contextDeallocated)
+    XCTAssertEqual(result.maybeFailure as? AsyncNinjaError, .contextDeallocated)
   }
 
   func testOnCompleteContextual_ContextAlive_RegularActor() {
@@ -388,7 +388,7 @@ class FutureTests: XCTestCase {
     let future3D = future(after: 0.2) { return future(after: 0.3) { value } }
     let future2D = future3D.flatten()
     if let failable = future2D.wait(timeout: timeout) {
-      XCTAssertEqual(failable.success!, value)
+      XCTAssertEqual(failable.maybeSuccess, value)
       let finishTime = DispatchTime.now()
       XCTAssert(startTime + 0.3 < finishTime)
       XCTAssert(startTime + 0.7 > finishTime)
@@ -402,7 +402,7 @@ class FutureTests: XCTestCase {
     let future3D = future(executor: .default) { try fail() }
     let future2D = future3D.flatten()
     let failable = future2D.wait()
-    XCTAssertEqual(failable.failure! as? AsyncNinjaError, AsyncNinjaError.cancelled)
+    XCTAssertEqual(failable.maybeFailure! as? AsyncNinjaError, AsyncNinjaError.cancelled)
   }
 
   func testFlatten_InnerFailure() {
@@ -412,7 +412,7 @@ class FutureTests: XCTestCase {
     let future3D = future(after: 0.2) { return future(after: 0.3) { try fail() } }
     let future2D = future3D.flatten()
     if let failable = future2D.wait(timeout: timeout) {
-      XCTAssertEqual(failable.failure! as? AsyncNinjaError, AsyncNinjaError.cancelled)
+      XCTAssertEqual(failable.maybeFailure! as? AsyncNinjaError, AsyncNinjaError.cancelled)
       let finishTime = DispatchTime.now()
       XCTAssert(startTime + 0.3 < finishTime)
       XCTAssert(startTime + 0.7 > finishTime)
@@ -444,7 +444,7 @@ class FutureTests: XCTestCase {
     let (updates, failable) = flattenedChannel.waitForAll()
     let finishTime = DispatchTime.now()
     XCTAssertEqual(updates, ["a", "b", "c", "d", "e"])
-    XCTAssertEqual(failable.success!, value)
+    XCTAssertEqual(failable.maybeSuccess, value)
     XCTAssert(startTime + 0.3 < finishTime)
     XCTAssert(startTime + 1.2 > finishTime)
   }

@@ -43,7 +43,7 @@ class CachableValueTests: XCTestCase {
         return future(after: 0.1) { value }
       }
       let futureA = holder.cachableValue.value()
-      XCTAssertEqual(futureA.wait().success, value)
+      XCTAssertEqual(futureA.wait().maybeSuccess!, value)
       let futureB = holder.cachableValue.value()
       XCTAssertTrue(futureA === futureB)
     }
@@ -55,7 +55,7 @@ class CachableValueTests: XCTestCase {
         return future(after: 0.1) { throw TestError.testCode }
       }
       let futureA = holder.cachableValue.value()
-      XCTAssertEqual(futureA.wait().failure as? TestError, TestError.testCode)
+      XCTAssertEqual(futureA.wait().maybeFailure as? TestError, TestError.testCode)
       let futureB = holder.cachableValue.value()
       XCTAssertTrue(futureA === futureB)
     }
@@ -70,7 +70,7 @@ class CachableValueTests: XCTestCase {
       }
 
       let futureA = holder.cachableValue.value()
-      XCTAssertEqual(futureA.wait().success, firstValue)
+      XCTAssertEqual(futureA.wait().maybeSuccess!, firstValue)
 
       let secondValue = pickInt()
       value = secondValue
@@ -78,7 +78,7 @@ class CachableValueTests: XCTestCase {
 
       let futureB = holder.cachableValue.value()
       XCTAssertFalse(futureA === futureB)
-      XCTAssertEqual(futureB.wait().success, secondValue)
+      XCTAssertEqual(futureB.wait().maybeSuccess!, secondValue)
     }
   }
 
@@ -92,7 +92,7 @@ class CachableValueTests: XCTestCase {
       }
 
       let futureA = holder.cachableValue.value()
-      XCTAssertEqual(futureA.wait().failure as? TestError, firstError)
+      XCTAssertEqual(futureA.wait().maybeFailure as? TestError, firstError)
 
       let secondError = TestError.otherCode
       error = secondError
@@ -100,7 +100,7 @@ class CachableValueTests: XCTestCase {
 
       let futureB = holder.cachableValue.value()
       XCTAssertFalse(futureA === futureB)
-      XCTAssertEqual(futureB.wait().failure as? TestError, secondError)
+      XCTAssertEqual(futureB.wait().maybeFailure as? TestError, secondError)
     }
   }
 }

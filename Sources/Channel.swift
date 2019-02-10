@@ -143,7 +143,7 @@ extension Channel: CustomStringConvertible, CustomDebugStringConvertible {
 public extension Channel {
   /// Synchronously waits for channel to complete. Returns all updates and completion
   func waitForAll() -> (updates: [Update], completion: Fallible<Success>) {
-    return try! self.extractAll().wait().liftSuccess() // swiftlint:disable:this force_try
+    return try! self.extractAll().wait().get() // swiftlint:disable:this force_try
   }
 
   /// Waits for channel to complete and returns all updates and completion
@@ -151,7 +151,7 @@ public extension Channel {
   /// - Parameter seconds: to wait completion for
   /// - Returns: completion value or nil if `Future` did not complete in specified timeout
   func waitForAll(seconds: Double) -> (updates: [Update], completion: Fallible<Success>)? {
-    return try! self.extractAll().wait(seconds: seconds)?.liftSuccess() // swiftlint:disable:this force_try
+    return try! self.extractAll().wait(seconds: seconds)?.get() // swiftlint:disable:this force_try
   }
 }
 
@@ -168,10 +168,10 @@ public struct ChannelIterator<Update, Success>: IteratorProtocol {
   public var completion: Fallible<Success>? { return _implBox.value.completion }
 
   /// success of the channel. Will be available as soon as the channel completes with success.
-  public var success: Success? { return _implBox.value.completion?.success }
+  public var success: Success? { return _implBox.value.completion?.maybeSuccess }
 
   /// failure of the channel. Will be available as soon as the channel completes with failure.
-  public var filure: Swift.Error? { return _implBox.value.completion?.failure }
+  public var filure: Swift.Error? { return _implBox.value.completion?.maybeFailure }
 
   /// **internal use only** Designated initializer
   init(impl: ChannelIteratorImpl<Update, Success>) {

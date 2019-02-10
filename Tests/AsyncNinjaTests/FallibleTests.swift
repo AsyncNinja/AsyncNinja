@@ -54,19 +54,19 @@ class FallibleTests: XCTestCase {
     ]
 
   func testSuccess() {
-    let value = Fallible(success: 3)
-    XCTAssertEqual(3, value.success)
-    XCTAssertNil(value.failure)
+    let value: Fallible<Int> = .success(3)
+    XCTAssertEqual(3, value.maybeSuccess)
+    XCTAssertNil(value.maybeFailure)
   }
 
   func testFailure() {
-    let value = Fallible<Int>(failure: TestError.testCode)
-    XCTAssertEqual(TestError.testCode, value.failure as! TestError)
-    XCTAssertNil(value.success)
+    let value: Fallible<Int> = .failure(TestError.testCode)
+    XCTAssertEqual(TestError.testCode, value.maybeFailure as! TestError)
+    XCTAssertNil(value.maybeSuccess)
   }
 
   func testOnSuccess() {
-    let value = Fallible(success: 1)
+    let value: Fallible<Int> = .success(1)
     var numberOfCalls = 0
 
     value.onSuccess {
@@ -78,7 +78,7 @@ class FallibleTests: XCTestCase {
   }
 
   func testOnFailure() {
-    let value = Fallible<Int>(failure: TestError.testCode)
+    let value: Fallible<Int> = .failure(TestError.testCode)
     var numberOfCalls = 0
 
     value.onFailure {
@@ -91,28 +91,28 @@ class FallibleTests: XCTestCase {
 
   func testFlattenSuccessSuccess() {
     let intValue = pickInt()
-    let fallible2dInt: Fallible<Fallible<Int>> = Fallible(success: Fallible(success: intValue))
+    let fallible2dInt: Fallible<Fallible<Int>> = .success(.success(intValue))
     let fallible1dInt: Fallible<Int> = fallible2dInt.flatten()
 
-    XCTAssertEqual(fallible1dInt.success, intValue)
+    XCTAssertEqual(fallible1dInt.maybeSuccess, intValue)
   }
 
   func testFlattenSuccessFailure() {
-    let fallible2dInt: Fallible<Fallible<Int>> = Fallible(success: Fallible(failure: TestError.testCode))
+    let fallible2dInt: Fallible<Fallible<Int>> = .success(.failure(TestError.testCode))
     let fallible1dInt: Fallible<Int> = fallible2dInt.flatten()
 
-    XCTAssertEqual(fallible1dInt.failure as? TestError, TestError.testCode)
+    XCTAssertEqual(fallible1dInt.maybeFailure as? TestError, TestError.testCode)
   }
 
   func testFlattenFailure() {
-    let fallible2dInt: Fallible<Fallible<Int>> = Fallible(failure: TestError.testCode)
+    let fallible2dInt: Fallible<Fallible<Int>> = .failure(TestError.testCode)
     let fallible1dInt: Fallible<Int> = fallible2dInt.flatten()
 
-    XCTAssertEqual(fallible1dInt.failure as? TestError, TestError.testCode)
+    XCTAssertEqual(fallible1dInt.maybeFailure as? TestError, TestError.testCode)
   }
 
   func testMapSuccessForSuccess() {
-    let value = Fallible<Int>(success: 2)
+    let value: Fallible<Int> = .success(2)
     var numberOfCalls = 0
 
     let nextValue = value.map { (success) -> Int in
@@ -120,12 +120,12 @@ class FallibleTests: XCTestCase {
       return success * 3
     }
 
-    XCTAssertEqual(nextValue.success!, 6)
+    XCTAssertEqual(nextValue.maybeSuccess, 6)
     XCTAssertEqual(numberOfCalls, 1)
   }
 
   func testMapSuccessForFailure() {
-    let value = Fallible<Int>(failure: TestError.testCode)
+    let value: Fallible<Int> = .failure(TestError.testCode)
     var numberOfCalls = 0
 
     let nextValue = value.map { (success) -> Int in
@@ -133,12 +133,12 @@ class FallibleTests: XCTestCase {
       return success * 3
     }
 
-    XCTAssertEqual(nextValue.failure as! TestError, TestError.testCode)
+    XCTAssertEqual(nextValue.maybeFailure as! TestError, TestError.testCode)
     XCTAssertEqual(numberOfCalls, 0)
   }
 
   func testMapSuccessForThrow() {
-    let value = Fallible<Int>(success: 2)
+    let value: Fallible<Int> = .success(2)
     var numberOfCalls = 0
 
     let nextValue = value.map { _ -> Int in
@@ -146,12 +146,12 @@ class FallibleTests: XCTestCase {
       throw TestError.testCode
     }
 
-    XCTAssertEqual(nextValue.failure as! TestError, TestError.testCode)
+    XCTAssertEqual(nextValue.maybeFailure as! TestError, TestError.testCode)
     XCTAssertEqual(numberOfCalls, 1)
   }
 
   func testMapFailureForSuccess() {
-    let value = Fallible(success: 2)
+    let value: Fallible = .success(2)
     var numberOfCalls = 0
 
     let nextValue = value.recover { _ in
@@ -164,7 +164,7 @@ class FallibleTests: XCTestCase {
   }
 
   func testMapFailureOnFailure() {
-    let value = Fallible<Int>(failure: TestError.testCode)
+    let value: Fallible<Int> = .failure(TestError.testCode)
     var numberOfCalls = 0
 
     let nextValue = value.recover { _ in
@@ -177,7 +177,7 @@ class FallibleTests: XCTestCase {
   }
 
   func testMapFailure2OnSuccess() {
-    let value = Fallible(success: 2)
+    let value: Fallible<Int> = .success(2)
     var numberOfCalls = 0
 
     let nextValue = value.tryRecover { _ in
@@ -186,12 +186,12 @@ class FallibleTests: XCTestCase {
       return 3
     }
 
-    XCTAssertEqual(nextValue.success!, 2)
+    XCTAssertEqual(nextValue.maybeSuccess, 2)
     XCTAssertEqual(numberOfCalls, 0)
   }
 
   func testMapFailure2OnFailure() {
-    let value = Fallible<Int>(failure: TestError.testCode)
+    let value: Fallible<Int> = .failure(TestError.testCode)
     var numberOfCalls = 0
 
     let nextValue = value.tryRecover { _ in
@@ -200,12 +200,12 @@ class FallibleTests: XCTestCase {
       return 3
     }
 
-    XCTAssertEqual(nextValue.success!, 3)
+    XCTAssertEqual(nextValue.maybeSuccess, 3)
     XCTAssertEqual(numberOfCalls, 1)
   }
 
   func testMapFailure2OnThrow() {
-    let value = Fallible<Int>(failure: TestError.testCode)
+    let value: Fallible<Int> = .failure(TestError.testCode)
     var numberOfCalls = 0
 
     let nextValue = value.tryRecover { _ in
@@ -213,54 +213,54 @@ class FallibleTests: XCTestCase {
       throw TestError.otherCode
     }
 
-    XCTAssertEqual(nextValue.failure as! TestError, TestError.otherCode)
+    XCTAssertEqual(nextValue.maybeFailure as! TestError, TestError.otherCode)
     XCTAssertEqual(numberOfCalls, 1)
   }
 
   func testMakeFallibleSuccess() {
     let value = fallible { 2 }
-    XCTAssertEqual(value.success!, 2)
+    XCTAssertEqual(value.maybeSuccess, 2)
   }
 
   func testMakeFallibleFailure() {
     let value = fallible { throw TestError.testCode }
-    XCTAssertEqual(value.failure as! TestError, TestError.testCode)
+    XCTAssertEqual(value.maybeFailure as! TestError, TestError.testCode)
   }
 
   func testZip2_SuccessSuccess() {
-    let fallibleA = Fallible(success: 1)
-    let fallibleB = Fallible(success: "a")
+    let fallibleA: Fallible<Int> = .success(1)
+    let fallibleB: Fallible<String> = .success("a")
     let fallibleResult = zip(fallibleA, fallibleB)
-    XCTAssertEqual(1, fallibleResult.success!.0)
-    XCTAssertEqual("a", fallibleResult.success!.1)
+    XCTAssertEqual(1, fallibleResult.maybeSuccess!.0)
+    XCTAssertEqual("a", fallibleResult.maybeSuccess!.1)
   }
 
   func testZip2_SuccessFailure() {
-    let fallibleA = Fallible(success: 1)
-    let fallibleB = Fallible<String>(failure: TestError.otherCode)
+    let fallibleA: Fallible<Int> = .success(1)
+    let fallibleB: Fallible<String> = .failure(TestError.otherCode)
     let fallibleResult = zip(fallibleA, fallibleB)
-    XCTAssertEqual(TestError.otherCode, fallibleResult.failure as! TestError)
+    XCTAssertEqual(TestError.otherCode, fallibleResult.maybeFailure as! TestError)
   }
 
   func testZip2_FailureSuccess() {
-    let fallibleA = Fallible<Int>(failure: TestError.testCode)
-    let fallibleB = Fallible(success: "a")
+    let fallibleA: Fallible<Int> = .failure(TestError.testCode)
+    let fallibleB: Fallible<String> = .success("a")
     let fallibleResult = zip(fallibleA, fallibleB)
-    XCTAssertEqual(TestError.testCode, fallibleResult.failure as! TestError)
+    XCTAssertEqual(TestError.testCode, fallibleResult.maybeFailure as! TestError)
   }
 
   func testZip2_FailureFailure() {
-    let fallibleA = Fallible<Int>(failure: TestError.testCode)
-    let fallibleB = Fallible<String>(failure: TestError.otherCode)
+    let fallibleA: Fallible<Int> = .failure(TestError.testCode)
+    let fallibleB: Fallible<String> = .failure(TestError.otherCode)
     let fallibleResult = zip(fallibleA, fallibleB)
-    XCTAssertEqual(TestError.testCode, fallibleResult.failure as! TestError)
+    XCTAssertEqual(TestError.testCode, fallibleResult.maybeFailure as! TestError)
   }
 
   func testDescription() {
-    let fallibleA = Fallible(success: 1)
+    let fallibleA: Fallible<Int> = .success(1)
     XCTAssertEqual("success(1)", fallibleA.description)
     XCTAssertEqual("success<Int>(1)", fallibleA.debugDescription)
-    let fallibleB = Fallible<Int>(failure: TestError.testCode)
+    let fallibleB: Fallible<Int> = .failure(TestError.testCode)
     XCTAssertEqual("failure(testCode)", fallibleB.description)
     XCTAssertEqual("failure<Int>(testCode)", fallibleB.debugDescription)
   }

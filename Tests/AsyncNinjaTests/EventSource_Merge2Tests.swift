@@ -44,8 +44,8 @@ class EventSource_Merge2Tests: XCTestCase {
       channelOfNumbers.extractAll().onSuccess {
         let (numbers, stringsOfError) = $0
         XCTAssertEqual(numbers, [1, 3, 2, 4, 5, 6, 7, 8])
-        XCTAssertEqual(stringsOfError.success!.0, "Hello")
-        XCTAssertEqual(stringsOfError.success!.1, "World")
+        XCTAssertEqual(stringsOfError.maybeSuccess!.0, "Hello")
+        XCTAssertEqual(stringsOfError.maybeSuccess!.1, "World")
 
         sema.signal()
       }
@@ -86,8 +86,8 @@ class EventSource_Merge2Tests: XCTestCase {
         for (number, fixture) in zip(numbers, fixtureNumbers) {
           XCTAssert(number == fixture)
         }
-        XCTAssertEqual(stringsOfError.success!.0, "Hello")
-        XCTAssertEqual(stringsOfError.success!.1, "World")
+        XCTAssertEqual(stringsOfError.maybeSuccess!.0, "Hello")
+        XCTAssertEqual(stringsOfError.maybeSuccess!.1, "World")
 
         sema.signal()
       }

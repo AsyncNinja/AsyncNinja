@@ -209,7 +209,7 @@ class ChannelTests: XCTestCase {
 
     producer.extractAll().onSuccess {
       XCTAssertEqual($0.updates, [1, 2, 3, 4, 5])
-      XCTAssertEqual($0.completion.success, "Done")
+      XCTAssertEqual($0.completion.maybeSuccess!, "Done")
       expectation.fulfill()
     }
 
@@ -232,7 +232,7 @@ class ChannelTests: XCTestCase {
 
     producer.extractAll().onSuccess {
       XCTAssertEqual($0.updates, [1, 2, 3, 4, 5])
-      XCTAssertEqual($0.completion.success, "Done")
+      XCTAssertEqual($0.completion.maybeSuccess!, "Done")
       expectation.fulfill()
     }
 
@@ -249,7 +249,7 @@ class ChannelTests: XCTestCase {
 
     producer.extractAll().onSuccess {
       XCTAssertEqual($0.updates, [1, 2, 3, 4, 5])
-      XCTAssertEqual($0.completion.success, "Done")
+      XCTAssertEqual($0.completion.maybeSuccess!, "Done")
       expectation.fulfill()
     }
 

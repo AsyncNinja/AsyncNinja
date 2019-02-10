@@ -43,7 +43,7 @@ class OptionalAdaptorTests: XCTestCase {
       .onSuccess {
         let (updates, completion) = $0
         XCTAssertEqual(updates, [1, 2, 3, 4, 5])
-        XCTAssertEqual(completion.success, "done")
+        XCTAssertEqual(completion.maybeSuccess, "done")
         sema.signal()
     }
 
@@ -64,7 +64,7 @@ class OptionalAdaptorTests: XCTestCase {
       .onSuccess {
         let (updates, completion) = $0
         XCTAssertEqual(updates, [1, 0, 3, 0, 5])
-        XCTAssertEqual(completion.success, "done")
+        XCTAssertEqual(completion.maybeSuccess, "done")
         sema.signal()
     }
 

@@ -436,7 +436,7 @@ public extension EventSource {
       cancellationToken: cancellationToken,
       bufferSize: bufferSize
     ) { (context, value) -> Transformed in
-      let success = try value.liftSuccess()
+      let success = try value.get()
       return try transform(context, success)
     }
   }
@@ -503,7 +503,7 @@ public extension EventSource {
       cancellationToken: cancellationToken,
       bufferSize: bufferSize
     ) { (value) -> Transformed in
-      let transformedValue = try value.liftSuccess()
+      let transformedValue = try value.get()
       return try transform(transformedValue)
     }
   }
@@ -603,19 +603,13 @@ public extension EventSource {
 public extension EventSource where Update: _Fallible {
   /// makes channel of unsafely unwrapped optional Updates
   var unsafelyUnwrapped: Channel<Update.Success, Success> {
-    return map(executor: .immediate) { $0.unsafeSuccess }
+    return map(executor: .immediate) { $0.maybeSuccess! }
   }
 
   /// makes channel of unsafely unwrapped optional Updates
   var unwrapped: Channel<Update.Success, Success> {
     func transform(update: Update) throws -> Update.Success {
-      if let success = update.success {
-        return success
-      } else if let failure = update.failure {
-        throw failure
-      } else {
-        fatalError("callback must return either success or failure")
-      }
+      return try update.get()
     }
 
     return map(executor: .immediate, transform)

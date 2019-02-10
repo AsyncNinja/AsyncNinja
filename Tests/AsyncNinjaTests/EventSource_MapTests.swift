@@ -72,7 +72,7 @@ class EventSource_MapTests: XCTestCase {
       .waitForAll()
 
     XCTAssertEqual(range.map { $0 * 2 }, updates)
-    XCTAssertEqual(success + "!", completion.success)
+    XCTAssertEqual(success + "!", completion.maybeSuccess!)
   }
 
   func testMapEventContextual() {
@@ -95,7 +95,7 @@ class EventSource_MapTests: XCTestCase {
       .waitForAll()
 
     XCTAssertEqual(range.map { $0 * 2 }, updates)
-    XCTAssertEqual(success + "!", completion.success)
+    XCTAssertEqual(success + "!", completion.maybeSuccess!)
   }
 
   func testMap() {
@@ -110,7 +110,7 @@ class EventSource_MapTests: XCTestCase {
       .waitForAll()
 
     XCTAssertEqual(range.map { $0 * 2 }, updates)
-    XCTAssertEqual(success, completion.success)
+    XCTAssertEqual(success, completion.maybeSuccess!)
   }
 
   func testMapContextual() {
@@ -126,7 +126,7 @@ class EventSource_MapTests: XCTestCase {
       .waitForAll()
 
     XCTAssertEqual(range.map { $0 * 2 }, updates)
-    XCTAssertEqual(success, completion.success)
+    XCTAssertEqual(success, completion.maybeSuccess!)
   }
 
   func testFilter() {
@@ -141,7 +141,7 @@ class EventSource_MapTests: XCTestCase {
       .waitForAll()
 
     XCTAssertEqual(range.filter { 0 == $0 % 2 }, updates)
-    XCTAssertEqual(success, completion.success)
+    XCTAssertEqual(success, completion.maybeSuccess!)
   }
 
   func testFilterContextual() {
@@ -157,7 +157,7 @@ class EventSource_MapTests: XCTestCase {
       .waitForAll()
 
     XCTAssertEqual(range.filter { 0 == $0 % 2 }, updates)
-    XCTAssertEqual(success, completion.success)
+    XCTAssertEqual(success, completion.maybeSuccess!)
   }
 
   func testFlatMapArray() {
@@ -172,7 +172,7 @@ class EventSource_MapTests: XCTestCase {
       .waitForAll()
 
     XCTAssertEqual([1, 2, 2, 3, 3, 3, 4, 4, 4, 4], updates)
-    XCTAssertEqual(success, completion.success)
+    XCTAssertEqual(success, completion.maybeSuccess!)
   }
 
   func testFlatMapArrayContextual() {
@@ -188,7 +188,7 @@ class EventSource_MapTests: XCTestCase {
       .waitForAll()
 
     XCTAssertEqual([1, 2, 2, 3, 3, 3, 4, 4, 4, 4], updates)
-    XCTAssertEqual(success, completion.success)
+    XCTAssertEqual(success, completion.maybeSuccess!)
   }
 
   func testFlatMapOptional() {
@@ -203,7 +203,7 @@ class EventSource_MapTests: XCTestCase {
       .waitForAll()
 
     XCTAssertEqual([0, 4, 8], updates)
-    XCTAssertEqual(success, completion.success)
+    XCTAssertEqual(success, completion.maybeSuccess!)
   }
 
   func testFlatMapOptionalContextual() {
@@ -219,6 +219,6 @@ class EventSource_MapTests: XCTestCase {
       .waitForAll()
 
     XCTAssertEqual([0, 4, 8], updates)
-    XCTAssertEqual(success, completion.success)
+    XCTAssertEqual(success, completion.maybeSuccess!)
   }
 }

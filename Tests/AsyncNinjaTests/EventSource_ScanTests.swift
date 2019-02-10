@@ -51,8 +51,8 @@ class EventSource_ScanTests: XCTestCase {
 
       channel.extractAll().onSuccess {
         XCTAssertEqual($0.updates, ["AB", "ABC", "ABCD", "ABCDE", "ABCDEF"])
-        XCTAssertEqual($0.completion.success!.0, "ABCDEF")
-        XCTAssertEqual($0.completion.success!.1, 7)
+        XCTAssertEqual($0.completion.maybeSuccess!.0, "ABCDEF")
+        XCTAssertEqual($0.completion.maybeSuccess!.1, 7)
         sema.signal()
       }
 
@@ -77,8 +77,8 @@ class EventSource_ScanTests: XCTestCase {
 
       channel.extractAll().onSuccess {
         XCTAssertEqual($0.updates, ["AB", "ABC", "ABCD", "ABCDE", "ABCDEF"])
-        XCTAssertEqual($0.completion.success!.0, "ABCDEF")
-        XCTAssertEqual($0.completion.success!.1, 7)
+        XCTAssertEqual($0.completion.maybeSuccess!.0, "ABCDEF")
+        XCTAssertEqual($0.completion.maybeSuccess!.1, 7)
         sema.signal()
       }
 

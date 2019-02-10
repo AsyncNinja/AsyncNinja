@@ -43,7 +43,7 @@ class PerformanceTests: XCTestCase {
     self.measure {
         for value in PerformanceTests.runsRange {
             let futureValue = future(success: value)
-            XCTAssertEqual(futureValue.wait().success, value)
+            XCTAssertEqual(futureValue.wait().maybeSuccess, value)
         }
     }
   }
@@ -52,7 +52,7 @@ class PerformanceTests: XCTestCase {
     self.measure {
       for value in PerformanceTests.runsRange {
         let futureValue = future(success: value).map(executor: .immediate) { $0 * 2 }
-        XCTAssertEqual(futureValue.wait().success, value * 2)
+        XCTAssertEqual(futureValue.wait().maybeSuccess, value * 2)
       }
     }
   }
@@ -61,7 +61,7 @@ class PerformanceTests: XCTestCase {
     self.measure {
       for value in PerformanceTests.runsRange {
         let futureValue = future(success: value).map(executor: .immediate) { _ in throw TestError.testCode }
-        let failure = futureValue.wait().failure as! TestError
+        let failure = futureValue.wait().maybeFailure as! TestError
         XCTAssertEqual(failure, TestError.testCode)
       }
     }
@@ -74,7 +74,7 @@ class PerformanceTests: XCTestCase {
         futureValue = futureValue.map(executor: executor) { $0 + 1 }
       }
 
-      XCTAssertEqual(futureValue.wait().success, PerformanceTests.runsRange.upperBound)
+      XCTAssertEqual(futureValue.wait().maybeSuccess, PerformanceTests.runsRange.upperBound)
     }
   }
 
@@ -93,7 +93,10 @@ class PerformanceTests: XCTestCase {
         futureValue = futureValue.map(executor: .immediate) { $0 + 1 }
       }
 
-      XCTAssertEqual(futureValue.wait().failure as! TestError, TestError.testCode)
+      let result = futureValue.wait()
+      let failure: Swift.Error = result.maybeFailure!
+      let testError = failure as! TestError
+      XCTAssertEqual(testError, TestError.testCode)
     }
   }
 
@@ -106,7 +109,7 @@ class PerformanceTests: XCTestCase {
       let resultValue = PerformanceTests.runsRange
         .map(asyncTransform)
         .asyncReduce(0, +)
-        .wait().success!
+        .wait().maybeSuccess
       let fixture = (PerformanceTests.runsRange.lowerBound + PerformanceTests.runsRange.upperBound - 1)
         * Int64(PerformanceTests.runsRange.count)
       XCTAssertEqual(resultValue, fixture)
@@ -138,7 +141,7 @@ class PerformanceTests: XCTestCase {
 
       let result = zip(result1, result2)
         .map { $0.0 + $0.1 }
-        .wait().success!
+        .wait().maybeSuccess
 
       XCTAssertEqual(result, 360)
     }

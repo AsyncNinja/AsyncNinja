@@ -174,7 +174,7 @@ package "Various Utility Types" {
         ---
 
         func map(_:)
-        func liftSuccess()
+        func get()
         func onSuccess(_:)
         func onFailure(_:)
     }

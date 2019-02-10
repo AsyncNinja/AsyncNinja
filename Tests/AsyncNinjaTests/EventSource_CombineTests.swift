@@ -55,8 +55,8 @@ class EventSource_CombineTests: XCTestCase {
         XCTAssertEqual(resultPair.1, fixturePair.1)
       }
 
-      XCTAssertEqual(stringsOfError.success!.0, "Hello")
-      XCTAssertEqual(stringsOfError.success!.1, "World")
+      XCTAssertEqual(stringsOfError.maybeSuccess!.0, "Hello")
+      XCTAssertEqual(stringsOfError.maybeSuccess!.1, "World")
       expectation.fulfill()
     }
 
@@ -85,7 +85,7 @@ class EventSource_CombineTests: XCTestCase {
       .onSuccess {
         let (updates, completion) = $0
         XCTAssertEqual([4, 5, 6, 7, 8, 9, 10, 11, 13, 14], updates)
-        XCTAssertEqual("Done", completion.success)
+        XCTAssertEqual("Done", completion.maybeSuccess!)
         sema.signal()
     }
 

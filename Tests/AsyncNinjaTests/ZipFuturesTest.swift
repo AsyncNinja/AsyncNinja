@@ -55,9 +55,9 @@ class ZipFuturesTest: XCTestCase {
     let futureA = future(success: valueA)
     let futureB = future(success: valueB)
     let futureAB = zip(futureA, futureB)
-    let valueAB = futureAB.wait().success!
-    XCTAssertEqual(valueAB.0, valueA)
-    XCTAssertEqual(valueAB.1, valueB)
+    let valueAB = futureAB.wait().maybeSuccess
+    XCTAssertEqual(valueAB!.0, valueA)
+    XCTAssertEqual(valueAB!.1, valueB)
   }
 
   func test3Simple() {
@@ -68,10 +68,10 @@ class ZipFuturesTest: XCTestCase {
     let futureB = future(success: valueB)
     let futureC = future(success: valueC)
     let futureABC = zip(futureA, futureB, futureC)
-    let valueABC = futureABC.wait().success!
-    XCTAssertEqual(valueABC.0, valueA)
-    XCTAssertEqual(valueABC.1, valueB)
-    XCTAssertEqual(valueABC.2, valueC)
+    let valueABC = futureABC.wait().maybeSuccess
+    XCTAssertEqual(valueABC!.0, valueA)
+    XCTAssertEqual(valueABC!.1, valueB)
+    XCTAssertEqual(valueABC!.2, valueC)
   }
 
   func test2Delayed() {
@@ -80,7 +80,7 @@ class ZipFuturesTest: XCTestCase {
     let futureA = future(after: 0.2) { valueA }
     let futureB = future(after: 0.3) { valueB }
     let futureAB = zip(futureA, futureB)
-    let valueAB = futureAB.wait().success!
+    let valueAB = futureAB.wait().maybeSuccess!
     XCTAssertEqual(valueAB.0, valueA)
     XCTAssertEqual(valueAB.1, valueB)
   }
@@ -93,7 +93,7 @@ class ZipFuturesTest: XCTestCase {
     let futureB = future(after: 0.3) { valueB }
     let futureC = future(after: 0.4) { valueC }
     let futureABC = zip(futureA, futureB, futureC)
-    let valueABC = futureABC.wait().success!
+    let valueABC = futureABC.wait().maybeSuccess!
     XCTAssertEqual(valueABC.0, valueA)
     XCTAssertEqual(valueABC.1, valueB)
     XCTAssertEqual(valueABC.2, valueC)
@@ -104,7 +104,7 @@ class ZipFuturesTest: XCTestCase {
     let valueB = pickInt()
     let futureA = future(after: 0.2) { valueA }
     let futureAB = zip(futureA, valueB)
-    let valueAB = futureAB.wait().success!
+    let valueAB = futureAB.wait().maybeSuccess!
     XCTAssertEqual(valueAB.0, valueA)
     XCTAssertEqual(valueAB.1, valueB)
   }
@@ -116,7 +116,7 @@ class ZipFuturesTest: XCTestCase {
     let futureA = future(after: 0.2) { valueA }
     let futureB = future(after: 0.3) { valueB }
     let futureABC = zip(futureA, futureB, valueC)
-    let valueABC = futureABC.wait().success!
+    let valueABC = futureABC.wait().maybeSuccess!
     XCTAssertEqual(valueABC.0, valueA)
     XCTAssertEqual(valueABC.1, valueB)
     XCTAssertEqual(valueABC.2, valueC)
@@ -128,7 +128,7 @@ class ZipFuturesTest: XCTestCase {
     let valueC = pickInt()
     let futureA = future(after: 0.2) { valueA }
     let futureABC = zip(futureA, valueB, valueC)
-    let valueABC = futureABC.wait().success!
+    let valueABC = futureABC.wait().maybeSuccess!
     XCTAssertEqual(valueABC.0, valueA)
     XCTAssertEqual(valueABC.1, valueB)
     XCTAssertEqual(valueABC.2, valueC)
@@ -140,7 +140,7 @@ class ZipFuturesTest: XCTestCase {
     let futureA = future(after: 0.4) { valueA }
     let futureB = future(after: 0.2) { throw TestError.testCode  }
     let futureAB = zip(futureA, futureB)
-    XCTAssertEqual(futureAB.wait().failure as! TestError, TestError.testCode)
+    XCTAssertEqual(futureAB.wait().maybeFailure as! TestError, TestError.testCode)
     XCTAssert(DispatchTime.now() > startTime + 0.2)
     XCTAssert(DispatchTime.now() < startTime + 0.4)
   }
@@ -153,7 +153,7 @@ class ZipFuturesTest: XCTestCase {
     let futureB = future(after: 0.3) { throw TestError.testCode  }
     let futureC = future(after: 0.4) { valueC }
     let futureABC = zip(futureA, futureB, futureC)
-    XCTAssertEqual(futureABC.wait().failure as! TestError, TestError.testCode)
+    XCTAssertEqual(futureABC.wait().maybeFailure as! TestError, TestError.testCode)
     let finishTime = DispatchTime.now()
     XCTAssert(finishTime > startTime + 0.2)
     XCTAssert(finishTime < startTime + 0.4)
@@ -218,45 +218,45 @@ class ZipFuturesTest: XCTestCase {
   func testMerge2OfSameTypeFirst() {
     let futureA: Future<String> = future(after: 0.1) { return "Right" }
     let futureB: Future<String> = future(after: 0.3) { return "Wrong" }
-    XCTAssertEqual(merge(futureA, futureB).wait().success, "Right")
+    XCTAssertEqual(merge(futureA, futureB).wait().maybeSuccess!, "Right")
   }
 
   func testMerge2OfSameTypeSecond() {
     let futureA: Future<String> = future(after: 0.3) { return "Wrong" }
     let futureB: Future<String> = future(after: 0.1) { return "Right" }
-    XCTAssertEqual(merge(futureA, futureB).wait().success, "Right")
+    XCTAssertEqual(merge(futureA, futureB).wait().maybeSuccess!, "Right")
   }
 
   func testMerge3OfSameTypeFirst() {
     let futureA: Future<String> = future(after: 0.1) { return "Right" }
     let futureB: Future<String> = future(after: 0.3) { return "Wrong" }
     let futureC: Future<String> = future(after: 0.5) { return "Wrong 2" }
-    XCTAssertEqual(merge(futureA, futureB, futureC).wait().success, "Right")
+    XCTAssertEqual(merge(futureA, futureB, futureC).wait().maybeSuccess!, "Right")
   }
 
   func testMerge3OfSameTypeSecond() {
     let futureA: Future<String> = future(after: 0.3) { return "Wrong" }
     let futureB: Future<String> = future(after: 0.1) { return "Right" }
     let futureC: Future<String> = future(after: 0.5) { return "Wrong 2" }
-    XCTAssertEqual(merge(futureA, futureB, futureC).wait().success, "Right")
+    XCTAssertEqual(merge(futureA, futureB, futureC).wait().maybeSuccess!, "Right")
   }
 
   func testMerge3OfSameTypeThird() {
     let futureA: Future<String> = future(after: 0.3) { return "Wrong" }
     let futureB: Future<String> = future(after: 0.5) { return "Wrong 2" }
     let futureC: Future<String> = future(after: 0.1) { return "Right" }
-    XCTAssertEqual(merge(futureA, futureB, futureC).wait().success, "Right")
+    XCTAssertEqual(merge(futureA, futureB, futureC).wait().maybeSuccess!, "Right")
   }
 
   func testMerge2OfDifferentTypeFirst() {
     let futureA: Future<String> = future(after: 0.1) { return "Right" }
     let futureB: Future<Int> = future(after: 0.3) { return 0xbad }
-    XCTAssert(merge(futureA, futureB).wait().success! == .left("Right"))
+    XCTAssert(merge(futureA, futureB).wait().maybeSuccess! == .left("Right"))
   }
 
   func testMerge2OfDifferentTypeSecond() {
     let futureA: Future<Int> = future(after: 0.3) { return 0xbad }
     let futureB: Future<String> = future(after: 0.1) { return "Right" }
-    XCTAssert(merge(futureA, futureB).wait().success! == .right("Right"))
+    XCTAssert(merge(futureA, futureB).wait().maybeSuccess! == .right("Right"))
   }
 }

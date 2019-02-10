@@ -45,7 +45,7 @@ class ExecutionContextTests: XCTestCase {
         return "\(value) to"
     }
 
-    XCTAssertEqual(halfOfFutureValue.wait().success!, "Hello to")
+    XCTAssertEqual(halfOfFutureValue.wait().maybeSuccess, "Hello to")
     let fullFutureValue = halfOfFutureValue
       .delayed(timeout: 0.1)
       .map(context: object!) { (object, value) -> String in
@@ -54,7 +54,7 @@ class ExecutionContextTests: XCTestCase {
     }
     object = nil
 
-    let failure = fullFutureValue.wait().failure
+    let failure = fullFutureValue.wait().maybeFailure
     XCTAssertNotNil(failure)
     XCTAssertEqual(failure as! AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }

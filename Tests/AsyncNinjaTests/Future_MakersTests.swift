@@ -157,7 +157,7 @@ class Future_MakersTests: XCTestCase {
 
     sema.wait()
     mysleep(0.1)
-    XCTAssertEqual(futureValue?.wait().failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
+    XCTAssertEqual(futureValue?.wait().maybeFailure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
   func testMakeFutureOfContextualFallibleBlock_Failure_ContextAlive() {
@@ -286,7 +286,7 @@ class Future_MakersTests: XCTestCase {
     XCTAssertNil(futureValue.value)
     actor = nil
 
-    XCTAssertEqual(futureValue.wait(seconds: 0.5)?.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
+    XCTAssertEqual(futureValue.wait(seconds: 0.5)?.maybeFailure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 
   func testMakeFutureOfDelayedContextualFallibleBlock_Failure_EarlyContextDead() {

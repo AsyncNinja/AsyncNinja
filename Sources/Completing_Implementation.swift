@@ -29,11 +29,11 @@ public extension Completing {
 
   /// Shorthand property that returns success
   /// if `Completing` is completed with success or nil otherwise
-  var success: Success? { return self.completion?.success }
+  var success: Success? { return self.completion?.maybeSuccess }
 
   /// Shorthand property that returns failure value
   /// if `Completing` is completed with failure or nil otherwise
-  var failure: Swift.Error? { return self.completion?.failure }
+  var failure: Swift.Error? { return self.completion?.maybeFailure }
 }
 
 public extension Completing {
@@ -144,8 +144,11 @@ public extension Completing {
       context: context,
       executor: executor
     ) { (context, completion) in
-      if let success = completion.success {
+      switch completion {
+      case let .success(success):
         block(context, success)
+      case .failure:
+        break
       }
     }
   }
@@ -158,7 +161,10 @@ public extension Completing {
     ) -> Self {
     return onComplete(context: context, executor: executor
     ) { (context, completion) in
-      if let failure = completion.failure {
+      switch completion {
+      case .success:
+        break
+      case let .failure(failure):
         block(context, failure)
       }
     }

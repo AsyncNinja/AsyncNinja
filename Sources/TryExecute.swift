@@ -321,7 +321,7 @@ private func _tryFlatExecute<T>(
       promise.value?._asyncNinja_retainHandlerUntilFinalization(handler)
 
     } catch {
-      let completion = Fallible<T>(failure: error)
+      let completion: Fallible<T> = .failure(error)
       let isValid: Bool
       lockingBox.value.lock()
       isValid = validate(completion)

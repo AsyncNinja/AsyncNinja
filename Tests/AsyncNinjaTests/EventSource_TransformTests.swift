@@ -48,7 +48,7 @@ class EventSource_TransformTests: XCTestCase {
     derivedProducer.extractAll().onSuccess {
       let (numbers, stringOrError) = $0
       XCTAssertEqual([1, 6, 9, 12], numbers)
-      XCTAssertEqual("Finished!", stringOrError.success!)
+      XCTAssertEqual("Finished!", stringOrError.maybeSuccess)
       expectation.fulfill()
     }
 
@@ -83,7 +83,7 @@ class EventSource_TransformTests: XCTestCase {
     updatable.distinct().extractAll().onSuccess {
       let (updates, completion) = $0
       XCTAssertEqual(updates, [1, 2, 3, 4, 5, 6, 7])
-      XCTAssertEqual(completion.success, "done")
+      XCTAssertEqual(completion.maybeSuccess, "done")
       expectation.fulfill()
     }
 
@@ -107,7 +107,7 @@ class EventSource_TransformTests: XCTestCase {
       for (update, result) in zip(updates, assumedResults) {
         XCTAssertEqual(update, result)
       }
-      XCTAssertEqual(completion.success, "done")
+      XCTAssertEqual(completion.maybeSuccess, "done")
       expectation.fulfill()
     }
 
@@ -131,7 +131,7 @@ class EventSource_TransformTests: XCTestCase {
       for (update, result) in zip(updates, assumedResults) {
         XCTAssert(update == result)
       }
-      XCTAssertEqual(completion.success, "done")
+      XCTAssertEqual(completion.maybeSuccess, "done")
       expectation.fulfill()
     }
 
@@ -156,7 +156,7 @@ class EventSource_TransformTests: XCTestCase {
         for (update, result) in zip(updates, assumedResults) {
           XCTAssert(update == result)
         }
-        XCTAssertEqual(completion.success, "done")
+        XCTAssertEqual(completion.maybeSuccess, "done")
         expectation.fulfill()
       }
 
@@ -186,7 +186,7 @@ class EventSource_TransformTests: XCTestCase {
         for (update, result) in zip(updates, assumedResults) {
           XCTAssert(update == result)
         }
-        XCTAssertEqual(completion.success, "done")
+        XCTAssertEqual(completion.maybeSuccess, "done")
         expectation.fulfill()
       }
 
@@ -216,7 +216,7 @@ class EventSource_TransformTests: XCTestCase {
           let (updates, completion) = $0
 
           XCTAssertEqual([2, 3, 4, 5, 6], updates)
-          XCTAssertEqual("Done", completion.success)
+          XCTAssertEqual("Done", completion.maybeSuccess)
           sema.signal()
       }
 
@@ -235,7 +235,7 @@ class EventSource_TransformTests: XCTestCase {
           let (updates, completion) = $0
 
           XCTAssertEqual([0, 1, 7, 8, 9], updates)
-          XCTAssertEqual("Done", completion.success)
+          XCTAssertEqual("Done", completion.maybeSuccess)
           sema.signal()
       }
 

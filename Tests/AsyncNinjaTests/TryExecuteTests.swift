@@ -50,7 +50,7 @@ class TryExecuteTests: XCTestCase {
       return "hello"
       }
       .wait()
-      .success
+      .maybeSuccess
     XCTAssertEqual(result, "hello")
     XCTAssertEqual(items, [1, 2, 3, 4])
   }
@@ -64,7 +64,7 @@ class TryExecuteTests: XCTestCase {
       return "hello"
       }
       .wait()
-      .success
+      .maybeSuccess
     XCTAssertEqual(result, "hello")
     XCTAssertEqual(items, [])
   }
@@ -79,7 +79,7 @@ class TryExecuteTests: XCTestCase {
       items.removeLast()
       return "hello" } }
       .wait()
-      .success
+      .maybeSuccess
     XCTAssertEqual(result, "hello")
     XCTAssertEqual(items, [1, 2, 3, 4])
   }
@@ -92,7 +92,7 @@ class TryExecuteTests: XCTestCase {
       items.removeLast()
       return "hello" } }
       .wait()
-      .success
+      .maybeSuccess
     XCTAssertEqual(result, "hello")
     XCTAssertEqual(items, [])
   }
@@ -110,10 +110,10 @@ class TryExecuteTests: XCTestCase {
 
     let result = tryExecute(times: 3) { () -> String in
       items.removeLast()
-      return try completions.removeFirst().liftSuccess()
+      return try completions.removeFirst().get()
       }
       .wait()
-      .success
+      .maybeSuccess
     XCTAssertEqual(result, "hello")
     XCTAssertEqual(items, [1, 2])
   }
@@ -130,10 +130,10 @@ class TryExecuteTests: XCTestCase {
 
     let result = tryExecute(times: 3) { () -> String in
       items.removeLast()
-      return try completions.removeFirst().liftSuccess()
+      return try completions.removeFirst().get()
       }
       .wait()
-      .failure
+      .maybeFailure
     XCTAssertEqual(result as? TestError, TestError.testCode)
     XCTAssertEqual(items, [1, 2])
   }
@@ -151,10 +151,10 @@ class TryExecuteTests: XCTestCase {
 
     let result = tryFlatExecute(times: 3) { () -> Future<String> in
       items.removeLast()
-      return future(after: 0.1) { try completions.removeFirst().liftSuccess() }
+      return future(after: 0.1) { try completions.removeFirst().get() }
       }
       .wait()
-      .success
+      .maybeSuccess
     XCTAssertEqual(result, "hello")
     XCTAssertEqual(items, [1, 2])
   }
@@ -171,10 +171,10 @@ class TryExecuteTests: XCTestCase {
 
     let result = tryFlatExecute(times: 3) { () -> Future<String> in
       items.removeLast()
-      return future(after: 0.1) { try completions.removeFirst().liftSuccess() }
+      return future(after: 0.1) { try completions.removeFirst().get() }
       }
       .wait()
-      .failure
+      .maybeFailure
     XCTAssertEqual(result as? TestError, TestError.testCode)
     XCTAssertEqual(items, [1, 2])
   }

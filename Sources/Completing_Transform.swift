@@ -171,7 +171,12 @@ public extension Completing {
     _ transform: @escaping (_ success: Success) throws -> T
     ) -> Future<T> {
     return mapCompletion(executor: executor, pure: pure) {
-      try transform(try $0.liftSuccess())
+      switch $0 {
+      case let .success(success):
+        return try transform(success)
+      case let .failure(failure):
+        throw failure
+      }
     }
   }
 
@@ -483,7 +488,7 @@ public extension Completing {
       executor: executor,
       pure: pure
     ) { (context, value) -> Transformed in
-      let success = try value.liftSuccess()
+      let success = try value.get()
       return try transform(context, success)
     }
   }
