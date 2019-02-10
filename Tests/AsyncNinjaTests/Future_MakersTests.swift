@@ -225,17 +225,17 @@ class Future_MakersTests: XCTestCase {
     var actor: TestActor? = TestActor()
     let value = pickInt()
 
-    let futureValue = future(context: actor!, after: 0.2) { (actor) -> Int in
+    let futureValue = future(context: actor!, after: 0.5) { (actor) -> Int in
       XCTFail()
       assert(actor: actor)
       return try square_success(value)
     }
 
-    mysleep(0.15)
+    mysleep(0.2)
     XCTAssertNil(futureValue.value)
     actor = nil
 
-    mysleep(0.25)
+    mysleep(1.0)
     XCTAssertEqual(futureValue.failure as? AsyncNinjaError, AsyncNinjaError.contextDeallocated)
   }
 

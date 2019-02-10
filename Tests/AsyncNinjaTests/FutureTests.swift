@@ -399,18 +399,10 @@ class FutureTests: XCTestCase {
 
   func testFlatten_OuterFailure() {
     func fail() throws -> Future<Int> { throw AsyncNinjaError.cancelled }
-    let startTime = DispatchTime.now()
-    let timeout = startTime + 0.4
-    let future3D = future(after: 0.2) { try fail() }
+    let future3D = future(executor: .default) { try fail() }
     let future2D = future3D.flatten()
-    if let failable = future2D.wait(timeout: timeout) {
-      XCTAssertEqual(failable.failure! as? AsyncNinjaError, AsyncNinjaError.cancelled)
-      let finishTime = DispatchTime.now()
-      XCTAssert(startTime + 0.1 < finishTime)
-      XCTAssert(startTime + 0.3 > finishTime)
-    } else {
-      XCTFail("timeout")
-    }
+    let failable = future2D.wait()
+    XCTAssertEqual(failable.failure! as? AsyncNinjaError, AsyncNinjaError.cancelled)
   }
 
   func testFlatten_InnerFailure() {
