@@ -261,8 +261,13 @@ class FallibleTests: XCTestCase {
     XCTAssertEqual("success(1)", fallibleA.description)
     XCTAssertEqual("success<Int>(1)", fallibleA.debugDescription)
     let fallibleB: Fallible<Int> = .failure(TestError.testCode)
+    #if swift(>=5.0)
+    XCTAssertEqual("failure(TestError)", fallibleB.description)
+    XCTAssertEqual("failure<Int>(TestError)", fallibleB.debugDescription)
+    #else
     XCTAssertEqual("failure(testCode)", fallibleB.description)
     XCTAssertEqual("failure<Int>(testCode)", fallibleB.debugDescription)
+    #endif
   }
 }
 

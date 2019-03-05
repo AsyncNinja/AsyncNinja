@@ -491,8 +491,13 @@ class FutureTests: XCTestCase {
     XCTAssertEqual("Succeded(1) Future<Int>", futureA.debugDescription)
 
     let futureB: Future<Int> = .failed(TestError.testCode)
+    #if swift(>=5.0)
+    XCTAssertEqual("Failed(TestError) Future", futureB.description)
+    XCTAssertEqual("Failed(TestError) Future<Int>", futureB.debugDescription)
+    #else
     XCTAssertEqual("Failed(testCode) Future", futureB.description)
     XCTAssertEqual("Failed(testCode) Future<Int>", futureB.debugDescription)
+    #endif
 
     let futureC = Promise<Int>()
     XCTAssertEqual("Incomplete Future", futureC.description)
