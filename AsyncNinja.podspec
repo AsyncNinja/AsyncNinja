@@ -1,9 +1,9 @@
 Pod::Spec.new do |s|
 
   s.name                = 'AsyncNinja'
-  s.version             = '1.3.2'
+  s.version             = '1.4.0'
   s.summary             = 'A complete set of primitives for concurrency and reactive programming on Swift'
-  s.homepage            = 'http://async.ninja'
+  s.homepage            = 'https://async.ninja'
   s.license             = { :type => 'MIT', :file => 'LICENSE' }
   s.author              = { 'Anton Mironov' => 'antonvmironov@gmail.com' }
   s.social_media_url    = 'https://twitter.com/AntonMironov'
