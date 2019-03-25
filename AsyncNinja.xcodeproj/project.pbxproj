@@ -19,6 +19,7 @@
 		B8C99AC31F5C742000E16257 /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C99AC21F5C742000E16257 /* Box.swift */; };
 		B8DC12851ED093CF0099893A /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DC12831ED093C60099893A /* PerformanceTests.swift */; };
 		E6B9399322496ACE0099B75A /* Producer_makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B9399222496ACE0099B75A /* Producer_makers.swift */; };
+		E6B9399522496E5C0099B75A /* Promise_makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B9399422496E5C0099B75A /* Promise_makers.swift */; };
 		F812B7A421DEDC4E00571A07 /* Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A321DEDC4E00571A07 /* Debug.swift */; };
 		F812B7A621DEE6DC00571A07 /* appleOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A521DEE6DC00571A07 /* appleOSTests.swift */; };
 		F812B7A821DEE91200571A07 /* macOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A721DEE91200571A07 /* macOSTests.swift */; };
@@ -133,6 +134,7 @@
 		B8C99AC21F5C742000E16257 /* Box.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
 		B8DC12831ED093C60099893A /* PerformanceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
 		E6B9399222496ACE0099B75A /* Producer_makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Producer_makers.swift; sourceTree = "<group>"; };
+		E6B9399422496E5C0099B75A /* Promise_makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Promise_makers.swift; sourceTree = "<group>"; };
 		F812B7A321DEDC4E00571A07 /* Debug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debug.swift; sourceTree = "<group>"; };
 		F812B7A521DEE6DC00571A07 /* appleOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOSTests.swift; sourceTree = "<group>"; };
 		F812B7A721DEE91200571A07 /* macOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macOSTests.swift; sourceTree = "<group>"; };
@@ -360,8 +362,10 @@
 				OBJ_47 /* OptionalAdaptor.swift */,
 				B87EC5CB1F6D565900ABBBE8 /* Queue.swift */,
 				OBJ_48 /* Producer.swift */,
+				E6B9399222496ACE0099B75A /* Producer_makers.swift */,
 				OBJ_49 /* ProducerProxy.swift */,
 				OBJ_50 /* Promise.swift */,
+				E6B9399422496E5C0099B75A /* Promise_makers.swift */,
 				OBJ_52 /* ReleasePool.swift */,
 				B8B520231EBF2F54006C27DA /* Sequence_AsyncFlatMap.swift */,
 				OBJ_53 /* Sequence_AsyncMap.swift */,
@@ -375,7 +379,6 @@
 				OBJ_58 /* watchOS.swift */,
 				OBJ_59 /* Zip2Futures.swift */,
 				OBJ_60 /* Zip3Futures.swift */,
-				E6B9399222496ACE0099B75A /* Producer_makers.swift */,
 			);
 			path = Sources;
 			sourceTree = SOURCE_ROOT;
@@ -581,6 +584,7 @@
 				B87EC5CC1F6D565900ABBBE8 /* Queue.swift in Sources */,
 				OBJ_140 /* Sequence_AsyncMap.swift in Sources */,
 				B8B520261EBF3287006C27DA /* Sequence_AsyncReduce.swift in Sources */,
+				E6B9399522496E5C0099B75A /* Promise_makers.swift in Sources */,
 				OBJ_141 /* Sink.swift in Sources */,
 				OBJ_143 /* TimerChannel.swift in Sources */,
 				OBJ_144 /* Util.swift in Sources */,
