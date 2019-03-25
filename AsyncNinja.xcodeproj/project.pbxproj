@@ -18,6 +18,7 @@
 		B8B520261EBF3287006C27DA /* Sequence_AsyncReduce.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B520251EBF3287006C27DA /* Sequence_AsyncReduce.swift */; };
 		B8C99AC31F5C742000E16257 /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C99AC21F5C742000E16257 /* Box.swift */; };
 		B8DC12851ED093CF0099893A /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DC12831ED093C60099893A /* PerformanceTests.swift */; };
+		E6B9399322496ACE0099B75A /* Producer_makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B9399222496ACE0099B75A /* Producer_makers.swift */; };
 		F812B7A421DEDC4E00571A07 /* Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A321DEDC4E00571A07 /* Debug.swift */; };
 		F812B7A621DEE6DC00571A07 /* appleOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A521DEE6DC00571A07 /* appleOSTests.swift */; };
 		F812B7A821DEE91200571A07 /* macOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A721DEE91200571A07 /* macOSTests.swift */; };
@@ -131,6 +132,7 @@
 		B8B520251EBF3287006C27DA /* Sequence_AsyncReduce.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sequence_AsyncReduce.swift; sourceTree = "<group>"; };
 		B8C99AC21F5C742000E16257 /* Box.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
 		B8DC12831ED093C60099893A /* PerformanceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
+		E6B9399222496ACE0099B75A /* Producer_makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Producer_makers.swift; sourceTree = "<group>"; };
 		F812B7A321DEDC4E00571A07 /* Debug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debug.swift; sourceTree = "<group>"; };
 		F812B7A521DEE6DC00571A07 /* appleOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOSTests.swift; sourceTree = "<group>"; };
 		F812B7A721DEE91200571A07 /* macOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macOSTests.swift; sourceTree = "<group>"; };
@@ -373,6 +375,7 @@
 				OBJ_58 /* watchOS.swift */,
 				OBJ_59 /* Zip2Futures.swift */,
 				OBJ_60 /* Zip3Futures.swift */,
+				E6B9399222496ACE0099B75A /* Producer_makers.swift */,
 			);
 			path = Sources;
 			sourceTree = SOURCE_ROOT;
@@ -520,6 +523,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				E6B9399322496ACE0099B75A /* Producer_makers.swift in Sources */,
 				OBJ_95 /* appleOS.swift in Sources */,
 				OBJ_96 /* appleOS_CoreData.swift in Sources */,
 				OBJ_97 /* appleOS_ExecutionContext.swift in Sources */,
