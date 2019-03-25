@@ -343,48 +343,6 @@ class ChannelTests: XCTestCase {
     majorActor.value = 7
     test(value: 7)
   }
-    
-  func testFlatMap() {
-    let future2seconds = future(executor: Executor.background) {
-      print("\(timeStr()): begin")
-      sleep(2)
-      print("\(timeStr()): end")
-    }
-    
-    let timeStart = Date()
-    
-    let event = Producer<Void,Void>()
-    
-    let start = event
-    let end = event.flatMap { future2seconds }
-    
-    let inProgress = merge(channels: [start.map { _ in true }, end.map { _ in false }])
-    
-    inProgress
-      .onUpdate { print("\(timeStr()): in progress: \($0)") }
-      .onUpdate { if $0 == false {
-        let timeFromStart = Date().timeIntervalSince(timeStart)
-        print("timeFromStart \(timeFromStart)")
-        XCTAssert(timeFromStart > 1.5)
-        }
-    }
-    
-    event.update(())
-    
-    sleep(3)
-  }
-}
-
-func timeStr() -> String {
-  return AsyncNinjaConstants.debugDateFormatter.string(from: Date())
-}
-
-func merge<Update,Success>(channels: [Channel<Update,Success>]) -> Channel<Update,Void> {
-  return channel(executor: Executor.primary) { (producer : Producer<Update,Void>) -> Void in
-    for ch in channels {
-      ch.bind(producer)
-    }
-  }
 }
 
 private class DoubleBindTestActor<T>: TestActor {
