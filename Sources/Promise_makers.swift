@@ -9,7 +9,7 @@ import Foundation
 
 public func promise<T>(
   executor: Executor = .immediate,
-  after timeout: Double,
+  after timeout: Double = 0,
   cancellationToken: CancellationToken?,
   _ block: @escaping (_ promise: Promise<T>) throws -> Void) -> Promise<T> {
   let promise = Promise<T>()
@@ -31,7 +31,7 @@ public func promise<T>(
 public func promise<C: ExecutionContext, T>(
   context: C,
   executor: Executor? = nil,
-  after timeout: Double,
+  after timeout: Double = 0,
   cancellationToken: CancellationToken?,
   _ block: @escaping (_ promise: Promise<T>) throws -> Void) -> Promise<T> {
   
