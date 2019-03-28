@@ -33,12 +33,13 @@ public func promise<C: ExecutionContext, T>(
   executor: Executor? = nil,
   after timeout: Double = 0,
   cancellationToken: CancellationToken? = nil,
-  _ block: @escaping (_ promise: Promise<T>) throws -> Void) -> Promise<T> {
+  _ block: @escaping (_ context: C, _ promise: Promise<T>) throws -> Void) -> Promise<T> {
   
   return promise(executor: executor ?? context.executor,
                  after: timeout,
                  cancellationToken: cancellationToken) { promise in
+                  
                   context.addDependent(cancellable: promise)
-                  try block(promise)
+                  try block(context, promise)
   }
 }
