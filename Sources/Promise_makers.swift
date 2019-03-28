@@ -2,11 +2,14 @@
 //  Promise_makers.swift
 //  AsyncNinja
 //
-//  Created by Loki on 3/25/19.
+//  Created by Sergiy Vynnychenko on 3/25/19.
 //
 
 import Foundation
 
+// MARK: -
+/// Convenience constructor of Promise
+/// Gives an access to an underlying Promise to a provided block
 public func promise<T>(
   executor: Executor = .immediate,
   after timeout: Double = 0,
@@ -28,6 +31,9 @@ public func promise<T>(
   return promise
 }
 
+// MARK: -
+/// Convenience constructor of Promise
+/// Gives an access to an underlying Promise to a provided block
 public func promise<C: ExecutionContext, T>(
   context: C,
   executor: Executor? = nil,

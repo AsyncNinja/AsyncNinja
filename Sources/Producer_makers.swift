@@ -2,7 +2,7 @@
 //  Producer_makers.swift
 //  AsyncNinja
 //
-//  Created by Loki on 3/25/19.
+//  Created by Sergiy Vynnychenko on 3/25/19.
 //
 
 import Dispatch
