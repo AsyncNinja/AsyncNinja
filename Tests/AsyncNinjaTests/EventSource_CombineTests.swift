@@ -102,4 +102,36 @@ class EventSource_CombineTests: XCTestCase {
     source.succeed("Done")
     sema.wait()
   }
+  
+  func testCombineLatest() {
+    
+    let source1 = Producer<String, String>()
+    let source2 = Producer<String, String>()
+    
+    var expectations = [["src1_upd2","src2_upd2"],
+                        ["src1_upd2","src2_upd1"],
+                        ["src1_upd1","src2_upd1"]]  // last is first
+    
+    combineLatestUpdates(source1, source2, executor: Executor.immediate)
+      .onUpdate() { upd in
+        guard let last = expectations.popLast() else { return }
+        XCTAssertEqual(last, [upd.0, upd.1])
+      }
+      .onSuccess() { success in
+        XCTAssertEqual([success.0,success.1], ["success1","success2"])
+      }
+    
+    source1.update("src1_upd1", from: Executor.immediate)
+    source2.update("src2_upd1", from: Executor.immediate)
+    
+    source1.update("src1_upd2", from: Executor.immediate)
+    
+    source2.update("src2_upd2", from: Executor.immediate)
+    
+    
+    source1.succeed("success1", from: Executor.immediate)
+    source2.succeed("success2", from: Executor.immediate)
+    
+    XCTAssert(expectations.count == 0)
+  }
 }
