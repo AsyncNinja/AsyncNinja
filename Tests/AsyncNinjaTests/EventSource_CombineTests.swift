@@ -104,6 +104,7 @@ class EventSource_CombineTests: XCTestCase {
   }
   
   func testCombineLatest() {
+    let actor = TestActor()
     
     let source1 = Producer<String, String>()
     let source2 = Producer<String, String>()
@@ -112,7 +113,7 @@ class EventSource_CombineTests: XCTestCase {
                         ["src1_upd2","src2_upd1"],
                         ["src1_upd1","src2_upd1"]]  // last is first
     
-    combineLatestUpdates(source1, source2, executor: Executor.immediate)
+    actor.combineLatest(source1, source2, executor: Executor.immediate)
       .onUpdate() { upd in
         guard let last = expectations.popLast() else { return }
         XCTAssertEqual(last, [upd.0, upd.1])
