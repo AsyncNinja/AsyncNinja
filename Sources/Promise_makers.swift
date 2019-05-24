@@ -7,7 +7,7 @@
 
 import Foundation
 
-// MARK: -
+// MARK: - promise
 /// Convenience constructor of Promise
 /// Gives an access to an underlying Promise to a provided block
 public func promise<T>(
@@ -31,21 +31,21 @@ public func promise<T>(
   return promise
 }
 
-// MARK: -
-/// Convenience constructor of Promise
-/// Gives an access to an underlying Promise to a provided block
-public func promise<C: ExecutionContext, T>(
-  context: C,
-  executor: Executor? = nil,
-  after timeout: Double = 0,
-  cancellationToken: CancellationToken? = nil,
-  _ block: @escaping (_ context: C, _ promise: Promise<T>) throws -> Void) -> Promise<T> {
-  
-  return promise(executor: executor ?? context.executor,
-                 after: timeout,
-                 cancellationToken: cancellationToken) { promise in
-                  
-                  context.addDependent(cancellable: promise)
-                  try block(context, promise)
-  }
+public extension ExecutionContext {
+  // MARK: - ExecutionContext.promise()
+  /// Convenience constructor of Promise
+  /// Gives an access to an underlying Promise to a provided block
+  func promise<T>(executor: Executor? = nil,
+               after timeout: Double = 0,
+               cancellationToken: CancellationToken? = nil,
+               _ block: @escaping (_ context: Self, _ promise: Promise<T>) throws -> Void) -> Promise<T> {
+    
+    return AsyncNinja.promise(executor: executor ?? self.executor, after: timeout, cancellationToken: cancellationToken)
+      { [weak self] promise  in
+        guard let _self = self else { return }
+        _self.addDependent(cancellable: promise)
+        try block(_self, promise)
+      }
+    }
 }
+
