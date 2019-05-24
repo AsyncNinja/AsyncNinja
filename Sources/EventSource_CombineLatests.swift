@@ -10,6 +10,9 @@ import Foundation
 public typealias ES = EventSource
 
 public extension ExecutionContext {
+  // MARK: - combineLatest2
+  /// Combines 2 recent updates into tuple
+  /// You can pass custom executor or use default from Context
   func combineLatest<ES1:ES, ES2:ES>(_ es1: ES1, _ es2: ES2, executor: Executor? = nil)
     -> Channel<(ES1.Update,ES2.Update),(ES1.Success, ES2.Success)> {
       
@@ -18,6 +21,9 @@ public extension ExecutionContext {
         .producer
   }
   
+  // MARK: - combineLatest3
+  /// Combines recent 3 updates into tuple
+  /// You can pass custom executor or use default from Context
   func combineLatest<ES1:ES, ES2:ES, ES3:ES>(_ es1: ES1, _ es2: ES2, _ es3: ES3, executor: Executor? = nil)
     -> Channel<(ES1.Update,ES2.Update,ES3.Update),(ES1.Success, ES2.Success, ES3.Success)> {
       
@@ -26,6 +32,9 @@ public extension ExecutionContext {
         .producer
   }
   
+  // MARK: - combineLatest4
+  /// Combines recent 3 updates into tuple
+  /// You can pass custom executor or use default from Context
   func combineLatest<ES1:ES, ES2:ES, ES3:ES, ES4:ES>(_ es1: ES1, _ es2: ES2, _ es3: ES3, _ es4: ES4, executor: Executor? = nil)
     -> Channel<(ES1.Update,ES2.Update,ES3.Update,ES4.Update),(ES1.Success, ES2.Success, ES3.Success, ES4.Success)> {
       
