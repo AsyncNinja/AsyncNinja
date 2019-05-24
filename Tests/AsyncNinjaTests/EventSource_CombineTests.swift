@@ -171,4 +171,44 @@ class EventSource_CombineTests: XCTestCase {
     
     XCTAssert(expectations.count == 0)
   }
+  
+  func testCombineLatest4() {
+    let actor = TestActor()
+    
+    let source1 = Producer<Int, Int>()
+    let source2 = Producer<Int, Int>()
+    let source3 = Producer<Int, Int>()
+    let source4 = Producer<Int, Int>()
+    
+    var expectations = [[1,1,2,2],
+                        [1,1,1,2],
+                        [1,1,1,1]]  // last is first
+    
+    actor.combineLatest(source1, source2, source3, source4, executor: Executor.immediate)
+      .onUpdate() { upd in
+        guard let last = expectations.popLast() else { return }
+        XCTAssertEqual(last, [upd.0, upd.1, upd.2, upd.3])
+      }
+      .onSuccess() { success in
+        XCTAssertEqual([success.0,success.1,success.2,success.3], [1,2,3,4])
+    }
+    
+    source1.update(1, from: Executor.immediate)
+    source2.update(1, from: Executor.immediate)
+    source3.update(1, from: Executor.immediate)
+    source4.update(1, from: Executor.immediate)
+    
+    source4.update(2, from: Executor.immediate)
+    
+    source3.update(2, from: Executor.immediate)
+    
+    
+    source1.succeed(1, from: Executor.immediate)
+    source2.succeed(2, from: Executor.immediate)
+    source3.succeed(3, from: Executor.immediate)
+    source3.succeed(4, from: Executor.immediate)
+    
+    
+    XCTAssert(expectations.count == 0)
+  }
 }
