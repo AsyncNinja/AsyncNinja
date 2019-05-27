@@ -19,6 +19,8 @@
 		B8C99AC31F5C742000E16257 /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C99AC21F5C742000E16257 /* Box.swift */; };
 		B8DC12851ED093CF0099893A /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DC12831ED093C60099893A /* PerformanceTests.swift */; };
 		E614657A22968BD5001EC0C0 /* EventSource_CombineLatests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E614657922968BD5001EC0C0 /* EventSource_CombineLatests.swift */; };
+		E6555C11229C0AB50086E214 /* EventSource_Concat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6555C10229C0AB50086E214 /* EventSource_Concat.swift */; };
+		E6555C13229C357F0086E214 /* EventSource_StartWith.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6555C12229C357F0086E214 /* EventSource_StartWith.swift */; };
 		E6B9399322496ACE0099B75A /* Producer_makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B9399222496ACE0099B75A /* Producer_makers.swift */; };
 		E6B9399522496E5C0099B75A /* Promise_makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B9399422496E5C0099B75A /* Promise_makers.swift */; };
 		F812B7A421DEDC4E00571A07 /* Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A321DEDC4E00571A07 /* Debug.swift */; };
@@ -135,6 +137,8 @@
 		B8C99AC21F5C742000E16257 /* Box.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
 		B8DC12831ED093C60099893A /* PerformanceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
 		E614657922968BD5001EC0C0 /* EventSource_CombineLatests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_CombineLatests.swift; sourceTree = "<group>"; };
+		E6555C10229C0AB50086E214 /* EventSource_Concat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Concat.swift; sourceTree = "<group>"; };
+		E6555C12229C357F0086E214 /* EventSource_StartWith.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_StartWith.swift; sourceTree = "<group>"; };
 		E6B9399222496ACE0099B75A /* Producer_makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Producer_makers.swift; sourceTree = "<group>"; };
 		E6B9399422496E5C0099B75A /* Promise_makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Promise_makers.swift; sourceTree = "<group>"; };
 		F812B7A321DEDC4E00571A07 /* Debug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debug.swift; sourceTree = "<group>"; };
@@ -338,6 +342,9 @@
 				OBJ_27 /* DynamicProperty.swift */,
 				F819DC171E8A9F2A0072E0B1 /* Either.swift */,
 				OBJ_28 /* EventSource_Combine.swift */,
+				E614657922968BD5001EC0C0 /* EventSource_CombineLatests.swift */,
+				E6555C10229C0AB50086E214 /* EventSource_Concat.swift */,
+				E6555C12229C357F0086E214 /* EventSource_StartWith.swift */,
 				B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */,
 				OBJ_29 /* EventSource_FlatMapFutures.swift */,
 				OBJ_30 /* EventSource_Implementation.swift */,
@@ -381,7 +388,6 @@
 				OBJ_58 /* watchOS.swift */,
 				OBJ_59 /* Zip2Futures.swift */,
 				OBJ_60 /* Zip3Futures.swift */,
-				E614657922968BD5001EC0C0 /* EventSource_CombineLatests.swift */,
 			);
 			path = Sources;
 			sourceTree = SOURCE_ROOT;
@@ -554,6 +560,7 @@
 				F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */,
 				OBJ_111 /* Completing_Transform.swift in Sources */,
 				OBJ_112 /* ConstantFuture.swift in Sources */,
+				E6555C11229C0AB50086E214 /* EventSource_Concat.swift in Sources */,
 				OBJ_113 /* Dispatch_Extensions.swift in Sources */,
 				F812B7AC21E0E78C00571A07 /* macOS_BindingsProxy.swift in Sources */,
 				OBJ_114 /* DynamicProperty.swift in Sources */,
@@ -587,6 +594,7 @@
 				OBJ_137 /* Promise.swift in Sources */,
 				OBJ_139 /* ReleasePool.swift in Sources */,
 				B87EC5CC1F6D565900ABBBE8 /* Queue.swift in Sources */,
+				E6555C13229C357F0086E214 /* EventSource_StartWith.swift in Sources */,
 				OBJ_140 /* Sequence_AsyncMap.swift in Sources */,
 				B8B520261EBF3287006C27DA /* Sequence_AsyncReduce.swift in Sources */,
 				E6B9399522496E5C0099B75A /* Promise_makers.swift in Sources */,

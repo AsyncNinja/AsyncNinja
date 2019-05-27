@@ -212,7 +212,7 @@ public extension EventSource {
     var updates = [Update]()
     let locking = makeLocking(isFair: true)
     let promise = Promise<(updates: [Update], completion: Fallible<Success>)>()
-    let handler = self.makeHandler(executor: .immediate) { [weak promise] (event, _) in
+    let handler = self.makeHandler(executor: .default) { [weak promise] (event, _) in
       switch event {
       case let .update(update):
         locking.lock()

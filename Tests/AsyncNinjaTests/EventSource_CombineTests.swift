@@ -211,4 +211,18 @@ class EventSource_CombineTests: XCTestCase {
     
     XCTAssert(expectations.count == 0)
   }
+    
+  func testStartWith() {
+    let exp = expectation(description: "")
+    var expResult = [6,6,7,2,3,4]
+    channel(updates: [2,3,4], success: ())
+      .startWith([6,6,7])
+      .onUpdate(executor: Executor.default) { XCTAssertEqual($0, expResult.first!); expResult.removeFirst() }
+      .onSuccess() { _ in
+        exp.fulfill()
+    }
+    
+    
+    waitForExpectations(timeout: 10, handler: nil)
+  }
 }

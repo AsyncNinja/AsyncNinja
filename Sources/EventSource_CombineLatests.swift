@@ -44,7 +44,7 @@ public extension ExecutionContext {
   }
 }
 
-fileprivate class RetainableProducerOwner<Update,Success> : ExecutionContext, ReleasePoolOwner {
+class RetainableProducerOwner<Update,Success> : ExecutionContext, ReleasePoolOwner {
   public let releasePool = ReleasePool()
   public var executor: Executor
   var producer = Producer<Update,Success>()
