@@ -225,4 +225,32 @@ class EventSource_CombineTests: XCTestCase {
     
     waitForExpectations(timeout: 10, handler: nil)
   }
+  
+  func testWithLatest() {
+    let exp = expectation(description: "")
+    
+    let eventProducer = Producer<Int,Void>()
+    let optionProducer = Producer<String,Void>()
+    
+    
+    eventProducer
+      .withLatest(from: optionProducer)
+      .onUpdate() { print("update \($0)") }
+      .onSuccess() { exp.fulfill() }
+    
+    eventProducer.update(-1)
+    eventProducer.update(0)
+    optionProducer.update("is on")
+    eventProducer.update(0)
+    optionProducer.update("skip me")
+    optionProducer.update("skip me")
+    optionProducer.update("is off")
+    eventProducer.update(1)
+    eventProducer.update(2)
+    optionProducer.update("is off")
+    eventProducer.update(3)
+    eventProducer.succeed()
+    
+    waitForExpectations(timeout: 2, handler: nil)
+  }
 }
