@@ -7,7 +7,7 @@
 
 import Foundation
 
-extension EventSource {
+public extension EventSource {
   func startWith(_ update: Update, executor: Executor = Executor.default) -> Channel<Update,Success> {
     return startWith([update], executor: executor)
   }
