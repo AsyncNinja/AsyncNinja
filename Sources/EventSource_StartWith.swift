@@ -13,8 +13,8 @@ public extension EventSource {
   }
   
   func startWith(_ updates: [Update], executor: Executor = Executor.default) -> Channel<Update,Success> {
-    return producer(executor: Executor.default) { producer in
-      updates.forEach() { producer.update($0, from: Executor.default) }
+    return producer(executor: executor) { producer in
+      updates.forEach() { producer.update($0, from: executor) }
       self.bindEvents(producer)
     }
   }
@@ -39,7 +39,6 @@ public extension EventSource {
       .onSuccess() { _ in producer.succeed() }
     
     let handler = self.makeHandler(executor: .default) { (event, _) in
-      print("event \(event)")
       switch event {
         
       case let .update(upd):
