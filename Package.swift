@@ -25,6 +25,11 @@ import PackageDescription
 
 let package = Package(
       name: "AsyncNinja",
+      products: [
+        .library(
+          name: "AsyncNinja",
+          targets: ["AsyncNinja"]),
+      ],
       targets: [
         .target(
           name: "AsyncNinja",
@@ -34,5 +39,6 @@ let package = Package(
           name: "AsyncNinjaTests",
           dependencies: ["AsyncNinja"],
           path: "Tests/AsyncNinjaTests")
-      ]
+      ],
+      swiftLanguageVersions: [.v4_2, .version("5")]
     )
