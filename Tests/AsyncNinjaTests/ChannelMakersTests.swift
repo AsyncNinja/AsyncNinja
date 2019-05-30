@@ -147,7 +147,7 @@ class ChannelMakersTests: XCTestCase {
     let updateDeliveredExpectation = expectation(description: "update delivered")
     let completionDeliveredExpectation = expectation(description: "completion delivered")
 
-    var testedChannel: Channel<String, Int>? = channel(executor: .default) { (producer: Producer<String, Int>)  in
+    var testedChannel: Channel<String, Int>? = producer(executor: .default) { (producer: Producer<String, Int>)  in
       assert(qos: .default)
       producer.update("update")
       producer._asyncNinja_notifyFinalization {
@@ -173,13 +173,14 @@ class ChannelMakersTests: XCTestCase {
   }
 
   func testMakeChannelWithProducerProvidingBlockWithDeadContext() {
+    
     let producerFinalizedExpectation = expectation(description: "producer finalized")
     let updateDeliveredExpectation = expectation(description: "update delivered")
     let completionDeliveredExpectation = expectation(description: "completion delivered")
 
     var context: TestActor? = TestActor()
-    var testedChannel: Channel<String, Int>? = channel(context: context!
-    ) { (_, producer: Producer<String, Int>)  in
+    var testedChannel: Channel<String, Int>? = context!.producer()
+    { (_, producer: Producer<String, Int>)  in
       producer.update("update")
       producer._asyncNinja_notifyFinalization {
         producerFinalizedExpectation.fulfill()

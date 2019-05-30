@@ -18,6 +18,11 @@
 		B8B520261EBF3287006C27DA /* Sequence_AsyncReduce.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B520251EBF3287006C27DA /* Sequence_AsyncReduce.swift */; };
 		B8C99AC31F5C742000E16257 /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C99AC21F5C742000E16257 /* Box.swift */; };
 		B8DC12851ED093CF0099893A /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DC12831ED093C60099893A /* PerformanceTests.swift */; };
+		E614657A22968BD5001EC0C0 /* EventSource_CombineLatests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E614657922968BD5001EC0C0 /* EventSource_CombineLatests.swift */; };
+		E6555C11229C0AB50086E214 /* EventSource_Concat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6555C10229C0AB50086E214 /* EventSource_Concat.swift */; };
+		E6555C13229C357F0086E214 /* EventSource_StartWith.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6555C12229C357F0086E214 /* EventSource_StartWith.swift */; };
+		E6B9399322496ACE0099B75A /* Producer_makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B9399222496ACE0099B75A /* Producer_makers.swift */; };
+		E6B9399522496E5C0099B75A /* Promise_makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B9399422496E5C0099B75A /* Promise_makers.swift */; };
 		F812B7A421DEDC4E00571A07 /* Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A321DEDC4E00571A07 /* Debug.swift */; };
 		F812B7A621DEE6DC00571A07 /* appleOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A521DEE6DC00571A07 /* appleOSTests.swift */; };
 		F812B7A821DEE91200571A07 /* macOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A721DEE91200571A07 /* macOSTests.swift */; };
@@ -131,6 +136,11 @@
 		B8B520251EBF3287006C27DA /* Sequence_AsyncReduce.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sequence_AsyncReduce.swift; sourceTree = "<group>"; };
 		B8C99AC21F5C742000E16257 /* Box.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
 		B8DC12831ED093C60099893A /* PerformanceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
+		E614657922968BD5001EC0C0 /* EventSource_CombineLatests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_CombineLatests.swift; sourceTree = "<group>"; };
+		E6555C10229C0AB50086E214 /* EventSource_Concat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Concat.swift; sourceTree = "<group>"; };
+		E6555C12229C357F0086E214 /* EventSource_StartWith.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_StartWith.swift; sourceTree = "<group>"; };
+		E6B9399222496ACE0099B75A /* Producer_makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Producer_makers.swift; sourceTree = "<group>"; };
+		E6B9399422496E5C0099B75A /* Promise_makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Promise_makers.swift; sourceTree = "<group>"; };
 		F812B7A321DEDC4E00571A07 /* Debug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debug.swift; sourceTree = "<group>"; };
 		F812B7A521DEE6DC00571A07 /* appleOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = appleOSTests.swift; sourceTree = "<group>"; };
 		F812B7A721DEE91200571A07 /* macOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macOSTests.swift; sourceTree = "<group>"; };
@@ -332,6 +342,9 @@
 				OBJ_27 /* DynamicProperty.swift */,
 				F819DC171E8A9F2A0072E0B1 /* Either.swift */,
 				OBJ_28 /* EventSource_Combine.swift */,
+				E614657922968BD5001EC0C0 /* EventSource_CombineLatests.swift */,
+				E6555C10229C0AB50086E214 /* EventSource_Concat.swift */,
+				E6555C12229C357F0086E214 /* EventSource_StartWith.swift */,
 				B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */,
 				OBJ_29 /* EventSource_FlatMapFutures.swift */,
 				OBJ_30 /* EventSource_Implementation.swift */,
@@ -358,8 +371,10 @@
 				OBJ_47 /* OptionalAdaptor.swift */,
 				B87EC5CB1F6D565900ABBBE8 /* Queue.swift */,
 				OBJ_48 /* Producer.swift */,
+				E6B9399222496ACE0099B75A /* Producer_makers.swift */,
 				OBJ_49 /* ProducerProxy.swift */,
 				OBJ_50 /* Promise.swift */,
+				E6B9399422496E5C0099B75A /* Promise_makers.swift */,
 				OBJ_52 /* ReleasePool.swift */,
 				B8B520231EBF2F54006C27DA /* Sequence_AsyncFlatMap.swift */,
 				OBJ_53 /* Sequence_AsyncMap.swift */,
@@ -444,6 +459,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = OBJ_5;
@@ -520,6 +536,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				E6B9399322496ACE0099B75A /* Producer_makers.swift in Sources */,
 				OBJ_95 /* appleOS.swift in Sources */,
 				OBJ_96 /* appleOS_CoreData.swift in Sources */,
 				OBJ_97 /* appleOS_ExecutionContext.swift in Sources */,
@@ -543,6 +560,7 @@
 				F819DC181E8A9F2A0072E0B1 /* Either.swift in Sources */,
 				OBJ_111 /* Completing_Transform.swift in Sources */,
 				OBJ_112 /* ConstantFuture.swift in Sources */,
+				E6555C11229C0AB50086E214 /* EventSource_Concat.swift in Sources */,
 				OBJ_113 /* Dispatch_Extensions.swift in Sources */,
 				F812B7AC21E0E78C00571A07 /* macOS_BindingsProxy.swift in Sources */,
 				OBJ_114 /* DynamicProperty.swift in Sources */,
@@ -551,6 +569,7 @@
 				OBJ_117 /* EventSource_Implementation.swift in Sources */,
 				OBJ_118 /* EventSource_Map.swift in Sources */,
 				OBJ_119 /* EventSource_Merge2.swift in Sources */,
+				E614657A22968BD5001EC0C0 /* EventSource_CombineLatests.swift in Sources */,
 				OBJ_120 /* EventSource_Scan.swift in Sources */,
 				OBJ_121 /* EventSource_ToFuture.swift in Sources */,
 				OBJ_122 /* EventSource_Transform.swift in Sources */,
@@ -575,8 +594,10 @@
 				OBJ_137 /* Promise.swift in Sources */,
 				OBJ_139 /* ReleasePool.swift in Sources */,
 				B87EC5CC1F6D565900ABBBE8 /* Queue.swift in Sources */,
+				E6555C13229C357F0086E214 /* EventSource_StartWith.swift in Sources */,
 				OBJ_140 /* Sequence_AsyncMap.swift in Sources */,
 				B8B520261EBF3287006C27DA /* Sequence_AsyncReduce.swift in Sources */,
+				E6B9399522496E5C0099B75A /* Promise_makers.swift in Sources */,
 				OBJ_141 /* Sink.swift in Sources */,
 				OBJ_143 /* TimerChannel.swift in Sources */,
 				OBJ_144 /* Util.swift in Sources */,

@@ -102,4 +102,155 @@ class EventSource_CombineTests: XCTestCase {
     source.succeed("Done")
     sema.wait()
   }
+  
+  func testCombineLatest2() {
+    let actor = TestActor()
+    
+    let source1 = Producer<String, String>()
+    let source2 = Producer<String, String>()
+    
+    var expectations = [["src1_upd2","src2_upd2"],
+                        ["src1_upd2","src2_upd1"],
+                        ["src1_upd1","src2_upd1"]]  // last is first
+    
+    actor.combineLatest(source1, source2, executor: Executor.immediate)
+      .onUpdate() { upd in
+        guard let last = expectations.popLast() else { return }
+        XCTAssertEqual(last, [upd.0, upd.1])
+      }
+      .onSuccess() { success in
+        XCTAssertEqual([success.0,success.1], ["success1","success2"])
+      }
+    
+    source1.update("src1_upd1", from: Executor.immediate)
+    source2.update("src2_upd1", from: Executor.immediate)
+    
+    source1.update("src1_upd2", from: Executor.immediate)
+    
+    source2.update("src2_upd2", from: Executor.immediate)
+    
+    
+    source1.succeed("success1", from: Executor.immediate)
+    source2.succeed("success2", from: Executor.immediate)
+    
+    XCTAssert(expectations.count == 0)
+  }
+  
+  func testCombineLatest3() {
+    let actor = TestActor()
+    
+    let source1 = Producer<Int, Int>()
+    let source2 = Producer<Int, Int>()
+    let source3 = Producer<Int, Int>()
+    
+    var expectations = [[1,2,2],
+                        [1,1,2],
+                        [1,1,1]]  // last is first
+    
+    actor.combineLatest(source1, source2, source3, executor: Executor.immediate)
+      .onUpdate() { upd in
+        guard let last = expectations.popLast() else { return }
+        XCTAssertEqual(last, [upd.0, upd.1, upd.2])
+      }
+      .onSuccess() { success in
+        XCTAssertEqual([success.0,success.1,success.2], [1,2,3])
+    }
+    
+    source1.update(1, from: Executor.immediate)
+    source2.update(1, from: Executor.immediate)
+    source3.update(1, from: Executor.immediate)
+    
+    source3.update(2, from: Executor.immediate)
+    
+    source2.update(2, from: Executor.immediate)
+    
+    
+    source1.succeed(1, from: Executor.immediate)
+    source2.succeed(2, from: Executor.immediate)
+    source3.succeed(3, from: Executor.immediate)
+    
+    XCTAssert(expectations.count == 0)
+  }
+  
+  func testCombineLatest4() {
+    let actor = TestActor()
+    
+    let source1 = Producer<Int, Int>()
+    let source2 = Producer<Int, Int>()
+    let source3 = Producer<Int, Int>()
+    let source4 = Producer<Int, Int>()
+    
+    var expectations = [[1,1,2,2],
+                        [1,1,1,2],
+                        [1,1,1,1]]  // last is first
+    
+    actor.combineLatest(source1, source2, source3, source4, executor: Executor.immediate)
+      .onUpdate() { upd in
+        guard let last = expectations.popLast() else { return }
+        XCTAssertEqual(last, [upd.0, upd.1, upd.2, upd.3])
+      }
+      .onSuccess() { success in
+        XCTAssertEqual([success.0,success.1,success.2,success.3], [1,2,3,4])
+    }
+    
+    source1.update(1, from: Executor.immediate)
+    source2.update(1, from: Executor.immediate)
+    source3.update(1, from: Executor.immediate)
+    source4.update(1, from: Executor.immediate)
+    
+    source4.update(2, from: Executor.immediate)
+    
+    source3.update(2, from: Executor.immediate)
+    
+    
+    source1.succeed(1, from: Executor.immediate)
+    source2.succeed(2, from: Executor.immediate)
+    source3.succeed(3, from: Executor.immediate)
+    source3.succeed(4, from: Executor.immediate)
+    
+    
+    XCTAssert(expectations.count == 0)
+  }
+    
+  func testStartWith() {
+    let exp = expectation(description: "")
+    var expResult = [6,6,7,2,3,4]
+    channel(updates: [2,3,4], success: ())
+      .startWith([6,6,7])
+      .onUpdate(executor: Executor.default) { XCTAssertEqual($0, expResult.first!); expResult.removeFirst() }
+      .onSuccess() { _ in
+        exp.fulfill()
+    }
+    
+    
+    waitForExpectations(timeout: 10, handler: nil)
+  }
+  
+  func testWithLatest() {
+    let exp = expectation(description: "")
+    
+    let eventProducer = Producer<Int,Void>()
+    let optionProducer = Producer<String,Void>()
+    
+    
+    eventProducer
+      .withLatest(from: optionProducer)
+      .onUpdate() { print("update \($0)") }
+      .onSuccess() { exp.fulfill() }
+    
+    eventProducer.update(-1)
+    eventProducer.update(0)
+    optionProducer.update("is on")
+    eventProducer.update(0)
+    optionProducer.update("skip me")
+    optionProducer.update("skip me")
+    optionProducer.update("is off")
+    eventProducer.update(1)
+    eventProducer.update(2)
+    optionProducer.update("is off")
+    eventProducer.update(3)
+    eventProducer.succeed()
+    
+    waitForExpectations(timeout: 2, handler: nil)
+  }
 }

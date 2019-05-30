@@ -81,3 +81,14 @@ public func merge<T: EventSource, U: EventSource>(
 
   return producer
 }
+
+/// Merges array of channels into one
+public extension Array where Element : EventSource {
+    func mergeUpdates(bufferSize: Int? = nil, cancellationToken: CancellationToken? = nil) -> Channel<Element.Update,Void> {
+        return producer(bufferSize: bufferSize ?? count) { producer in
+            for ch in self {
+                ch.bind(producer, cancellationToken: cancellationToken)
+            }
+        }
+    }
+}
