@@ -113,13 +113,17 @@ where Source.Update == Destination.Update, Source.Success == Destination.Success
     private func createTimer() {
         timer = DispatchSource.makeTimerSource(queue: queue)
         timer!.schedule(deadline: DispatchTime.now() + timerInterval)
-        timer!.setEventHandler {
-            if let update = self.nextUpdate {
-                self.sendNow(update: update)
-            }
-            self.timer = nil
-        }
+        timer!.setEventHandler { self.timerHandler() }
         timer!.resume()
+    }
+    
+    private func timerHandler() {
+        if let update = nextUpdate {
+            sendNow(update: update)
+            createTimer()
+        } else {
+            timer = nil
+        }
     }
 }
 
