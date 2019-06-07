@@ -25,11 +25,9 @@ import Dispatch
 public extension EventSource {
   
   /**
-   Returns an Channel that emits the first and the latest item emitted by the source EventSource during interval.
+   Returns an Channel that emits the first and the latest item emitted by the EventSource during interval.
    
    This operator makes sure that no two or more elements are emitted within specified interval.
-   
-   - seealso: [debounce operator on reactivex.io](http://reactivex.io/documentation/operators/debounce.html)
    
    - parameter interval: Throttling duration for each update.
    - parameter qos: quality of service.
