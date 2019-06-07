@@ -21,6 +21,7 @@
 		E614657A22968BD5001EC0C0 /* EventSource_CombineLatests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E614657922968BD5001EC0C0 /* EventSource_CombineLatests.swift */; };
 		E6555C11229C0AB50086E214 /* EventSource_Concat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6555C10229C0AB50086E214 /* EventSource_Concat.swift */; };
 		E6555C13229C357F0086E214 /* EventSource_StartWith.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6555C12229C357F0086E214 /* EventSource_StartWith.swift */; };
+		E6878F4422AA53A800A21D28 /* EventSource_Throttle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6878F4322AA53A800A21D28 /* EventSource_Throttle.swift */; };
 		E6B9399322496ACE0099B75A /* Producer_makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B9399222496ACE0099B75A /* Producer_makers.swift */; };
 		E6B9399522496E5C0099B75A /* Promise_makers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B9399422496E5C0099B75A /* Promise_makers.swift */; };
 		F812B7A421DEDC4E00571A07 /* Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = F812B7A321DEDC4E00571A07 /* Debug.swift */; };
@@ -139,6 +140,7 @@
 		E614657922968BD5001EC0C0 /* EventSource_CombineLatests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_CombineLatests.swift; sourceTree = "<group>"; };
 		E6555C10229C0AB50086E214 /* EventSource_Concat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Concat.swift; sourceTree = "<group>"; };
 		E6555C12229C357F0086E214 /* EventSource_StartWith.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_StartWith.swift; sourceTree = "<group>"; };
+		E6878F4322AA53A800A21D28 /* EventSource_Throttle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Throttle.swift; sourceTree = "<group>"; };
 		E6B9399222496ACE0099B75A /* Producer_makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Producer_makers.swift; sourceTree = "<group>"; };
 		E6B9399422496E5C0099B75A /* Promise_makers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Promise_makers.swift; sourceTree = "<group>"; };
 		F812B7A321DEDC4E00571A07 /* Debug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debug.swift; sourceTree = "<group>"; };
@@ -346,6 +348,7 @@
 				E6555C10229C0AB50086E214 /* EventSource_Concat.swift */,
 				E6555C12229C357F0086E214 /* EventSource_StartWith.swift */,
 				B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */,
+				E6878F4322AA53A800A21D28 /* EventSource_Throttle.swift */,
 				OBJ_29 /* EventSource_FlatMapFutures.swift */,
 				OBJ_30 /* EventSource_Implementation.swift */,
 				OBJ_31 /* EventSource_Map.swift */,
@@ -601,6 +604,7 @@
 				OBJ_141 /* Sink.swift in Sources */,
 				OBJ_143 /* TimerChannel.swift in Sources */,
 				OBJ_144 /* Util.swift in Sources */,
+				E6878F4422AA53A800A21D28 /* EventSource_Throttle.swift in Sources */,
 				OBJ_145 /* watchOS.swift in Sources */,
 				B8C99AC31F5C742000E16257 /* Box.swift in Sources */,
 				B873DAB61F6D04BD00A04524 /* SinglyLinkedList.swift in Sources */,
