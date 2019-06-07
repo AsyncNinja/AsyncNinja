@@ -75,6 +75,43 @@ class EventSource_TransformTests: XCTestCase {
 
     self.waitForExpectations(timeout: 5.0)
   }
+  
+  func testTrottle() {
+    let initalProducer = Producer<Int, String>()
+    let derivedProducer = initalProducer.throttle(interval: 0.5)
+    let expectation = self.expectation(description: "completion of derived producer")
+    
+    derivedProducer.extractAll().onSuccess {
+      let (numbers, stringOrError) = $0
+      print("NUMBERS: \(numbers)")
+      XCTAssertEqual([1, 3, 9, 10, 12], numbers)
+      XCTAssertEqual("Finished!", stringOrError.maybeSuccess)
+      expectation.fulfill()
+    }
+    
+    DispatchQueue.global().async {
+      mysleep(0.1)
+      initalProducer.update(1)
+      initalProducer.update(2)
+      initalProducer.update(3)
+      mysleep(0.6)
+      initalProducer.update(4)
+      initalProducer.update(5)
+      initalProducer.update(6)
+      mysleep(0.25)
+      initalProducer.update(7)
+      initalProducer.update(8)
+      initalProducer.update(9)
+      mysleep(1.0)
+      initalProducer.update(10)
+      initalProducer.update(11)
+      initalProducer.update(12)
+      mysleep(0.2)
+      initalProducer.succeed("Finished!")
+    }
+    
+    self.waitForExpectations(timeout: 5.0)
+  }
 
   func testDistinctInts() {
     let updatable = Producer<Int, String>()
