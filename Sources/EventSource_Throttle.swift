@@ -23,113 +23,119 @@
 import Dispatch
 
 public extension EventSource {
+  
+  /**
+   Returns an Channel that emits the first and the latest item emitted by the source EventSource during interval.
+   
+   This operator makes sure that no two or more elements are emitted within specified interval.
+   
+   - seealso: [debounce operator on reactivex.io](http://reactivex.io/documentation/operators/debounce.html)
+   
+   - parameter interval: Throttling duration for each update.
+   - parameter qos: quality of service.
+   - parameter cancellationToken: `CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned primitive
+   - parameter bufferSize: `DerivedChannelBufferSize` of derived channel. Keep default value of the argument unless you need
+   - returns: The throttled Channel.
+   */
+  func throttle(
+    interval: Double,
+    qos: DispatchQoS.QoSClass = .default,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success> {
+    // Test: EventSource_TransformTests.testDebounce
     
-    /// Picks latest update value of the channel every interval and sends it
-    ///
-    /// - Parameters:
-    ///   - deadline: to start picking peridic values after
-    ///   - interval: interfal for picking latest update values
-    ///   - leeway: leeway for timer
-    ///   - cancellationToken: `CancellationToken` to use.
-    ///     Keep default value of the argument unless you need
-    ///     an extended cancellation options of returned primitive
-    ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
-    ///     Keep default value of the argument unless you need
-    /// - Returns: channel
-    func throttle(
-        interval: Double,
-        qos: DispatchQoS.QoSClass = .default,
-        cancellationToken: CancellationToken? = nil,
-        bufferSize: DerivedChannelBufferSize = .default
-        ) -> Channel<Update, Success> {
-        // Test: EventSource_TransformTests.testDebounce
-        
-        typealias Destination = Producer<Update, Success>
-        let producer = Destination(bufferSize: bufferSize.bufferSize(self))
-        cancellationToken?.add(cancellable: producer)
-        
-        let helper = ThrottleEventSourceHelper<Self, Destination>(
-            destination: producer,
-            interval: interval,
-            qos: qos)
-        
-        producer._asyncNinja_retainHandlerUntilFinalization(helper.eventHandler(source: self))
-        
-        return producer
-    }
+    typealias Destination = Producer<Update, Success>
+    let producer = Destination(bufferSize: bufferSize.bufferSize(self))
+    cancellationToken?.add(cancellable: producer)
+    
+    let helper = ThrottleEventSourceHelper<Self, Destination>(
+      destination: producer,
+      interval: interval,
+      qos: qos)
+    
+    producer._asyncNinja_retainHandlerUntilFinalization(helper.eventHandler(source: self))
+    
+    return producer
+  }
 }
 
 private class ThrottleEventSourceHelper<Source: EventSource, Destination: EventDestination>
 where Source.Update == Destination.Update, Source.Success == Destination.Success {
-    var locking = makeLocking()
-    var nextUpdate : Source.Update?
-    let queue: DispatchQueue
-    var timer: DispatchSourceTimer?
-    var timerInterval: DispatchTimeInterval
-    weak var destination: Destination?
+  var locking = makeLocking()
+  var nextUpdate : Source.Update?
+  let queue: DispatchQueue
+  var timer: DispatchSourceTimer?
+  var timerInterval: DispatchTimeInterval
+  weak var destination: Destination?
+  
+  init(
+    destination: Destination,
+    interval: Double,
+    qos: DispatchQoS.QoSClass
+    ) {
     
-    init(
-        destination: Destination,
-        interval: Double,
-        qos: DispatchQoS.QoSClass
-        ) {
-        
-        self.destination = destination
-        self.timerInterval = interval.dispatchInterval
-        self.queue = DispatchQueue.global(qos: qos)
+    self.destination = destination
+    self.timerInterval = interval.dispatchInterval
+    self.queue = DispatchQueue.global(qos: qos)
+  }
+  
+  func eventHandler(source: Source) -> AnyObject? {
+    return source.makeHandler(executor: .immediate) { (event, originalExecutor) in
+      
+      self.locking.lock()
+      defer { self.locking.unlock() }
+      
+      switch event {
+      case let .completion(completion):   self.onComplete(completion: completion, executor: originalExecutor)
+      case let .update(update):           self.onUpdate(update: update)
+      }
     }
-    
-    func eventHandler(source: Source) -> AnyObject? {
-        return source.makeHandler(executor: .immediate) { (event, originalExecutor) in
-            
-            self.locking.lock()
-            defer { self.locking.unlock() }
-            
-            switch event {
-            case let .completion(completion):
-                if let update = self.nextUpdate {
-                    self.sendNow(update: update)
-                }
-                self.destination?.complete(completion, from: originalExecutor)
-                
-            case let .update(update):
-                if self.timer == nil {
-                    self.sendNow(update: update)
-                    self.createTimer()
-                } else {
-                    if self.nextUpdate == nil {
-                        self.nextUpdate = update
-                    }
-                }
-            }
-        }
+  }
+  
+  func onUpdate(update: Destination.Update) {
+    if timer == nil {
+      sendNow(update: update)
+      createTimer()
+    } else {
+        nextUpdate = update
     }
-    
-    private func sendNow(update: Destination.Update) {
-        self.nextUpdate = nil
-        self.destination?.update(update)
+  }
+  
+  func onComplete(completion: Fallible<Source.Success>, executor: Executor) {
+    if let update = nextUpdate {
+      self.sendNow(update: update)
     }
-    
-    private func createTimer() {
-        timer = DispatchSource.makeTimerSource(queue: queue)
-        timer!.schedule(deadline: DispatchTime.now() + timerInterval)
-        timer!.setEventHandler { self.timerHandler() }
-        timer!.resume()
+    self.destination?.complete(completion, from: executor)
+  }
+}
+
+extension ThrottleEventSourceHelper {
+  private func sendNow(update: Destination.Update) {
+    nextUpdate = nil
+    destination?.update(update)
+  }
+  
+  private func createTimer() {
+    timer = DispatchSource.makeTimerSource(queue: queue)
+    timer!.schedule(deadline: DispatchTime.now() + timerInterval)
+    timer!.setEventHandler { self.timerHandler() }
+    timer!.resume()
+  }
+  
+  private func timerHandler() {
+    if let update = nextUpdate {
+      sendNow(update: update)
+      createTimer()
+    } else {
+      timer = nil
     }
-    
-    private func timerHandler() {
-        if let update = nextUpdate {
-            sendNow(update: update)
-            createTimer()
-        } else {
-            timer = nil
-        }
-    }
+  }
 }
 
 public extension Double {
-    var dispatchInterval: DispatchTimeInterval {
-        let microseconds = Int64(self * 1000000) // perhaps use nanoseconds, though would more often be > Int.max
-        return microseconds < Int.max ? DispatchTimeInterval.microseconds(Int(microseconds)) : DispatchTimeInterval.seconds(Int(self))
-    }
+  var dispatchInterval: DispatchTimeInterval {
+    let microseconds = Int64(self * 1000000) // perhaps use nanoseconds, though would more often be > Int.max
+    return microseconds < Int.max ? DispatchTimeInterval.microseconds(Int(microseconds)) : DispatchTimeInterval.seconds(Int(self))
+  }
 }
