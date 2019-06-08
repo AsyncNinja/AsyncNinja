@@ -61,7 +61,7 @@ public extension EventSource {
     after: AfterThrottling = .sendLast,
     options: ThrottleOptions = ThrottleOptions()
     ) -> Channel<Update, Success> {
-    // Test: EventSource_TransformTests.testDebounce
+    // Test: EventSource_TransformTests.testTrottle
     
     typealias Destination = Producer<Update, Success>
     let producer = Destination(bufferSize: options.bufferSize.bufferSize(self))
