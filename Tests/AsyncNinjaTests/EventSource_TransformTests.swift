@@ -78,35 +78,46 @@ class EventSource_TransformTests: XCTestCase {
   
   func testTrottle() {
     let initalProducer = Producer<Int, String>()
-    let derivedProducer = initalProducer.throttle(interval: 0.5)
+    let derivedProducer = initalProducer.throttle(interval: 0.5) // sendLast as default
+    let derivedProducer2 = initalProducer.throttle(interval: 0.5, after: .sendFirst)
+    let derivedProducer3 = initalProducer.throttle(interval: 0.5, after: .none)
     let expectation = self.expectation(description: "completion of derived producer")
     
     derivedProducer.extractAll().onSuccess {
       let (numbers, stringOrError) = $0
-      print("NUMBERS: \(numbers)")
-      XCTAssertEqual([1, 3, 9, 10, 12], numbers)
+      XCTAssertEqual([1, 3, 4, 6], numbers)
+      XCTAssertEqual("Finished!", stringOrError.maybeSuccess)
+      expectation.fulfill()
+    }
+    
+    derivedProducer2.extractAll().onSuccess {
+      let (numbers, stringOrError) = $0
+      XCTAssertEqual([1, 2, 4, 5], numbers)
+      XCTAssertEqual("Finished!", stringOrError.maybeSuccess)
+      expectation.fulfill()
+    }
+    
+    derivedProducer3.extractAll().onSuccess {
+      let (numbers, stringOrError) = $0
+      XCTAssertEqual([1, 4], numbers)
       XCTAssertEqual("Finished!", stringOrError.maybeSuccess)
       expectation.fulfill()
     }
     
     DispatchQueue.global().async {
-      mysleep(0.1)
+      mysleep(0.01)
       initalProducer.update(1)
+      mysleep(0.01)
       initalProducer.update(2)
+      mysleep(0.01)
       initalProducer.update(3)
-      mysleep(0.6)
+      mysleep(1)
       initalProducer.update(4)
+      mysleep(0.01)
       initalProducer.update(5)
+      mysleep(0.01)
       initalProducer.update(6)
-      mysleep(0.25)
-      initalProducer.update(7)
-      initalProducer.update(8)
-      initalProducer.update(9)
-      mysleep(1.0)
-      initalProducer.update(10)
-      initalProducer.update(11)
-      initalProducer.update(12)
-      mysleep(0.2)
+      mysleep(0.01)
       initalProducer.succeed("Finished!")
     }
     

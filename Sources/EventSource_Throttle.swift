@@ -22,6 +22,29 @@
 
 import Dispatch
 
+public enum AfterThrottling {
+  case sendLast
+  case sendFirst
+  case none
+}
+ 
+public struct ThrottleOptions {
+  let qos:                DispatchQoS.QoSClass
+  let cancellationToken:  CancellationToken?
+  let bufferSize:         DerivedChannelBufferSize
+
+  /// - parameter qos: quality of service.
+  /// - parameter cancellationToken: `CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned primitive
+  /// - parameter bufferSize: `DerivedChannelBufferSize` of derived channel. Keep default value of the argument unless you need
+  public init(qos: DispatchQoS.QoSClass = .default,
+              cancellationToken: CancellationToken? = nil,
+              bufferSize: DerivedChannelBufferSize = .default) {
+    self.qos = qos
+    self.cancellationToken = cancellationToken
+    self.bufferSize = bufferSize
+  }
+}
+
 public extension EventSource {
   
   /**
@@ -30,27 +53,21 @@ public extension EventSource {
    This operator makes sure that no two or more elements are emitted within specified interval.
    
    - parameter interval: Throttling duration for each update.
-   - parameter qos: quality of service.
-   - parameter cancellationToken: `CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned primitive
-   - parameter bufferSize: `DerivedChannelBufferSize` of derived channel. Keep default value of the argument unless you need
+   - parameter options: quality of service, cancellationToken and bufferSize
    - returns: The throttled Channel.
    */
   func throttle(
     interval: Double,
-    qos: DispatchQoS.QoSClass = .default,
-    cancellationToken: CancellationToken? = nil,
-    bufferSize: DerivedChannelBufferSize = .default
+    after: AfterThrottling = .sendLast,
+    options: ThrottleOptions = ThrottleOptions()
     ) -> Channel<Update, Success> {
     // Test: EventSource_TransformTests.testDebounce
     
     typealias Destination = Producer<Update, Success>
-    let producer = Destination(bufferSize: bufferSize.bufferSize(self))
-    cancellationToken?.add(cancellable: producer)
+    let producer = Destination(bufferSize: options.bufferSize.bufferSize(self))
+    options.cancellationToken?.add(cancellable: producer)
     
-    let helper = ThrottleEventSourceHelper<Self, Destination>(
-      destination: producer,
-      interval: interval,
-      qos: qos)
+    let helper = ThrottleEventSourceHelper<Self, Destination>(destination: producer, interval: interval, qos: options.qos, after: after)
     
     producer._asyncNinja_retainHandlerUntilFinalization(helper.eventHandler(source: self))
     
@@ -61,6 +78,7 @@ public extension EventSource {
 private class ThrottleEventSourceHelper<Source: EventSource, Destination: EventDestination>
 where Source.Update == Destination.Update, Source.Success == Destination.Success {
   var locking = makeLocking()
+  let after: AfterThrottling
   var nextUpdate : Source.Update?
   let queue: DispatchQueue
   var timer: DispatchSourceTimer?
@@ -70,12 +88,14 @@ where Source.Update == Destination.Update, Source.Success == Destination.Success
   init(
     destination: Destination,
     interval: Double,
-    qos: DispatchQoS.QoSClass
+    qos: DispatchQoS.QoSClass,
+    after: AfterThrottling
     ) {
     
     self.destination = destination
     self.timerInterval = interval.dispatchInterval
     self.queue = DispatchQueue.global(qos: qos)
+    self.after = after
   }
   
   func eventHandler(source: Source) -> AnyObject? {
@@ -96,7 +116,15 @@ where Source.Update == Destination.Update, Source.Success == Destination.Success
       sendNow(update: update)
       createTimer()
     } else {
-        nextUpdate = update
+      
+      // decide which update to send
+      // after throttling interval
+      switch after {
+      case .sendLast:     nextUpdate = update
+      case .sendFirst:    if nextUpdate == nil { nextUpdate = update }
+      case .none:         break
+      }
+      
     }
   }
   
