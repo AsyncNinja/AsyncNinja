@@ -7,7 +7,7 @@
 
 import Foundation
 
-extension ExecutionContext {
+public extension ExecutionContext {
     func concat<ES:EventSource>(sources: [ES], executor: Executor? = nil) -> Channel<ES.Update,Void> {
         return Concatenator(sources: sources, executor: executor ?? self.executor)
             .retain(with: self)
