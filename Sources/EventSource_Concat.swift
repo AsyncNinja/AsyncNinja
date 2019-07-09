@@ -43,8 +43,14 @@ private class Concatenator<ES:EventSource> : RetainableProducerOwner<ES.Update,V
             switch event {
             case .update(let upd):
                 self?.producer.update(upd, from: self!.executor)
-            case .completion(_):
-                self?.nextSource(dropFirst: true)
+            case .completion(let completion):
+                switch completion {
+                case .success(_):
+                    self?.nextSource(dropFirst: true)
+                case .failure(let error):
+                    self?.producer.fail(error)
+                }
+                
             }
         }
     }
