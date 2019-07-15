@@ -19,6 +19,7 @@
 		B8C99AC31F5C742000E16257 /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C99AC21F5C742000E16257 /* Box.swift */; };
 		B8DC12851ED093CF0099893A /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DC12831ED093C60099893A /* PerformanceTests.swift */; };
 		E614657A22968BD5001EC0C0 /* EventSource_CombineLatests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E614657922968BD5001EC0C0 /* EventSource_CombineLatests.swift */; };
+		E6369A6222DCDD79001B0C9A /* EventSource_ifEmpty.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6369A6122DCDD79001B0C9A /* EventSource_ifEmpty.swift */; };
 		E6555C11229C0AB50086E214 /* EventSource_Concat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6555C10229C0AB50086E214 /* EventSource_Concat.swift */; };
 		E6555C13229C357F0086E214 /* EventSource_StartWith.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6555C12229C357F0086E214 /* EventSource_StartWith.swift */; };
 		E6878F4422AA53A800A21D28 /* EventSource_Throttle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6878F4322AA53A800A21D28 /* EventSource_Throttle.swift */; };
@@ -138,6 +139,7 @@
 		B8C99AC21F5C742000E16257 /* Box.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
 		B8DC12831ED093C60099893A /* PerformanceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
 		E614657922968BD5001EC0C0 /* EventSource_CombineLatests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_CombineLatests.swift; sourceTree = "<group>"; };
+		E6369A6122DCDD79001B0C9A /* EventSource_ifEmpty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_ifEmpty.swift; sourceTree = "<group>"; };
 		E6555C10229C0AB50086E214 /* EventSource_Concat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Concat.swift; sourceTree = "<group>"; };
 		E6555C12229C357F0086E214 /* EventSource_StartWith.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_StartWith.swift; sourceTree = "<group>"; };
 		E6878F4322AA53A800A21D28 /* EventSource_Throttle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSource_Throttle.swift; sourceTree = "<group>"; };
@@ -347,6 +349,7 @@
 				E614657922968BD5001EC0C0 /* EventSource_CombineLatests.swift */,
 				E6555C10229C0AB50086E214 /* EventSource_Concat.swift */,
 				E6555C12229C357F0086E214 /* EventSource_StartWith.swift */,
+				E6369A6122DCDD79001B0C9A /* EventSource_ifEmpty.swift */,
 				B8B520211EBF2918006C27DA /* EventSource_Debounce.swift */,
 				E6878F4322AA53A800A21D28 /* EventSource_Throttle.swift */,
 				OBJ_29 /* EventSource_FlatMapFutures.swift */,
@@ -543,6 +546,7 @@
 				OBJ_95 /* appleOS.swift in Sources */,
 				OBJ_96 /* appleOS_CoreData.swift in Sources */,
 				OBJ_97 /* appleOS_ExecutionContext.swift in Sources */,
+				E6369A6222DCDD79001B0C9A /* EventSource_ifEmpty.swift in Sources */,
 				OBJ_98 /* appleOS_Notifications.swift in Sources */,
 				OBJ_99 /* appleOS_Observation.swift in Sources */,
 				OBJ_100 /* appleOS_ReactiveProperties.swift in Sources */,
