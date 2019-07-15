@@ -17,12 +17,10 @@ public extension EventSource {
       switch event {
       
       case .update(let upd):
-        print("update \(upd)")
         updateCounter += 1
         producer.update(upd)
         
       case .completion(let comp):
-        print("complete \(comp)")
         if updateCounter > 0 {
           producer.complete(comp)
         } else {
