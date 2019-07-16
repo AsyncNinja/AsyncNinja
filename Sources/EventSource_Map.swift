@@ -169,13 +169,20 @@ public extension EventSource {
     _ transform: @escaping (_ update: Update) throws -> P
     ) -> Channel<P, Success> {
     // Test: EventSource_MapTests.testMap
-
+    
+    debugID?.dbgLog(msg: "mapping")
+    
     return makeProducer(
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
       bufferSize: bufferSize
-    ) { (event, producer, originalExecutor) in
+    ) { [weak self] (event, producer, originalExecutor) in
+      
+      if let id = self?.debugID {
+        producer.value?.debugID = id + "∙map"
+      }
+      
       switch event {
       case .update(let update):
         let transformedValue = try transform(update)

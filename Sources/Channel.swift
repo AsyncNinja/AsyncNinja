@@ -38,6 +38,9 @@ public class Channel<U, S>: EventSource {
 
   /// maximal amount of updates store
   public var maxBufferSize: Int { assertAbstract() }
+  
+  /// assign a value to start tracing events
+  public var debugID: String?
 
   init() { }
 
