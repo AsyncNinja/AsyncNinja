@@ -170,7 +170,7 @@ public extension EventSource {
     ) -> Channel<P, Success> {
     // Test: EventSource_MapTests.testMap
     
-    debugID?.dbgLog(msg: "mapping")
+    debugID?.dbgLog(msg: "apply mapping")
     
     return makeProducer(
       executor: executor,
@@ -587,17 +587,26 @@ public extension EventSource {
     ) -> Channel<Update, Success> {
     // Test: EventSource_MapTests.testFilter
 
+    debugID?.dbgLog(msg: "apply filtering")
+    
     return makeProducer(
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
       bufferSize: bufferSize
-    ) { (event, producer, originalExecutor) in
+    ) { [weak self] (event, producer, originalExecutor) in
+      
+      if let id = self?.debugID {
+        producer.value?.debugID = id + "∙filter"
+      }
+      
       switch event {
       case .update(let update):
         do {
           if try predicate(update) {
             producer.value?.update(update, from: originalExecutor)
+          } else {
+            producer.value?.debugID?.dbgLog(msg: "skipping update \(update)")
           }
         } catch { producer.value?.fail(error, from: originalExecutor) }
       case .completion(let completion):

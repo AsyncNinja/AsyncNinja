@@ -40,7 +40,12 @@ public class Channel<U, S>: EventSource {
   public var maxBufferSize: Int { assertAbstract() }
   
   /// assign a value to start tracing events
-  public var debugID: String?
+  var debugID: String?
+    
+  public func set(debugID: String?) -> Self {
+    self.debugID = debugID
+    return self
+  }
 
   init() { }
 
