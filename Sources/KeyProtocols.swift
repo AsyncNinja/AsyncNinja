@@ -185,7 +185,7 @@ public protocol EventSource: EventController, Completing, Updating, Sequence {
   var maxBufferSize: Int { get }
     
   /// assign a value to start tracing events
-  var debugID : String? { get set }
+  var traceID : String? { get set }
 
   /// **internal use only**
   func makeHandler(
