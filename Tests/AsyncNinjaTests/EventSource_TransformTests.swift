@@ -293,5 +293,12 @@ class EventSource_TransformTests: XCTestCase {
       source.succeed("Done")
       sema.wait()
     }
+    
+    let result = (channel(updates: [1,2,3,4], success: "Success") as Channel<Int,String>)
+      .take(2, completion: "bla", cancellationToken: nil, bufferSize: .specific(2))
+      .waitForAll()    
+    
+    XCTAssert(result.updates == [1,2])
+    XCTAssert(result.completion.success == "bla")
   }
 }

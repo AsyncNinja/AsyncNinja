@@ -385,6 +385,67 @@ public extension EventSource {
   ///
   /// - Parameters:
   ///   - first: number of first updates to take
+  ///   - completion: completion to use after specified ammount of updates
+  ///   - cancellationToken: `CancellationToken` to use.
+  ///     Keep default value of the argument unless you need
+  ///     an extended cancellation options of returned primitive
+  ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+  ///     Keep default value of the argument unless you need
+  ///     an extended buffering options of returned channel
+  /// - Returns: channel that takes specified amount of updates
+  func take(
+    _ first: Int,
+    completion: Success,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default
+    ) -> Channel<Update, Success> {
+    
+    var locking = makeLocking(isFair: true)
+    var updatesQueue = Queue<Update>()
+    var numberOfFirstToTake = first
+    
+    func onEvent(
+      event: ChannelEvent<Update, Success>,
+      producerBox: WeakBox<BaseProducer<Update, Success>>,
+      originalExecutor: Executor) {
+      switch event {
+      case let .update(update):
+        let updateToPost: Update? = locking.locker {
+          if numberOfFirstToTake > 0 {
+            numberOfFirstToTake -= 1
+            return update
+          } else {
+            return nil
+          }
+        }
+        
+        if let updateToPost = updateToPost {
+          producerBox.value?.update(updateToPost, from: originalExecutor)
+        }
+        
+        if numberOfFirstToTake == 0 {
+          producerBox.value?.succeed(completion)
+        }
+        
+      case let .completion(completion):
+        if let producer = producerBox.value {
+          let queue = locking.locker { updatesQueue }
+          producer.update(queue)
+          producer.complete(completion, from: originalExecutor)
+        }
+      }
+    }
+    
+    return makeProducer(executor: .immediate, pure: true,
+                        cancellationToken: cancellationToken,
+                        bufferSize: bufferSize, onEvent)
+  }
+  
+  
+  /// Makes a channel that takes updates specific number of update
+  ///
+  /// - Parameters:
+  ///   - first: number of first updates to take
   ///   - last: number of last updates to take
   ///   - cancellationToken: `CancellationToken` to use.
   ///     Keep default value of the argument unless you need
