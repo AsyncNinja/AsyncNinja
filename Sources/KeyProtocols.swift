@@ -184,7 +184,7 @@ public protocol EventSource: EventController, Completing, Updating, Sequence {
   /// maximal amount of updates store
   var maxBufferSize: Int { get }
     
-  /// assign a value to start tracing events
+  /// **internal use only** assign a value to start tracing events
   var traceID : String? { get set }
 
   /// **internal use only**
