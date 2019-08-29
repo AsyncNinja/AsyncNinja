@@ -86,7 +86,8 @@ public extension EventSource {
       executor: .immediate,
       pure: true,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙bufferedPairs")
     ) { (value, producer, originalExecutor) in
       switch value {
       case let .update(update):
@@ -97,9 +98,11 @@ public extension EventSource {
 
         if let previousUpdate = _previousUpdate {
           let change = (previousUpdate, update)
+          producer.value?.traceID?.dbgLog(msg: "update \(update)")
           producer.value?.update(change, from: originalExecutor)
         }
       case let .completion(completion):
+        producer.value?.traceID?.dbgLog(msg: "complete \(completion)")
         producer.value?.complete(completion, from: originalExecutor)
       }
     }
@@ -129,7 +132,8 @@ public extension EventSource {
       executor: .immediate,
       pure: true,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙buffered")
     ) { (value, producer, originalExecutor) in
       locking.lock()
 
@@ -140,6 +144,7 @@ public extension EventSource {
           let localBuffer = buffer
           buffer.removeAll(keepingCapacity: true)
           locking.unlock()
+          producer.value?.traceID?.dbgLog(msg: "update \(localBuffer)")
           producer.value?.update(localBuffer, from: originalExecutor)
         } else {
           locking.unlock()
@@ -150,8 +155,10 @@ public extension EventSource {
         locking.unlock()
 
         if !localBuffer.isEmpty {
+          producer.value?.traceID?.dbgLog(msg: "update \(localBuffer)")
           producer.value?.update(localBuffer, from: originalExecutor)
         }
+        producer.value?.traceID?.dbgLog(msg: "complete \(completion)")
         producer.value?.complete(completion, from: originalExecutor)
       }
     }
@@ -177,9 +184,11 @@ public extension EventSource {
       executor: .immediate,
       pure: true,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙buffered")
     ) { (event: Event, producer, originalExecutor: Executor) -> Void in
       delayingExecutor.execute(after: timeout) { (originalExecutor) in
+        producer.value?.traceID?.dbgLog(msg: "event \(event)")
         producer.value?.post(event, from: originalExecutor)
       }
     }
@@ -213,7 +222,8 @@ extension EventSource {
       executor: .immediate,
       pure: true,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙buffered")
     ) { (value, producer, originalExecutor) in
       switch value {
       case let .update(update):
@@ -224,12 +234,15 @@ extension EventSource {
 
         if let previousUpdate = _previousUpdate {
           if !isEqual(previousUpdate, update) {
+            producer.value?.traceID?.dbgLog(msg: "update \(update)")
             producer.value?.update(update, from: originalExecutor)
           }
         } else {
+          producer.value?.traceID?.dbgLog(msg: "update \(update)")
           producer.value?.update(update, from: originalExecutor)
         }
       case let .completion(completion):
+        producer.value?.traceID?.dbgLog(msg: "complete \(completion)")
         producer.value?.complete(completion, from: originalExecutor)
       }
     }
@@ -365,16 +378,18 @@ public extension EventSource {
         }
 
         if let updateToPost = updateToPost {
+          producerBox.value?.traceID?.dbgLog(msg: "update \(updateToPost)")
           producerBox.value?.update(updateToPost, from: originalExecutor)
         }
       case let .completion(completion):
+        producerBox.value?.traceID?.dbgLog(msg: "complete \(completion)")
         producerBox.value?.complete(completion, from: originalExecutor)
       }
     }
 
     return makeProducer(executor: .immediate, pure: true,
                         cancellationToken: cancellationToken,
-                        bufferSize: bufferSize, onEvent)
+                        bufferSize: bufferSize, traceID: traceID?.with(suffix: "∙skip"), onEvent)
   }
 }
 
@@ -420,17 +435,21 @@ public extension EventSource {
         }
         
         if let updateToPost = updateToPost {
+          producerBox.value?.traceID?.dbgLog(msg: "update \(updateToPost)")
           producerBox.value?.update(updateToPost, from: originalExecutor)
         }
         
         if numberOfFirstToTake == 0 {
+          producerBox.value?.traceID?.dbgLog(msg: "complete \(completion)")
           producerBox.value?.succeed(completion)
         }
         
       case let .completion(completion):
         if let producer = producerBox.value {
           let queue = locking.locker { updatesQueue }
+          producer.traceID?.dbgLog(msg: "update \(queue)")
           producer.update(queue)
+          producer.traceID?.dbgLog(msg: "complete \(completion)")
           producer.complete(completion, from: originalExecutor)
         }
       }
@@ -438,7 +457,7 @@ public extension EventSource {
     
     return makeProducer(executor: .immediate, pure: true,
                         cancellationToken: cancellationToken,
-                        bufferSize: bufferSize, onEvent)
+                        bufferSize: bufferSize, traceID: traceID?.with(suffix: "∙take"), onEvent)
   }
   
   
@@ -489,18 +508,22 @@ public extension EventSource {
 
         if let updateToPost = updateToPost {
           producerBox.value?.update(updateToPost, from: originalExecutor)
+          producerBox.value?.traceID?.dbgLog(msg: "update \(updateToPost)")
         }
       case let .completion(completion):
         if let producer = producerBox.value {
           let queue = locking.locker { updatesQueue }
+          producer.traceID?.dbgLog(msg: "update \(queue)")
           producer.update(queue)
+          producer.traceID?.dbgLog(msg: "complete \(completion)")
           producer.complete(completion, from: originalExecutor)
+          
         }
       }
     }
 
     return makeProducer(executor: .immediate, pure: true,
                         cancellationToken: cancellationToken,
-                        bufferSize: bufferSize, onEvent)
+                        bufferSize: bufferSize, traceID: traceID?.with(suffix: "∙take"), onEvent)
   }
 }

@@ -75,16 +75,18 @@ public extension EventSource {
           }
         }
         if let update = update {
+            producerBox.value?.traceID?.dbgLog(msg: "update with \(update)")
           producerBox.value?.update(update, from: originalExecutor)
         }
       case let .completion(completion):
+        producerBox.value?.traceID?.dbgLog(msg: "complete with \(completion)")
         producerBox.value?.complete(completion, from: originalExecutor)
       }
     }
 
     let producer = makeProducer(executor: .immediate, pure: true,
                         cancellationToken: cancellationToken,
-                        bufferSize: bufferSize, onEvent)
+                        bufferSize: bufferSize, traceID: traceID?.with(suffix: "suspendable") , onEvent)
 
       let handler = suspensionController.makeUpdateHandler(
         executor: .immediate

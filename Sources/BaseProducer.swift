@@ -188,6 +188,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
     ) -> Bool {
     // TEST: ChannelTests.testOverComplete
 
+    traceID?.dbgLog(msg: "try complete \(completion)")
     _locking.lock()
 
     guard case .none = _completion

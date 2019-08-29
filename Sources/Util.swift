@@ -185,12 +185,15 @@ extension String {
   func dbgLog(msg: String) {
     Dbg.log(id: self, msg: msg)
   }
+  func with(suffix: String) -> String {
+    return self + suffix
+  }
 }
 
 class Dbg {
   static func log(id: String, msg: String, thread: Bool = true) {
     if thread {
-      print("\(time) AsyncNinja [\(id)] (\(Thread.current.dbgName)) \(msg)")
+      print("\(time) AsyncNinja (\(Thread.current.dbgName)) [\(id)]  \(msg)")
     } else {
       print("\(time) AsyncNinja [\(id)]: \(msg)")
     }
@@ -198,7 +201,7 @@ class Dbg {
   
   static func log(title: String, error: Error, thread: Bool = true) {
     if thread {
-      print("\(time) AsyncNinja [\(title) ERROR] (\(Thread.current.dbgName)) \(error.localizedDescription)")
+      print("\(time) AsyncNinja (\(Thread.current.dbgName)) [\(title) ERROR]  \(error.localizedDescription)")
     }else {
       print("\(time) AsyncNinja [\(title) ERROR] \(error.localizedDescription)")
     }
@@ -217,6 +220,10 @@ private extension Thread {
   
   var dbgName: String {
     if let currentOperationQueue = OperationQueue.current?.name {
+      
+      if currentOperationQueue == "NSOperationQueue Main Queue" {
+        return "MainQueue"
+      }
       
       if currentOperationQueue.contains("OperationQueue") {
         return currentOperationQueue

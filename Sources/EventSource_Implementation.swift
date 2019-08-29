@@ -57,11 +57,13 @@ extension EventSource {
     pure: Bool,
     cancellationToken: CancellationToken?,
     bufferSize: DerivedChannelBufferSize,
+    traceID: String?,
     // swiftlint:disable:next line_length
     _ onEvent: @escaping (_ event: Event, _ producer: WeakBox<BaseProducer<P, S>>, _ originalExecutor: Executor) throws -> Void
     ) -> BaseProducer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = Producer<P, S>(bufferSize: bufferSize)
+    producer.traceID = traceID
     self.attach(producer, executor: executor, pure: pure,
                 cancellationToken: cancellationToken, onEvent)
     return producer
@@ -105,11 +107,13 @@ extension EventSource {
     pure: Bool,
     cancellationToken: CancellationToken?,
     bufferSize: DerivedChannelBufferSize,
+    traceID: String?,
     // swiftlint:disable:next line_length
     _ onEvent: @escaping (_ context: C, _ event: Event, _ producer: WeakBox<BaseProducer<P, S>>, _ originalExecutor: Executor) throws -> Void
     ) -> BaseProducer<P, S> {
     let bufferSize = bufferSize.bufferSize(self)
     let producer = BaseProducer<P, S>(bufferSize: bufferSize)
+    producer.traceID = traceID
     self.attach(producer, context: context, executor: executor, pure: pure,
                 cancellationToken: cancellationToken, onEvent)
     return producer

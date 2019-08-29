@@ -56,9 +56,12 @@ public extension EventSource {
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙mapEvent")
     ) { (context, event, producer, originalExecutor) in
       let transformedEvent = try transform(context, event)
+      producer.value?.traceID?.dbgLog(msg: "mapping from \(event)")
+      producer.value?.traceID?.dbgLog(msg: "mapping to \(transformedEvent)")
       producer.value?.post(transformedEvent, from: originalExecutor)
     }
   }
@@ -88,9 +91,12 @@ public extension EventSource {
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙mapEvent")
     ) { (event, producer, originalExecutor) in
       let transformedEvent = try transform(event)
+      producer.value?.traceID?.dbgLog(msg: "mapping from \(event)")
+      producer.value?.traceID?.dbgLog(msg: "mapping to \(transformedEvent)")
       producer.value?.post(transformedEvent, from: originalExecutor)
     }
   }
@@ -134,13 +140,17 @@ public extension EventSource {
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙map")
     ) { (context, event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         let transformedValue = try transform(context, update)
+        producer.value?.traceID?.dbgLog(msg: "mapping from \(update)")
+        producer.value?.traceID?.dbgLog(msg: "mapping to \(transformedValue)")
         producer.value?.update(transformedValue, from: originalExecutor)
       case .completion(let completion):
+        producer.value?.traceID?.dbgLog(msg: "completion with \(completion)")
         producer.value?.complete(completion, from: originalExecutor)
       }
     }
@@ -176,18 +186,20 @@ public extension EventSource {
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
-    ) { [weak self] (event, producer, originalExecutor) in
-      
-      if let id = self?.traceID {
-        producer.value?.traceID = id + "∙map"
-      }
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙map")
+    ) { (event, producer, originalExecutor) in
       
       switch event {
       case .update(let update):
+        
         let transformedValue = try transform(update)
+        producer.value?.traceID?.dbgLog(msg: "mapping from \(update)")
+        producer.value?.traceID?.dbgLog(msg: "mapping to \(transformedValue)")
+        
         producer.value?.update(transformedValue, from: originalExecutor)
       case .completion(let completion):
+        producer.value?.traceID?.dbgLog(msg: "completion with \(completion)")
         producer.value?.complete(completion, from: originalExecutor)
       }
     }
@@ -225,19 +237,25 @@ public extension EventSource {
     ) -> Channel<P, Success> {
     // Test: EventSource_MapTests.testFlatMapOptionalContextual
 
+    traceID?.dbgLog(msg: "apply flatMapping")
+    
     return makeProducer(
       context: context,
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙flatMapp")
     ) { (context, event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         if let transformedValue = try transform(context, update) {
+          producer.value?.traceID?.dbgLog(msg: "flatMapping from \(update)")
+          producer.value?.traceID?.dbgLog(msg: "flatMapping to \(transformedValue)")
           producer.value?.update(transformedValue, from: originalExecutor)
         }
       case .completion(let completion):
+        producer.value?.traceID?.dbgLog(msg: "completion with \(completion)")
         producer.value?.complete(completion, from: originalExecutor)
       }
     }
@@ -269,14 +287,17 @@ public extension EventSource {
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙flatMapp")
     ) { (event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         if let transformedValue = try transform(update) {
+          producer.value?.traceID?.dbgLog(msg: "flatMapping update \(update)")
           producer.value?.update(transformedValue, from: originalExecutor)
         }
       case .completion(let completion):
+        producer.value?.traceID?.dbgLog(msg: "completion with \(completion)")
         producer.value?.complete(completion, from: originalExecutor)
       }
     }
@@ -310,17 +331,23 @@ public extension EventSource {
     ) -> Channel<PS.Iterator.Element, Success> {
     // Test: EventSource_MapTests.testFlatMapArrayContextual
 
+    traceID?.dbgLog(msg: "apply flatMapping")
+    
     return makeProducer(
       context: context,
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙flatMapp")
     ) { (context, event, producer, originalExecutor) in
       switch event {
       case .update(let update):
+        producer.value?.traceID?.dbgLog(msg: "flatMapping update \(update)")
         producer.value?.update(try transform(context, update), from: originalExecutor)
+        
       case .completion(let completion):
+        producer.value?.traceID?.dbgLog(msg: "completion with \(completion)")
         producer.value?.complete(completion, from: originalExecutor)
       }
     }
@@ -353,12 +380,15 @@ public extension EventSource {
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙flatMapp")
     ) { (event, producer, originalExecutor) in
       switch event {
       case .update(let update):
+        producer.value?.traceID?.dbgLog(msg: "flatMapping from \(update)")
         producer.value?.update(try transform(update), from: originalExecutor)
       case .completion(let completion):
+        producer.value?.traceID?.dbgLog(msg: "completion with \(completion)")
         producer.value?.complete(completion, from: originalExecutor)
       }
     }
@@ -399,13 +429,17 @@ public extension EventSource {
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙mapCompletion")
     ) { (context, event, producer, originalExecutor) in
       switch event {
       case let .update(update):
+        producer.value?.traceID?.dbgLog(msg: "update \(update)")
         producer.value?.update(update, from: originalExecutor)
       case let .completion(completion):
         let transformedCompletion = fallible { try transform(context, completion) }
+        producer.value?.traceID?.dbgLog(msg: "completion \(completion)")
+        producer.value?.traceID?.dbgLog(msg: "transformedCompletion \(transformedCompletion)")
         producer.value?.complete(transformedCompletion, from: originalExecutor)
       }
     }
@@ -472,13 +506,17 @@ public extension EventSource {
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙mapCompletion")
     ) { (event, producer, originalExecutor) in
       switch event {
       case let .update(update):
         producer.value?.update(update, from: originalExecutor)
+        producer.value?.traceID?.dbgLog(msg: "update \(update)")
       case let .completion(completion):
         let transformedCompletion = fallible { try transform(completion) }
+        producer.value?.traceID?.dbgLog(msg: "completion \(completion)")
+        producer.value?.traceID?.dbgLog(msg: "transformedCompletion \(transformedCompletion)")
         producer.value?.complete(transformedCompletion, from: originalExecutor)
       }
     }
@@ -546,21 +584,28 @@ public extension EventSource {
     ) -> Channel<Update, Success> {
     // Test: EventSource_MapTests.testFilterContextual
 
+    traceID?.dbgLog(msg: "apply filtering")
+    
     return makeProducer(
       context: context,
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙filter")
     ) { (context, event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         do {
           if try predicate(context, update) {
+            producer.value?.traceID?.dbgLog(msg: "update \(update)")
             producer.value?.update(update, from: originalExecutor)
+          } else {
+            producer.value?.traceID?.dbgLog(msg: "skipping update \(update)")
           }
         } catch { producer.value?.fail(error, from: originalExecutor) }
       case .completion(let completion):
+        producer.value?.traceID?.dbgLog(msg: "completion \(completion)")
         producer.value?.complete(completion, from: originalExecutor)
       }
     }
@@ -593,23 +638,21 @@ public extension EventSource {
       executor: executor,
       pure: pure,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
-    ) { [weak self] (event, producer, originalExecutor) in
-      
-      if let id = self?.traceID {
-        producer.value?.traceID = id + "∙filter"
-      }
-      
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙filter")
+    ) { (event, producer, originalExecutor) in
       switch event {
       case .update(let update):
         do {
           if try predicate(update) {
+            producer.value?.traceID?.dbgLog(msg: "update \(update)")
             producer.value?.update(update, from: originalExecutor)
           } else {
             producer.value?.traceID?.dbgLog(msg: "skipping update \(update)")
           }
         } catch { producer.value?.fail(error, from: originalExecutor) }
       case .completion(let completion):
+        producer.value?.traceID?.dbgLog(msg: "completion \(completion)")
         producer.value?.complete(completion, from: originalExecutor)
       }
     }

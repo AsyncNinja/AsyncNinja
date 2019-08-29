@@ -41,7 +41,8 @@ public extension EventSource {
       executor: .immediate,
       pure: true,
       cancellationToken: cancellationToken,
-      bufferSize: bufferSize
+      bufferSize: bufferSize,
+      traceID: traceID?.with(suffix: "∙_scan")
     ) { (event, producer, originalExecutor) in
       locking.lock()
       queue.push(event)
@@ -52,6 +53,7 @@ public extension EventSource {
       ) { _ in
         let event: ChannelEvent<Result, (Result, Success)> = locking.locker {
           let event = queue.pop()!
+          producer.value?.traceID?.dbgLog(msg: "event \(event)")
           switch event {
           case let .update(update):
             do {
