@@ -103,6 +103,8 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
     from originalExecutor: Executor?
     ) -> Bool {
     // TEST: ChannelTests.testOverUpdate
+    
+    traceID?.dbgLog(msg: "try update \(update)")
 
     _locking.lock()
     guard case .none = _completion
@@ -186,6 +188,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
     ) -> Bool {
     // TEST: ChannelTests.testOverComplete
 
+    traceID?.dbgLog(msg: "try complete \(completion)")
     _locking.lock()
 
     guard case .none = _completion
@@ -365,6 +368,7 @@ final private class ProducerHandler<Update, Success> {
       from: originalExecutor
     ) { (originalExecutor) in
       self.handleBufferedUpdatesIfNeeded(from: originalExecutor)
+      self.owner?.traceID?.dbgLog(msg: "handling event \(value)")
       self.block(value, originalExecutor)
     }
   }

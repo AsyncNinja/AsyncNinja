@@ -78,6 +78,15 @@ public struct Executor {
       _impl.asyncNinja_execute { () -> Void in block(self.unnested) }
     }
   }
+  
+  /// Schedules specified block for execution. Execution will be asynchronous
+  /// on all DispatchQueue based Executors (like main or default global).
+  /// Immediate executor will do it synchronously.
+  ///
+  /// - Parameter block: to execute
+  func schedule( _ block : @escaping (_ original: Executor) -> Void) {
+    _impl.asyncNinja_execute { block(self.unnested) }
+  }
 
   func execute<T>(from original: Executor?, value: T, _ block: @escaping (_ value: T, _ original: Executor) -> Void) {
     if case let .some(newOrigin) = original?.nested,

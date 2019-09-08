@@ -38,6 +38,14 @@ public class Channel<U, S>: EventSource {
 
   /// maximal amount of updates store
   public var maxBufferSize: Int { assertAbstract() }
+  
+  /// assign a value to start tracing events
+  public var traceID: String?
+    
+  public func setTrace(id: String?) -> Self {
+    self.traceID = id
+    return self
+  }
 
   init() { }
 

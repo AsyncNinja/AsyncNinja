@@ -253,4 +253,21 @@ class EventSource_CombineTests: XCTestCase {
     
     waitForExpectations(timeout: 2, handler: nil)
   }
+  
+  func testSwitchIfEmpty() {
+    let switchTo = channel(updates: [4,5,6], success: ())
+    
+    let ifNotEmpty = channel(updates: [1,2,3], success: ())
+      .ifEmpty(switchTo: switchTo)
+      .waitForAll()
+    
+    XCTAssert(ifNotEmpty.updates == [1,2,3])
+    
+    let ifEmpty = channel(updates: [], success: ())
+      .ifEmpty(switchTo: switchTo)
+      .waitForAll()
+    
+    XCTAssert(ifEmpty.updates == [4,5,6])
+    
+  }
 }

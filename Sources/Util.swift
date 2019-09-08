@@ -180,3 +180,68 @@ public enum DerivedChannelBufferSize {
     }
   }
 }
+
+extension String {
+  func dbgLog(msg: String) {
+    Dbg.log(id: self, msg: msg)
+  }
+  func with(suffix: String) -> String {
+    return self + suffix
+  }
+}
+
+class Dbg {
+  static func log(id: String, msg: String, thread: Bool = true) {
+    if thread {
+      print("\(time) AsyncNinja (\(Thread.current.dbgName)) [\(id)]  \(msg)")
+    } else {
+      print("\(time) AsyncNinja [\(id)]: \(msg)")
+    }
+  }
+  
+  static func log(title: String, error: Error, thread: Bool = true) {
+    if thread {
+      print("\(time) AsyncNinja (\(Thread.current.dbgName)) [\(title) ERROR]  \(error.localizedDescription)")
+    }else {
+      print("\(time) AsyncNinja [\(title) ERROR] \(error.localizedDescription)")
+    }
+  }
+  
+  private static var time : String { return debugDateFormatter.string(from: Date()) }
+  
+  private static let debugDateFormatter: DateFormatter = { () -> DateFormatter in
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "HH:mm:ss.SSSS"
+    return dateFormatter
+  }()
+}
+
+private extension Thread {
+  
+  var dbgName: String {
+    if let currentOperationQueue = OperationQueue.current?.name {
+      
+      if currentOperationQueue == "NSOperationQueue Main Queue" {
+        return "MainQueue"
+      }
+      
+      if currentOperationQueue.contains("OperationQueue") {
+        return currentOperationQueue
+      } else {
+        return "OperationQueue: \(currentOperationQueue)"
+      }
+      
+    } else if let underlyingDispatchQueue = OperationQueue.current?.underlyingQueue?.label {
+      
+      if underlyingDispatchQueue.contains("DispatchQueue") {
+        return underlyingDispatchQueue
+      } else {
+        return "DispatchQueue: \(underlyingDispatchQueue)"
+      }
+      
+    } else {
+      let name = __dispatch_queue_get_label(nil)
+      return String(cString: name, encoding: .utf8) ?? Thread.current.description
+    }
+  }
+}

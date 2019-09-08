@@ -75,6 +75,56 @@ class EventSource_TransformTests: XCTestCase {
 
     self.waitForExpectations(timeout: 5.0)
   }
+  
+  func testTrottle() {
+    let initalProducer = Producer<Int, String>()
+    let derivedProducer = initalProducer.throttle(interval: 0.5) // sendLast as default
+    let derivedProducer2 = initalProducer.throttle(interval: 0.5, after: .sendFirst)
+    let derivedProducer3 = initalProducer.throttle(interval: 0.5, after: .none)
+    let expectation1 = self.expectation(description: "completion of derived producer")
+    let expectation2 = self.expectation(description: "completion of derived producer")
+    let expectation3 = self.expectation(description: "completion of derived producer")
+    
+    derivedProducer.extractAll().onSuccess {
+      let (numbers, stringOrError) = $0
+      XCTAssertEqual([1, 3, 4, 6], numbers)
+      XCTAssertEqual("Finished!", stringOrError.maybeSuccess)
+      expectation1.fulfill()
+    }
+    
+    derivedProducer2.extractAll().onSuccess {
+      let (numbers, stringOrError) = $0
+      XCTAssertEqual([1, 2, 4, 5], numbers)
+      XCTAssertEqual("Finished!", stringOrError.maybeSuccess)
+      expectation2.fulfill()
+    }
+    
+    derivedProducer3.extractAll().onSuccess {
+      let (numbers, stringOrError) = $0
+      XCTAssertEqual([1, 4], numbers)
+      XCTAssertEqual("Finished!", stringOrError.maybeSuccess)
+      expectation3.fulfill()
+    }
+    
+    DispatchQueue.global().async {
+      mysleep(0.01)
+      initalProducer.update(1)
+      mysleep(0.01)
+      initalProducer.update(2)
+      mysleep(0.01)
+      initalProducer.update(3)
+      mysleep(1)
+      initalProducer.update(4)
+      mysleep(0.01)
+      initalProducer.update(5)
+      mysleep(0.01)
+      initalProducer.update(6)
+      mysleep(0.01)
+      initalProducer.succeed("Finished!")
+    }
+    
+    self.waitForExpectations(timeout: 2.0)
+  }
 
   func testDistinctInts() {
     let updatable = Producer<Int, String>()
@@ -243,5 +293,12 @@ class EventSource_TransformTests: XCTestCase {
       source.succeed("Done")
       sema.wait()
     }
+    
+    let result = (channel(updates: [1,2,3,4], success: "Success") as Channel<Int,String>)
+      .take(2, completion: "bla", cancellationToken: nil, bufferSize: .specific(2))
+      .waitForAll()    
+    
+    XCTAssert(result.updates == [1,2])
+    XCTAssert(result.completion.success == "bla")
   }
 }

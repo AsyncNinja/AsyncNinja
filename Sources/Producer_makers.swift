@@ -11,7 +11,7 @@ import Dispatch
 /// Convenience constructor of Producer
 /// Gives an access to an underlying Producer to a provided block
 public func producer<Update, Success>(
-  executor: Executor = .immediate,
+  executor: Executor = .main,
   cancellationToken: CancellationToken? = nil,
   bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize,
   block: @escaping (_ producer: Producer<Update, Success>) throws -> Void
@@ -20,7 +20,7 @@ public func producer<Update, Success>(
   
   let producer = Producer<Update, Success>(bufferSize: bufferSize)
   cancellationToken?.add(cancellable: producer)
-  executor.execute(from: nil) { (originalExecutor) in
+  executor.schedule { originalExecutor in
     do {
       try block(producer)
     } catch {
