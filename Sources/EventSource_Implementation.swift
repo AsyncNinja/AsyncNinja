@@ -295,8 +295,8 @@ public extension EventSource {
   ///   - with: any Retainer
   ///   - keyPath: property keyPath to update
   /// - Example: channel.bind(with: myView.button, to: \\.title)
-  func bind<T: Retainer>(with obj: T, to keyPath: ReferenceWritableKeyPath<T, Update>) {
-    let handler = makeHandler(executor: .main) { [weak obj] event, originalExecutor  in
+  func bind<T: Retainer>(with obj: T, to keyPath: ReferenceWritableKeyPath<T, Update>, executor: Executor = .main) {
+    let handler = makeHandler(executor: executor) { [weak obj] event, originalExecutor  in
       guard let obj = obj else { return }
       switch event {
       case .update(let update):
