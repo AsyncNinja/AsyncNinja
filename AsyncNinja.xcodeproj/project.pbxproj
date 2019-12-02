@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA6915F523950F1A00D49DC2 /* PropertyWrappers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6915F423950F1A00D49DC2 /* PropertyWrappers.swift */; };
 		B87378E01F67EA5900B6FF97 /* SinglyLinkedListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87378DF1F67EA5900B6FF97 /* SinglyLinkedListTests.swift */; };
 		B873DAB61F6D04BD00A04524 /* SinglyLinkedList.swift in Sources */ = {isa = PBXBuildFile; fileRef = B873DAB51F6D04BD00A04524 /* SinglyLinkedList.swift */; };
 		B87EC5CC1F6D565900ABBBE8 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87EC5CB1F6D565900ABBBE8 /* Queue.swift */; };
@@ -127,6 +128,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AA6915F423950F1A00D49DC2 /* PropertyWrappers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyWrappers.swift; sourceTree = "<group>"; };
 		B87378DF1F67EA5900B6FF97 /* SinglyLinkedListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglyLinkedListTests.swift; sourceTree = "<group>"; };
 		B873DAB51F6D04BD00A04524 /* SinglyLinkedList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglyLinkedList.swift; sourceTree = "<group>"; };
 		B87EC5CB1F6D565900ABBBE8 /* Queue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
@@ -394,6 +396,7 @@
 				OBJ_58 /* watchOS.swift */,
 				OBJ_59 /* Zip2Futures.swift */,
 				OBJ_60 /* Zip3Futures.swift */,
+				AA6915F423950F1A00D49DC2 /* PropertyWrappers.swift */,
 			);
 			path = Sources;
 			sourceTree = SOURCE_ROOT;
@@ -553,6 +556,7 @@
 				OBJ_101 /* appleOS_Retainer.swift in Sources */,
 				OBJ_102 /* appleOS_URLSession.swift in Sources */,
 				OBJ_103 /* BaseProducer.swift in Sources */,
+				AA6915F523950F1A00D49DC2 /* PropertyWrappers.swift in Sources */,
 				OBJ_104 /* CachableValue.swift in Sources */,
 				OBJ_105 /* Cache.swift in Sources */,
 				OBJ_106 /* CancellationToken.swift in Sources */,
@@ -729,6 +733,7 @@
 				PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 4.2;
 				TARGET_NAME = AsyncNinja;
 			};
 			name = Debug;
@@ -748,6 +753,7 @@
 				PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 4.2;
 				TARGET_NAME = AsyncNinja;
 			};
 			name = Release;
