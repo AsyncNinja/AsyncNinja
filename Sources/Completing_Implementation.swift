@@ -169,6 +169,33 @@ public extension Completing {
       }
     }
   }
+    
+  func assignSuccess<T:ExecutionContext>(to keyPath: ReferenceWritableKeyPath<T, Success>, on context: T, executor: Executor = .main) {
+    return onComplete(context: context, executor: executor
+    ) { (context, completion) in
+      switch completion {
+      case .success:
+        obj[keyPath: keyPath] = success
+      
+      default: break
+      }
+    }
+//    let handler = makeHandler(executor: executor) { [weak obj] event, originalExecutor  in
+//      guard let obj = obj else { return }
+//      switch event {
+//      case .completion(let fallible):
+//        switch fallible {
+//        case .success(let success):
+//          obj[keyPath: keyPath] = success
+//        default: break
+//        }
+//      default:break
+//      }
+//    }
+//    if let handler = handler {
+//      obj.releaseOnDeinit(handler)
+//    }
+  }
 }
 
 private func eternalWaiter(semaphore: DispatchSemaphore) -> DispatchTimeoutResult {
@@ -251,4 +278,5 @@ public extension Completing {
   func wait(seconds: Double) -> Fallible<Success>? {
     return self.wait(wallTimeout: DispatchWallTime.now().adding(seconds: seconds))
   }
+    
 }
