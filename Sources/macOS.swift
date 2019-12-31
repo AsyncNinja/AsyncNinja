@@ -141,6 +141,12 @@ public extension ReactiveProperties where Object: NSControl {
   }
 }
 
+public extension ReactiveProperties where Object: NSButton {
+    var title: ProducerProxy<String?, Void> {
+        return updatable(forKeyPath: "title")
+    }
+}
+
 public extension ReactiveProperties where Object: NSPopUpButton {
   var indexDidSelect : Channel<Int,Void> {
     return self.object.actionChannel()

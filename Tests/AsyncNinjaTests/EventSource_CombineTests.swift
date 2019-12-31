@@ -103,6 +103,25 @@ class EventSource_CombineTests: XCTestCase {
     sema.wait()
   }
   
+  func testCombineCompletion() {
+    let exp = expectation(description: "combine")
+    
+    let actor = TestActor()
+    
+    let promise1 = Promise<String>()
+    let promise2 = Promise<String>()
+    
+    let expectation = ("completion1","completion2")
+    
+    actor.combine(promise1, promise2)
+      .onSuccess { success in XCTAssert(success == expectation); exp.fulfill() }
+    
+    promise1.succeed("completion1")
+    promise2.succeed("completion2")
+    
+    waitForExpectations(timeout: 1, handler: nil)
+  }
+  
   func testCombineLatest2() {
     let actor = TestActor()
     

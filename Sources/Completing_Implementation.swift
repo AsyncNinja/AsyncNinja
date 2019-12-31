@@ -169,6 +169,21 @@ public extension Completing {
       }
     }
   }
+  
+  @discardableResult
+  func assignSuccess<T:ExecutionContext>(
+    to keyPath: ReferenceWritableKeyPath<T, Success>,
+    on context: T, executor: Executor? = nil
+  ) -> Self {
+    return onComplete(context: context, executor: executor
+    ) { (context, completion) in
+      switch completion {
+      case .success(let success):
+        context[keyPath: keyPath] = success
+      default: break
+      }
+    }
+  }
 }
 
 private func eternalWaiter(semaphore: DispatchSemaphore) -> DispatchTimeoutResult {
@@ -251,4 +266,5 @@ public extension Completing {
   func wait(seconds: Double) -> Fallible<Success>? {
     return self.wait(wallTimeout: DispatchWallTime.now().adding(seconds: seconds))
   }
+    
 }

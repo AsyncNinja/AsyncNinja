@@ -106,3 +106,56 @@ public extension EventSource {
       return producer
   }
 }
+
+public extension ExecutionContext {
+  // MARK: - combine
+  /// Combines 2 Completings into tuple
+  /// You can pass custom executor or use default from Context
+  func combine<C1:Completing, C2:Completing>(_ c1: C1, _ c2: C2, executor: Executor? = nil)
+    -> Future<(C1.Success,C2.Success)> {
+
+      return Combine2(c1, c2, executor: executor ?? self.executor)
+      .retain(with: self)
+      .promise
+  }
+}
+
+class RetainablePromiseOwner<Success> : ExecutionContext, ReleasePoolOwner {
+  public let releasePool = ReleasePool()
+  public var executor: Executor
+  var promise = Promise<Success>()
+  
+  init(executor: Executor) {
+    self.executor = executor
+  }
+  
+  func retain(with releasePool: Retainer) -> RetainablePromiseOwner {
+    releasePool.releaseOnDeinit(self)
+    return self
+  }
+}
+
+fileprivate class Combine2<C1:Completing, C2:Completing> : RetainablePromiseOwner<(C1.Success, C2.Success)> {
+
+  var success1 : C1.Success?
+  var success2 : C2.Success?
+
+  init(_ c1: C1, _ c2: C2, executor: Executor) {
+    super.init(executor: executor)
+
+    c1
+      .onSuccess(context: self) { ctx, success in ctx.success1 = success; ctx.tryComplete()   }
+      .onFailure(context: self) { ctx, error in   ctx.promise.fail(error, from: executor) }
+
+    c2
+      .onSuccess(context: self) { ctx, success in ctx.success2 = success; ctx.tryComplete()   }
+      .onFailure(context: self) { ctx, error in   ctx.promise.fail(error, from: executor) }
+  }
+
+  func tryComplete() {
+    guard let suc1 = success1 else { return }
+    guard let suc2 = success2 else { return }
+
+    promise.succeed((suc1,suc2), from: executor)
+  }
+}
