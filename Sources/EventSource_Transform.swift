@@ -531,7 +531,7 @@ public extension EventSource {
                         bufferSize: bufferSize, traceID: traceID?.with(suffix: "∙take"), onEvent)
   }
   
-  func takeFirst() -> Channel<Update, Success> {
+  func takeOne() -> Channel<Update, Success> {
     return take(first: 1, last: 0)
   }
 }
