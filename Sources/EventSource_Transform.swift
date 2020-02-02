@@ -391,6 +391,10 @@ public extension EventSource {
                         cancellationToken: cancellationToken,
                         bufferSize: bufferSize, traceID: traceID?.with(suffix: "∙skip"), onEvent)
   }
+    
+  func skipFirst() -> Channel<Update, Success> {
+    return skip(first: 1, last: 0)
+  }
 }
 
 // MARK: take
