@@ -9,16 +9,16 @@ Pod::Spec.new do |s|
   s.social_media_url    = 'https://twitter.com/AntonMironov'
 
   s.ios.frameworks               = 'WebKit', 'CoreData', 'SystemConfiguration', 'UIKit'
-  s.ios.deployment_target        = '8.0'
+  s.ios.deployment_target        = '11.0'
 
   s.osx.frameworks               = 'WebKit', 'CoreData', 'SystemConfiguration', 'AppKit'
-  s.osx.deployment_target        = '10.10'
+  s.osx.deployment_target        = '10.13'
 
   s.watchos.frameworks           = 'CoreData', 'WatchKit'
-  s.watchos.deployment_target    = '2.0'
+  s.watchos.deployment_target    = '4.0'
 
   s.tvos.frameworks              = 'CoreData', 'SystemConfiguration', 'UIKit'
-  s.tvos.deployment_target       = '9.0'
+  s.tvos.deployment_target       = '11.0'
 
   s.source_files        = 'Sources/*.swift'
   s.source              = { :git => 'https://github.com/AsyncNinja/AsyncNinja.git', :tag => s.version }

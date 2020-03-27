@@ -32,7 +32,7 @@ public class MyActor {
 }
 
 extension MyActor: ExecutionContext 
-      let internalQueue = DispatchQueue(label: "com.company.app.my-actor", attributes: [])
+      let internalQueue = DispatchQueue(label: "com.company.app.my-actor", attributes: [], target: .global())
       var executor: Executor { return .queue(self.internalQueue) }
       let releasePool = ReleasePool()
 }
