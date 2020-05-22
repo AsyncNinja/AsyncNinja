@@ -1,6 +1,5 @@
-// swift-tools-version:5.0
 //
-//  Copyright (c) 2016-2020 Anton Mironov
+//  Copyright (c) 2016-2020 Anton Mironov, Sergiy Vynnychenko
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"),
@@ -21,46 +20,22 @@
 //  IN THE SOFTWARE.
 //
 
-import PackageDescription
+import Foundation
 
-let package = Package(
-  name: "AsyncNinja",
-  products: [
-    .executable(name: "ImportingTestExecutable", targets: [
-      "ImportingTestExecutable"
-    ]),
-    .library(name: "AsyncNinja", targets: [
-      "AsyncNinja",
-      "AsyncNinjaReactiveUI"
-    ])
-  ],
-  targets: [
-    .target(
-      name: "AsyncNinja",
-      path: "Sources/AsyncNinja"
-    ),
-    .testTarget(
-      name: "AsyncNinjaTests",
-      dependencies: ["AsyncNinja"],
-      path: "Tests/AsyncNinja"
-    ),
-
-    .target(
-      name: "AsyncNinjaReactiveUI",
-      dependencies: ["AsyncNinja"],
-      path: "Sources/AsyncNinjaReactiveUI"
-    ),
-    .testTarget(
-      name: "AsyncNinjaReactiveUITests",
-      dependencies: ["AsyncNinjaReactiveUI"],
-      path: "Tests/AsyncNinjaReactiveUI"
-    ),
-
-    .target(
-      name: "ImportingTestExecutable",
-      dependencies: ["AsyncNinja", "AsyncNinjaReactiveUI"],
-      path: "Sources/ImportingTestExecutable"
-    )
-  ],
-  swiftLanguageVersions: [.v5]
-)
+/// using: @WrappedProducer var variable = "String Value"
+/// variable can be used as usual
+/// channel can be accessed as $variable
+@propertyWrapper public struct WrappedProducer<Value> {
+  public var wrappedValue : Value { didSet { _producer.update(wrappedValue)  } }
+  
+  /// The property that can be accessed with the `$` syntax and allows access to the `Channel`
+  public var projectedValue: Channel<Value, Void> { get { return _producer } }
+  
+  private let _producer : Producer<Value, Void>
+  
+  /// Initialize the storage of the Published property as well as the corresponding `Publisher`.
+  public init(wrappedValue: Value) {
+    self.wrappedValue = wrappedValue
+    self._producer = Producer<Value,Void>(bufferSize: 1, bufferedUpdates: [wrappedValue])
+  }
+}
