@@ -21,6 +21,7 @@
 //
 
 import AsyncNinja
+import Foundation // necessary for tvOS
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 
