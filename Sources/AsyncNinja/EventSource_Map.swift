@@ -321,14 +321,14 @@ public extension EventSource {
   ///   - strongContext: context restored from weak reference to specified context
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMap<PS: Sequence, C: ExecutionContext>(
+  func flatMap<ES: EventSource, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     pure: Bool = true,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
-    _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> PS
-    ) -> Channel<PS.Iterator.Element, Success> {
+    _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> ES
+    ) -> Channel<ES.Update, Success> where ES.Update == ES.Element{
     // Test: EventSource_MapTests.testFlatMapArrayContextual
 
     traceID?._asyncNinja_log("apply flatMapping")
@@ -367,13 +367,13 @@ public extension EventSource {
   ///     will be treated as multiple period values
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
-  func flatMap<PS: Sequence>(
+  func flatMap<ES: EventSource>(
     executor: Executor = .primary,
     pure: Bool = true,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
-    _ transform: @escaping (_ update: Update) throws -> PS
-    ) -> Channel<PS.Iterator.Element, Success> {
+    _ transform: @escaping (_ update: Update) throws -> ES
+    ) -> Channel<ES.Iterator.Element, Success> {
     // Test: EventSource_MapTests.testFlatMapArray
 
     return makeProducer(
