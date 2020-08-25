@@ -21,6 +21,7 @@
 //
 
 import Dispatch
+import Foundation
 
 /// Executor encapsulates asynchrounous way of execution escaped block.
 public struct Executor {
@@ -141,6 +142,12 @@ public extension Executor {
   // Test: ExecutorTests.testImmediate
   /// executes block immediately. Not suitable for long running calculations
   static let immediate = Executor(impl: ImmediateExecutorImpl(), nesting: 0)
+  
+    // Test: ExecutorTests.testSerialUnique
+  /// generates each time unique serial executor
+  static var serialUnique : Executor { Executor.queue(DispatchQueue(label: UUID().uuidString)) }
+        
+    
 
   /// initializes executor based on specified queue
   ///

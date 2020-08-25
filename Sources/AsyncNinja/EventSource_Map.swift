@@ -229,7 +229,7 @@ public extension EventSource {
   /// - Returns: transformed channel
   func flatMap<P, C: ExecutionContext>(
     context: C,
-    executor: Executor? = nil,
+    executor: Executor? = .serialUnique, // temp solution for flatMap bcs 1. conqurent executor will cause loss of updates bug 2. serial executre can cause deadlock
     pure: Bool = true,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
@@ -275,7 +275,7 @@ public extension EventSource {
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
   func flatMap<P>(
-    executor: Executor = .primary,
+    executor: Executor = .serialUnique, // temp solution for flatMap bcs 1. conqurent executor will cause loss of updates bug 2. serial executre can cause deadlock
     pure: Bool = true,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
@@ -323,7 +323,7 @@ public extension EventSource {
   /// - Returns: transformed channel
   func flatMap<ES: EventSource, C: ExecutionContext>(
     context: C,
-    executor: Executor? = nil,
+    executor: Executor? = .serialUnique, // temp solution for flatMap bcs 1. conqurent executor will cause loss of updates bug 2. serial executre can cause deadlock
     pure: Bool = true,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,
@@ -368,7 +368,7 @@ public extension EventSource {
   ///   - update: `Update` to transform
   /// - Returns: transformed channel
   func flatMap<ES: EventSource>(
-    executor: Executor = .primary,
+    executor: Executor = .serialUnique, // temp solution for flatMap bcs 1. conqurent executor will cause loss of updates bug 2. serial executre can cause deadlock
     pure: Bool = true,
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default,

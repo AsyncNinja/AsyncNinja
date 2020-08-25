@@ -104,6 +104,16 @@ class ExecutorTests: XCTestCase {
     }
     self.waitForExpectations(timeout: 0.1)
   }
+    
+    func testSerialUnique() {
+        let e1 = Executor.serialUnique
+        let e2 = Executor.serialUnique
+        
+        guard let q1 = e1.representedDispatchQueue else { XCTAssert(false); return }
+        guard let q2 = e2.representedDispatchQueue else { XCTAssert(false); return }
+        
+        XCTAssert(q1.label != q2.label)
+    }
 
   func testCustomQueue() {
     let queue = DispatchQueue(label: "test")

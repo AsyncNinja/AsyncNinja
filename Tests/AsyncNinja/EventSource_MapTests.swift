@@ -36,8 +36,6 @@ class EventSource_MapTests: XCTestCase {
     ("testMapContextual", testMapContextual),
     ("testFilter", testFilter),
     ("testFilterContextual", testFilterContextual),
-    ("testFlatMapArray", testFlatMapArray),
-    ("testFlatMapArrayContextual", testFlatMapArrayContextual),
     ("testFlatMapOptional", testFlatMapOptional),
     ("testFlatMapOptionalContextual", testFlatMapOptionalContextual)
   ]
@@ -172,41 +170,6 @@ class EventSource_MapTests: XCTestCase {
     XCTAssertEqual(success, completion.maybeSuccess!)
   }
 
-  func testFlatMapArray() {
-    let range = 0..<5
-    let success = "bye"
-    let queue = DispatchQueue(
-      label: "test",
-      qos: DispatchQoS(qosClass: pickQoS(), relativePriority: 0),
-      target: .global()
-    )
-    let (updates, completion) = makeChannel(updates: range, success: success)
-      .flatMap(executor: .queue(queue)) { value -> [Int] in
-        assert(on: queue)
-        return Array(repeating: value, count: value)
-      }
-      .waitForAll()
-
-    XCTAssertEqual([1, 2, 2, 3, 3, 3, 4, 4, 4, 4], updates)
-    XCTAssertEqual(success, completion.maybeSuccess!)
-  }
-
-  func testFlatMapArrayContextual() {
-    let range = 0..<5
-    let success = "bye"
-    let actor = TestActor()
-    let (updates, completion) = makeChannel(updates: range, success: success)
-      .flatMap(context: actor) { (actor_, value) -> [Int] in
-        assert(actor_ === actor)
-        assert(on: actor_.internalQueue)
-        return Array(repeating: value, count: value)
-      }
-      .waitForAll()
-
-    XCTAssertEqual([1, 2, 2, 3, 3, 3, 4, 4, 4, 4], updates)
-    XCTAssertEqual(success, completion.maybeSuccess!)
-  }
-
   func testFlatMapOptional() {
     let range = 0..<5
     let success = "bye"
@@ -233,7 +196,9 @@ class EventSource_MapTests: XCTestCase {
     let (updates, completion) = makeChannel(updates: range, success: success)
       .flatMap(context: actor) { (actor_, value) -> Int? in
         assert(actor_ === actor)
-        assert(on: actor_.internalQueue)
+        // not a default executor anymore
+        // pls check comments on flatMap executor argument
+        //assert(on: actor_.internalQueue)
         return 1 == value % 2 ? nil : value * 2
       }
       .waitForAll()
