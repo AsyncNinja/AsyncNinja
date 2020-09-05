@@ -296,7 +296,8 @@ public extension EventSource {
   ///   - on: any Retainer
   ///
   /// - Example: channel.assign(to: \\.title, on: myView.button)
-  func assign<T: Retainer>(to keyPath: ReferenceWritableKeyPath<T, Update>, on obj: T, executor: Executor = .main) {
+  @discardableResult
+  func assign<T: Retainer>(to keyPath: ReferenceWritableKeyPath<T, Update>, on obj: T, executor: Executor = .main) -> Self {
     let handler = makeHandler(executor: executor) { [weak obj] event, originalExecutor  in
       guard let obj = obj else { return }
       switch event {
@@ -308,6 +309,7 @@ public extension EventSource {
     if let handler = handler {
       obj.releaseOnDeinit(handler)
     }
+    return self
   }
   
 }
