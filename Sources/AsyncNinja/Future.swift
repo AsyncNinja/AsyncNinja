@@ -146,11 +146,11 @@ public extension Future {
   ///   - success: is a success value of original future
   ///
   /// - Returns: transformed future
-  func flatMap<T: Completing>(
+  func flatMap<T>(
     executor: Executor = .primary,
     pure: Bool = true,
-    transform: @escaping (_ success: Success) throws -> T
-    ) -> Future<T.Success> {
+    transform: @escaping (_ success: Success) throws -> Future<T>
+    ) -> Future<T> {
     return flatMapSuccess(executor: executor, pure: pure, transform)
   }
 
@@ -213,12 +213,12 @@ public extension Future {
   ///   - strongContext: is `ExecutionContext` restored from weak reference of context passed to method
   ///   - Success: is a success value of original future
   /// - Returns: transformed future
-  func flatMap<T: Completing, C: ExecutionContext>(
+  func flatMap<T, C: ExecutionContext>(
     context: C,
     executor: Executor? = nil,
     pure: Bool = true,
-    transform: @escaping (_ strongContext: C, _ Success: Success) throws -> T
-    ) -> Future<T.Success> {
+    transform: @escaping (_ strongContext: C, _ Success: Success) throws -> Future<T>
+  ) -> Future<T> {
     return flatMapSuccess(context: context, executor: executor, pure: pure, transform)
   }
 
