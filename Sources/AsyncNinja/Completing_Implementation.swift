@@ -184,6 +184,46 @@ public extension Completing {
       }
     }
   }
+    
+  /// Binds error  to error property of Retainer. The Retainer will release handler
+  ///
+  /// - Parameters:
+  ///   - to: keyPath of property to update
+  ///   - on: any Retainer
+  ///
+  /// - Example: channel.assign(to: \\.title, on: myView.button)
+  @discardableResult
+  func assignError<T:ExecutionContext>(to keyPath: ReferenceWritableKeyPath<T, Error>, on context: T, executor: Executor = .main) -> Self {
+    return onComplete(context: context, executor: executor
+    ) { (context, completion) in
+      switch completion {
+      case .failure(let error):
+        context[keyPath: keyPath] = error
+      default: break
+      }
+    }
+  }
+  
+  /// Binds error  to string property of Retainer. The Retainer will release handler
+  ///
+  /// - Parameters:
+  ///   - to: keyPath of property to update
+  ///   - on: any Retainer
+  ///
+  /// - Example: channel.assign(to: \\.title, on: myView.button)
+  @discardableResult
+  func assignErrorString<T: ExecutionContext>(to keyPath: ReferenceWritableKeyPath<T, String>, on context: T, executor: Executor = .main) -> Self {
+    return onComplete(context: context, executor: executor
+    ) { (context, completion) in
+      switch completion {
+      case .failure(let error):
+        context[keyPath: keyPath] = error.localizedDescription
+      default: break
+      }
+    }
+  }
+
+
 }
 
 private func eternalWaiter(semaphore: DispatchSemaphore) -> DispatchTimeoutResult {
