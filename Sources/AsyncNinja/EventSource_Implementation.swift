@@ -312,7 +312,64 @@ public extension EventSource {
     return self
   }
   
+  /// Binds error  to error property of Retainer. The Retainer will release handler
+  ///
+  /// - Parameters:
+  ///   - to: keyPath of property to update
+  ///   - on: any Retainer
+  ///
+  /// - Example: channel.assign(to: \\.title, on: myView.button)
+  @discardableResult
+  func assignError<T: Retainer>(to keyPath: ReferenceWritableKeyPath<T, Error>, on obj: T, executor: Executor = .main) -> Self {
+    let handler = makeHandler(executor: executor) { [weak obj] event, originalExecutor  in
+      guard let obj = obj else { return }
+      switch event {
+      case .completion(let fallible):
+        switch fallible {
+          case .failure(let error):
+            obj[keyPath: keyPath] = error
+        default:break
+        }
+      default:break
+      }
+    }
+    if let handler = handler {
+      obj.releaseOnDeinit(handler)
+    }
+    return self
+  }
+  
+  /// Binds error  to string property of Retainer. The Retainer will release handler
+  ///
+  /// - Parameters:
+  ///   - to: keyPath of property to update
+  ///   - on: any Retainer
+  ///
+  /// - Example: channel.assign(to: \\.title, on: myView.button)
+  @discardableResult
+  func assignErrorString<T: Retainer>(to keyPath: ReferenceWritableKeyPath<T, String>, on obj: T, executor: Executor = .main) -> Self {
+    let handler = makeHandler(executor: executor) { [weak obj] event, originalExecutor  in
+      guard let obj = obj else { return }
+      switch event {
+      case .completion(let fallible):
+        switch fallible {
+          case .failure(let error):
+            obj[keyPath: keyPath] = error.localizedDescription
+        default:break
+        }
+      default:break
+      }
+    }
+    if let handler = handler {
+      obj.releaseOnDeinit(handler)
+    }
+    return self
+  }
+
+
 }
+
+
 
 // MARK: - double bind
 
