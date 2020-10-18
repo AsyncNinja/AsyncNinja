@@ -209,6 +209,64 @@ public extension EventSource {
 // MARK: - updates only flattening transformations
 
 public extension EventSource {
+    /// Applies transformation to update values of the channel.
+    ///
+    /// - Parameters:
+    ///   - context: `ExectionContext` to apply transformation in
+    ///   - catch: Error property on the context
+    ///   - executor: override of `ExecutionContext`s executor.
+    ///     Keep default value of the argument unless you need
+    ///     to override an executor provided by the context
+    ///   - cancellationToken: `CancellationToken` to use.
+    ///     Keep default value of the argument unless you need
+    ///     an extended cancellation options of returned primitive
+    ///   - bufferSize: `DerivedChannelBufferSize` of derived channel.
+    ///     Keep default value of the argument unless you need
+    ///     an extended buffering options of returned channel
+    ///   - transform: to apply. Sequence returned from transform
+    ///     will be treated as multiple period values
+    ///   - strongContext: context restored from weak reference to specified context
+    ///   - update: `Update` to transform
+    /// - Returns: transformed channel
+    func flatMap<ES: EventSource, C: ExecutionContext>(
+      context: C,
+      `catch` errorKeyPath: ReferenceWritableKeyPath<C, Error?>,
+      executor: Executor? = .serialUnique, // temp solution for flatMap bcs 1. conqurent executor will cause loss of updates bug 2. serial executre can cause deadlock
+      pure: Bool = true,
+      cancellationToken: CancellationToken? = nil,
+      bufferSize: DerivedChannelBufferSize = .default,
+      _ transform: @escaping (_ strongContext: C, _ update: Update) throws -> ES 
+      ) -> Channel<ES.Update, Success> where ES.Update == ES.Element{
+      // Test: EventSource_MapTests.testFlatMapArrayContextual
+
+      traceID?._asyncNinja_log("apply flatMapping")
+      
+      return makeProducer(
+        context: context,
+        executor: executor,
+        pure: pure,
+        cancellationToken: cancellationToken,
+        bufferSize: bufferSize,
+        traceID: traceID?.appending("∙flatMapp")
+      ) { (context, event, producer, originalExecutor) in
+        switch event {
+        case .update(let update):
+          producer.value?.traceID?._asyncNinja_log("flatMapping update \(update)")
+          producer.value?.update(try transform(context, update), from: originalExecutor)
+          
+        case .completion(let completion):
+            producer.value?.traceID?._asyncNinja_log("completion with \(completion)")
+              
+          switch completion {
+          case .success(let success):
+              producer.value?.succeed(success)
+          case .failure(let error):
+              context[keyPath: errorKeyPath] = error
+          }
+        }
+      }
+    }
+
 
   /// Applies transformation to update values of the channel.
   ///
