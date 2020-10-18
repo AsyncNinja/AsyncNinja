@@ -193,7 +193,7 @@ public extension Completing {
   ///
   /// - Example: channel.assign(to: \\.title, on: myView.button)
   @discardableResult
-  func assignError<T:ExecutionContext>(to keyPath: ReferenceWritableKeyPath<T, Error>, on context: T, executor: Executor = .main) -> Self {
+  func assignError<T:ExecutionContext>(to keyPath: ReferenceWritableKeyPath<T, Error?>, on context: T, executor: Executor = .main) -> Self {
     return onComplete(context: context, executor: executor
     ) { (context, completion) in
       switch completion {
