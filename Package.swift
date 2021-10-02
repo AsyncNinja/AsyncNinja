@@ -56,7 +56,7 @@ let package = Package(
       path: "Tests/AsyncNinjaReactiveUI"
     ),
 
-    .target(
+    .executableTarget(
       name: "ImportingTestExecutable",
       dependencies: ["AsyncNinja", "AsyncNinjaReactiveUI"],
       path: "Sources/ImportingTestExecutable"
