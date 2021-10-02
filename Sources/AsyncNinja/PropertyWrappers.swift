@@ -29,7 +29,7 @@ import Foundation
   public var wrappedValue: Value { didSet { _producer.update(wrappedValue)  } }
 
   /// The property that can be accessed with the `$` syntax and allows access to the `Channel`
-  public var projectedValue: Channel<Value, Void> { get { return _producer } }
+  public var projectedValue: Channel<Value, Void> { _producer }
 
   private let _producer: Producer<Value, Void>
 

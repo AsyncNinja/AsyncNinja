@@ -49,15 +49,17 @@
       }
 
       func makeNetworkReachability() -> SCNetworkReachability? {
-        return addressPair.localAddress?.data.withUnsafeBytes { (localAddress: UnsafeRawBufferPointer) -> SCNetworkReachability? in
-          addressPair.remoteAddress?.data.withUnsafeBytes { (remoteAddress: UnsafeRawBufferPointer) -> SCNetworkReachability? in
-            return SCNetworkReachabilityCreateWithAddressPair(
-              nil,
-              localAddress.bindMemory(to: sockaddr.self).baseAddress,
-              remoteAddress.bindMemory(to: sockaddr.self).baseAddress
-            )
+        return addressPair.localAddress?.data
+          .withUnsafeBytes { (localAddress: UnsafeRawBufferPointer) -> SCNetworkReachability? in
+            addressPair.remoteAddress?.data
+              .withUnsafeBytes { (remoteAddress: UnsafeRawBufferPointer) -> SCNetworkReachability? in
+                return SCNetworkReachabilityCreateWithAddressPair(
+                  nil,
+                  localAddress.bindMemory(to: sockaddr.self).baseAddress,
+                  remoteAddress.bindMemory(to: sockaddr.self).baseAddress
+                )
+              }
           }
-        }
       }
 
       return channel(fetch: fetch, makeNetworkReachability: makeNetworkReachability)

@@ -36,9 +36,11 @@ public struct ThrottleOptions {
   /// - parameter qos: quality of service.
   /// - parameter cancellationToken: `CancellationToken` to use. Keep default value of the argument unless you need an extended cancellation options of returned primitive
   /// - parameter bufferSize: `DerivedChannelBufferSize` of derived channel. Keep default value of the argument unless you need
-  public init(qos: DispatchQoS.QoSClass = .default,
-              cancellationToken: CancellationToken? = nil,
-              bufferSize: DerivedChannelBufferSize = .default) {
+  public init(
+    qos: DispatchQoS.QoSClass = .default,
+    cancellationToken: CancellationToken? = nil,
+    bufferSize: DerivedChannelBufferSize = .default
+  ) {
     self.qos = qos
     self.cancellationToken = cancellationToken
     self.bufferSize = bufferSize
@@ -67,7 +69,12 @@ public extension EventSource {
     let producer = Destination(bufferSize: options.bufferSize.bufferSize(self))
     options.cancellationToken?.add(cancellable: producer)
 
-    let helper = ThrottleEventSourceHelper<Self, Destination>(destination: producer, interval: interval, qos: options.qos, after: after)
+    let helper = ThrottleEventSourceHelper<Self, Destination>(
+      destination: producer,
+      interval: interval,
+      qos: options.qos,
+      after: after
+    )
 
     producer._asyncNinja_retainHandlerUntilFinalization(helper.eventHandler(source: self))
 
@@ -162,6 +169,8 @@ extension ThrottleEventSourceHelper {
 public extension Double {
   var dispatchInterval: DispatchTimeInterval {
     let microseconds = Int64(self * 1000000) // perhaps use nanoseconds, though would more often be > Int.max
-    return microseconds < Int.max ? DispatchTimeInterval.microseconds(Int(microseconds)) : DispatchTimeInterval.seconds(Int(self))
+    return microseconds < Int.max
+    ? DispatchTimeInterval.microseconds(Int(microseconds))
+    : DispatchTimeInterval.seconds(Int(self))
   }
 }

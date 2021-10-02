@@ -22,8 +22,6 @@
 
 import Dispatch
 
-// swiftlint:disable line_length
-
 /// Flattening Behavior for Channel.flatMap methods
 /// that transform update value to future. See cases for details.
 public enum ChannelFlatteningBehavior {

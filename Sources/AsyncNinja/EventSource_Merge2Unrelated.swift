@@ -67,8 +67,7 @@ Destination.Success == (LeftSource.Success, RightSource.Success) {
     // `self` is being captured but it is okay
     // because it does not retain valuable resources
 
-    return {
-      (event, originalExecutor) in
+    return { (event, originalExecutor) in
       switch event {
       case let .update(update):
         updateHandler(update, originalExecutor)

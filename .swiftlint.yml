@@ -8,3 +8,9 @@ disabled_rules:
   - todo
   - nesting
   - block_based_kvo
+function_body_length:
+  warning: 50
+  error: 60
+line_length: 
+  ignores_comments: true
+

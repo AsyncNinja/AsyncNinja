@@ -28,34 +28,46 @@ public extension ExecutionContext {
   // MARK: - combineLatest2
   /// Combines 2 recent updates into tuple
   /// You can pass custom executor or use default from Context
-  func combineLatest<ES1: ES, ES2: ES>(_ es1: ES1, _ es2: ES2, executor: Executor? = nil)
-    -> Channel<(ES1.Update, ES2.Update), (ES1.Success, ES2.Success)> {
+  func combineLatest<ES1: ES, ES2: ES>(
+    _ es1: ES1,
+    _ es2: ES2,
+    executor: Executor? = nil
+  ) -> Channel<(ES1.Update, ES2.Update), (ES1.Success, ES2.Success)> {
 
-      return CombineLatest2(es1, es2, executor: executor ?? self.executor)
-        .retain(with: self)
-        .producer
+    return CombineLatest2(es1, es2, executor: executor ?? self.executor)
+      .retain(with: self)
+      .producer
   }
 
   // MARK: - combineLatest3
   /// Combines recent 3 updates into tuple
   /// You can pass custom executor or use default from Context
-  func combineLatest<ES1: ES, ES2: ES, ES3: ES>(_ es1: ES1, _ es2: ES2, _ es3: ES3, executor: Executor? = nil)
-    -> Channel<(ES1.Update, ES2.Update, ES3.Update), (ES1.Success, ES2.Success, ES3.Success)> {
+  func combineLatest<ES1: ES, ES2: ES, ES3: ES>(
+    _ es1: ES1,
+    _ es2: ES2,
+    _ es3: ES3,
+    executor: Executor? = nil
+  ) -> Channel<(ES1.Update, ES2.Update, ES3.Update), (ES1.Success, ES2.Success, ES3.Success)> {
 
-      return CombineLatest3(es1, es2, es3, executor: executor ?? self.executor)
-        .retain(with: self)
-        .producer
+    return CombineLatest3(es1, es2, es3, executor: executor ?? self.executor)
+      .retain(with: self)
+      .producer
   }
 
   // MARK: - combineLatest4
   /// Combines recent 3 updates into tuple
   /// You can pass custom executor or use default from Context
-  func combineLatest<ES1: ES, ES2: ES, ES3: ES, ES4: ES>(_ es1: ES1, _ es2: ES2, _ es3: ES3, _ es4: ES4, executor: Executor? = nil)
-    -> Channel<(ES1.Update, ES2.Update, ES3.Update, ES4.Update), (ES1.Success, ES2.Success, ES3.Success, ES4.Success)> {
+  func combineLatest<ES1: ES, ES2: ES, ES3: ES, ES4: ES>(
+    _ es1: ES1,
+    _ es2: ES2,
+    _ es3: ES3,
+    _ es4: ES4,
+    executor: Executor? = nil
+  ) -> Channel<(ES1.Update, ES2.Update, ES3.Update, ES4.Update), (ES1.Success, ES2.Success, ES3.Success, ES4.Success)> {
 
-      return CombineLatest4(es1, es2, es3, es4, executor: executor ?? self.executor)
-        .retain(with: self)
-        .producer
+    return CombineLatest4(es1, es2, es3, es4, executor: executor ?? self.executor)
+      .retain(with: self)
+      .producer
   }
 }
 
@@ -74,7 +86,10 @@ class RetainableProducerOwner<Update, Success>: ExecutionContext, ReleasePoolOwn
   }
 }
 
-private class CombineLatest2<ES1: ES, ES2: ES>: RetainableProducerOwner<(ES1.Update, ES2.Update), (ES1.Success, ES2.Success)> {
+private class CombineLatest2<ES1: ES, ES2: ES>: RetainableProducerOwner<
+(ES1.Update, ES2.Update),
+(ES1.Success, ES2.Success)
+> {
   var update1: ES1.Update?
   var update2: ES2.Update?
 
@@ -85,12 +100,12 @@ private class CombineLatest2<ES1: ES, ES2: ES>: RetainableProducerOwner<(ES1.Upd
     super.init(executor: executor)
 
     es1.onUpdate(context: self) { ctx, upd in     ctx.update1 = upd;      ctx.trySendUpdate() }
-      .onSuccess(context: self) { ctx, success in ctx.success1 = success; ctx.tryComplete()   }
-      .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
+    .onSuccess(context: self) { ctx, success in ctx.success1 = success; ctx.tryComplete()   }
+    .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
 
     es2.onUpdate(context: self) { ctx, upd in     ctx.update2 = upd;      ctx.trySendUpdate() }
-      .onSuccess(context: self) { ctx, success in ctx.success2 = success; ctx.tryComplete()   }
-      .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
+    .onSuccess(context: self) { ctx, success in ctx.success2 = success; ctx.tryComplete()   }
+    .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
   }
 
   func trySendUpdate() {
@@ -108,7 +123,10 @@ private class CombineLatest2<ES1: ES, ES2: ES>: RetainableProducerOwner<(ES1.Upd
   }
 }
 
-private class CombineLatest3<ES1: ES, ES2: ES, ES3: ES>: RetainableProducerOwner<(ES1.Update, ES2.Update, ES3.Update), (ES1.Success, ES2.Success, ES3.Success)> {
+private class CombineLatest3<ES1: ES, ES2: ES, ES3: ES>: RetainableProducerOwner<
+(ES1.Update, ES2.Update, ES3.Update),
+(ES1.Success, ES2.Success, ES3.Success)
+> {
   var update1: ES1.Update?
   var update2: ES2.Update?
   var update3: ES3.Update?
@@ -121,16 +139,16 @@ private class CombineLatest3<ES1: ES, ES2: ES, ES3: ES>: RetainableProducerOwner
     super.init(executor: executor)
 
     es1.onUpdate(context: self) { ctx, upd in     ctx.update1 = upd;      ctx.trySendUpdate() }
-      .onSuccess(context: self) { ctx, success in ctx.success1 = success; ctx.tryComplete()   }
-      .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
+    .onSuccess(context: self) { ctx, success in ctx.success1 = success; ctx.tryComplete()   }
+    .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
 
     es2.onUpdate(context: self) { ctx, upd in     ctx.update2 = upd;      ctx.trySendUpdate() }
-      .onSuccess(context: self) { ctx, success in ctx.success2 = success; ctx.tryComplete()   }
-      .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
+    .onSuccess(context: self) { ctx, success in ctx.success2 = success; ctx.tryComplete()   }
+    .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
 
     es3.onUpdate(context: self) { ctx, upd in     ctx.update3 = upd;      ctx.trySendUpdate() }
-      .onSuccess(context: self) { ctx, success in ctx.success3 = success; ctx.tryComplete()   }
-      .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
+    .onSuccess(context: self) { ctx, success in ctx.success3 = success; ctx.tryComplete()   }
+    .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
   }
 
   func trySendUpdate() {
@@ -150,7 +168,10 @@ private class CombineLatest3<ES1: ES, ES2: ES, ES3: ES>: RetainableProducerOwner
   }
 }
 
-private class CombineLatest4<ES1: ES, ES2: ES, ES3: ES, ES4: ES>: RetainableProducerOwner<(ES1.Update, ES2.Update, ES3.Update, ES4.Update), (ES1.Success, ES2.Success, ES3.Success, ES4.Success)> {
+private class CombineLatest4<ES1: ES, ES2: ES, ES3: ES, ES4: ES>: RetainableProducerOwner<
+(ES1.Update, ES2.Update, ES3.Update, ES4.Update),
+(ES1.Success, ES2.Success, ES3.Success, ES4.Success)
+> {
   var update1: ES1.Update?
   var update2: ES2.Update?
   var update3: ES3.Update?
@@ -165,20 +186,20 @@ private class CombineLatest4<ES1: ES, ES2: ES, ES3: ES, ES4: ES>: RetainableProd
     super.init(executor: executor)
 
     es1.onUpdate(context: self) { ctx, upd in     ctx.update1 = upd;      ctx.trySendUpdate() }
-      .onSuccess(context: self) { ctx, success in ctx.success1 = success; ctx.tryComplete()   }
-      .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
+    .onSuccess(context: self) { ctx, success in ctx.success1 = success; ctx.tryComplete()   }
+    .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
 
     es2.onUpdate(context: self) { ctx, upd in     ctx.update2 = upd;      ctx.trySendUpdate() }
-      .onSuccess(context: self) { ctx, success in ctx.success2 = success; ctx.tryComplete()   }
-      .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
+    .onSuccess(context: self) { ctx, success in ctx.success2 = success; ctx.tryComplete()   }
+    .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
 
     es3.onUpdate(context: self) { ctx, upd in     ctx.update3 = upd;      ctx.trySendUpdate() }
-      .onSuccess(context: self) { ctx, success in ctx.success3 = success; ctx.tryComplete()   }
-      .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
+    .onSuccess(context: self) { ctx, success in ctx.success3 = success; ctx.tryComplete()   }
+    .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
 
     es4.onUpdate(context: self) { ctx, upd in     ctx.update4 = upd;      ctx.trySendUpdate() }
-      .onSuccess(context: self) { ctx, success in ctx.success4 = success; ctx.tryComplete()   }
-      .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
+    .onSuccess(context: self) { ctx, success in ctx.success4 = success; ctx.tryComplete()   }
+    .onFailure(context: self) { ctx, error in   ctx.producer.fail(error, from: executor) }
   }
 
   func trySendUpdate() {

@@ -42,39 +42,38 @@ public func merge<T: EventSource, U: EventSource>(
 
   func makeHandlerBlock<V>(
     _ successHandler: @escaping (V) -> (T.Success, U.Success)?
-    ) -> (
+  ) -> (
     _ event: ChannelEvent<T.Update, V>,
     _ originalExecutor: Executor
-    ) -> Void {
-      return {
-        (event, originalExecutor) in
-        guard case .some = weakProducer.value else { return }
-        switch event {
-        case let .update(update):
-          weakProducer.value?.update(update, from: originalExecutor)
-        case let .completion(.failure(error)):
-          weakProducer.value?.fail(error, from: originalExecutor)
-        case let .completion(.success(localSuccess)):
-          locking.lock()
-          defer { locking.unlock() }
-          if let success = successHandler(localSuccess) {
-            weakProducer.value?.succeed(success, from: originalExecutor)
-          }
+  ) -> Void {
+    return { (event, originalExecutor) in
+      guard case .some = weakProducer.value else { return }
+      switch event {
+      case let .update(update):
+        weakProducer.value?.update(update, from: originalExecutor)
+      case let .completion(.failure(error)):
+        weakProducer.value?.fail(error, from: originalExecutor)
+      case let .completion(.success(localSuccess)):
+        locking.lock()
+        defer { locking.unlock() }
+        if let success = successHandler(localSuccess) {
+          weakProducer.value?.succeed(success, from: originalExecutor)
         }
       }
+    }
   }
 
   let handlerA = channelA.makeHandler(executor: .immediate,
                                       makeHandlerBlock { (success: T.Success) in
-                                        successA = success
-                                        return successB.map { (success, $0) }
+    successA = success
+    return successB.map { (success, $0) }
   })
   producer._asyncNinja_retainHandlerUntilFinalization(handlerA)
 
   let handlerB = channelB.makeHandler(executor: .immediate,
                                       makeHandlerBlock { (success: U.Success) in
-                                        successB = success
-                                        return successA.map { ($0, success) }
+    successB = success
+    return successA.map { ($0, success) }
   })
   producer._asyncNinja_retainHandlerUntilFinalization(handlerB)
   cancellationToken?.add(cancellable: producer)
@@ -84,11 +83,14 @@ public func merge<T: EventSource, U: EventSource>(
 
 /// Merges array of channels into one
 public extension Array where Element: EventSource {
-    func mergeUpdates(bufferSize: Int? = nil, cancellationToken: CancellationToken? = nil) -> Channel<Element.Update, Void> {
-        return producer(bufferSize: bufferSize ?? count) { producer in
-            for ch in self {
-                ch.bind(producer, cancellationToken: cancellationToken)
-            }
-        }
+  func mergeUpdates(
+    bufferSize: Int? = nil,
+    cancellationToken: CancellationToken? = nil
+  ) -> Channel<Element.Update, Void> {
+    return producer(bufferSize: bufferSize ?? count) { producer in
+      for ch in self {
+        ch.bind(producer, cancellationToken: cancellationToken)
+      }
     }
+  }
 }

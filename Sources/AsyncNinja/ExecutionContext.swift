@@ -22,8 +22,6 @@
 
 import Dispatch
 
-// swiftlint:disable line_length
-
 /// Protocol for concurrency-aware active objects.
 /// Conforming to this protocol helps to avoid boilerplate code related to dispatching and memory management.
 /// See ["Moving to nice asynchronous Swift code"](https://github.com/AsyncNinja/article-moving-to-nice-asynchronous-swift-code/blob/master/ARTICLE.md) for complete explanation.
