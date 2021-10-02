@@ -34,6 +34,17 @@ class EventSource_CombineTests: XCTestCase {
     ("testSuspendable", testSuspendable)
   ]
 
+  let serialExecutor: Executor = {
+    let serialQueue = DispatchQueue(
+      label: "serial-test-queue",
+      qos: .default,
+      attributes: [],
+      target: DispatchQueue.global()
+    )
+    return Executor(queue: serialQueue)
+  }()
+
+
   func testSample() {
     let producerOfOdds = Producer<Int, String>()
     let producerOfEvents = Producer<Int, String>()
@@ -228,16 +239,18 @@ class EventSource_CombineTests: XCTestCase {
   }
 
   func testStartWith() {
-    let exp = expectation(description: "")
-    var expResult = [6, 6, 7, 2, 3, 4]
+    let completionExpectation = expectation(description: "Expecting to complete in time")
+    let expectedResult = [6, 6, 7, 2, 3, 4]
+    var recordedResult = [Int]()
     channel(updates: [2, 3, 4], success: ())
       .startWith([6, 6, 7])
-      .onUpdate(executor: Executor.default) { XCTAssertEqual($0, expResult.first!); expResult.removeFirst() }
-      .onSuccess { _ in
-        exp.fulfill()
-    }
+      .onUpdate(executor: serialExecutor) {
+        recordedResult.append($0)
+      }
+      .onSuccess(executor: .main) { _ in completionExpectation.fulfill() }
 
     waitForExpectations(timeout: 10, handler: nil)
+    XCTAssertEqual(recordedResult, expectedResult)
   }
 
   func testWithLatest() {
