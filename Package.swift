@@ -25,6 +25,12 @@ import PackageDescription
 
 let package = Package(
   name: "AsyncNinja",
+  platforms: [
+    .macOS(.v10_13),
+    .iOS(.v11),
+    .tvOS(.v11),
+    .watchOS(.v4)
+  ],
   products: [
     .executable(name: "ImportingTestExecutable", targets: [
       "ImportingTestExecutable"
