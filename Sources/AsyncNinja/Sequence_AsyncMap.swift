@@ -80,7 +80,7 @@ public extension Sequence {
       promise.succeed([])
       return promise
     }
-    var locking = makeLocking()
+    let locking = makeLocking()
     var canContinue = true
     var unknownSubvaluesCount = subvalues.count
 

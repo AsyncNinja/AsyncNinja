@@ -23,26 +23,26 @@
 import Foundation
 
 public extension EventSource {
-  func ifEmpty<Source: EventSource>(switchTo other: Source) -> Channel<Update,Success>
+  func ifEmpty<Source: EventSource>(switchTo other: Source) -> Channel<Update, Success>
     where Source.Update == Update, Source.Success == Success {
-      
-      let producer = Producer<Self.Update,Self.Success>(bufferSize: Swift.max(bufferSize, other.bufferSize))
+
+      let producer = Producer<Self.Update, Self.Success>(bufferSize: Swift.max(bufferSize, other.bufferSize))
       let locking = makeLocking(isFair: true)
       var updateCounter = 0
-      
+
       let handler = self.makeHandler(executor: .immediate) { event, executor in
         switch event {
         case .update(let upd):
           locking.lock()
           updateCounter += 1
           locking.unlock()
-          
+
           producer.update(upd, from: executor)
         case .completion(let comp):
           locking.lock()
           let shouldSwitch = updateCounter > 0
           locking.unlock()
-          
+
           if shouldSwitch {
             producer.complete(comp, from: executor)
           } else {
@@ -50,9 +50,9 @@ public extension EventSource {
           }
         }
       }
-      
+
       _asyncNinja_retainHandlerUntilFinalization(handler)
-      
+
       return producer
   }
 }

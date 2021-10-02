@@ -227,7 +227,7 @@ public extension EventDestination {
 
 /// Base protocol for objects that can extend lifetime of attached objects
 /// up to the moment of finalization (deinit or completion).
-public protocol LifetimeExtender: class {
+public protocol LifetimeExtender: AnyObject {
   /// **Internal use only**.
   func _asyncNinja_retainUntilFinalization(_ releasable: Releasable)
 

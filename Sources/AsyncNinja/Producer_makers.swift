@@ -32,7 +32,7 @@ public func producer<Update, Success>(
   block: @escaping (_ producer: Producer<Update, Success>) throws -> Void
   ) -> Producer<Update, Success> {
   // TEST: ChannelMakersTests.testMakeChannelWithProducerProvidingBlock
-  
+
   let producer = Producer<Update, Success>(bufferSize: bufferSize)
   cancellationToken?.add(cancellable: producer)
   executor.schedule { originalExecutor in
@@ -55,7 +55,7 @@ public extension ExecutionContext {
     bufferSize: Int = AsyncNinjaConstants.defaultChannelBufferSize,
     block: @escaping (_ context: Self, _ strongProducer: Producer<Update, Success>) throws -> Void
     ) -> Producer<Update, Success> {
-    
+
     return AsyncNinja.producer(
       executor: executor ?? self.executor,
       cancellationToken: cancellationToken,

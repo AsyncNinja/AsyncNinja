@@ -191,13 +191,13 @@ private class Logger {
   static func log(id: String, message: String) {
     print("\(time) AsyncNinja [\(id)]: \(message)")
   }
-  
+
   static func log(title: String, error: Error, thread: Bool = true) {
     print("\(time) AsyncNinja [\(title) ERROR] \(error.localizedDescription)")
   }
-  
-  private static var time : String { return debugDateFormatter.string(from: Date()) }
-  
+
+  private static var time: String { return debugDateFormatter.string(from: Date()) }
+
   private static let debugDateFormatter: DateFormatter = { () -> DateFormatter in
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "HH:mm:ss.SSSS"
@@ -206,28 +206,28 @@ private class Logger {
 }
 
 private extension Thread {
-  
+
   var dbgName: String {
     if let currentOperationQueue = OperationQueue.current?.name {
-      
+
       if currentOperationQueue == "NSOperationQueue Main Queue" {
         return "MainQueue"
       }
-      
+
       if currentOperationQueue.contains("OperationQueue") {
         return currentOperationQueue
       } else {
         return "OperationQueue: \(currentOperationQueue)"
       }
-      
+
     } else if let underlyingDispatchQueue = OperationQueue.current?.underlyingQueue?.label {
-      
+
       if underlyingDispatchQueue.contains("DispatchQueue") {
         return underlyingDispatchQueue
       } else {
         return "DispatchQueue: \(underlyingDispatchQueue)"
       }
-      
+
     } else {
       let name = __dispatch_queue_get_label(nil)
       return String(cString: name, encoding: .utf8) ?? Thread.current.description

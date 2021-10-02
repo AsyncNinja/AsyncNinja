@@ -294,7 +294,7 @@ public extension EventSource {
     bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     // Test: EventSource_TransformTests.testSkip
-    var locking = makeLocking(isFair: true)
+    let locking = makeLocking(isFair: true)
     var updatesQueue = Queue<Update>()
     var numberOfFirstToSkip = first
     let numberOfLastToSkip = last
@@ -357,11 +357,11 @@ public extension EventSource {
     cancellationToken: CancellationToken? = nil,
     bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
-    
-    var locking = makeLocking(isFair: true)
-    var updatesQueue = Queue<Update>()
+
+    let locking = makeLocking(isFair: true)
+    let updatesQueue = Queue<Update>()
     var numberOfFirstToTake = first
-    
+
     func onEvent(
       event: ChannelEvent<Update, Success>,
       producerBox: WeakBox<BaseProducer<Update, Success>>,
@@ -376,17 +376,17 @@ public extension EventSource {
             return nil
           }
         }
-        
+
         if let updateToPost = updateToPost {
           producerBox.value?.traceID?._asyncNinja_log("update \(updateToPost)")
           producerBox.value?.update(updateToPost, from: originalExecutor)
         }
-        
+
         if numberOfFirstToTake == 0 {
           producerBox.value?.traceID?._asyncNinja_log("complete \(completion)")
           producerBox.value?.succeed(completion)
         }
-        
+
       case let .completion(completion):
         if let producer = producerBox.value {
           let queue = locking.locker { updatesQueue }
@@ -397,13 +397,12 @@ public extension EventSource {
         }
       }
     }
-    
+
     return makeProducer(executor: .immediate, pure: true,
                         cancellationToken: cancellationToken,
                         bufferSize: bufferSize, traceID: traceID?.appending("∙take"), onEvent)
   }
-  
-  
+
   /// Makes a channel that takes updates specific number of update
   ///
   /// - Parameters:
@@ -423,7 +422,7 @@ public extension EventSource {
     bufferSize: DerivedChannelBufferSize = .default
     ) -> Channel<Update, Success> {
     // Test: EventSource_TransformTests.testTake
-    var locking = makeLocking(isFair: true)
+    let locking = makeLocking(isFair: true)
     var updatesQueue = Queue<Update>()
     var numberOfFirstToTake = first
     let numberOfLastToTake = last
@@ -460,7 +459,7 @@ public extension EventSource {
           producer.update(queue)
           producer.traceID?._asyncNinja_log("complete \(completion)")
           producer.complete(completion, from: originalExecutor)
-          
+
         }
       }
     }

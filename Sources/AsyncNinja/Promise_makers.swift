@@ -32,18 +32,17 @@ public func promise<T>(
   _ block: @escaping (_ promise: Promise<T>) throws -> Void
 ) -> Promise<T> {
   let promise = Promise<T>()
-  
+
   cancellationToken?.add(cancellable: promise)
-  
+
   executor.execute(after: timeout) { [weak promise] (originalExecutor) in
     if cancellationToken?.isCancelled ?? false {
       promise?.cancel(from: originalExecutor)
     } else if let promise = promise {
-      do    { try block(promise) }
-      catch { promise.fail(error) }
+      do { try block(promise) } catch { promise.fail(error) }
     }
   }
-  
+
   return promise
 }
 
@@ -57,7 +56,7 @@ public extension ExecutionContext {
     cancellationToken: CancellationToken? = nil,
     _ block: @escaping (_ context: Self, _ promise: Promise<T>) throws -> Void
   ) -> Promise<T> {
-    
+
     return AsyncNinja.promise(
       executor: executor ?? self.executor,
       after: timeout,
@@ -69,4 +68,3 @@ public extension ExecutionContext {
     }
   }
 }
-

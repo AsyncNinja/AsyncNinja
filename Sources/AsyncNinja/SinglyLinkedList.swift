@@ -138,7 +138,7 @@ class SinglyLinkedListImpl<Node: SinglyLinkedListElementNode>: Sequence {
 
 // MARK: Nodes
 
-protocol SinglyLinkedListElementNode: class {
+protocol SinglyLinkedListElementNode: AnyObject {
   /// a type of an element
   associatedtype Element
 

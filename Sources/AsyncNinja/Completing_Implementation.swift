@@ -169,9 +169,9 @@ public extension Completing {
       }
     }
   }
-  
+
   @discardableResult
-  func assignSuccess<T:ExecutionContext>(
+  func assignSuccess<T: ExecutionContext>(
     to keyPath: ReferenceWritableKeyPath<T, Success>,
     on context: T, executor: Executor? = nil
   ) -> Self {
@@ -206,6 +206,7 @@ public extension Completing {
       result = completion
       sema.signal()
     }
+    _ = handler
     defer { handler = nil }
 
     switch waitingBlock(sema) {
@@ -266,5 +267,5 @@ public extension Completing {
   func wait(seconds: Double) -> Fallible<Success>? {
     return self.wait(wallTimeout: DispatchWallTime.now().adding(seconds: seconds))
   }
-    
+
 }

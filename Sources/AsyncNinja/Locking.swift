@@ -26,7 +26,7 @@ import Dispatch
 #endif
 
 /// Context indepedent locking. Non-recursive.
-public protocol Locking: class {
+public protocol Locking: AnyObject {
 
   /// Locks. Be sure to balance with unlock
   func lock()
@@ -159,14 +159,24 @@ class SpinLockLocking: Locking {
 /// **internal use only**
 @available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *)
 class UnfairLockLocking: Locking {
-  private var _lock = os_unfair_lock_s()
+  private var _lock: UnsafeMutablePointer<os_unfair_lock>
+
+  init() {
+    _lock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
+    _lock.initialize(to: .init())
+  }
+
+  deinit {
+    _lock.deinitialize(count: 1)
+    _lock.deallocate()
+  }
 
   func lock() {
-    os_unfair_lock_lock(&_lock)
+    os_unfair_lock_lock(_lock)
   }
 
   func unlock() {
-    os_unfair_lock_unlock(&_lock)
+    os_unfair_lock_unlock(_lock)
   }
 }
 #endif

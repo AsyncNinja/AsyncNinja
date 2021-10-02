@@ -103,7 +103,7 @@ public class BaseProducer<Update, Success>: Channel<Update, Success>, EventDesti
     from originalExecutor: Executor?
     ) -> Bool {
     // TEST: ChannelTests.testOverUpdate
-    
+
     traceID?._asyncNinja_log("try update \(update)")
 
     _locking.lock()

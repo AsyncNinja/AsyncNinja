@@ -88,12 +88,12 @@ public extension ReactiveProperties where Object: NSButton {
 }
 
 public extension ReactiveProperties where Object: NSPopUpButton {
-  var indexDidSelect : Channel<Int,Void> {
+  var indexDidSelect: Channel<Int, Void> {
     return self.object.actionChannel()
       .map { $0.objectValue as! Int }
   }
-  
-  var tagDidSelect : Channel<Int,Void> {
+
+  var tagDidSelect: Channel<Int, Void> {
     return self.object.actionChannel()
       .map { ($0.sender as! NSPopUpButton, $0.objectValue as! Int) }
       .map { sender, idx in sender.item(at: idx)!.tag }

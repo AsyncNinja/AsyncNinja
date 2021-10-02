@@ -36,7 +36,7 @@ public func merge<T: EventSource, U: EventSource>(
   let producer = Producer<T.Update, (T.Success, U.Success)>(bufferSize: bufferSize_)
   let weakProducer = WeakBox(producer)
 
-  var locking = makeLocking()
+  let locking = makeLocking()
   var successA: T.Success?
   var successB: U.Success?
 
@@ -83,8 +83,8 @@ public func merge<T: EventSource, U: EventSource>(
 }
 
 /// Merges array of channels into one
-public extension Array where Element : EventSource {
-    func mergeUpdates(bufferSize: Int? = nil, cancellationToken: CancellationToken? = nil) -> Channel<Element.Update,Void> {
+public extension Array where Element: EventSource {
+    func mergeUpdates(bufferSize: Int? = nil, cancellationToken: CancellationToken? = nil) -> Channel<Element.Update, Void> {
         return producer(bufferSize: bufferSize ?? count) { producer in
             for ch in self {
                 ch.bind(producer, cancellationToken: cancellationToken)

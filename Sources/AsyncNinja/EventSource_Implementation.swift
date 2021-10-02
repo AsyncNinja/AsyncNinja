@@ -288,7 +288,7 @@ public extension EventSource {
     }
     _asyncNinja_retainUntilFinalization(eventDestination)
   }
-  
+
   /// Binds updates to any property of Retainer. The Retainer will release handler
   ///
   /// - Parameters:
@@ -297,7 +297,7 @@ public extension EventSource {
   ///
   /// - Example: channel.assign(to: \\.title, on: myView.button)
   func assign<T: Retainer>(to keyPath: ReferenceWritableKeyPath<T, Update>, on obj: T, executor: Executor = .main) {
-    let handler = makeHandler(executor: executor) { [weak obj] event, originalExecutor  in
+    let handler = makeHandler(executor: executor) { [weak obj] event, _  in
       guard let obj = obj else { return }
       switch event {
       case .update(let update):
@@ -309,7 +309,7 @@ public extension EventSource {
       obj.releaseOnDeinit(handler)
     }
   }
-  
+
 }
 
 // MARK: - double bind

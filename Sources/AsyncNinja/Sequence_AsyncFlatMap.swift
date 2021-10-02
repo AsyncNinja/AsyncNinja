@@ -84,7 +84,7 @@ public extension Sequence {
     }
 
     let promise = Promise<[T.Success]>()
-    var locking = makeLocking()
+    let locking = makeLocking()
     var canContinue = true
     promise._asyncNinja_notifyFinalization { canContinue = false }
     var unknownSubvaluesCount = subvalues.count

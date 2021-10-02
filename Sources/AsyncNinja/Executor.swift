@@ -178,7 +178,7 @@ public extension Executor {
 // MARK: - implementations
 
 /// **internal use only**
-protocol ExecutorImpl: class {
+protocol ExecutorImpl: AnyObject {
   var asyncNinja_representedDispatchQueue: DispatchQueue? { get }
   var asyncNinja_canImmediatelyExecuteOnPrimaryExecutor: Bool { get }
 

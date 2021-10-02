@@ -179,9 +179,9 @@ public extension EventSource {
     _ transform: @escaping (_ update: Update) throws -> P
     ) -> Channel<P, Success> {
     // Test: EventSource_MapTests.testMap
-    
+
     traceID?._asyncNinja_log("apply mapping")
-    
+
     return makeProducer(
       executor: executor,
       pure: pure,
@@ -189,14 +189,14 @@ public extension EventSource {
       bufferSize: bufferSize,
       traceID: traceID?.appending("∙map")
     ) { (event, producer, originalExecutor) in
-      
+
       switch event {
       case .update(let update):
-        
+
         let transformedValue = try transform(update)
         producer.value?.traceID?._asyncNinja_log("mapping from \(update)")
         producer.value?.traceID?._asyncNinja_log("mapping to \(transformedValue)")
-        
+
         producer.value?.update(transformedValue, from: originalExecutor)
       case .completion(let completion):
         producer.value?.traceID?._asyncNinja_log("completion with \(completion)")
@@ -238,7 +238,7 @@ public extension EventSource {
     // Test: EventSource_MapTests.testFlatMapOptionalContextual
 
     traceID?._asyncNinja_log("apply flatMapping")
-    
+
     return makeProducer(
       context: context,
       executor: executor,
@@ -332,7 +332,7 @@ public extension EventSource {
     // Test: EventSource_MapTests.testFlatMapArrayContextual
 
     traceID?._asyncNinja_log("apply flatMapping")
-    
+
     return makeProducer(
       context: context,
       executor: executor,
@@ -345,7 +345,7 @@ public extension EventSource {
       case .update(let update):
         producer.value?.traceID?._asyncNinja_log("flatMapping update \(update)")
         producer.value?.update(try transform(context, update), from: originalExecutor)
-        
+
       case .completion(let completion):
         producer.value?.traceID?._asyncNinja_log("completion with \(completion)")
         producer.value?.complete(completion, from: originalExecutor)
@@ -585,7 +585,7 @@ public extension EventSource {
     // Test: EventSource_MapTests.testFilterContextual
 
     traceID?._asyncNinja_log("apply filtering")
-    
+
     return makeProducer(
       context: context,
       executor: executor,
@@ -633,7 +633,7 @@ public extension EventSource {
     // Test: EventSource_MapTests.testFilter
 
     traceID?._asyncNinja_log("apply filtering")
-    
+
     return makeProducer(
       executor: executor,
       pure: pure,

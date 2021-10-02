@@ -30,19 +30,19 @@ public struct ReactiveProperties<Object: NSObject&Retainer> {
   public typealias CustomGetter<T> = (Object) -> T?
   /// a setter that could be provided as customization point
   public typealias CustomSetter<T> = (Object, T) -> Void
-  
+
   /// object that hosts reactive properties
   public var object: Object
-  
+
   /// executor to update object on
   public var executor: Executor
-  
+
   /// original exectutor this instance was created on
   public var originalExecutor: Executor?
-  
+
   /// observation session used by this instance
   public var observationSession: ObservationSession?
-  
+
   /// designated initalizer
   public init(
     object: Object,
@@ -54,7 +54,7 @@ public struct ReactiveProperties<Object: NSObject&Retainer> {
     self.originalExecutor = originalExecutor
     self.observationSession = observationSession
   }
-  
+
   func reactiveProperties<O: NSObject&Retainer>(with object: O) -> ReactiveProperties<O> {
     return ReactiveProperties<O>(object: object,
                                  executor: executor,
@@ -100,7 +100,7 @@ public extension ReactiveProperties {
                             customGetter: customGetter,
                             customSetter: customSetter)
   }
-  
+
   /// makes an `UpdatableProperty<T>` for specified key path.
   ///
   /// `UpdatableProperty` is a kind of `Producer` so you can:
@@ -141,7 +141,7 @@ public extension ReactiveProperties {
                             customGetter: customGetter,
                             customSetter: customSetter)
   }
-  
+
   /// makes an `Updating<T?>` for specified key path.
   ///
   /// `Updating` is a kind of `Channel` so you can:
@@ -169,7 +169,7 @@ public extension ReactiveProperties {
                            channelBufferSize: channelBufferSize,
                            customGetter: customGetter)
   }
-  
+
   /// makes an `Updating<T>` for specified key path.
   ///
   /// `Updating` is a kind of `Channel` so you can:
@@ -201,7 +201,7 @@ public extension ReactiveProperties {
                            channelBufferSize: channelBufferSize,
                            customGetter: customGetter)
   }
-  
+
   /// Makes a sink that wraps specified setter
   ///
   /// - Parameter setter: to use with sink
@@ -212,7 +212,7 @@ public extension ReactiveProperties {
 }
 
 public extension Retainer where Self: NSObject {
-  
+
   /// Makes a `ReactiveProperties` bount to `self` that captures specified values
   ///
   /// - Parameter executor: to subscribe and update value on
@@ -236,7 +236,7 @@ public extension Retainer where Self: NSObject {
 }
 
 public extension ExecutionContext where Self: NSObject {
-  
+
   /// Makes a `ReactiveProperties` bount to `self` that captures specified values
   ///
   /// - Parameter originalExecutor: `Executor` you calling this method on.
@@ -254,7 +254,7 @@ public extension ExecutionContext where Self: NSObject {
                               from: originalExecutor,
                               observationSession: observationSession)
   }
-  
+
   /// Short and useful property that returns `ReactiveProperties` and covers `99%` of use cases
   var rp: ReactiveProperties<Self> { return reactiveProperties(from: executor) }
 }
@@ -275,7 +275,7 @@ public extension ReactiveProperties {
       initialValue: initialValue
     )
   }
-  
+
   func updatable<T>(
     forBindingName bindingName: NSBindingName,
     channelBufferSize: Int = 1,
@@ -288,7 +288,7 @@ public extension ReactiveProperties {
                                                    from: originalExecutor,
                                                    observationSession: observationSession,
                                                    initialValue: initialValue)
-    
+
     var isTypesafeProxyUpdatingEnabled = true
     let typesafeProducerProxy = ProducerProxy<T?, Void>(
       updateExecutor: executor,
@@ -305,7 +305,7 @@ public extension ReactiveProperties {
       }
       isTypesafeProxyUpdatingEnabled = true
     }
-    
+
     let handler = typeerasedProducerProxy.makeUpdateHandler(
       executor: .immediate
     ) { [weak typesafeProducerProxy] (update, originalExecutor) in
@@ -315,7 +315,7 @@ public extension ReactiveProperties {
         else { return }
       _ = typesafeProducerProxy.tryUpdateWithoutHandling(transformer(update), from: originalExecutor)
     }
-    
+
     typesafeProducerProxy._asyncNinja_retainHandlerUntilFinalization(handler)
     return typesafeProducerProxy
   }
@@ -330,7 +330,7 @@ import WebKit
 
 // MARK: - reactive properties for WKWebView
 public extension ReactiveProperties where Object: WKWebView {
-  
+
   /// `Sink` that refers to write-only `WKWebView.load(_:)`
   var loadRequest: Sink<URLRequest, Void> {
     func setter(webView: WKWebView, request: URLRequest) {
@@ -338,7 +338,7 @@ public extension ReactiveProperties where Object: WKWebView {
     }
     return sink(setter: setter)
   }
-  
+
   /// `Sink` that refers to write-only `WKWebView.loadFileURL(_:, allowingReadAccessTo:)`
   @available(OSX 10.11, iOS 9, *)
   var loadFileURL: Sink<(url: URL, readAccessURL: URL), Void> {
@@ -347,7 +347,7 @@ public extension ReactiveProperties where Object: WKWebView {
     }
     return sink(setter: setter)
   }
-  
+
   /// `Sink` that refers to write-only `WKWebView.loadHTMLString(_:, baseURL:)`
   var loadHTMLString: Sink<(string: String, baseURL: URL?), Void> {
     func setter(webView: WKWebView, values: (string: String, baseURL: URL?)) {
@@ -355,7 +355,7 @@ public extension ReactiveProperties where Object: WKWebView {
     }
     return sink(setter: setter)
   }
-  
+
   /// `Sink` that refers to write-only `load(_:, mimeType:, characterEncodingName:, baseURL:)`
   @available(OSX 10.11, iOS 9, *)
   var loadData: Sink<(data: Data, mimeType: String, characterEncodingName: String, baseURL: URL), Void> {

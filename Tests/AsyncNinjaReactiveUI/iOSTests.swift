@@ -43,7 +43,7 @@ class iOSTests: appleOSTests {
     ("testUISlider", testUISlider),
     ("testUIViewController", testUIViewController)
   ]
-  
+
   func testUIView() {
     let object = UIView()
     testEventStream(object.rp.alpha,
@@ -67,7 +67,7 @@ class iOSTests: appleOSTests {
                     keyPathOrGetSet: .left("userInteractionEnabled"),
                     values: Fixtures.bools)
   }
-  
+
   func testUIControl() {
     let object = UIControl()
     testEventStream(object.rp.isEnabled,
@@ -79,7 +79,7 @@ class iOSTests: appleOSTests {
                     keyPathOrGetSet: .left("selected"),
                     values: Fixtures.bools)
   }
-  
+
   func testUITextField() {
     let object = UITextField()
     let defaultTextAttributes = object.defaultTextAttributes
@@ -122,10 +122,10 @@ class iOSTests: appleOSTests {
                             keyPathOrGetSet: .left("disabledBackground"),
                             values: Fixtures.imagesAndNils)
   }
-  
+
   func testUITextView() {
     let object = UITextView()
-    
+
     testEventStream(object.rp.text,
                     object: object,
                     keyPathOrGetSet: .left("text"),
@@ -159,11 +159,11 @@ class iOSTests: appleOSTests {
                     keyPathOrGetSet: .left("clearsOnInsertion"),
                     values: Fixtures.bools)
   }
-  
+
   func testUISearchBar() {
     #if os(iOS)
     let object = UISearchBar()
-    
+
     testEventStream(object.rp.barStyle, object: object,
                     keyPathOrGetSet: .right((getter: { $0.barStyle }, setter: { $0.barStyle = $1! })),
                     values: [.default, .default, .black, .black, .default, .black])
@@ -196,10 +196,10 @@ class iOSTests: appleOSTests {
                     values: [.default, .default, .prominent, .minimal, .minimal, .default])
     #endif
   }
-  
+
   func testUIImageView() {
     let object = UIImageView()
-    
+
     testOptionalEventStream(object.rp.image,
                             object: object,
                             keyPathOrGetSet: .left("image"),
@@ -244,11 +244,11 @@ class iOSTests: appleOSTests {
     //          }
     //      })
   }
-  
+
   func testUIButton() {
     for state in Fixtures.uiControlStates {
       let object = UIButton()
-      
+
       testOptionalEventDestination(object.rp.title(for: state),
                                    object: object,
                                    keyPathOrGet: .right({ $0.title(for: state) }),
@@ -267,7 +267,7 @@ class iOSTests: appleOSTests {
                                    values: Fixtures.attributedStrings)
     }
   }
-  
+
   func testUIBarItem() {
     let object = UIBarButtonItem()
     testEventStream(object.rp.isEnabled,
@@ -297,10 +297,10 @@ class iOSTests: appleOSTests {
     //                            keyPathOrGet: .right({ $0.titleTextAttributes(for: .normal) }),
     //                            values: /*TODO*/)
   }
-  
+
   func testUILabel() {
     let object = UILabel()
-    
+
     testEventStream(object.rp.text, object: object,
                     keyPathOrGetSet: .left("text"),
                     values: Fixtures.strings)
@@ -340,11 +340,11 @@ class iOSTests: appleOSTests {
                       setter: { $0.baselineAdjustment = $1! })),
                     values: Fixtures.baselineAdjustments)
   }
-  
+
   func testUIDatePicker() {
     #if os(iOS)
     let object = UIDatePicker()
-    
+
     let datePickerModeFixtures: [UIDatePicker.Mode] = [
       .time, .time, .date, .date, .dateAndTime, .countDownTimer, .countDownTimer, .dateAndTime
     ]
@@ -388,11 +388,11 @@ class iOSTests: appleOSTests {
                     values: Fixtures.ints)
     #endif
   }
-  
+
   func testUISwitch() {
     #if os(iOS)
     let object = UISwitch()
-    
+
     testEventStream(object.rp.isOn,
                     object: object,
                     keyPathOrGetSet: .left("on"),
@@ -415,11 +415,11 @@ class iOSTests: appleOSTests {
                             values: Fixtures.imagesAndNils)
     #endif
   }
-  
+
   func testUIStepper() {
     #if os(iOS)
     let object = UIStepper()
-    
+
     testEventStream(object.rp.isContinuous, object: object,
                     keyPathOrGetSet: .left("continuous"),
                     values: Fixtures.bools)
@@ -443,7 +443,7 @@ class iOSTests: appleOSTests {
                     values: Fixtures.doubles.map { $0 + 0.1 })
     for state in Fixtures.uiControlStates {
       let object = UIStepper()
-      
+
       //    TODO: investigate
       //          testEventDestination(object.rp.backgroundImage(for: state), object: object,
       //                               keyPathOrGet: .right({ $0.backgroundImage(for: state) }),
@@ -462,7 +462,7 @@ class iOSTests: appleOSTests {
     }
     #endif
   }
-  
+
   #if os(iOS)
   func _testUISlider(_ object: UISlider, state: UIControl.State) {
     testOptionalEventDestination(object.rp.thumbImage(for: state), object: object,
@@ -476,11 +476,11 @@ class iOSTests: appleOSTests {
                                  values: Fixtures.imagesAndNils)
   }
   #endif
-  
+
   func testUISlider() {
     #if os(iOS)
     let object = UISlider()
-    
+
     testEventStream(object.rp.value, object: object,
                     keyPathOrGetSet: .left("value"),
                     values: Fixtures.floats)
@@ -513,7 +513,7 @@ class iOSTests: appleOSTests {
     }
     #endif
   }
-  
+
   func testUIViewController() {
     let object = UIViewController()
     testOptionalEventStream(object.rp.title,

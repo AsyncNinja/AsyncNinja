@@ -92,7 +92,7 @@ public class CancellationToken: Cancellable {
 }
 
 /// Protocol for objects that have cancellation
-public protocol Cancellable: class {
+public protocol Cancellable: AnyObject {
 
   /// Performs cancellation action
   func cancel()

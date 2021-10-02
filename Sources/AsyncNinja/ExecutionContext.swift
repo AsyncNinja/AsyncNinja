@@ -160,7 +160,7 @@ public extension ExecutionContext where Self: ReleasePoolOwner {
 }
 
 /// An object that can extend lifetime of another objects up to deinit or notify deinit
-public protocol Retainer: class {
+public protocol Retainer: AnyObject {
 
   /// Extends lifetime of specified object
   func releaseOnDeinit(_ object: AnyObject)

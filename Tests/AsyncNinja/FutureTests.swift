@@ -284,10 +284,10 @@ class FutureTests: XCTestCase {
   }
 
   func testMapContextual_Failure_ContextDead() {
-    //let transformExpectation = self.expectation(description: "transform called")
+    // let transformExpectation = self.expectation(description: "transform called")
     weak var weakInitialFuture: Future<Int>?
     let value = pickInt()
-    //let valueSquared = square(value)
+    // let valueSquared = square(value)
 
     let mappedFuture: Future<Int> = eval {
       let initialFuture = future(success: value)
@@ -298,7 +298,7 @@ class FutureTests: XCTestCase {
         .map(context: actor) { (actor, value) in
           XCTFail()
           assert(actor: actor)
-          //transformExpectation.fulfill()
+          // transformExpectation.fulfill()
           return try square_failure(value)
       }
 
@@ -306,7 +306,7 @@ class FutureTests: XCTestCase {
       return result
     }
 
-    //self.waitForExpectations(timeout: 0.1)
+    // self.waitForExpectations(timeout: 0.1)
     let result = mappedFuture.wait()
     XCTAssertNil(weakInitialFuture)
     XCTAssertEqual(result.maybeFailure as? AsyncNinjaError, .contextDeallocated)

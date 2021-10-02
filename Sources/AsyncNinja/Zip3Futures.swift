@@ -39,7 +39,7 @@ public func zip<A, B, C>(
   // Test: ZipFuturesTest.test3Failure
   // Test: ZipFuturesTest.test3Lifetime
   let promise = Promise<(A, B, C)>()
-  var locking = makeLocking()
+  let locking = makeLocking()
   var subvalueA: A?
   var subvalueB: B?
   var subvalueC: C?

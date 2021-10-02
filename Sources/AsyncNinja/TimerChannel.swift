@@ -106,7 +106,7 @@ public struct TimerSpec {
     #endif
     return timer
   }
-  
+
   /// Makes channel that
   ///
   /// - Parameters:
@@ -124,7 +124,7 @@ public struct TimerSpec {
   ) -> Channel<T, Void> {
     return makeTimerChannel(executor: executor) { .update(try maker()) }
   }
-  
+
   /// Makes channel that
   ///
   /// - Parameters:
@@ -153,7 +153,7 @@ public struct TimerSpec {
           producer?.fail(error)
         }
       } else {
-        executor.execute(from: queueExecutor) { (originalExecutor) in
+        executor.execute(from: queueExecutor) { (_) in
           guard case .some = producer else { return }
           do {
             let event = try makeEvent()
@@ -225,7 +225,7 @@ public extension Sequence {
         locking.lock()
         let value = iterator.next()
         locking.unlock()
-        
+
         if let value = value {
           return .update(value)
         } else {

@@ -51,7 +51,7 @@ public extension EventSource {
   ) -> Channel<Update, Success>
     where T.Update == Bool {
       // Test: EventSource_CombineTests.testSuspendable
-      var locking = makeLocking(isFair: true)
+      let locking = makeLocking(isFair: true)
       var isUnsuspended = !isSuspendedInitially
       var queue = Queue<Update>()
 
