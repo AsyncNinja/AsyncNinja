@@ -180,18 +180,18 @@ class ChannelMakersTests: XCTestCase {
 
     var context: TestActor? = TestActor()
     var testedChannel: Channel<String, Int>? = context!.producer { (_, producer: Producer<String, Int>)  in
-      producer.update("update")
+      producer.update("update", from: .immediate)
       producer._asyncNinja_notifyFinalization {
         producerFinalizedExpectation.fulfill()
       }
     }
 
     testedChannel!
-      .onUpdate(executor: .userInitiated) {
+      .onUpdate(executor: .immediate) {
         XCTAssertEqual($0, "update")
         updateDeliveredExpectation.fulfill()
       }
-      .onComplete {
+      .onComplete(executor: .immediate) {
         XCTAssertEqual($0.maybeFailure as! AsyncNinjaError, .contextDeallocated)
         completionDeliveredExpectation.fulfill()
     }
