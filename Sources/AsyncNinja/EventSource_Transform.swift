@@ -50,7 +50,7 @@ public extension EventSource {
 
     #else
 
-      var locking = makeLocking()
+      let locking = makeLocking()
       var index = 0
       return self.map(executor: .immediate,
                       cancellationToken: cancellationToken,

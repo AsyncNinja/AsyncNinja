@@ -21,15 +21,11 @@
 //
 
 import Dispatch
+import Foundation
 
-/// Constatns used my AsyncNinja
+/// Constants used my AsyncNinja
 /// Values of these constants were carefully considered
 public struct AsyncNinjaConstants {
-  #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-  /// Defines whether usage of lock-free structures is allowed
-  public static let isLockFreeUseAllowed = true
-  #endif
-
   /// Defines size of buffer for channels.
   /// Buffer size is an amount of the latest values for channel to remember
   ///
@@ -229,8 +225,12 @@ private extension Thread {
       }
 
     } else {
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
       let name = __dispatch_queue_get_label(nil)
       return String(cString: name, encoding: .utf8) ?? Thread.current.description
+#else
+      return Thread.current.description
+#endif
     }
   }
 }

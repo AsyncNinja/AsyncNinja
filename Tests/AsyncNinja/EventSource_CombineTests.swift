@@ -44,7 +44,6 @@ class EventSource_CombineTests: XCTestCase {
     return Executor(queue: serialQueue)
   }()
 
-
   func testSample() {
     let producerOfOdds = Producer<Int, String>()
     let producerOfEvents = Producer<Int, String>()
