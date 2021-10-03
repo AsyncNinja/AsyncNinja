@@ -25,6 +25,5 @@ import AsyncNinjaTests
 
 var tests = [XCTestCaseEntry]()
 tests += AsyncNinjaTests.allTests()
-tests += AsyncNinjaReactiveUITests.allTests()
 
 XCTMain(tests)
